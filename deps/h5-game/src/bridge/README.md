@@ -1,0 +1,702 @@
+# Bridge 目录说明
+
+返回 [开发入口](../../README.md) · [会话与接口参考](../../docs/development/integration.md)
+
+本文档说明 `src/bridge` 各子目录职责边界，目标是让后续改动能快速判断”代码该放哪里”。
+
+## 0. 协议来源：本地 vs 共享包
+
+协议层（action 常量 / payload 类型 / 消息信封）现在通过 `@bridge-protocol` 这个别名引入，由 `vite.config.ts` 根据 `VITE_BRIDGE_TARGET` 切实际路径：
+
+| `VITE_BRIDGE_TARGET` | `@bridge-protocol` 解析到 | 适用场景 |
+|---|---|---|
+| `pokerqueen`（默认）| 本地 `src/bridge/protocol/` | 对接旧 cocos 项目，保留与 pokerqueen `H5MsgMgr.ts` 对齐的冻结副本 |
+| `h5-cc-game` | npm 包 `h5-cc-bridge`（[github](https://github.com/soolary/h5-cc-bridge)）| 对接新 cocos 项目 h5-cc-game，两端共用同一份类型 |
+
+业务代码统一从 `@bridge-protocol` 引入，不要写 `'./protocol'` 或 `'@/bridge/protocol'`：
+
+```ts
+import { BRIDGE_ACTION, type BridgeMessage } from '@bridge-protocol'
+```
+
+切换目标后协议层会自动换源，传输/业务层（core/channels/sync/ws）**不动**，因为它们本来就只依赖 `@bridge-protocol` 暴露的接口。
+
+切换方法：改 `.env`（或 `.env.development`）里的 `VITE_BRIDGE_TARGET`，重启 dev server / 重新 build。
+
+## 1. 目录分层
+
+```text
+src/bridge
+├── core/       # H5 <-> Cocos 通道与握手（底层传输）
+├── protocol/   # 【冻结副本】对接 pokerqueen 时使用的协议；
+│               # h5-cc-game 模式下不再被引用（alias 改指 npm 包）
+├── ws/         # H5 代理服务器 WebSocket（连接、收发、重连、解析）
+├── channels/   # Cocos -> H5 的业务通道（UI/Toast/路由等）
+├── sync/       # H5 HTTP 结果同步到 Cocos + Cocos 持久化代理回写
+└── index.ts    # 顶层聚合导出
+```
+
+**为什么保留本地 protocol/？** 因为 pokerqueen（旧 cocos 项目）不接入 `@silenthill/h5-cc-bridge` 仓库，本目录就是它的兼容协议快照。如果哪天 pokerqueen 也接入了共享协议，可以直接删掉这个文件夹（连带 vite alias 的分支）。
+
+**注意：`@silenthill/h5-cc-bridge` 这个 npm 包不管哪个模式都得装**。原因：
+
+- 运行时（Vite bundle）：是否用 npm 包看 `VITE_BRIDGE_TARGET`。pokerqueen 模式下 alias 切到本地，npm 包代码不会进 bundle。
+- 类型检查（vue-tsc）：`tsconfig.app.json` 里 `@bridge-protocol` 是静态映射到 `node_modules/@silenthill/h5-cc-bridge/dist/h5-side.d.ts` 的，tsc 不读环境变量，所以无论哪个模式都需要包存在才能类型检查通过。
+
+结果：`pnpm install` 永远必须；但是 `pnpm build` 出来的产物在 pokerqueen 模式下不含 `@silenthill/h5-cc-bridge` 任何代码。
+
+## 2. 各文件夹功能说明
+
+### `core/`
+
+职责：
+
+- 统一 H5 与 Cocos 的消息收发入口。
+- 管理 ready/ack 握手状态（`__H5_READY__` / `__CC_READY__`）。
+- 处理多种桥接通道能力探测（direct call / injected / webkit / postMessage / scheme）。
+
+典型文件：
+
+- `cocosBridgeChannel.ts`：`sendBridgeMessage`、`subscribeCocosMessages`、握手管理。
+
+不应放在这里的内容：
+
+- 服务器 websocket 逻辑。
+- 具体业务动作处理（如 toast、路由跳转、列表刷新）。
+
+---
+
+### `protocol/`
+
+**这是 pokerqueen 兼容模式下的协议副本，结构与 `@silenthill/h5-cc-bridge` 仓库的 `src/` 一一对应。**
+
+- `VITE_BRIDGE_TARGET=pokerqueen` 时，`@bridge-protocol` 解析到本目录。
+- `VITE_BRIDGE_TARGET=h5-cc-game` 时，`@bridge-protocol` 解析到 npm 包 `@silenthill/h5-cc-bridge` 的 h5-side 入口，本目录闲置但保留。
+
+典型文件：
+
+- `actions.ts`：动作常量与 `msgtype` 常量。
+- `message.ts`：消息规范化、解析、序列化。
+- `cocosToH5.ts`：Cocos 下发到 H5 的 payload 类型。
+- `h5ToCocos.ts`：H5 回传给 Cocos 的 payload 类型。
+
+维护约定：
+
+- 新协议优先去 [h5-cc-bridge 仓库](https://github.com/soolary/h5-cc-bridge) 改，再回到本副本同步。
+- 如果只在 pokerqueen 用、暂时不上 h5-cc-game，可直接改本目录；记得同步到 pokerqueen 的 `H5MsgMgr.ts`。
+
+---
+
+### `ws/`
+
+职责：
+
+- H5 侧代理 websocket：连接、发送、接收、关闭、重连、心跳。
+- 把服务端消息透传给 Cocos（按约定 `dataType` + 原始 binary/text）。
+- 对服务端二进制包做协议头解析（仅用于分流与日志，不改写透传数据）。
+- 提供 H5 自身的 ws 订阅与按 code 分发能力。
+
+典型文件：
+
+- `wsProxy.ts`：桥接动作 `wsConnect/wsSend/wsClose` 的核心实现。
+- `holdemPacket.ts`：Holdem 包头编解码与 code 解析。
+- `messageCenter.ts`：H5 业务按 code 订阅 WS 消息。
+
+不应放在这里的内容：
+
+- UI 显隐、toast、路由等页面逻辑。
+- HTTP 响应同步逻辑。
+
+---
+
+### `channels/`
+
+职责：
+
+- 消费 Cocos -> H5 的业务消息，并落到具体 UI 行为。
+- 仅处理“业务层动作”，不处理底层传输细节。
+
+典型文件：
+
+- `toastChannel.ts`：`showToast` / 兼容 toast 动作。
+- `dialogChannel.ts`：`showDialog` / `dialogResult` 双向交互弹窗。
+- `panelChannel.ts`：`showPanel` / `panelEvent` / `closePanel` 复杂交互面板。
+- `uiChannel.ts`：`h5Hide`、`h5Show`、`h5Navigate`。
+
+维护约定：
+
+- 每个业务通道建议单文件，命名为 `xxxChannel.ts`。
+- 页面相关副作用尽量封装在对应 channel，避免散落在 `main.ts`。
+
+---
+
+### `sync/`
+
+职责：
+
+- 把 H5 的 HTTP 结果（如 `user/info`、`user_club`、`rooms/list`）同步给 Cocos。
+- 与握手状态联动：握手完成后再下发需要延迟同步的消息。
+
+典型文件：
+
+- `h5BusinessSync.ts`：`forwardUserInfoToCocos`、`forwardUserClubToCocos`、`forwardRoomsListToCocos`。
+
+不应放在这里的内容：
+
+- 真实 HTTP 请求本身（请求仍在 `src/api`）。
+- WebSocket 长连接收发。
+
+## 3. 新需求如何归类
+
+1. 新增跨端动作名或 payload 结构：放 `protocol/`。
+2. 改桥接收发方式、握手、source/msgtype 过滤：放 `core/`。
+3. 与服务器 websocket 长连接相关：放 `ws/`。
+4. Cocos 下发后触发 H5 UI 行为：放 `channels/`。
+5. H5 HTTP 结果同步给 Cocos：放 `sync/`。
+
+## 4. 命名建议
+
+- 文件名：`lowerCamelCase`。
+- 通道类文件后缀：`Channel.ts`。
+- websocket 代理类文件后缀：`Proxy.ts`。
+- 协议常量统一使用 `BRIDGE_ACTION`，不要在业务代码中写硬编码字符串。
+
+## 5. 对外导出约定
+
+- 子目录内通过 `index.ts` 聚合导出。
+- 上层模块优先从 `@/bridge/<layer>` 引用，而不是跨层深路径引用。
+- `src/bridge/index.ts` 仅做总聚合导出，不放业务逻辑。
+
+## 6. Dialog Bridge 使用说明
+
+### 6.1 适用场景
+
+`toast` 适合单向提示；`dialog` 适合需要用户确认、取消、关闭后再把结果回传给 Cocos 的场景。
+
+当前实现采用“全局 Host + 协议驱动”模式：
+
+- Cocos 下发 `showDialog`
+- H5 全局 `dialogChannel.ts` 接收消息
+- 根组件中的 `GlobalBridgeDialogHost.vue` 使用 `GameDialog.vue` 展示
+- 用户点击确认/取消/关闭后，H5 回传 `dialogResult`
+
+这意味着业务页面不需要各自常驻一个 dialog，只需要在应用根部保留一个全局宿主组件。
+
+### 6.2 相关文件
+
+- `src/bridge/protocol/actions.ts`
+- `src/bridge/protocol/cocosToH5.ts`
+- `src/bridge/protocol/h5ToCocos.ts`
+- `src/bridge/channels/dialogChannel.ts`
+- `src/components/Dialog/GlobalBridgeDialogHost.vue`
+- `src/components/Dialog/GameDialog.vue`
+
+### 6.3 协议约定
+
+#### Cocos -> H5
+
+action: `showDialog`
+
+payload 类型：`CocosDialogPayload`
+
+```ts
+interface CocosDialogPayload {
+  title?: string
+  message: string
+  showCancelButton?: boolean
+  showConfirmButton?: boolean
+  cancelButtonText?: string
+  confirmButtonText?: string
+  closeOnClickOverlay?: boolean
+  ensureVisible?: boolean
+}
+```
+
+说明：
+
+- `message` 必填。
+- `showCancelButton` 为 `true` 时显示取消按钮。
+- `showConfirmButton` 默认 `true`。
+- `closeOnClickOverlay` 默认 `false`。
+- `ensureVisible` 默认 `false`，这样 dialog 会直接覆盖在 Cocos canvas 上，而不会把整个 H5 页面重新显示出来。
+- 只有明确传 `ensureVisible: true` 时，才会在弹窗前调用 `setH5Visible(true)`。
+- 本次请求使用桥接消息自带的 `requestId` 作为 dialog 请求标识，无需业务层额外传 `dialogId`。
+
+#### H5 -> Cocos
+
+action: `dialogResult`
+
+payload 类型：`DialogResultPayload`
+
+```ts
+interface DialogResultPayload {
+  dialogRequestId: string
+  action: 'confirm' | 'cancel' | 'close'
+}
+```
+
+说明：
+
+- `dialogRequestId` 对应最初 `showDialog` 那条桥接消息的 `requestId`。
+- `confirm` 表示点击确认按钮。
+- `cancel` 表示点击取消按钮。
+- `close` 表示通过遮罩关闭或外部关闭。
+
+### 6.4 Cocos 侧发送示例
+
+```ts
+H5MsgMgr.sendToH5('showDialog', 1, {
+  title: '提示',
+  message: '是否离开当前牌桌？',
+  showCancelButton: true,
+  confirmButtonText: '确定',
+  cancelButtonText: '取消',
+})
+```
+
+如果只需要一个单按钮提示，也可以只传文案：
+
+```ts
+H5MsgMgr.sendToH5('showDialog', 1, {
+  message: '报名成功',
+})
+```
+
+### 6.5 Cocos 侧接收结果示例
+
+```ts
+H5MsgMgr.Instance.on('dialogResult', (payload) => {
+  if (!payload?.dialogRequestId) {
+    return
+  }
+
+  if (payload.action === 'confirm') {
+    // 用户确认
+    return
+  }
+
+  if (payload.action === 'cancel' || payload.action === 'close') {
+    // 用户取消或关闭
+  }
+})
+```
+
+如果同一时刻可能存在多类弹窗流程，建议 Cocos 侧用 `dialogRequestId` 关联本次业务上下文，再决定后续逻辑。
+
+## 7. Panel Bridge 使用说明
+
+### 7.1 适用场景
+
+当 Cocos 需要拉起一个“不是简单确认框”的 H5 交互层时，推荐使用 `panel bridge`：
+
+- 内部有 tab 切换
+- 有图片、活动说明、奖励列表
+- 有多种按钮和上报事件
+- 内容由 Cocos 传参驱动
+
+这类场景不建议让 Cocos 直接拼 HTML，而是由 H5 预先准备可复用面板组件，Cocos 只传：
+
+- `panelType`
+- `title`
+- `props`
+
+H5 再根据 `panelType` 动态加载对应组件并渲染。
+
+### 7.2 相关文件
+
+- `src/bridge/protocol/actions.ts`
+- `src/bridge/protocol/cocosToH5.ts`
+- `src/bridge/protocol/h5ToCocos.ts`
+- `src/bridge/channels/panelChannel.ts`
+- `src/components/BridgePanel/GlobalBridgePanelHost.vue`
+- `src/components/BridgePanel/panelRegistry.ts`
+
+### 7.3 协议约定
+
+#### Cocos -> H5：打开面板
+
+action: `showPanel`
+
+```ts
+interface CocosPanelPayload {
+  panelType: string
+  title?: string
+  props?: Record<string, unknown>
+  closeOnClickOverlay?: boolean
+  ensureVisible?: boolean
+}
+```
+
+说明：
+
+- `panelType` 必填，用于选择具体 H5 组件。
+- `props` 由对应面板组件自行解释。
+- `closeOnClickOverlay` 默认 `true`，用户点击遮罩会直接关闭当前 panel，并回传 `panelEvent(close)`。
+- `ensureVisible` 默认 `false`，因此默认覆盖在 Cocos 牌桌上，而不会把整个 H5 页面显示出来。
+
+#### Cocos -> H5：关闭面板
+
+action: `closePanel`
+
+```ts
+interface ClosePanelPayload {
+  requestId?: string
+  panelType?: string
+}
+```
+
+说明：
+
+- 两个字段都不传时，关闭当前活动面板。
+- 传 `requestId` 或 `panelType` 时，仅在匹配当前面板时才关闭。
+
+#### H5 -> Cocos：面板事件回传
+
+action: `panelEvent`
+
+```ts
+interface PanelEventPayload {
+  panelRequestId: string
+  event: string
+  payload?: unknown
+}
+```
+
+说明：
+
+- `panelRequestId` 对应最初 `showPanel` 的桥接消息 `requestId`。
+- `event` 用于区分交互类型，如 `tabChange`、`primaryAction`、`close`。
+- `payload` 可携带 tab key、按钮参数、表单值等业务数据。
+
+### 7.4 Cocos 侧发送示例
+
+```ts
+H5MsgMgr.sendToH5('showPanel', 1, {
+  panelType: 'richTabsDemo',
+  title: '活动中心',
+  props: {
+    heading: '五月活动',
+    summary: '不同 tab 的内容由 Cocos 动态控制',
+    defaultTab: 'reward',
+    tabs: [
+      {
+        key: 'reward',
+        label: '奖励说明',
+        description: '累计完成任务后即可领取奖励',
+        imageUrl: 'https://example.com/reward-banner.png',
+        bullets: ['完成 3 局', '累计带入 1000', '奖励次日发放'],
+      },
+      {
+        key: 'task',
+        label: '任务列表',
+        description: '这里也可以换成更复杂的任务 UI',
+        bullets: ['任务 A', '任务 B'],
+      },
+    ],
+  },
+})
+```
+
+### 7.5 Cocos 侧接收事件示例
+
+```ts
+H5MsgMgr.Instance.on('panelEvent', (payload) => {
+  if (!payload?.panelRequestId) {
+    return
+  }
+
+  if (payload.event === 'tabChange') {
+    console.log('tab changed:', payload.payload)
+    return
+  }
+
+  if (payload.event === 'primaryAction') {
+    console.log('primary action:', payload.payload)
+    return
+  }
+
+  if (payload.event === 'close') {
+    console.log('panel closed:', payload.payload)
+  }
+})
+```
+
+### 7.6 新增自定义面板的步骤
+
+1. 在 `src/components/BridgePanel/panels/` 新建一个面板组件。
+2. 在 `panelRegistry.ts` 注册 `panelType -> 组件` 映射，建议使用异步加载。
+3. 组件通过 `panelProps` 接收 Cocos 传参。
+4. 组件通过 `emitPanelEvent(event, payload)` 回传交互事件。
+5. 组件通过 `closePanel(reason, payload)` 主动关闭。
+
+## 8. WebSocket 协议解析（H5 侧）
+
+### 8.1 分层原则
+
+- `wsProxy.ts` 负责连接、收发、重连、心跳、原始消息透传给 Cocos。
+- `holdemPacket.ts` 只负责包头解析（取 code、token、body 等基础字段）。
+- `messageCenter.ts` 负责“按 code 分发订阅”。
+- `roomChangeNotify.ts` 与 `mttNotify.ts` 负责“业务 protobuf 解析 + 结构映射”。
+
+### 8.2 现状：使用生成 protobuf 代码解析
+
+当前 H5 对以下 code 使用生成的 protobuf 代码（与 Cocos/Unity 思路一致）：
+
+- `140` `ROOM_CHANGE_NOTIFY`
+- `151` `USER_MTT_CHANGE_NOTIFY`
+- `152` `USER_SNG_CHANGE_NOTIFY`
+- `153` `MTT_SERIES_NOTIFY`
+
+对应实现：
+
+- `src/bridge/ws/roomChangeNotify.ts`
+- `src/bridge/ws/mttNotify.ts`
+
+**加载策略**：pb 类由 `@silenthill/agreement-web` 提供。Vite 在页面启动时先加载该包的 `holdem-pb.js` UMD bundle，业务代码直接从 `@silenthill/agreement-web` 导入协议对象，仓库内不再保存 pb 生成文件。
+
+### 8.3 为什么不再手写 wire 解析
+
+- 与 Cocos/Unity 的字段定义保持一致，减少协议偏差。
+- 新增/变更字段时只需更新协议依赖与映射层，维护成本更低。
+- 避免手写 varint / fieldNo / wireType 时遗漏字段或类型不一致。
+
+### 8.4 后续新增 WS 业务消息的建议流程
+
+1. 先确认上游 `@silenthill/agreement-web` 已发布相应协议，再执行 `pnpm sync:protocol`。
+2. 提交更新后的 `pnpm-lock.yaml`，并保证 H5 与 Cocos 锁定到同一协议提交。
+3. 在 `messageCenter.ts` 新增对应 code 常量（如需要）。
+4. 新增 `xxxNotify.ts` decoder 文件，从 `@silenthill/agreement-web` 引入消息类并将 pb 对象映射为 H5 业务结构。
+5. 在 store 或业务层通过 `subscribeH5WsCode/subscribeH5WsCodes` 订阅并消费。
+6. 仅在映射层输出 H5 业务需要的数据结构，不在 `wsProxy.ts` 混入业务逻辑。
+7. 更新本 README 8.2 节的协议列表。
+
+### 8.5 协议 UMD 与 proxy
+
+`vite.config.ts` 的 `holdemPbInjectPlugin` 将 `@silenthill/agreement-web/dist/holdem-pb.js` 作为独立资源注入页面，proxy 层再从 `window.HoldemPB` 惰性获取协议类。升级协议时只需更新 npm 依赖，不需要维护本地 CJS→ESM 转换逻辑。
+
+## 9. WebSocket 重连机制
+
+### 9.1 设计目标
+
+对齐 Unity `NetworkDetectionComponent` 的行为：H5 全权负责 WebSocket 连接的存活检测、断线重连和恢复，Cocos 通过桥接事件感知状态变化并决定上层 UI（重连遮罩）与玩法恢复（`ReEnterRoom`）。
+
+### 9.2 触发来源
+
+`wsProxy.ts` 在以下五种情况下进入重连流程，并通过 `wsReconnecting` 的 `reason` 字段告知 Cocos：
+
+| reason       | 触发点                                                                 |
+|--------------|------------------------------------------------------------------------|
+| `close`      | `ws.onclose` 被动断开（默认归类）                                       |
+| `heartbeat`  | 连续 5 次心跳无响应（对齐 Unity `_sendCount >= 5`）                     |
+| `visibility` | `document.visibilitychange` → `visible`，且满足 WS 已断开 或 后台累计 ≥ 30s |
+| `online`     | `window.online` 网络恢复且 WS 未连接                                    |
+| `force`      | Cocos 通过 `wsConnect` 携带 `force: true` 主动要求重连                  |
+
+### 9.3 状态机与超时
+
+```
+idle ─connect─▶ open ─close─▶ reconnecting ─open─▶ open
+                                      │
+                                      └─cap─▶ failed
+```
+
+- 单次重连退避：指数 `1s → 2s → 4s → 8s → 10s`（封顶 `WS_RECONNECT_MAX_DELAY_MS`）
+- 整体放弃阈值：**10 次尝试**（`WS_RECONNECT_MAX_ATTEMPTS`）或 **60s 累计**（`WS_RECONNECT_MAX_DURATION_MS`）
+- 鉴权失败（`forceToLoginFromWs`）直接走 `auth-invalid` 失败路径，不再重试
+
+### 9.4 心跳与活性检测
+
+- 心跳间隔默认 `HEARTBEAT_INTERVAL_NORMAL_MS = 5000`（牌桌外），由 Cocos 通过 `setHeartbeatMode` 切到 `HEARTBEAT_INTERVAL_IN_GAMEPLAY_MS = 1000`（牌桌内）
+- 对齐 Cocos `HeartbeatComponent.SendIntervalNormal/InGameplay`：`ProcedureTexas.lateEnter` 切 `in-gameplay`，`Leave` 切回 `normal`
+- 每发送一次 `MSG_D_HEARTBEAT`，`pendingHeartbeatCount += 1`；累计 ≥ 2 时立即 warn 日志，方便观察弱网渐进恶化
+- 收到任意心跳响应即重置为 0；若复位前累计 ≥ 2 则打 `heartbeat recovered` info
+- 累积 `>= HEARTBEAT_MAX_PENDING (5)` 时主动 `triggerReconnect('heartbeat')` 关闭旧连接
+
+### 9.5 协议约定
+
+#### H5 → Cocos：`wsReconnecting`
+
+```ts
+interface WsReconnectingPayload {
+  attempt: number        // 从 1 开始
+  delayMs: number        // 本次等待时长
+  reason: 'close' | 'heartbeat' | 'visibility' | 'online' | 'force'
+}
+```
+
+#### H5 → Cocos：`wsReconnected`
+
+```ts
+interface WsReconnectedPayload {
+  url: string
+  attempt: number        // 成功时是第几次（0 表示无重连过程）
+  durationMs: number     // 从首次失败到成功的总耗时
+}
+```
+
+emit 时机：WS `onopen` 成功且发送 REGISTER 之后，仅当本次 open 之前曾经历过断开。
+
+#### H5 → Cocos：`wsReconnectFailed`
+
+```ts
+interface WsReconnectFailedPayload {
+  reason: 'max-attempts' | 'overall-timeout' | 'auth-invalid'
+  attempts: number
+  durationMs: number
+}
+```
+
+#### Cocos → H5：`wsConnect`（已扩展）
+
+```ts
+interface WsConnectPayload {
+  url?: string
+  port?: number
+  roomId?: number
+  matchId?: number
+  force?: boolean        // true 时复位 attempt/计时，立即重连一次
+}
+```
+
+#### Cocos → H5：`setHeartbeatMode`
+
+```ts
+interface SetHeartbeatModePayload {
+  mode: 'normal' | 'in-gameplay'   // 5s / 1s
+}
+```
+
+由 `ProcedureTexas.lateEnter / Leave` 触发，对齐 Cocos `HeartbeatComponent` 的 `SendIntervalNormal / SendIntervalInGameplay`。仅当模式真正变化时 H5 端会重启心跳定时器。
+
+### 9.6 Cocos 侧契约
+
+- `BridgeReconnectComponent`（`assets/script/funcomponent/BridgeReconnectComponent.ts`）订阅三类事件：
+  - `wsReconnecting` → 显示重连遮罩 `Main.Reconnect`，并标记 `_inReconnectFlow = true`
+  - `wsReconnected` → 等服务端 `Protocol_Holdem_Register` 回包；带 8s 兜底定时器
+  - `wsReconnectFailed` → 隐藏遮罩 + Toast + 通过 `h5Navigate` 回登录页
+- 服务端 Register 回包到达时清掉遮罩；若 `GameCache.Instance.CurGame` 存在则调用 `ReEnterRoom()` 恢复牌桌
+- Cocos 主动重连：`BridgeReconnectComponent.Instance.StartReconnect()` 内部下发 `wsConnect` + `force: true`
+- 牌桌业务清场入口：`BridgeReconnectComponent.Instance.ConsumeReconnectFlag()` 在 `Protocol_Holdem_EnterRoom_Handler` 内调用，返回 `true` 表示本次进房是由重连触发，调用方据此触发 `ReEnterClear()` 清掉公牌/弹窗/座位等脏 UI（对齐 Unity `OnMsgEnterRoom` 内对 `_gameStatusRestoreHandler` 的处理）
+
+### 9.7 注意事项
+
+- H5 在桥接模式下独占心跳，Cocos 端 `LobbySession.heartbeatComponent` 不在桥接路径中激活，避免双倍心跳
+- `wsClosed` 仅作日志记录，不再用于触发重连（`wsProxy` 已自动处理）
+- 鉴权失败（token 缺失）会同时触发 `forceToLoginFromWs` 与 `wsReconnectFailed(auth-invalid)`，Cocos 端在该 reason 下不再二次发送 `h5Navigate`
+- 切到后台再回来：浏览器 `ws.readyState` 不能信（长时间挂起后底层 TCP 已断但 readyState 仍是 `OPEN`），因此采用「后台累计 ≥ 30s 一律强制重连」策略（`RECONNECT_AFTER_HIDDEN_MS`），对齐 Unity 在 `OnApplicationPause(false)` + `internetReachability` 轮询下的等价行为
+
+## 10. 持久化代理（Storage Bridge）
+
+### 10.1 设计目标
+
+Cocos 端不再自己开 `cc_cache_user_*` 这个独立 IndexedDB，也不再直接调 `cc.sys.localStorage`：所有持久化操作经 bridge 委托给 H5，由 H5 落到统一的 IndexedDB（`user_cache_${userId}`，与 h5 自己的 `club_list` 同库不同名）和 `dzpk_cc_*` 命名空间下的 localStorage。
+
+收益：
+
+- IndexedDB 单一库、单一 schema：迁移/清理/调试只看一份。
+- localStorage 命名空间隔离：cocos 的 `dzpk_cc_*` 与 h5 的 `dzpk_h5_*` 互不污染。
+- store 白名单：h5 强制校验 cocos 写入的 store 名，拦截误写到 h5 自己 store（如 `club_list`）的请求。
+
+### 10.2 相关文件
+
+- `src/bridge/protocol/actions.ts` — `CC_STORAGE_OP / CC_STORAGE_RESULT / CC_STORAGE_SNAPSHOT`
+- `src/bridge/protocol/cocosToH5.ts` — `CcIndexedDBOpPayload`、`CcLocalStorageOpPayload`
+- `src/bridge/protocol/h5ToCocos.ts` — `CcStorageResultPayload`、`CcStorageSnapshotPayload`
+- `src/bridge/sync/ccStorageProxy.ts` — H5 侧分发 + 白名单 + snapshot 回灌
+- `src/utils/indexedDB.ts` — `user_cache_${uid}` schema，`CC_CACHE_STORES` 白名单
+- Cocos 侧：`pokerqueen/assets/script/frame/BridgeStorage.ts`（统一出口），`tools/CocosIndexedDB.ts` / `frame/manager/LocalStoreManager.ts`（thin wrapper）
+
+### 10.3 协议约定
+
+#### Cocos → H5：`ccStorageOp`
+
+两类 payload 通过 `storage` 字段区分。
+
+```ts
+// IndexedDB
+interface CcIndexedDBOpPayload {
+  requestId: string                                  // 必填，H5 按 requestId 回包
+  storage: 'indexeddb'
+  store: string                                      // 必须命中白名单（见 10.4）
+  op: 'get' | 'getAll' | 'put' | 'delete' | 'clear'
+  key?: IDBValidKey                                  // get/put/delete 需要；getAll/clear 可省略
+  value?: unknown                                    // 仅 put
+}
+
+// localStorage
+interface CcLocalStorageOpPayload {
+  requestId?: string                                 // 写操作通常 fire-and-forget，可不带
+  storage: 'localstorage'
+  op: 'get' | 'set' | 'remove' | 'clear'
+  key?: string                                       // get/set/remove 需要
+  value?: string                                     // 仅 set；字符串形态由 Cocos 自决（JSON / 明文）
+}
+```
+
+#### H5 → Cocos：`ccStorageResult`
+
+```ts
+interface CcStorageResultPayload {
+  requestId: string
+  ok: boolean
+  value?: unknown                                    // 读 op 命中时为存储值，未命中为 null
+  error?: string                                     // 失败原因：'store_not_allowed' / 'no_user' / 'missing_key' / ...
+}
+```
+
+#### H5 → Cocos：`ccStorageSnapshot`
+
+握手完成后由 H5 主动推送，把 `dzpk_cc_*` 命名空间下的全部 key/value 一次性回灌给 Cocos 用作内存镜像，让 `LocalStoreManager.getItem` 保持同步 API。
+
+```ts
+interface CcStorageSnapshotPayload {
+  entries: Record<string, string>                    // 已去掉 'dzpk_cc_' 前缀
+}
+```
+
+### 10.4 IndexedDB 白名单
+
+H5 侧只接受以下 store；其它 store 直接 `ok=false, error='store_not_allowed'`，不会落盘也不会覆盖 h5 自己的表。
+
+| Store 常量                          | 实际表名                  | Cocos 业务                          |
+|------------------------------------|--------------------------|------------------------------------|
+| `CC_STORE_TABLE_USER_BASE_INFO`    | `table_user_base_info`   | 牌桌内玩家公共信息（24h TTL）        |
+| `CC_STORE_TABLE_USER_DATA_INFO`    | `table_user_data_info`   | 牌桌内玩家战绩（30 分钟 TTL）        |
+| `CC_STORE_GAME_REPLAYS`            | `game_replays`           | 局内牌谱缓存                          |
+
+新增白名单步骤：
+
+1. `src/utils/indexedDB.ts` 加常量到 `CC_STORE_*` 并放进 `CC_CACHE_STORES`。
+2. 把 `USER_CACHE_DB_VERSION` 加一，老用户下次 open 会自动补建。
+3. Cocos 侧 `frame/BridgeStorage.ts` 同步加 `STORE_*` 常量与 union 成员。
+4. 业务 wrapper（如 `PlayerInfoCacheDB.ts`）按现有模式接入，无需感知 bridge。
+
+### 10.5 localStorage 命名空间
+
+- Cocos 写 key `foo` → H5 实际落地 `dzpk_cc_foo`。
+- H5 自己的 store（pinia-persist 等）使用 `dzpk_h5_` 前缀，与 cocos 完全隔离。
+- 握手完成后 H5 扫描所有 `dzpk_cc_*` key，去掉前缀打包成 `ccStorageSnapshot` 发回 Cocos。
+- Cocos 在握手前调用 `localStorageGet` 只能返回 `null`（镜像尚未回灌），目前所有调用点都在登录后或 UI 触发，影响面可接受。
+
+### 10.6 Cocos 侧入口
+
+业务层不直接 import bridge 协议；统一走 `BridgeStorage`：
+
+```ts
+// IndexedDB
+import { BridgeStorage, STORE_TABLE_USER_BASE_INFO } from '../frame/BridgeStorage';
+await BridgeStorage.indexedDBPut(STORE_TABLE_USER_BASE_INFO, key, data);
+const v = await BridgeStorage.indexedDBGet<MyType>(STORE_TABLE_USER_BASE_INFO, key);
+
+// localStorage（同步 API）
+BridgeStorage.localStorageSet('SomeKey', 'value');
+const s = BridgeStorage.localStorageGet('SomeKey');
+```
+
+`cocosCache()`（`tools/CocosIndexedDB.ts`）和 `LocalStoreManager`（`frame/manager/LocalStoreManager.ts`）是 thin wrapper，保留旧的业务接口（含加密/JSON 序列化语义），内部全部转发到 `BridgeStorage`。
+
+### 10.7 启动顺序
+
+- Cocos：`Main.onLoad` 在 `H5MsgMgr.Instance.init()` 之后调用 `BridgeStorage.install()`，注册 `ccStorageResult` / `ccStorageSnapshot` 监听。
+- H5：`main.ts` 在 mount 前调用 `installCcStorageProxy()`，订阅 `ccStorageOp` 并在 `onBridgeHandshakeDone` 时推一次 snapshot。
+

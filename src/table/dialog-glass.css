@@ -1,0 +1,33 @@
+/* CC widget/Mask.prefab: black with opacity 128/255. Applied to open dialogs only. */
+.mx-game{--mx-dialog-mask:rgba(0,0,0,.502)}
+.mx-dialog-overlay{--mx-active-mask:var(--mx-dialog-mask);background:var(--mx-active-mask)}
+.mx-dialog-overlay[hidden]{display:none!important}
+/* Keep one dimming layer when another modal is above this one, including report/player details. */
+.mx-dialog-overlay:has(.mx-dialog-overlay:not([hidden]):not([aria-hidden=true])),
+.mx-dialog-overlay:has(~ .mx-dialog-overlay:not([hidden]):not([aria-hidden=true])){--mx-active-mask:transparent}
+.mx-menu-overlay.mx-dialog-overlay{background:none}
+.mx-menu-shade{background:var(--mx-active-mask)}
+
+/* Light stays around the rim; a low-opacity center lets the table show through. */
+.mx-dialog-glass{
+  --mx-glass-unit:.3px;
+  --mx-glass-radius:calc(145 * var(--mx-glass-unit));
+  border:1px solid rgba(255,255,255,.64);
+  border-radius:var(--mx-glass-radius);
+  background:linear-gradient(135deg,rgba(150,155,165,.18),rgba(48,55,70,.16) 52%,rgba(115,120,133,.20));
+  box-shadow:inset 0 0 calc(135 * var(--mx-glass-unit)) calc(6 * var(--mx-glass-unit)) rgba(255,255,255,.32),
+    inset 0 0 calc(45 * var(--mx-glass-unit)) rgba(255,255,255,.30),
+    inset 0 calc(3 * var(--mx-glass-unit)) calc(12 * var(--mx-glass-unit)) rgba(255,255,255,.65),
+    0 calc(14 * var(--mx-glass-unit)) calc(50 * var(--mx-glass-unit)) rgba(0,0,0,.25);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.mx-settings-panel.mx-dialog-glass{--mx-glass-unit:var(--settings-unit,.3px)}
+.mx-buyin-panel.mx-dialog-glass{--mx-glass-unit:var(--mx-setup-unit,.3px)}
+.mx-record-panel.mx-dialog-glass{--mx-glass-unit:var(--record-unit,.3px)}
+.mx-emoji-panel.mx-dialog-glass{--mx-glass-unit:var(--emoji-unit,.3px)}
+/* CC sideMenuBg.png has an asymmetric outline: tight upper-left, broad right/bottom bends.
+   Keep this shape separate from the shared dialog skin and independent of menu row count. */
+.mx-menu-panel.mx-dialog-glass{
+  --mx-glass-unit:var(--menu-unit,.3px);
+  --mx-glass-radius:calc(60 * var(--mx-glass-unit)) calc(210 * var(--mx-glass-unit)) calc(200 * var(--mx-glass-unit)) calc(170 * var(--mx-glass-unit)) / calc(70 * var(--mx-glass-unit)) calc(180 * var(--mx-glass-unit)) calc(220 * var(--mx-glass-unit)) calc(140 * var(--mx-glass-unit));
+}

@@ -1,0 +1,332 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useGameStore } from '@/stores/game'
+import { useUserInfoStore } from '@/stores/userInfo'
+import iconDiamond from '@/assets/icons/icon_diamond.png'
+import iconChip from '@/assets/icons/icon_chips.png'
+import AppSvgIcon from '@/components/Icon/AppSvgIcon.vue'
+import { t } from '@/i18n'
+import iconBoxClubT from '@/assets/icons/icon_club_data.png'
+import iconBoxClubTLight from '@/assets/icons/icon_club_data_light.png'
+import iconBoxFriendT from '@/assets/icons/icon_box_friend_t.png'
+import iconBoxFriendTLight from '@/assets/icons/icon_box_friend_t_light.png'
+import iconBoxDiamond from '@/assets/icons/icon_box_diamond.png'
+import iconBoxDiamondLight from '@/assets/icons/icon_box_diamond_light.png'
+import iconBoxSave from '@/assets/icons/icon_box_save.png'
+import iconBoxSaveLight from '@/assets/icons/icon_box_save_light.png'
+import iconBoxBag from '@/assets/icons/icon_box_bag.png'
+import iconBoxBagLight from '@/assets/icons/icon_box_bag_light.png'
+import iconBoxComment from '@/assets/icons/icon_box_comment.png'
+import iconBoxCommentLight from '@/assets/icons/icon_box_comment_light.png'
+import iconBoxSetting from '@/assets/icons/icon_box_setting.png'
+import iconBoxSettingLight from '@/assets/icons/icon_box_setting_light.png'
+import iconShop from '@/assets/icons/icon_shop.png'
+import defaultAvatar from '@/assets/images/default_avatar.png'
+import { isChannelDiamondFreeMode, isChannelPackageHost } from '@/utils/channelPackage'
+import { formatUC } from '@/utils/roomVisibility'
+import { requireRealUser } from '@/session/realUserGate'
+
+const router = useRouter()
+const gameStore = useGameStore()
+const userInfoStore = useUserInfoStore()
+const isChannelPackage = isChannelPackageHost()
+const hideDiamondElements = isChannelDiamondFreeMode()
+
+interface BoxItem {
+  key: string
+  icon: string
+  iconLight: string
+  text: string
+  route: string
+}
+
+const boxList: BoxItem[] = [
+  {
+    key: 'club-career',
+    icon: iconBoxClubT,
+    iconLight: iconBoxClubTLight,
+    text: isChannelPackage ? t('UIData_KrVdD5WqB') : t('PageMineClubCareer'),
+    route: '/mine/career/club',
+  },
+  {
+    key: 'friends-career',
+    icon: iconBoxFriendT,
+    iconLight: iconBoxFriendTLight,
+    text: t('PageMineFriendTableCareer'),
+    route: '/mine/career/friends',
+  },
+  {
+    key: 'my-bill',
+    icon: iconBoxDiamond,
+    iconLight: iconBoxDiamondLight,
+    text: t('UIMine_Bill'),
+    route: '/mine/bill',
+  },
+  {
+    key: 'hand-history',
+    icon: iconBoxSave,
+    iconLight: iconBoxSaveLight,
+    text: t('UIMine_btn_paipu'),
+    route: '/mine/hand-collection',
+  },
+  {
+    key: 'bag',
+    icon: iconBoxBag,
+    iconLight: iconBoxBagLight,
+    text: t('UIMine_btn_backpack'),
+    route: '/mine/backpack',
+  },
+  {
+    key: 'message-board',
+    icon: iconBoxComment,
+    iconLight: iconBoxCommentLight,
+    text: t('PageMineMessageBoard'),
+    route: '/mine/message-board',
+  },
+  {
+    key: 'settings',
+    icon: iconBoxSetting,
+    iconLight: iconBoxSettingLight,
+    text: t('UIMine_btn_setting'),
+    route: '/mine/settings',
+  },
+].filter((item) => !isChannelPackage || item.key !== 'friends-career')
+
+function goToNextPage(path: string): void {
+  if (path === '/mine/settings') {
+    void router.push(path)
+    return
+  }
+  if (!requireRealUser(() => goToNextPage(path))) return
+  void router.push(path)
+}
+
+function goToProfileEdit(): void {
+  if (!requireRealUser(goToProfileEdit)) return
+  void router.push('/mine/profile/edit')
+}
+
+function goToMineShop(): void {
+  if (!requireRealUser(goToMineShop)) return
+  void router.push('/mine/shop')
+}
+
+const displayUser = computed(() => {
+  if (!gameStore.isRealUser) {
+    return {
+      nickname: t('UIGuest_Text8'),
+      userID: '-',
+      avatar: defaultAvatar,
+      diamond: 0,
+      gold: 0,
+    }
+  }
+  let totalGold = 0
+  for (const club of userInfoStore.clubList || []) {
+    totalGold += club.user_gold ?? 0
+  }
+  return {
+    nickname: userInfoStore.userInfo?.user.nickname || gameStore.loginNickname || '-',
+    userID: userInfoStore.userInfo?.user.un_id || gameStore.loginUserId || '-',
+    avatar: userInfoStore.userInfo?.user.avatar || defaultAvatar,
+    diamond: userInfoStore.userInfo?.user.diamonds ?? 0,
+    gold: totalGold,
+  }
+})
+</script>
+
+<template>
+  <div class="page-shell mine-page">
+    <div class="title-bar main-primary-header">
+      <div class="title">{{ t('UIMine_title') }}</div>
+      <div v-if="!hideDiamondElements" class="currency-info main-primary-currency" @click="goToMineShop">
+        <div class="icon-diamond">
+          <img :src="iconDiamond" :alt="t('UIMine_VIP_diamond')" />
+        </div>
+        <div class="num">{{ displayUser.diamond }}</div>
+        <div class="icon-recharge">
+          <AppSvgIcon
+            class="icon-recharge-svg"
+            name="plus-circle"
+            :title="t('UIMine_WalletAdd_EjPOTlsz')"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="card-bg-highlight">
+      <div class="card-bg-outter">
+        <div class="card-bg-innner">
+          <div class="card-line1">
+            <button class="left-avatar" type="button" @click="goToProfileEdit">
+              <img :src="String(displayUser.avatar)" :alt="t('UIMine_UserInfoSetting_btn_head')" />
+            </button>
+            <div class="right-box">
+              <button class="name" type="button" @click="goToProfileEdit">
+                {{ displayUser.nickname }}
+              </button>
+              <div class="idbox">
+                <div class="id-label">ID</div>
+                <div class="id-value">{{ displayUser.userID }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-line2">
+            <div class="left-board">
+              <div v-if="isChannelPackage" class="currency">
+                <img class="icon-currency" :src="iconChip" alt="gold" />
+                <div class="num">{{ formatUC(displayUser.gold) }}</div>
+              </div>
+              <div v-if="!hideDiamondElements" class="currency">
+                <img class="icon-currency" :src="iconDiamond" alt="diamond" />
+                <div class="num">{{ displayUser.diamond.toLocaleString() }}</div>
+              </div>
+            </div>
+            <button v-if="!hideDiamondElements" class="button" type="button" @click="goToMineShop">
+              <div class="text">{{ t('UIHappyShop_ActivityShop') }}</div>
+              <div class="round-icon">
+                <img :src="iconShop" :alt="t('UIHappyShop_ActivityShop')" />
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="box-gallery">
+      <div v-for="box in boxList" :key="box.key" class="box-item" @click="goToNextPage(box.route)">
+        <div class="img">
+          <img class="only-dark" :src="box.icon" :alt="box.text" />
+          <img class="only-light" :src="box.iconLight" :alt="box.text" />
+        </div>
+        <div class="text">{{ box.text }}</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use '@/styles/messages_mine.scss' as *;
+@use '@/styles/mixins' as *;
+
+.mine-page {
+  .card-bg-highlight {
+    .card-bg-outter {
+      .card-bg-innner {
+        .card-line1 {
+          justify-content: flex-start;
+          align-items: flex-start;
+          gap: 0.5rem;
+          padding: 0 0.8rem 0.3rem 0.45rem;
+          .left-avatar {
+            width: 2.32rem;
+            height: 2.32rem;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            img {
+              width: 100%;
+              height: 100%;
+            }
+          }
+          .right-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.3rem;
+            .name {
+              border: 0;
+              background: transparent;
+              padding: 0;
+              text-align: left;
+              color: #fff;
+              margin-top: 0.2rem;
+              font-size: 0.6rem;
+              line-height: 100%;
+              font-weight: bold;
+              font-family: var(--font-family-SF);
+
+              @include theme-light {
+                color: #000;
+              }
+            }
+            .idbox {
+              display: flex;
+              align-items: center;
+              gap: 0.15rem;
+              .id-label {
+                font-size: 0.28rem;
+                line-height: 150%;
+                background-color: rgba(255, 255, 255, 0.4);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 0 0.25rem;
+                border-radius: 0.5rem;
+
+                @include theme-light {
+                  color: #000;
+                  background: rgba(0, 0, 0, 0.06);
+                }
+              }
+              .id-value {
+                font-size: 0.3rem;
+                line-height: 120%;
+                font-weight: 500;
+                font-family: var(--font-family-SF);
+
+                @include theme-light {
+                  color: #000;
+                }
+              }
+            }
+          }
+        }
+        .card-line2 {
+          padding: 0 0.25rem 0 0.45rem;
+          .left-board {
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.1rem;
+            .currency {
+              display: flex;
+              align-items: center;
+              gap: 0.2rem;
+              .icon-currency {
+                width: 0.32rem;
+              }
+              .num {
+                font-size: 0.34rem;
+                line-height: 120%;
+                font-weight: 500;
+                font-family: var(--font-family-SF);
+
+                @include theme-light {
+                  color: #000;
+                }
+              }
+            }
+          }
+          .button {
+            border: 0;
+            cursor: pointer;
+            .round-icon {
+              img {
+                width: 0.32rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.logout-btn {
+  position: absolute;
+  bottom: 3rem;
+  right: 0;
+}
+</style>

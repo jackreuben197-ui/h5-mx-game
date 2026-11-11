@@ -1,0 +1,464 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { showFailToast, showSuccessToast } from 'vant'
+import { useRouter } from 'vue-router'
+import { postUserCheckNicknameApi, postUserModifyInfoApi } from '@/api/user'
+import mainBgUrl from '@/assets/images/main_bg.webp'
+import mainBgLightUrl from '@/assets/images/main_bg_light.png'
+import HeaderBack from '@/components/HeaderBack/HeaderBack.vue'
+import { useAppConfigStore } from '@/stores/appConfig'
+import { useGameStore } from '@/stores/game'
+import { useUserInfoStore } from '@/stores/userInfo'
+import iconDiamond from '@/assets/icons/icon_diamond.png'
+import iconChips from '@/assets/icons/icon_chips.png'
+import { resolveDiamondPriceValue } from '@/utils/diamondPriceConfig'
+import { t } from '@/i18n'
+import {
+  isChannelDiamondFreeMode,
+  isChannelPackageHost,
+  isPrivateUcChargeVisible,
+  PRIVATE_UC_FEE_TYPE,
+} from '@/utils/channelPackage'
+import { formatUC } from '@/utils/roomVisibility'
+
+const router = useRouter()
+
+const title = computed(() => t('UIMine_UserInfoSettingNick_title'))
+
+// 主容器背景图：全页面共用一张底图。
+const backgroundStyle = computed(() => ({
+  '--nickname-bg-dark': `url(${mainBgUrl})`,
+  '--nickname-bg-light': `url(${mainBgLightUrl})`,
+}))
+const gameStore = useGameStore()
+const userInfoStore = useUserInfoStore()
+const appConfigStore = useAppConfigStore()
+const hideDiamondElements = isChannelDiamondFreeMode()
+const isPrivateUcPackage = isChannelPackageHost()
+const chargeIcon = isPrivateUcPackage ? iconChips : iconDiamond
+
+const inputName = ref('')
+const submitting = ref(false)
+const isComposingNickname = ref(false)
+
+const NICKNAME_MIN_LENGTH = 2
+const NICKNAME_MAX_LENGTH = 10
+
+function getNicknameCharacterLength(value: string): number {
+  return Array.from(value).reduce((length, character) => {
+    return length + (/\p{Script=Han}/u.test(character) ? 2 : 1)
+  }, 0)
+}
+
+function truncateNickname(value: string, maxLength = NICKNAME_MAX_LENGTH): string {
+  let length = 0
+  let result = ''
+
+  for (const character of Array.from(value)) {
+    const characterLength = /\p{Script=Han}/u.test(character) ? 2 : 1
+    if (length + characterLength > maxLength) {
+      break
+    }
+    result += character
+    length += characterLength
+  }
+
+  return result
+}
+
+const nicknameCharacterLength = computed(() => getNicknameCharacterLength(inputName.value))
+
+function onNicknameInput(event: Event): void {
+  if (isComposingNickname.value) {
+    return
+  }
+
+  const input = event.target as HTMLInputElement
+  const limitedValue = truncateNickname(input.value)
+  inputName.value = limitedValue
+  if (input.value !== limitedValue) {
+    input.value = limitedValue
+  }
+}
+
+function onNicknameCompositionStart(): void {
+  isComposingNickname.value = true
+}
+
+function onNicknameCompositionEnd(event: CompositionEvent): void {
+  isComposingNickname.value = false
+  onNicknameInput(event)
+}
+
+function readNickname(): string {
+  const user = userInfoStore.userInfo?.user
+  if (!user || typeof user !== 'object') {
+    return gameStore.loginNickname || ''
+  }
+
+  const record = user as Record<string, unknown>
+  const candidates = [record.nick_name, record.nickname]
+  for (const item of candidates) {
+    if (typeof item === 'string' && item.trim()) {
+      return item.trim()
+    }
+  }
+
+  return gameStore.loginNickname || ''
+}
+
+function readDiamond(): number {
+  const user = userInfoStore.userInfo?.user
+  if (user && typeof user === 'object') {
+    const record = user as Record<string, unknown>
+    const value = Number(record.diamonds ?? record.diamond ?? 0)
+    if (Number.isFinite(value) && value >= 0) {
+      return value
+    }
+  }
+  return 0
+}
+
+const displayUser = computed(() => ({
+  nickname: readNickname(),
+  diamond: readDiamond(),
+  uc: formatUC(Number(userInfoStore.currentClub?.user_gold ?? 0)),
+}))
+
+const nicknameCost = computed(() => {
+  if (isPrivateUcPackage) {
+    const price = appConfigStore.getPrivateUcChargePrice(PRIVATE_UC_FEE_TYPE.NICKNAME)
+    return {
+      original: price,
+      current: price,
+    }
+  }
+  return resolveDiamondPriceValue(appConfigStore.globalConfig?.user_modify_name_price, {
+    original: 0,
+    current: 0,
+  })
+})
+
+const showPrivateUcCharge = computed(() => {
+  return isPrivateUcPackage && isPrivateUcChargeVisible(nicknameCost.value.current)
+})
+
+const showChargeElements = computed(() => {
+  return !hideDiamondElements || showPrivateUcCharge.value
+})
+
+inputName.value = String(displayUser.value.nickname || '')
+
+function validateNickname(value: string): string | null {
+  if (!value) {
+    return t('UIMine_SetNick_InputTips')
+  }
+  const characterLength = getNicknameCharacterLength(value)
+  if (characterLength < NICKNAME_MIN_LENGTH) {
+    return t('UIClub_Text62') + NICKNAME_MIN_LENGTH + t('UIClub_Text63')
+  }
+  if (characterLength > NICKNAME_MAX_LENGTH) {
+    return t('UIClub_Text64') + NICKNAME_MAX_LENGTH + t('UIClub_Text63')
+  }
+  return null
+}
+
+async function onSave(): Promise<void> {
+  const nextNickname = inputName.value.trim()
+  const error = validateNickname(nextNickname)
+  if (error) {
+    showFailToast(error)
+    return
+  }
+
+  if (nextNickname === displayUser.value.nickname) {
+    showSuccessToast(t('UIClub_Not2'))
+    router.back()
+    return
+  }
+
+  submitting.value = true
+  try {
+    const checkRes = await postUserCheckNicknameApi({ nickname: nextNickname })
+    if (checkRes.code !== 0) {
+      throw new Error(typeof checkRes.msg === 'string' ? checkRes.msg : t('UIClub_Can2'))
+    }
+
+    const modifyRes = await postUserModifyInfoApi({ nick_name: nextNickname })
+    if (modifyRes.code !== 0) {
+      throw new Error(typeof modifyRes.msg === 'string' ? modifyRes.msg : t('UIClub_SaveFail4'))
+    }
+
+    const userInfo = userInfoStore.userInfo
+    if (
+      userInfo &&
+      typeof userInfo === 'object' &&
+      userInfo.user &&
+      typeof userInfo.user === 'object'
+    ) {
+      const nextUserInfo = {
+        ...userInfo,
+        user: {
+          ...(userInfo.user as Record<string, unknown>),
+          nick_name: nextNickname,
+          nickname: nextNickname,
+        },
+      }
+      userInfoStore.setUserInfo(nextUserInfo)
+    }
+    gameStore.loginNickname = nextNickname
+
+    showSuccessToast(t('UIClub_DoneSave3'))
+    router.back()
+  } catch (requestError) {
+    const message = requestError instanceof Error ? requestError.message : t('UIClub_SaveFail4')
+    showFailToast(message)
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="page-shell nickname-page" :style="backgroundStyle">
+    <HeaderBack :title="title" />
+
+    <div class="content-wrap">
+      <section class="nickname-content">
+        <div class="name-input-wrap">
+          <input
+            v-model="inputName"
+            class="name-input"
+            type="text"
+            :placeholder="t('UIMine_SetNick_InputTips')"
+            aria-describedby="nickname-character-count"
+            @input="onNicknameInput"
+            @compositionstart="onNicknameCompositionStart"
+            @compositionend="onNicknameCompositionEnd"
+          />
+          <span id="nickname-character-count" class="name-input-count">
+            {{ nicknameCharacterLength }}/{{ NICKNAME_MAX_LENGTH }}
+          </span>
+        </div>
+        <p class="input-hint">{{ t('UIMine_SetNick_InputTips') }}</p>
+
+        <div v-if="showChargeElements" class="cost-row">
+          <span class="label">
+            {{ isPrivateUcPackage ? t('UIMine_UserInfoSettingNick_cost_title') : t('UIClub_FundRecharge_9jO4mlS6') }}
+          </span>
+          <img class="diamond" :src="chargeIcon" :alt="isPrivateUcPackage ? 'UC' : 'diamond'" />
+          <span v-if="!isPrivateUcPackage" class="origin">{{ nicknameCost.original }}</span>
+          <span class="current">{{ nicknameCost.current }}</span>
+        </div>
+
+        <div v-if="showChargeElements" class="cost-row balance-row">
+          <span class="label">
+            {{ isPrivateUcPackage ? t('UIMine_UserInfoSettingNick_coin_left') : t('UIMineAllDiamond') }}
+          </span>
+          <img class="diamond" :src="chargeIcon" :alt="isPrivateUcPackage ? 'UC' : 'diamond'" />
+          <span class="balance">{{ isPrivateUcPackage ? displayUser.uc : displayUser.diamond }}</span>
+        </div>
+      </section>
+
+      <div class="save-wrap">
+        <button class="save-btn" type="button" :disabled="submitting" @click="onSave">
+          {{ submitting ? t('UIClub_Save3') + '...' : t('Save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use '@/styles/mixins' as *;
+
+.nickname-page {
+  height: 100dvh;
+  min-height: 100dvh;
+  html[data-channel-package='1'] & {
+    height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+    min-height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+  }
+  display: flex;
+  flex-direction: column;
+  color: #f9f9f9;
+  background-color: var(--c-page);
+  background-image: var(--nickname-bg-dark);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  @include theme-light {
+    color: #000;
+    background-image: var(--nickname-bg-light);
+  }
+}
+
+.content-wrap {
+  min-height: 0;
+  flex: 1;
+  padding: 0 0.48rem;
+  margin-top: 0.6228rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.name-input-wrap {
+  position: relative;
+  width: 9.0613rem;
+  height: 1.6638rem;
+}
+
+.name-input {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.4759rem;
+  border: 0.0082rem solid rgba(249, 249, 249, 0.6);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(0.8232rem);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: 'PingFang SC', var(--font-family-sans);
+  font-size: 0.3885rem;
+  line-height: 1.4;
+  padding: 0 1.5rem 0 0.52rem;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.71);
+  }
+
+  @include theme-light {
+    border-color: rgba(249, 249, 249, 0.6);
+    background: #dadada;
+    color: rgba(0, 0, 0, 0.71);
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.38);
+    }
+  }
+}
+
+.name-input-count {
+  position: absolute;
+  top: 50%;
+  right: 0.52rem;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.71);
+  font-family: 'PingFang SC', var(--font-family-sans);
+  font-size: 0.3467rem;
+  line-height: 1;
+  pointer-events: none;
+
+  @include theme-light {
+    color: rgba(0, 0, 0, 0.48);
+  }
+}
+
+.input-hint {
+  margin: 0.2133rem 0 0;
+  color: #fbfbfb;
+  font-family: 'PingFang SC', var(--font-family-sans);
+  font-size: 0.3467rem;
+  line-height: 1.4;
+
+  @include theme-light {
+    color: #000;
+  }
+}
+
+.cost-row {
+  margin-top: 0.3413rem;
+  display: flex;
+  align-items: center;
+  gap: 0.1532rem;
+  color: #fff;
+  font-family: 'Afacad', var(--font-family-sans);
+  font-size: 0.3574rem;
+  line-height: 1.4;
+
+  @include theme-light {
+    color: #000;
+  }
+}
+
+.balance-row {
+  margin-top: 0.1098rem;
+}
+
+.label {
+  opacity: 0.96;
+}
+
+.diamond {
+  width: 0.4267rem;
+  height: 0.3467rem;
+  object-fit: contain;
+}
+
+.origin {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: line-through;
+  text-decoration-thickness: 0.0267rem;
+  text-decoration-color: rgba(255, 255, 255, 0.75);
+
+  @include theme-light {
+    color: rgba(0, 0, 0, 0.75);
+    text-decoration-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+.current,
+.balance {
+  color: #fff;
+  font-weight: 600;
+
+  @include theme-light {
+    color: #000;
+  }
+}
+
+.info {
+  width: 0.3467rem;
+  height: 0.3467rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: #9a6075;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.2667rem;
+  font-weight: 600;
+  line-height: 1;
+
+  @include theme-light {
+    background: rgba(0, 0, 0, 0.48);
+    color: #fff;
+  }
+}
+
+.save-wrap {
+  margin-top: auto;
+  padding: 0 0.1067rem calc(env(safe-area-inset-bottom) + 1.0667rem);
+}
+
+.save-btn {
+  width: 100%;
+  height: 1.4349rem;
+  border-radius: 1.0557rem;
+  border: 0.0133rem solid rgba(242, 242, 242, 0.8);
+  color: #fbfbfb;
+  font-family: 'PingFang SC', var(--font-family-sans);
+  font-size: 0.5063rem;
+  font-weight: 500;
+  line-height: 1.2;
+  background: linear-gradient(168.34deg, #05e7ae 7.55%, #027a5c 71.92%);
+
+  @include theme-light {
+    background: var(--c-brand);
+  }
+
+  &:disabled {
+    opacity: 0.72;
+  }
+}
+</style>

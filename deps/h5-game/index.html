@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Newpkr</title>
+    <meta
+      name="viewport"
+      content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=overlays-content"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#c487a8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="renderer" content="webkit" />
+    <meta name="force-rendering" content="webkit" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="full-screen" content="yes" />
+    <meta name="x5-fullscreen" content="true" />
+    <meta name="360-fullscreen" content="true" />
+    <meta name="x5-page-mode" content="app" />
+    <meta name="apple-mobile-web-app-title" content="Newpkr" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+
+    <!-- Telegram SDK 必须在业务脚本前读取启动参数（含 SDK 的同标签页刷新缓存）。 -->
+    <script>
+      ;(function () {
+        if (window.Telegram && window.Telegram.WebApp) {
+          return
+        }
+
+        var locationText = String(window.location.search || '') + String(window.location.hash || '')
+        var hasTelegramLaunch = /(?:[?#&]|^)tgWebAppData=/.test(locationText)
+        // Vue Router 会把初始 hash 替换为 /home。SDK 自己能从 sessionStorage
+        // 恢复 initParams，但前提是刷新时仍加载 SDK，不能只检查当前 URL。
+        try {
+          var storedParams = JSON.parse(window.sessionStorage.getItem('__telegram__initParams') || 'null')
+          hasTelegramLaunch = hasTelegramLaunch || Boolean(storedParams && storedParams.tgWebAppData)
+        } catch (error) {}
+        if (!hasTelegramLaunch) {
+          return
+        }
+        window.__H5_TG_MINI_APP__ = true
+
+        document.write('<script src="https://telegram.org/js/telegram-web-app.js?63"><\/script>')
+      })()
+    </script>
+
+    <!-- 主题首帧防闪烁：在样式生效前设好 html[data-theme]，
+         正式逻辑（持久化/系统主题监听/meta 同步）由 src/utils/theme.ts 接管，
+         默认值与 utils/theme.ts 的 DEFAULT_THEME_MODE 保持同步 -->
+    <script>
+      ;(function () {
+        var mode = ''
+        try {
+          // localStore 统一 JSON 序列化存储，这里按同规则直读。
+          mode = JSON.parse(window.localStorage.getItem('dzpk_h5_THEME_MODE') || '""')
+        } catch (error) {}
+        // URL ?theme=light|dark|system 预览覆盖（hash 路由下 query 可能在 hash 段内）。
+        var match = (window.location.search + ' ' + window.location.hash).match(
+          /[?&]theme=(light|dark|system)\b/,
+        )
+        if (match) {
+          mode = match[1]
+        }
+        if (mode !== 'light' && mode !== 'dark' && mode !== 'system') {
+          mode = 'system' // DEFAULT_THEME_MODE：默认跟随当前设备 / 浏览器 / WebView 环境
+        }
+        var theme = mode
+        if (mode === 'system') {
+          theme =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark'
+        }
+        document.documentElement.setAttribute('data-theme', theme)
+      })()
+    </script>
+    <!-- @silenthill/h5-cc-i18n runtime: 必须先于 Vue 入口加载，挂 window.__H5_CC_I18N__ -->
+    <script src="./h5-cc-i18n.min.js"></script>
+    <script>
+      ;(function () {
+        var root = document.documentElement
+        var lastViewportSignature = ''
+
+        function isIosStandalone() {
+          var nav = window.navigator || {}
+          var ua = String(nav.userAgent || '')
+          var isIos = /iPad|iPhone|iPod/.test(ua)
+            || (nav.platform === 'MacIntel' && Number(nav.maxTouchPoints) > 1)
+          var isStandalone = nav.standalone === true
+            || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+
+          return isIos && isStandalone
+        }
+
+        if (isIosStandalone()) {
+          root.setAttribute('data-ios-standalone', '1')
+        }
+
+        function toPixelNumber(value) {
+          var next = parseFloat(String(value || '0'))
+          if (!isFinite(next) || next < 0) {
+            return 0
+          }
+          return Math.round(next)
+        }
+
+        function readSafeAreaTopFromCss() {
+          if (!document.body || typeof window.getComputedStyle !== 'function') {
+            return 0
+          }
+
+          var probe = document.createElement('div')
+          probe.style.position = 'fixed'
+          probe.style.top = '0'
+          probe.style.left = '0'
+          probe.style.width = '0'
+          probe.style.height = '0'
+          probe.style.paddingTop = 'env(safe-area-inset-top)'
+          probe.style.visibility = 'hidden'
+          probe.style.pointerEvents = 'none'
+          document.body.appendChild(probe)
+          var safeTop = toPixelNumber(window.getComputedStyle(probe).paddingTop)
+          document.body.removeChild(probe)
+          return safeTop
+        }
+
+        function syncStandaloneSafeArea() {
+          if (!isIosStandalone()) {
+            return
+          }
+
+          var safeTop = readSafeAreaTopFromCss()
+          root.style.setProperty('--app-visual-safe-area-top', safeTop + 'px')
+          window.__H5_SAFE_AREA_TOP__ = safeTop
+        }
+
+        function syncStandaloneSafeAreaWhenReady() {
+          if (document.body) {
+            syncStandaloneSafeArea()
+            window.setTimeout(syncStandaloneSafeArea, 250)
+            window.setTimeout(syncStandaloneSafeArea, 1000)
+            return
+          }
+          document.addEventListener('DOMContentLoaded', syncStandaloneSafeAreaWhenReady, { once: true })
+        }
+
+        function getViewportHeight() {
+          var innerHeight = Number(window.innerHeight) || 0
+          var visualViewportHeight = window.visualViewport
+            ? Number(window.visualViewport.height) || 0
+            : 0
+          var screenHeight = window.screen ? Number(window.screen.height) || 0 : 0
+
+          if (isIosStandalone() && screenHeight > 0) {
+            return Math.round(screenHeight) + 'px'
+          }
+
+          var height = Math.max(innerHeight, visualViewportHeight)
+          return height > 0 ? Math.round(height) + 'px' : '100vh'
+        }
+
+        function syncViewportHeight() {
+          // 软键盘弹出期间冻结视口 CSS 变量：Android 键盘会压缩 innerHeight，
+          // 若跟着更新 --app-viewport-height / --app-cocos-height，Cocos canvas 会被压扁。
+          if (window.__H5_KEYBOARD_OPEN__ || window.__H5_KEYBOARD_CLOSING__) {
+            return
+          }
+          var height = getViewportHeight()
+          var viewportWidth = Number(window.visualViewport && window.visualViewport.width)
+            || Number(window.innerWidth)
+            || 375
+          var mainLayout = root.getAttribute('data-main-layout') || ''
+          var cocosActive = root.getAttribute('data-cocos-active') === '1'
+          var adaptiveDesktop = Boolean(mainLayout || cocosActive) && viewportWidth >= 600
+          var frameWidth = adaptiveDesktop ? viewportWidth : Math.min(viewportWidth, 480)
+          // 桌面横向缩放时 frame 高度不变，宽度由 CSS 100vw 自行处理；不重复写高度变量。
+          var widthSignature = adaptiveDesktop ? 'desktop' : String(Math.round(frameWidth))
+          var viewportSignature = widthSignature + 'x' + height + 'x'
+            + mainLayout + 'x' + String(cocosActive)
+          if (viewportSignature === lastViewportSignature) {
+            return
+          }
+          lastViewportSignature = viewportSignature
+          root.style.setProperty('--app-viewport-height', height)
+
+          // 已声明桌面框架的页面占满浏览器可视区，未迁移页面继续沿用手机框。
+          var heightNumber = parseFloat(height)
+          if (isFinite(heightNumber) && heightNumber > 0) {
+            var frameHeight = adaptiveDesktop
+              ? heightNumber
+              : viewportWidth > 480
+                ? Math.min(heightNumber, (frameWidth * 926) / 428)
+                : heightNumber
+            root.style.removeProperty('--app-frame-width')
+            root.style.setProperty(
+              '--app-frame-height',
+              Math.round(frameHeight) + 'px',
+            )
+            root.style.setProperty(
+              '--app-frame-offset-top',
+              Math.max(0, Math.round((heightNumber - frameHeight) / 2)) + 'px',
+            )
+          }
+        }
+
+        function syncViewportHeightLater() {
+          syncViewportHeight()
+          syncStandaloneSafeArea()
+          window.setTimeout(syncViewportHeight, 250)
+          window.setTimeout(syncViewportHeight, 1000)
+          window.setTimeout(syncStandaloneSafeArea, 250)
+          window.setTimeout(syncStandaloneSafeArea, 1000)
+        }
+
+        syncViewportHeight()
+        syncStandaloneSafeAreaWhenReady()
+        window.addEventListener('resize', function () {
+          syncViewportHeight()
+          syncStandaloneSafeArea()
+        }, { passive: true })
+        window.addEventListener('orientationchange', syncViewportHeightLater, { passive: true })
+        window.addEventListener('h5:cocos-layout-change', syncViewportHeightLater)
+        document.addEventListener('visibilitychange', function () {
+          syncViewportHeight()
+          syncStandaloneSafeArea()
+        }, { passive: true })
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', function () {
+            syncViewportHeight()
+            syncStandaloneSafeArea()
+          }, { passive: true })
+        }
+
+        // ---- 通用软键盘适配（普通浏览器与 PWA 使用同一套覆盖式行为）----
+        // 牌桌和 H5 外壳始终保留键盘弹出前的逻辑尺寸；键盘只遮盖页面。
+        // Cocos EditBox 聚焦时平移 #GameDiv，H5 客服输入框聚焦时抬升 chat-sheet。
+        // 这样不会触发 FIXED_WIDTH/FIXED_HEIGHT 来回切换，也不会产生可滚动的灰色空白。
+        function isTextInput(el) {
+          if (!el || !el.tagName) return false
+          var tag = el.tagName
+          if (tag === 'TEXTAREA' || el.isContentEditable === true) return true
+          if (tag !== 'INPUT') return false
+          var type = String(el.type || 'text').toLowerCase()
+          return type === 'text'
+            || type === 'search'
+            || type === 'email'
+            || type === 'url'
+            || type === 'tel'
+            || type === 'password'
+            || type === 'number'
+        }
+
+        function isCocosEditBoxInput(el) {
+          return !!(el && el.classList && el.classList.contains('cocosEditBox'))
+        }
+
+        var keyboardCloseTimer = 0
+        var keyboardRestoreTimers = []
+        var keyboardFocusIsCocos = false
+        var keyboardStableHeight = 0
+        var cocosKeyboardOffset = 0
+        var h5KeyboardOffset = 0
+
+        function getCssPixel(name) {
+          if (typeof window.getComputedStyle !== 'function') return 0
+          return toPixelNumber(window.getComputedStyle(root).getPropertyValue(name))
+        }
+
+        function getStableViewportSize() {
+          var canvas = document.getElementById('GameCanvas')
+          var rect = canvas && typeof canvas.getBoundingClientRect === 'function'
+            ? canvas.getBoundingClientRect()
+            : null
+          var width = Math.round(
+            (rect && rect.width)
+              || Number(window.innerWidth)
+              || Number(root.clientWidth)
+              || 0,
+          )
+          var height = Math.round(
+            getCssPixel('--app-cocos-height')
+              || (rect && rect.height)
+              || Number(window.innerHeight)
+              || Number(root.clientHeight)
+              || 0,
+          )
+          return { width: width, height: height }
+        }
+
+        function setKeyboardOffset(name, value) {
+          root.style.setProperty(name, Math.max(0, Math.round(value || 0)) + 'px')
+        }
+
+        function clearKeyboardRestoreTimers() {
+          while (keyboardRestoreTimers.length) {
+            window.clearTimeout(keyboardRestoreTimers.pop())
+          }
+        }
+
+        function enableOverlayKeyboard() {
+          try {
+            if (window.navigator && window.navigator.virtualKeyboard) {
+              window.navigator.virtualKeyboard.overlaysContent = true
+            }
+          } catch (error) {}
+        }
+
+        // 必须在 input 真正 focus 前启用；Cocos 侧 editing-did-began 也会调用此入口。
+        window.__H5_PREPARE_KEYBOARD__ = enableOverlayKeyboard
+        enableOverlayKeyboard()
+
+        function getKeyboardMetrics() {
+          var stableHeight = keyboardStableHeight || getStableViewportSize().height
+          var visibleTop = 0
+          var visibleBottom = stableHeight
+          var virtualKeyboard = window.navigator && window.navigator.virtualKeyboard
+          var keyboardRect = virtualKeyboard && virtualKeyboard.boundingRect
+
+          if (keyboardRect && Number(keyboardRect.height) > 0) {
+            visibleBottom = Math.min(stableHeight, Math.max(0, Number(keyboardRect.y) || 0))
+          } else if (window.visualViewport) {
+            visibleTop = Math.max(0, Number(window.visualViewport.offsetTop) || 0)
+            visibleBottom = Math.min(
+              stableHeight,
+              visibleTop + Math.max(0, Number(window.visualViewport.height) || 0),
+            )
+          } else if (Number(window.innerHeight) > 0) {
+            visibleBottom = Math.min(stableHeight, Number(window.innerHeight))
+          }
+
+          return {
+            stableHeight: stableHeight,
+            visibleTop: visibleTop,
+            visibleBottom: visibleBottom,
+            inset: Math.max(0, stableHeight - visibleBottom),
+          }
+        }
+
+        function resetBrowserScroll() {
+          if (window.scrollX !== 0 || window.scrollY !== 0) {
+            window.scrollTo(0, 0)
+          }
+        }
+
+        function updateKeyboardLayout() {
+          if (!window.__H5_KEYBOARD_OPEN__) return
+          var metrics = getKeyboardMetrics()
+          var active = document.activeElement
+          setKeyboardOffset('--app-keyboard-inset', metrics.inset)
+
+          if (keyboardFocusIsCocos) {
+            // rect 已包含上一次的父容器 transform，先加回旧 offset 得到未平移位置。
+            var cocosRect = active && typeof active.getBoundingClientRect === 'function'
+              ? active.getBoundingClientRect()
+              : null
+            var originalBottom = cocosRect ? cocosRect.bottom + cocosKeyboardOffset : 0
+            cocosKeyboardOffset = originalBottom > 0
+              ? Math.max(0, originalBottom - metrics.visibleBottom + 12)
+              : Math.max(0, metrics.inset)
+            setKeyboardOffset('--app-cocos-keyboard-offset', cocosKeyboardOffset)
+            setKeyboardOffset('--app-h5-keyboard-offset', 0)
+          } else if (active && active.closest && active.closest('.chat-sheet')) {
+            // 客服面板自身使用 --app-keyboard-inset 抬升，不再平移整个 H5。
+            h5KeyboardOffset = 0
+            setKeyboardOffset('--app-h5-keyboard-offset', 0)
+          } else {
+            // 其他 H5 文本框只在被遮挡时平移外壳，行为等同浏览器正常的输入框上顶。
+            var activeRect = active && typeof active.getBoundingClientRect === 'function'
+              ? active.getBoundingClientRect()
+              : null
+            var originalH5Bottom = activeRect ? activeRect.bottom + h5KeyboardOffset : 0
+            h5KeyboardOffset = originalH5Bottom > 0
+              ? Math.max(0, originalH5Bottom - metrics.visibleBottom + 12)
+              : 0
+            setKeyboardOffset('--app-h5-keyboard-offset', h5KeyboardOffset)
+            setKeyboardOffset('--app-cocos-keyboard-offset', 0)
+          }
+
+          // Cocos 2.4.8 Android EditBox 会在 800ms 后主动 scrollIntoView。
+          // 持续把页面滚动归零，真正的可见性由上面的容器平移保证。
+          resetBrowserScroll()
+          window.requestAnimationFrame(resetBrowserScroll)
+        }
+
+        function rememberStableViewport() {
+          var size = getStableViewportSize()
+          if (size.height > 0) keyboardStableHeight = size.height
+          if (keyboardStableHeight > 0) {
+            root.style.setProperty('--app-viewport-height', keyboardStableHeight + 'px')
+          }
+        }
+
+        function openKeyboardFix(target) {
+          window.clearTimeout(keyboardCloseTimer)
+          clearKeyboardRestoreTimers()
+          enableOverlayKeyboard()
+          if (!window.__H5_KEYBOARD_OPEN__) {
+            rememberStableViewport()
+          }
+          window.__H5_KEYBOARD_CLOSING__ = false
+          keyboardFocusIsCocos = isCocosEditBoxInput(target)
+          window.__H5_KEYBOARD_OPEN__ = true
+          root.setAttribute('data-keyboard-open', '1')
+          root.setAttribute('data-keyboard-owner', keyboardFocusIsCocos ? 'cocos' : 'h5')
+          updateKeyboardLayout()
+          window.requestAnimationFrame(updateKeyboardLayout)
+          keyboardRestoreTimers.push(window.setTimeout(updateKeyboardLayout, 80))
+          keyboardRestoreTimers.push(window.setTimeout(updateKeyboardLayout, 250))
+          keyboardRestoreTimers.push(window.setTimeout(updateKeyboardLayout, 850))
+        }
+
+        function viewportHasRecovered() {
+          if (!keyboardStableHeight) return true
+          var currentHeight = Math.max(
+            Number(window.innerHeight) || 0,
+            Number(window.visualViewport && window.visualViewport.height) || 0,
+          )
+          return currentHeight >= keyboardStableHeight - 48
+        }
+
+        function finishKeyboardRestore(force) {
+          if (window.__H5_KEYBOARD_OPEN__) return
+          if (!force && !viewportHasRecovered()) return
+          window.__H5_KEYBOARD_CLOSING__ = false
+          keyboardStableHeight = 0
+          lastViewportSignature = ''
+          syncViewportHeight()
+          syncStandaloneSafeArea()
+          resetBrowserScroll()
+          if (typeof window.__H5_FORCE_COCOS_REFIT__ === 'function') {
+            window.__H5_FORCE_COCOS_REFIT__()
+          }
+          window.dispatchEvent(new Event('h5:viewport-stable'))
+        }
+
+        function closeKeyboardFix() {
+          window.__H5_KEYBOARD_OPEN__ = false
+          window.__H5_KEYBOARD_CLOSING__ = true
+          keyboardFocusIsCocos = false
+          cocosKeyboardOffset = 0
+          h5KeyboardOffset = 0
+          root.removeAttribute('data-keyboard-open')
+          root.removeAttribute('data-keyboard-owner')
+          setKeyboardOffset('--app-keyboard-inset', 0)
+          setKeyboardOffset('--app-cocos-keyboard-offset', 0)
+          setKeyboardOffset('--app-h5-keyboard-offset', 0)
+          resetBrowserScroll()
+          clearKeyboardRestoreTimers()
+          ;[50, 180, 350, 700].forEach(function (delay) {
+            keyboardRestoreTimers.push(window.setTimeout(function () {
+              finishKeyboardRestore(false)
+            }, delay))
+          })
+          keyboardRestoreTimers.push(window.setTimeout(function () {
+            finishKeyboardRestore(true)
+          }, 1200))
+        }
+
+        document.addEventListener('pointerdown', function (event) {
+          if (isTextInput(event.target)) {
+            enableOverlayKeyboard()
+          }
+        }, true)
+
+        document.addEventListener('focusin', function (event) {
+          if (isTextInput(event.target)) {
+            openKeyboardFix(event.target)
+          }
+        })
+
+        document.addEventListener('focusout', function (event) {
+          if (!isTextInput(event.target)) return
+          window.clearTimeout(keyboardCloseTimer)
+          keyboardCloseTimer = window.setTimeout(function () {
+            if (isTextInput(document.activeElement)) {
+              openKeyboardFix(document.activeElement)
+              return
+            }
+            closeKeyboardFix()
+          }, 200)
+        })
+
+        function bindKeyboardGeometryEvents() {
+          if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateKeyboardLayout, { passive: true })
+            window.visualViewport.addEventListener('scroll', updateKeyboardLayout, { passive: true })
+          }
+          var virtualKeyboard = window.navigator && window.navigator.virtualKeyboard
+          if (virtualKeyboard && virtualKeyboard.addEventListener) {
+            virtualKeyboard.addEventListener('geometrychange', updateKeyboardLayout)
+          }
+          window.addEventListener('resize', updateKeyboardLayout, { passive: true })
+          window.addEventListener('scroll', function () {
+            if (!window.__H5_KEYBOARD_OPEN__) return
+            resetBrowserScroll()
+            updateKeyboardLayout()
+          }, { passive: true })
+        }
+
+        bindKeyboardGeometryEvents()
+      })()
+    </script>
+
+    <style>
+      :root {
+        --app-frame-max-width: 480px;
+        --app-frame-width: min(100%, var(--app-frame-max-width));
+        --app-frame-height: var(--app-viewport-height);
+        --app-frame-offset-top: 0px;
+        --app-viewport-height: 100vh;
+        --app-full-height: var(--app-viewport-height);
+        /* Cocos uses this as its real frame height; do not include H5 bottom bleed. */
+        --app-cocos-height: var(--app-viewport-height);
+        --h5-shell-bg-color: #000;
+        --app-bottom-bleed: 0px;
+        --app-content-safe-area-top: env(safe-area-inset-top);
+        --app-visual-safe-area-top: 0px;
+        /* 软键盘只改变下面三个位移值，不改变 Cocos 的逻辑画布尺寸。 */
+        --app-keyboard-inset: 0px;
+        --app-cocos-keyboard-offset: 0px;
+        --app-h5-keyboard-offset: 0px;
+      }
+
+      html[data-theme='light'] {
+        --h5-shell-bg-color: #fff;
+      }
+
+      @supports (height: 100dvh) {
+        :root {
+          --app-viewport-height: 100dvh;
+        }
+      }
+
+      html[data-ios-standalone='1'] {
+        --app-full-height: var(--app-viewport-height);
+        --app-cocos-height: var(--app-viewport-height);
+        --app-bottom-bleed: max(env(safe-area-inset-bottom), 120px);
+        /* Keep H5 controls below the iOS status bar in Home Screen mode. */
+        --app-content-safe-area-top: env(safe-area-inset-top);
+      }
+
+      html {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        min-height: -webkit-fill-available;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background-color: var(--h5-shell-bg-color);
+      }
+
+      body {
+        margin: 0;
+        width: var(--app-frame-width);
+        max-width: var(--app-frame-max-width);
+        margin-left: auto;
+        margin-right: auto;
+        height: 100vh;
+        height: 100dvh;
+        height: var(--app-full-height);
+        min-height: 100%;
+        min-height: -webkit-fill-available;
+        overflow: hidden;
+        overscroll-behavior: none;
+        position: relative;
+        background-color: #000;
+      }
+
+      /*
+       * Keep the mobile H5/Cocos coordinate system on wide screens. A transform
+       * makes body the containing block for position:fixed pages and popups,
+       * including Vue teleports mounted directly under body.
+       */
+      @media (min-width: 481px) {
+        :root,
+        html[data-ios-standalone='1'] {
+          --app-full-height: var(--app-frame-height);
+          --app-cocos-height: var(--app-frame-height);
+        }
+
+        body {
+          transform: translateZ(0);
+          box-shadow: 0 0 32px rgba(0, 0, 0, 0.28);
+        }
+      }
+
+      @media (min-width: 600px) {
+        html[data-main-layout],
+        html[data-cocos-active='1'] {
+          --app-frame-max-width: 100vw;
+          --app-frame-width: 100vw;
+        }
+
+        html[data-main-layout='primary'] body,
+        html[data-cocos-active='1'] body {
+          box-shadow: none;
+        }
+      }
+
+      html[data-ios-standalone='1'] body {
+        height: var(--app-full-height);
+      }
+
+      #GameDiv {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: var(--app-cocos-height);
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      /* 仅在 Cocos 输入框唤起键盘时创建位移合成层。
+       * iOS 全屏下长期保留 translate3d(0, 0, 0) 会裁掉底部安全区。 */
+      html[data-keyboard-open='1'][data-keyboard-owner='cocos'] #GameDiv {
+        transform: translate3d(0, calc(-1 * var(--app-cocos-keyboard-offset)), 0);
+        will-change: transform;
+      }
+
+      /* Cocos 牌桌画布层：在最底层 */
+      #GameCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: auto;
+        bottom: auto;
+        width: 100% !important;
+        height: 100% !important;
+        /* Keep canvas sizing independent from the H5 background bleed to avoid Cocos scale distortion. */
+        height: var(--app-cocos-height) !important;
+        display: block;
+        z-index: 0;
+      }
+
+      html[data-ios-standalone='1'] #GameDiv,
+      html[data-ios-standalone='1'] #GameCanvas {
+        height: var(--app-cocos-height) !important;
+      }
+
+      /* H5 业务层：覆盖在 Cocos 之上 */
+      #app {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: calc(-1 * var(--app-bottom-bleed));
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        z-index: 10;
+        box-sizing: border-box;
+        background-color: #fff;
+      }
+
+      /* 普通 H5 输入框仅在会被键盘遮挡时平移；客服面板单独使用 keyboard inset。 */
+      html[data-keyboard-open='1'][data-keyboard-owner='h5'] #app {
+        transform: translate3d(0, calc(-1 * var(--app-h5-keyboard-offset)), 0);
+      }
+
+      html[data-ios-standalone='1'] #app {
+        height: auto;
+        min-height: 0;
+      }
+
+      /* 仅给路由页面留安全区；弹窗也是 #app 的直接子节点，不能被撑到一屏高。 */
+      html[data-tg-mini-app='1'] {
+        /* 页面自己的 Header 已包含系统安全区，这里只补 Telegram 额外遮挡部分。 */
+        --app-route-safe-area-top: max(
+          0px,
+          calc(var(--tg-content-safe-area-inset-top, 0px) - env(safe-area-inset-top)),
+          calc(var(--tg-safe-area-guard-top, 0px) - env(safe-area-inset-top))
+        );
+      }
+
+      html[data-tg-mini-app='1'] #app > .h5-route-host {
+        box-sizing: border-box;
+        min-height: 100%;
+        padding-top: var(--app-route-safe-area-top, 0px);
+      }
+
+      #drawCanvas {
+        display: none;
+      }
+
+      #splash {
+        display: none;
+      }
+      /* Cocos EditBox 原生输入框需要显示在 H5 业务层之上 */
+      .cocosEditBox {
+        z-index: 20 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Cocos 运行节点（与 build-templates/web-mobile 对齐） -->
+    <div id="GameDiv">
+      <canvas id="GameCanvas" oncontextmenu="event.preventDefault()" tabindex="0"></canvas>
+      <div id="splash">
+        <div class="progress-bar stripes">
+          <span></span>
+        </div>
+      </div>
+    </div>
+    <canvas id="drawCanvas"></canvas>
+    <input id="OpenImageFile" type="file" accept=".png,.jpg,.jpeg" style="visibility: hidden" />
+
+    <!-- H5 挂载节点 -->
+    <div id="app"></div>
+
+    <!--
+      settings/main 保持 Cocos Creator 原生静态引用，确保发布构建可以正确改写 hash。
+      Cocos framework 立即加载；场景和游戏资源由 boot() 在 H5 首页首帧后启动。
+    -->
+    <script src="src/settings.js" charset="utf-8"></script>
+    <script src="main.js" charset="utf-8"></script>
+
+    <!-- Cocos framework 先初始化；H5 首页完成首次绘制后再 boot 并加载游戏资源。 -->
+    <script type="text/javascript">
+      ;(function () {
+        var cocosRuntimeLoadStarted = false
+        var cocosRuntimeReady = false
+        var cocosBootStarted = false
+        var h5FirstPaintReady = window.__H5_FIRST_PAINT_DONE__ === true
+
+        function loadScript(moduleName, cb) {
+          function finish(loaded) {
+            if (domScript.parentNode) {
+              domScript.parentNode.removeChild(domScript)
+            }
+            domScript.removeEventListener('load', scriptLoaded, false)
+            domScript.removeEventListener('error', scriptFailed, false)
+            cb && cb(loaded)
+          }
+          function scriptLoaded() {
+            finish(true)
+          }
+          function scriptFailed() {
+            finish(false)
+          }
+          var domScript = document.createElement('script')
+          domScript.async = true
+          domScript.src = moduleName
+          domScript.addEventListener('load', scriptLoaded, false)
+          domScript.addEventListener('error', scriptFailed, false)
+          document.body.appendChild(domScript)
+        }
+
+        function tryBootCocos() {
+          if (cocosBootStarted || !cocosRuntimeReady || !h5FirstPaintReady) {
+            return
+          }
+          if (!window._CCSettings || typeof window.boot !== 'function') {
+            return
+          }
+          cocosBootStarted = true
+
+          var splash = document.getElementById('splash')
+          if (splash) {
+            splash.style.display = 'block'
+          }
+          window.boot()
+        }
+
+        function markCocosRuntimeReady() {
+          cocosRuntimeReady = true
+          tryBootCocos()
+        }
+
+        function loadCocosRuntime() {
+          if (cocosRuntimeLoadStarted || cocosRuntimeReady) {
+            return
+          }
+          // 独立 H5 开发环境没有 Cocos 构建产物，保持原来的跳过行为。
+          if (!window._CCSettings || typeof window.boot !== 'function') {
+            return
+          }
+          cocosRuntimeLoadStarted = true
+
+          var debug = window._CCSettings.debug
+          loadScript(debug ? 'cocos2d-js.js' : 'cocos2d-js-min.js', function (engineLoaded) {
+            if (!engineLoaded) {
+              cocosRuntimeLoadStarted = false
+              return
+            }
+            var hasPhysics = window.CC_PHYSICS_BUILTIN || window.CC_PHYSICS_CANNON
+            if (hasPhysics) {
+              loadScript(debug ? 'physics.js' : 'physics-min.js', function (physicsLoaded) {
+                if (!physicsLoaded) {
+                  cocosRuntimeLoadStarted = false
+                  return
+                }
+                markCocosRuntimeReady()
+              })
+            } else {
+              markCocosRuntimeReady()
+            }
+          })
+        }
+
+        function markH5FirstPaintReady() {
+          h5FirstPaintReady = true
+          tryBootCocos()
+        }
+
+        window.addEventListener('h5:first-paint', markH5FirstPaintReady, { once: true })
+        // 页面解析到这里就开始加载 framework；boot 仍必须同时等待 H5 首帧和 runtime。
+        loadCocosRuntime()
+        // 便于性能排查和 framework 加载失败后的显式重试。
+        window.__H5_START_COCOS__ = loadCocosRuntime
+      })()
+    </script>
+    <!-- Telegram 初始化：内联脚本避免外部路径在 Cocos 预览中失效 -->
+    <script>
+      ;(function () {
+        function toInsetNumber(value) {
+          var next = Number(value)
+          if (!Number.isFinite(next) || next < 0) {
+            return 0
+          }
+          return Math.floor(next)
+        }
+
+        function readTelegramInitDataFromLocation() {
+          try {
+            if (!window.location || typeof URLSearchParams !== 'function') {
+              return ''
+            }
+
+            var search = window.location.search || ''
+            var hash = window.location.hash || ''
+            var hashQueryIndex = hash.indexOf('?')
+            var hashQuery = hashQueryIndex >= 0 ? hash.slice(hashQueryIndex) : hash.replace(/^#/, '')
+
+            var fromSearch = new URLSearchParams(search).get('tgWebAppData')
+            if (fromSearch) {
+              return fromSearch
+            }
+
+            var fromHash = new URLSearchParams(hashQuery).get('tgWebAppData')
+            if (fromHash) {
+              return fromHash
+            }
+            var storedParams = JSON.parse(window.sessionStorage.getItem('__telegram__initParams') || 'null')
+            return String((storedParams && storedParams.tgWebAppData) || '')
+          } catch (error) {
+            if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+              console.warn('[telegram] parse tgWebAppData failed:', error)
+            }
+          }
+          return ''
+        }
+
+        function getSafeFillColor(tg) {
+          if (!document || !document.documentElement || typeof window.getComputedStyle !== 'function') {
+            var fallbackThemeParams = (tg && tg.themeParams) || {}
+            return fallbackThemeParams.bg_color || fallbackThemeParams.secondary_bg_color || '#c6a2b8'
+          }
+
+          var rootStyles = window.getComputedStyle(document.documentElement)
+          var cssFallback = String(rootStyles.getPropertyValue('--tg-safe-fill-bg') || '').trim()
+
+          if (cssFallback) {
+            return cssFallback
+          }
+
+          var themeParams = (tg && tg.themeParams) || {}
+          return themeParams.bg_color || themeParams.secondary_bg_color || '#c6a2b8'
+        }
+
+        function getViewportChromeHeight(tg) {
+          var viewportHeight = Number(tg && tg.viewportHeight)
+          var stableViewportHeight = Number(tg && tg.viewportStableHeight)
+          var winHeight = Number(window.innerHeight)
+
+          var chromeFromViewport = Number.isFinite(viewportHeight) && viewportHeight > 0
+            ? Math.max(0, Math.floor(winHeight - viewportHeight))
+            : 0
+          var chromeFromStable = Number.isFinite(stableViewportHeight) && stableViewportHeight > 0
+            ? Math.max(0, Math.floor(winHeight - stableViewportHeight))
+            : 0
+
+          return Math.max(chromeFromViewport, chromeFromStable)
+        }
+
+        function getTopControlsCompensation(tg, safeTop, contentTop) {
+          var platform = String((tg && tg.platform) || '').toLowerCase()
+          var isIos = platform.indexOf('ios') >= 0
+          var isFullscreen = !!(tg && tg.isFullscreen)
+          if (!isFullscreen) {
+            return 0
+          }
+
+          var controlBarBase = contentTop > 0 ? contentTop : isIos ? 32 : 24
+
+          var viewportChromeHeight = getViewportChromeHeight(tg)
+          var inferredTopExtra = Math.min(36, viewportChromeHeight)
+
+          var topCompensation = Math.max(controlBarBase, inferredTopExtra)
+          var minTopGuard = safeTop + topCompensation
+
+          return Math.max(minTopGuard, contentTop)
+        }
+
+        /**
+         * 检测软键盘是否弹出（用于守卫 applySafeAreaToCss，避免键盘引起的 viewport 变化
+         * 误触发 CSS 变量更新 → #app padding 重排 → CC canvas 渲染抖动/变形）。
+         * 3 路判断 fallback，任一命中即认为键盘弹出：
+         * (a) Telegram SDK viewportStableHeight - viewportHeight > 50px（最准，Telegram 专属）
+         * (b) visualViewport.height / innerHeight < 0.75（W3C 标准，最准）
+         * (c) innerHeight / screen.height < 0.6（兜底）
+         * 阈值与 CC 层 OrientationComponent.isKeyboardLikelyOpen 保持一致（已生产验证）
+         */
+        function isKeyboardOpen(tg) {
+          // 展开/全屏动画也会产生高度差。没有输入焦点时不能仅凭高度拦截安全区。
+          if (window.__H5_KEYBOARD_OPEN__ || window.__H5_KEYBOARD_CLOSING__) return true
+          var active = document.activeElement
+          if (!active || !(active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'
+              || active.isContentEditable)) return false
+          if (tg && tg.viewportHeight != null && tg.viewportStableHeight != null
+              && tg.viewportStableHeight - tg.viewportHeight > 50) {
+            return true
+          }
+          var vv = window.visualViewport
+          if (vv && window.innerHeight > 0 && vv.height / window.innerHeight < 0.75) {
+            return true
+          }
+          if (window.screen && window.screen.height > 0
+              && window.innerHeight / window.screen.height < 0.6) {
+            return true
+          }
+          return false
+        }
+
+        function applySafeAreaToCss(tg) {
+          // ⚠️ Telegram 键盘守卫：键盘弹出时跳过，避免 CSS 变量更新引发 #app padding 重排
+          // （iOS Telegram 上实测：键盘弹出会触发 viewportChanged → 调用本函数 → 画面变形）
+          if (isKeyboardOpen(tg)) {
+            return
+          }
+          var safe = tg.safeAreaInset || {}
+          var contentSafe = tg.contentSafeAreaInset || {}
+
+          var safeTop = toInsetNumber(safe.top)
+          var safeBottom = toInsetNumber(safe.bottom)
+          var safeLeft = toInsetNumber(safe.left)
+          var safeRight = toInsetNumber(safe.right)
+
+          var contentTop = toInsetNumber(contentSafe.top)
+          var contentBottom = toInsetNumber(contentSafe.bottom)
+          var contentLeft = toInsetNumber(contentSafe.left)
+          var contentRight = toInsetNumber(contentSafe.right)
+
+          var guardTop = getTopControlsCompensation(tg, safeTop, contentTop)
+          var guardBottom = Math.max(safeBottom, contentBottom)
+          var previousSafeArea = [window.__H5_SAFE_AREA_TOP__, window.__H5_SAFE_AREA_BOTTOM__,
+            window.__H5_SAFE_AREA_LEFT__, window.__H5_SAFE_AREA_RIGHT__].join(',')
+
+          if (document && document.documentElement) {
+            var rootStyle = document.documentElement.style
+            rootStyle.setProperty('--tg-safe-area-inset-top', safeTop + 'px')
+            rootStyle.setProperty('--tg-safe-area-inset-bottom', safeBottom + 'px')
+            rootStyle.setProperty('--tg-safe-area-inset-left', safeLeft + 'px')
+            rootStyle.setProperty('--tg-safe-area-inset-right', safeRight + 'px')
+
+            rootStyle.setProperty('--tg-content-safe-area-inset-top', contentTop + 'px')
+            rootStyle.setProperty('--tg-content-safe-area-inset-bottom', contentBottom + 'px')
+            rootStyle.setProperty('--tg-content-safe-area-inset-left', contentLeft + 'px')
+            rootStyle.setProperty('--tg-content-safe-area-inset-right', contentRight + 'px')
+
+            rootStyle.setProperty('--tg-safe-area-guard-top', guardTop + 'px')
+            rootStyle.setProperty('--tg-safe-area-guard-bottom', guardBottom + 'px')
+            rootStyle.setProperty('--tg-header-guard-top', Math.max(0, guardTop - safeTop) + 'px')
+            window.__H5_SAFE_AREA_TOP__ = Math.max(guardTop, contentTop)
+            window.__H5_SAFE_AREA_BOTTOM__ = Math.max(guardBottom, contentBottom)
+            window.__H5_SAFE_AREA_LEFT__ = Math.max(safeLeft, contentLeft)
+            window.__H5_SAFE_AREA_RIGHT__ = Math.max(safeRight, contentRight)
+            var nextSafeArea = [window.__H5_SAFE_AREA_TOP__, window.__H5_SAFE_AREA_BOTTOM__,
+              window.__H5_SAFE_AREA_LEFT__, window.__H5_SAFE_AREA_RIGHT__].join(',')
+            if (previousSafeArea !== nextSafeArea) {
+              window.dispatchEvent(new Event('h5:safe-area-changed'))
+            }
+          }
+        }
+
+        function bindSafeAreaEvents(tg) {
+          if (window.__H5_TG_SAFE_AREA_BOUND__) {
+            return
+          }
+
+          if (typeof tg.onEvent !== 'function') {
+            return
+          }
+          window.__H5_TG_SAFE_AREA_BOUND__ = true
+
+          var refresh = function () {
+            applySafeAreaToCss(tg)
+          }
+
+          tg.onEvent('safeAreaChanged', refresh)
+          tg.onEvent('contentSafeAreaChanged', refresh)
+          tg.onEvent('viewportChanged', refresh)
+          tg.onEvent('fullscreenChanged', refresh)
+          tg.onEvent('fullscreenFailed', refresh)
+          tg.onEvent('activated', refresh)
+          window.addEventListener('pageshow', refresh)
+          document.addEventListener('visibilitychange', refresh)
+          document.addEventListener('focusout', function () {
+            window.setTimeout(refresh, 300)
+            window.setTimeout(refresh, 1000)
+          })
+        }
+
+        /**
+         * 强制 cocos 基于当前 canvas CSS 尺寸重新算内部缓冲区（bufW/bufH）。
+         * 用于 setupTelegramKeyboardFix 锁定 height 后 / 收起时，让 cocos 内部状态跟 CSS 同步。
+         *
+         * 关键设计（针对 cocos 2.4.x 内部行为）：
+         *  1. 同步调用（不用 RAF）：避免 cocos 在 RAF 等待期间按旧 bufH 渲染一帧
+         *  2. 主动同步 _frameSize：cocos 部分内部 API 用 _frameSize 而非 clientHeight，
+         *     不同步的话 setDesignResolutionSize 可能按旧 _frameSize 算 bufH（参考 CC 层
+         *     ProcedureInit.updateFitMode 中 view._frameSize.width/height 主动赋值的做法）
+         *  3. emit('canvas-resize')：让 cc.Widget 重新对齐
+         */
+        function forceCocosRefit(canvas, heightOverride) {
+          try {
+            canvas = canvas || document.getElementById('GameCanvas')
+            if (!window.cc || !cc.view || !canvas) return false
+            var rect = typeof canvas.getBoundingClientRect === 'function'
+              ? canvas.getBoundingClientRect()
+              : null
+            // 必须取稳定的 Canvas CSS 尺寸；visualViewport.height 是键盘后的可见高度。
+            var w = Math.round((rect && rect.width) || canvas.clientWidth || window.innerWidth || 0)
+            var h = Math.round(heightOverride || (rect && rect.height) || canvas.clientHeight || window.innerHeight || 0)
+            if (!w || !h) return false
+
+            var view = cc.view
+            if (typeof view.setFrameSize === 'function') {
+              view.setFrameSize(w, h)
+            } else if (view._frameSize) {
+              view._frameSize.width = w
+              view._frameSize.height = h
+            }
+
+            if (cc.Canvas && cc.Canvas.instance) {
+              var designW = cc.Canvas.instance.designResolution.width
+              var designH = cc.Canvas.instance.designResolution.height
+              var policy = w / h > 0.75 ? cc.ResolutionPolicy.FIXED_HEIGHT : cc.ResolutionPolicy.FIXED_WIDTH
+              view.setDesignResolutionSize(designW, designH, policy)
+            }
+
+            view.emit('canvas-resize')
+            return true
+          } catch (e) {
+            return false
+          }
+        }
+
+        /**
+         * 拦截引擎自身的 resize 适配（关键修复）：
+         * main.js 启动时 resizeWithBrowserSize(true) 注册的 window resize/orientationchange
+         * 监听最终都走 cc.view._resizeEvent（属性动态查找）。iOS Safari 页签里软键盘
+         * 会压缩 window.innerHeight 并触发 resize，引擎便按键盘态高度重设
+         * cc.game.container 样式并重算适配 → 牌桌被压小挤到顶部、下方大面积灰色。
+         * standalone（保存到桌面）里键盘是覆盖式的，innerHeight 不变，所以一切正常——
+         * 这里让浏览器页签也获得同样行为：键盘期间吞掉引擎 resize，收起后由
+         * closeKeyboardFix 的 __H5_FORCE_COCOS_REFIT__ 恢复。
+         */
+        function isSoftKeyboardOpen() {
+          if (window.__H5_KEYBOARD_OPEN__ === true || window.__H5_KEYBOARD_CLOSING__ === true) return true
+          var el = document.activeElement
+          return !!(el && el.tagName && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'))
+        }
+
+        function guardCocosEngineResize() {
+          try {
+            if (!window.cc || !cc.view || typeof cc.view._resizeEvent !== 'function') return false
+            if (cc.view.__H5_KB_RESIZE_GUARDED__) return true
+            var origResizeEvent = cc.view._resizeEvent
+            cc.view.__H5_KB_RESIZE_GUARDED__ = true
+            cc.view._resizeEvent = function () {
+              if (isSoftKeyboardOpen()) return
+              return origResizeEvent.apply(this, arguments)
+            }
+            return true
+          } catch (e) {
+            return false
+          }
+        }
+
+        function bindCocosViewportResize() {
+          if (window.__H5_CC_VIEWPORT_RESIZE_BOUND__) return
+          window.__H5_CC_VIEWPORT_RESIZE_BOUND__ = true
+          var timer = 0
+          // 高度取 canvas 的 CSS 实际尺寸（由 --app-cocos-height 决定，键盘期间被冻结），
+          // 不直接用 visualViewport（键盘会把它压得很矮，w/h > 0.75 误切 FIXED_HEIGHT，
+          // 画布宽度被压成 1/3）——与 iOS standalone 路径 syncCocosFrameToCanvas 保持一致
+          var refitFromCanvasRect = function () {
+            var canvas = document.getElementById('GameCanvas')
+            var rect = canvas && typeof canvas.getBoundingClientRect === 'function'
+              ? canvas.getBoundingClientRect()
+              : null
+            forceCocosRefit(canvas, (rect && rect.height) || 0)
+          }
+          var run = function () {
+            // 键盘弹出期间冻结适配，收起时由 __H5_FORCE_COCOS_REFIT__ 恢复
+            if (window.__H5_KEYBOARD_OPEN__ || window.__H5_KEYBOARD_CLOSING__) return
+            refitFromCanvasRect()
+          }
+          var schedule = function () {
+            window.clearTimeout(timer)
+            timer = window.setTimeout(run, 80)
+          }
+          // 键盘收起后的强制恢复入口（绕过防抖与键盘守卫）
+          window.__H5_FORCE_COCOS_REFIT__ = function () {
+            window.clearTimeout(timer)
+            refitFromCanvasRect()
+          }
+          window.addEventListener('resize', schedule, { passive: true })
+          window.addEventListener('orientationchange', schedule, { passive: true })
+          window.addEventListener('h5:cocos-layout-change', schedule)
+          if (window.visualViewport && window.visualViewport.addEventListener) {
+            window.visualViewport.addEventListener('resize', schedule, { passive: true })
+          }
+          window.addEventListener('load', schedule, { passive: true })
+          schedule()
+        }
+
+        /**
+         * Telegram 键盘修复：监听 viewportChanged，键盘弹出时锁定 canvas 高度 + translateY 上移，
+         * 避免 100dvh 在 iOS Telegram 中跟随键盘变化导致 cocos FIXED_HEIGHT 适配产生两侧留白。
+         * 参考 telegram_mini_app_keyboard_fix_report.md，但避开其 3 个问题：
+         *  1. 不动 cc.view._resizeCallback（2.4.x 不可靠，已用 updateFitMode 守卫替代）
+         *  2. 不改 canvas.position（保持 fixed,避免布局副作用）
+         *  3. 用 viewportStableHeight 替代 initialViewportHeight（SDK 提供的稳定基准值）
+         */
+        function setupTelegramKeyboardFix(tg) {
+          var canvas = document.getElementById('GameCanvas')
+          if (!canvas) return
+
+          // ⚠️ stableHeight 用 window.screen.height（固定值，不受键盘/dvh 影响）
+          //   实测：canvas.clientHeight 初始化时可能=690（Telegram 未全屏），100dvh 键盘收起瞬间可能=476（延迟恢复）
+          //   只有 window.screen.height=812 永远不变（设备屏幕高度）
+          var stableHeight = window.screen.height || window.innerHeight || canvas.clientHeight || tg.viewportStableHeight
+          if (!stableHeight) return
+
+          var isFixActive = false
+
+          function activateFix(reason) {
+            if (isFixActive) return
+            isFixActive = true
+            // 1. 阻止 alignWithScreen（它会用 innerHeight=476 算 Canvas node=2117.6）
+            if (window.cc && cc.Canvas && cc.Canvas.prototype) {
+              if (!cc.Canvas.prototype._origAlignWithScreen) {
+                cc.Canvas.prototype._origAlignWithScreen = cc.Canvas.prototype.alignWithScreen
+              }
+              cc.Canvas.prototype.alignWithScreen = function() {}
+            }
+            // 2. 锁定 CSS height
+            canvas.style.setProperty('height', stableHeight + 'px', 'important')
+            // 3. 手动设 Canvas node
+            forceCocosRefit(canvas)
+          }
+
+          function deactivateFix(reason) {
+            if (!isFixActive) return
+            isFixActive = false
+
+            // 1. 恢复 alignWithScreen 原型方法
+            if (window.cc && cc.Canvas && cc.Canvas.prototype && cc.Canvas.prototype._origAlignWithScreen) {
+              cc.Canvas.prototype.alignWithScreen = cc.Canvas.prototype._origAlignWithScreen
+            }
+
+            // 2. 锁定 CSS 高度（保持 stableHeight=screen.height=812 固定值）
+            canvas.style.setProperty('height', stableHeight + 'px', 'important')
+            canvas.style.removeProperty('transform')
+
+            // 3. ⚠️ v22 核心修复（Gemini 方案）：调 cc.view.setFrameSize 触发全套触摸矩阵重算
+            //    之前只改 _frameSize 属性，cocos 不会自动重算 _scaleY / 触摸转换矩阵。
+            //    setFrameSize 是 cocos 官方 API，内部会更新所有相关字段（_frameSize + _scaleX/Y + viewportRect）。
+            //    传入 stableHeight=812 确保用正确值（不用可能=476 的 clientHeight）。
+            if (window.cc && cc.view) {
+              try {
+                cc.view.setFrameSize(canvas.clientWidth, stableHeight)
+              } catch(e) {}
+            }
+
+            // 4. 主动调一次 alignWithScreen 让 Canvas 节点尺寸恢复
+            if (window.cc && cc.Canvas && cc.Canvas.instance && cc.Canvas.prototype._origAlignWithScreen) {
+              cc.Canvas.prototype._origAlignWithScreen.call(cc.Canvas.instance)
+            }
+
+            // 5. 延迟再次 setFrameSize + emit canvas-resize（防 iOS 底层 resize 冲掉）
+            setTimeout(function() {
+              try {
+                if (window.cc && cc.view) {
+                  cc.view.setFrameSize(canvas.clientWidth, stableHeight)
+                  cc.view.emit('canvas-resize')
+                }
+              } catch(e) {}
+            }, 500)
+          }
+
+          // ⚠️ 主触发：focusin/focusout（最可靠的键盘状态信号，不依赖 visualViewport/innerHeight）
+          //   viewportChanged + isKeyboardOpen 的判断在键盘收起时会因 vv 滞后误判（vvH=476 innerH=812），
+          //   导致走了"键盘弹出"分支，收起后画面无法恢复。focusin/focusout 由 DOM 焦点驱动，不滞后。
+          document.addEventListener('focusin', function(e) {
+            var tag = e.target.tagName
+            if (tag === 'INPUT' || tag === 'TEXTAREA') {
+              activateFix('focusin')
+            }
+          })
+
+          document.addEventListener('focusout', function(e) {
+            var tag = e.target.tagName
+            if (tag !== 'INPUT' && tag !== 'TEXTAREA') return
+            // 延迟恢复（防焦点切换误触发，比如从 input 切到另一个 input）
+            setTimeout(function() {
+              var active = document.activeElement
+              if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+                return
+              }
+              deactivateFix('focusout')
+            }, 200)
+          })
+
+          // 兜底：viewportChanged（只用于保持锁定，不用于激活）
+          // ⚠️ 不在 viewportChanged 里 activateFix —— 键盘收起时 vv 滞后会导致 isKeyboardOpen 误判，
+          //    再次激活 fix → emit('canvas-resize') → Widget 对齐错乱 → 按钮点击失效。
+          //    激活完全由 focusin 负责（最可靠的 DOM 焦点信号）。
+          tg.onEvent('viewportChanged', function() {
+            if (isFixActive) {
+              // fix 已激活（focusin 触发），保持 CSS 锁定
+              canvas.style.setProperty('height', stableHeight + 'px', 'important')
+            }
+            // fix 未激活时不做任何事
+          })
+        }
+
+        function syncTelegramHeaderAndBackground(tg) {
+          var fill = getSafeFillColor(tg)
+          if (document && document.documentElement) {
+            document.documentElement.style.setProperty('--tg-safe-fill-bg', fill)
+          }
+
+          if (typeof tg.setBackgroundColor === 'function') {
+            tg.setBackgroundColor(fill)
+          }
+          if (typeof tg.setHeaderColor === 'function') {
+            tg.setHeaderColor(fill)
+          }
+        }
+
+        function initTelegramWebApp() {
+          if (!window.Telegram || !window.Telegram.WebApp) {
+            console.warn('[telegram] sdk loaded but Telegram.WebApp is not available, continue without telegram bridge')
+            return
+          }else{
+            console.log('[telegram] sdk loaded and Telegram.WebApp is available, initializing telegram bridge')
+          }
+
+          var tg = window.Telegram.WebApp
+
+          var initData = String(tg.initData || '').trim()
+          if (initData) {
+            window.__H5_TG_MINI_APP__ = true
+            window.__H5_TG_INIT_DATA__ = initData
+          }else{
+            return
+          }
+          if (document && document.documentElement) {
+            document.documentElement.setAttribute('data-tg-mini-app', '1')
+          }
+          // 通知运行时 Telegram 主题信息已可用；theme.ts 会优先读取 WebApp.colorScheme。
+          window.dispatchEvent(new Event('h5:telegram-ready'))
+          // 先订阅再请求全屏；安全区可能晚于握手到达，也可能同步触发事件。
+          bindSafeAreaEvents(tg)
+          applySafeAreaToCss(tg)
+          window.setTimeout(function () { applySafeAreaToCss(tg) }, 200)
+          window.setTimeout(function () { applySafeAreaToCss(tg) }, 1000)
+          callTelegramOptional(tg, 'ready')
+          if (typeof tg.requestFullscreen === 'function') {
+            try {
+              tg.requestFullscreen()
+            } catch (error) {
+              console.warn('[telegram] requestFullscreen failed, falling back to expand:', error)
+              callTelegramOptional(tg, 'expand')
+            }
+          } else if (typeof tg.expand === 'function') {
+            callTelegramOptional(tg, 'expand')
+          }
+
+          callTelegramOptional(tg, 'disableVerticalSwipes')
+          callTelegramOptional(tg, 'enableClosingConfirmation')
+          callTelegramOptional(tg, 'lockOrientation')
+
+          applySafeAreaToCss(tg)
+          setupTelegramKeyboardFix(tg)
+          syncTelegramHeaderAndBackground(tg)
+        }
+
+        function callTelegramOptional(tg, method) {
+          if (typeof tg[method] !== 'function') return
+          try {
+            tg[method]()
+          } catch (error) {
+            console.warn('[telegram] optional method failed:', method, error)
+          }
+        }
+
+        function initH5TelegramEnvironment() {
+          var initDataFromUrl = readTelegramInitDataFromLocation()
+          if (initDataFromUrl) {
+            window.__H5_TG_MINI_APP__ = true
+            window.__H5_TG_INIT_DATA__ = initDataFromUrl
+          }
+
+          if (window.__H5_TG_MINI_APP__) {
+            if (document && document.documentElement) {
+              document.documentElement.setAttribute('data-tg-mini-app', '1')
+            }
+          }
+        }
+        initH5TelegramEnvironment()
+
+        function hasTelegramWebApp() {
+          return !!(window.Telegram && window.Telegram.WebApp)
+        }
+
+        if (hasTelegramWebApp()) {
+          // SDK 已在 head 中按 Telegram 官方要求优先加载，此处只初始化业务桥接。
+          initTelegramWebApp()
+        } else if (window.__H5_TG_MINI_APP__) {
+          console.warn('[telegram] sdk load failed, continue without telegram bridge')
+        }
+        bindCocosViewportResize()
+
+        // 引擎脚本异步加载，轮询直到 cc.view 就绪后安装引擎 resize 键盘守卫
+        var engineGuardTimer = window.setInterval(function () {
+          if (guardCocosEngineResize()) {
+            window.clearInterval(engineGuardTimer)
+          }
+        }, 250)
+        window.setTimeout(function () {
+          window.clearInterval(engineGuardTimer)
+        }, 30000)
+      })()
+    </script>
+    <!-- H5 独立入口：可被 Cocos 统一模板复用 -->
+    <script type="module" src="/src/entry/cocos-h5-entry.ts"></script>
+  </body>
+</html>

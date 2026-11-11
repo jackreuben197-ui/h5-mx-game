@@ -1,0 +1,1396 @@
+<script setup lang="ts">
+import { usePlatformDiamondVisibility } from '@/composables/usePlatformDiamondVisibility'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getCowboyRoomListApi } from '@/api/gc'
+import type { RoomRecord } from '@/api/models/roomcenter'
+import StorageKey from '@/constants/storageKey'
+import { useAppConfigStore } from '@/stores/appConfig'
+import { useMttListStore } from '@/stores/mttList'
+import { useRoomListStore } from '@/stores/roomList'
+import { type ClubInfo, useUserInfoStore } from '@/stores/userInfo'
+import { t } from '@/i18n'
+import { localStore } from '@/utils/localStore'
+import { useLobbyBannerImages } from '@/composables/useLobbyBannerImages'
+import { useHomeAnnouncement } from '@/composables/useHomeAnnouncement'
+import { checkIsShowForClubAndTribe, getRoomPlayerCount } from '@/utils/roomVisibility'
+import { filterVisibleMttRecords } from '@/utils/mttVisibility'
+import { showGameToast } from '@/components/Toast'
+import ChannelClubInfoPanel from '@/components/Club/ChannelClubInfoPanel.vue'
+import HomeTopBar from '@/components/HomeTopBar.vue'
+import { useGameStore } from '@/stores/game'
+import { isChannelPackageHost } from '@/utils/channelPackage'
+import PokerGameList from '@/views/home/gameList.vue'
+import { useChannelBottomMenu } from '@/composables/useChannelBottomMenu'
+import { requireRealUser } from '@/session/realUserGate'
+import { ensureExperienceSession } from '@/session/experienceSession'
+import LoginSession from '@/session/loginSession'
+import { isBridgeHandshakeDone, onBridgeHandshakeDone } from '@/bridge/core/cocosBridgeChannel'
+import { ensureWsProxyConnected } from '@/bridge/ws'
+import { waitForH5FirstPaint } from '@/utils/firstPaint'
+import { isH5OnlyDevMode } from '@/utils/h5OnlyDev'
+import ChannelCHome from '@/components/ChannelC/ChannelCHome.vue'
+
+const router = useRouter()
+const route = useRoute()
+const userInfoStore = useUserInfoStore()
+const roomListStore = useRoomListStore()
+const mttListStore = useMttListStore()
+const appConfigStore = useAppConfigStore()
+const gameStore = useGameStore()
+const displayPlatformDiamond = usePlatformDiamondVisibility()
+// 配置缓存/接口到达后重新判断域名类型；未知域名首屏按渠道处理，避免错显官方布局。
+const isChannelPackage = computed(() => {
+  void appConfigStore.globalConfig
+  return isChannelPackageHost()
+})
+const { isVersionB: isChannelMenuVersionB, isVersionC } = useChannelBottomMenu()
+
+const noticeScrollRef = ref<HTMLElement | null>(null)
+const noticeItemRef = ref<HTMLElement | null>(null)
+const shouldScrollNotice = ref(false)
+const noticeDistancePx = ref(0)
+const noticeDurationSec = ref(0)
+
+const NOTICE_SPEED_PX_PER_SEC = 40
+const NOTICE_GAP_PX = 48
+
+let noticeResizeObserver: ResizeObserver | null = null
+let stopHomeWsBridgeReadyListener: (() => void) | null = null
+
+async function ensureHomeWebSocket(forceExistingConnection = false): Promise<void> {
+  try {
+    const cachedPort = LoginSession.WSPort
+    if (forceExistingConnection && cachedPort > 0) {
+      // 真实账号的 post-auth 可能早于延后启动的 Cocos 建立 WS。握手完成后强制
+      // 重连一次，让 Cocos 收到新的 wsOpen/REGISTER；游客有缓存端口时同样适用。
+      await ensureWsProxyConnected({ port: cachedPort, force: true })
+      return
+    }
+    await LoginSession.EnsureWS()
+  } catch (error) {
+    console.warn('[home] ensure websocket failed:', error)
+  }
+}
+
+function startHomeWebSocketAfterCocosReady(): void {
+  stopHomeWsBridgeReadyListener?.()
+  stopHomeWsBridgeReadyListener = null
+
+  if (isH5OnlyDevMode()) {
+    void ensureHomeWebSocket()
+    return
+  }
+
+  if (isBridgeHandshakeDone()) {
+    void ensureHomeWebSocket()
+    return
+  }
+
+  // 游客也能进入牌桌。会话就绪后预先等待 Cocos 握手并建立 WS，不能等点击牌桌。
+  stopHomeWsBridgeReadyListener = onBridgeHandshakeDone(() => {
+    stopHomeWsBridgeReadyListener?.()
+    stopHomeWsBridgeReadyListener = null
+    void ensureHomeWebSocket(true)
+  })
+}
+
+interface ZoneStats {
+  tables: number
+  players: number
+}
+
+interface HomeZoneStats {
+  poker: ZoneStats
+  miniGame: ZoneStats
+  mahjong: ZoneStats
+  mtt: ZoneStats
+}
+
+interface HomeRoomStatsCachePayload {
+  version: number
+  updatedAt: number
+  stats: HomeZoneStats
+}
+
+const HOME_ROOM_STATS_CACHE_VERSION = 1
+
+function createEmptyZoneStats(): HomeZoneStats {
+  return {
+    poker: { tables: 0, players: 0 },
+    miniGame: { tables: 0, players: 0 },
+    mahjong: { tables: 0, players: 0 },
+    mtt: { tables: 0, players: 0 },
+  }
+}
+
+// 兜底清洗每个玩法统计，避免脏缓存导致页面展示异常。
+function normalizeZoneStats(raw: unknown): ZoneStats {
+  const data = (raw || {}) as Record<string, unknown>
+  return {
+    tables: toSafeNumber(data.tables),
+    players: toSafeNumber(data.players),
+  }
+}
+
+// 从 unknown 恢复 HomeZoneStats，缺字段时回落到 0。
+function normalizeHomeZoneStats(raw: unknown): HomeZoneStats {
+  const data = (raw || {}) as Record<string, unknown>
+  return {
+    poker: normalizeZoneStats(data.poker),
+    miniGame: normalizeZoneStats(data.miniGame),
+    mahjong: normalizeZoneStats(data.mahjong),
+    mtt: normalizeZoneStats(data.mtt),
+  }
+}
+
+// 首屏优先读取缓存，避免从 0 闪到真实值。
+function restoreHomeRoomStatsCache(): HomeZoneStats | null {
+  // 渠道包的展示结果依赖 CMS 钻石开关；持久化统计没有携带该上下文，不能跨页面刷新复用。
+  if (typeof window === 'undefined' || isChannelPackageHost()) {
+    return null
+  }
+
+  const cached = localStore.getItem<HomeRoomStatsCachePayload | null>(
+    StorageKey.HOME_ROOM_STATS_CACHE,
+    null,
+  )
+  if (!cached || typeof cached !== 'object') {
+    return null
+  }
+
+  if (cached.version !== HOME_ROOM_STATS_CACHE_VERSION) {
+    return null
+  }
+
+  return normalizeHomeZoneStats(cached.stats)
+}
+
+// 玩法统计更新后写入缓存，供下次进入首页秒开。
+function persistHomeRoomStatsCache(stats: HomeZoneStats): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const payload: HomeRoomStatsCachePayload = {
+    version: HOME_ROOM_STATS_CACHE_VERSION,
+    updatedAt: Date.now(),
+    stats,
+  }
+  localStore.setItem(StorageKey.HOME_ROOM_STATS_CACHE, payload)
+}
+
+const homeRoomStats = ref<HomeZoneStats>(restoreHomeRoomStatsCache() || createEmptyZoneStats())
+const currentClub = computed<ClubInfo | null>(() => {
+  // 渠道入口只能展示 default 接口锁定的俱乐部；持久化的 currentClub 也可能来自官方包。
+  if (isChannelPackage.value) {
+    return userInfoStore.channelDefaultClub
+  }
+  if (userInfoStore.currentClub) {
+    return userInfoStore.currentClub
+  }
+  return userInfoStore.clubList[0] || null
+})
+const selectedClubId = computed(() => toSafeInt(currentClub.value?.club_id))
+const selectedTribeId = computed(() =>
+  toSafeInt((currentClub.value as Record<string, unknown> | null)?.tribe_id),
+)
+
+const { bannerImages, fetchLobbyBannerImages } = useLobbyBannerImages()
+const { noticeText } = useHomeAnnouncement()
+const noticeTrackStyle = computed<CSSProperties>(() => ({
+  '--notice-gap': `${NOTICE_GAP_PX}px`,
+  '--notice-distance': `${noticeDistancePx.value}px`,
+  '--notice-duration': `${noticeDurationSec.value}s`,
+}))
+const pokerTablesText = computed(() => `${homeRoomStats.value.poker.tables}`)
+const pokerPlayersText = computed(() => `${homeRoomStats.value.poker.players}`)
+// const miniGamePlayersText = computed(() => `${homeRoomStats.value.miniGame.players}`)
+const miniGamePlayersText = 0
+// const mahjongTablesText = computed(() => `${homeRoomStats.value.mahjong.tables}`)
+const mahjongTablesText = 0
+// const mahjongPlayersText = computed(() => `${homeRoomStats.value.mahjong.players}`)
+const mahjongPlayersText = 0
+const mttTablesText = computed(() => `${homeRoomStats.value.mtt.tables}`)
+const mttPlayersText = computed(() => `${homeRoomStats.value.mtt.players}`)
+type HomeContentMode = 'zones' | 'mtt' | 'poker'
+const requestedHomeSection = computed<'mtt' | 'poker' | null>(() => {
+  const rawSection = Array.isArray(route.query.section)
+    ? route.query.section[0]
+    : route.query.section
+  return rawSection === 'mtt' || rawSection === 'poker' ? rawSection : null
+})
+watch([isVersionC, requestedHomeSection], ([versionC, section]) => {
+  if (versionC && section) {
+    void router.replace({ name: section === 'poker' ? 'channel-c-poker' : 'channel-c-mtt' })
+  }
+}, { immediate: true })
+
+// 渠道包在首页信息区下按 A/B 与可见列表决定内容；官方包始终使用专区豆腐块布局。
+const homeContentModeRaw = computed<HomeContentMode>(() => {
+  // 官方包布局固定为“游戏中心 + 热门游戏”，不随牌桌/赛事数量切版。
+  if (!isChannelPackage.value) {
+    return 'zones'
+  }
+  const pokerTables = homeRoomStats.value.poker.tables
+  const mttTables = homeRoomStats.value.mtt.tables
+  if (isChannelMenuVersionB.value) {
+    // 私域 B 的底栏牌桌/赛事都是同一个首页，只通过查询参数选择首页内嵌列表。
+    // 查询参数与当前可见数据不一致时回退到原落点规则，避免展示空的错误专区。
+    if (requestedHomeSection.value === 'poker' && pokerTables > 0) {
+      return 'poker'
+    }
+    if (requestedHomeSection.value === 'mtt' && (mttTables > 0 || pokerTables === 0)) {
+      return 'mtt'
+    }
+    // 对齐原渠道 B 落点：有赛事时优先赛事；只有牌桌时才进入牌桌列表。
+    return mttTables > 0 || pokerTables === 0 ? 'mtt' : 'poker'
+  }
+  if (mttTables > 0 && pokerTables === 0) {
+    return 'mtt'
+  }
+  if (pokerTables > 0 && mttTables === 0) {
+    return 'poker'
+  }
+  return 'zones'
+})
+// 渠道首屏不猜测布局：俱乐部配置、全局配置、牌桌和 MTT 稳定后再一次性展示。
+const homeContentMode = ref<HomeContentMode>('zones')
+const homeContentReady = ref(false)
+const showOfficialHomeSections = computed(() => !isChannelPackage.value)
+
+function commitHomeContentMode(): void {
+  homeContentMode.value = homeContentModeRaw.value
+}
+
+const currentJoinedClub = computed(() => userInfoStore.currentJoinedClub)
+const canManageChannelClub = computed(
+  () => isChannelPackage.value && Boolean(gameStore.isRealUser && currentJoinedClub.value),
+)
+const showChannelFloatingActions = computed(() => canManageChannelClub.value)
+
+function toSafeNumber(value: unknown): number {
+  const num = Number(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+function toSafeInt(value: unknown): number {
+  const num = Number(value)
+  if (!Number.isFinite(num)) {
+    return 0
+  }
+  return Math.floor(num)
+}
+
+function ensureClubDataReady(): void {
+  // 仅消费 store 已有俱乐部数据，不在首页回流时触发 user/club 请求。
+  if (!userInfoStore.currentClub && userInfoStore.clubList.length) {
+    userInfoStore.setCurrentClub(userInfoStore.clubList[0] || null)
+  }
+}
+
+function goToGameList(): void {
+  void router.push('/gameList')
+}
+function goToMttList(): void {
+  void router.push('/mttList')
+}
+
+function goToClubDetail(): void {
+  if (!requireRealUser(goToClubDetail)) return
+  void router.push('/club/detail')
+}
+
+function openMiniGamePanel(): void {
+  if (!requireRealUser(openMiniGamePanel)) return
+  showGameToast(t('UIClub_InDeve'))
+  // openBridgePanel({
+  //   panelType: 'notification',
+  //   title: '', // GameDialog 标题，可留空
+  //   props: {
+  //     page1: {
+  //       id: 1001,
+  //       type: 1,
+  //       name: 'XXXX123.com',
+  //       icon: 'https://static.awanptest.com/pint-intl-test/image-normal/20250904131213-AUVNG.png',
+  //       title: '立即下載XPoker立即下載XPoker立即下載XPoker',
+  //       url: 'https://download.example.com/xpoker.apk',
+  //       status: 1,
+  //       create_time: Math.floor(Date.now() / 1000) - 3600,
+  //     },
+  //     page2: [
+  //       {
+  //         id: 2001,
+  //         type: 2,
+  //         title: '系統維護公告',
+  //         content:
+  //           '<p style="margin-top:200px">今晚 22:00-24:00 系統升級，請提前下牌。</p><p style="margin-top:200px">今晚 22:00-24:00 系統升級，請提前下牌。</p>',
+  //         weight: 100,
+  //         status: 1,
+  //         create_time: Math.floor(Date.now() / 1000) - 1800,
+  //       },
+  //       {
+  //         id: 2002,
+  //         type: 2,
+  //         title: '活動上線',
+  //         content:
+  //           '<p>新春活動火熱進行中，登錄即送鑽石！</p><p><span style="color:#05E7AE">活动内容一：</span>参与指定牌局即可获得返水奖励，返水比例最高提升至 0.8%，上不封顶。</p>',
+  //         weight: 80,
+  //         status: 1,
+  //         create_time: Math.floor(Date.now() / 1000) - 86400,
+  //       },
+  //     ],
+  //     page3: {
+  //       id: 3001,
+  //       type: 3,
+  //       title: 'USDT 充值地址',
+  //       content: 'TRC20 網絡，請勿轉錯TRC20 網絡，請勿轉錯TRC20 網絡，請勿轉錯',
+  //       urls: [
+  //         'TXxxxxxxxxxxx',
+  //         'TYyyyyyyyyyyyy',
+  //         'TYyyyyyyyyyyyy',
+  //         'TYyyyyyyyyyyyy',
+  //         'TYyyyyyyyyyyyy',
+  //         '1',
+  //         '1',
+  //         '1',
+  //         '1',
+  //         'www.www.www',
+  //       ],
+  //       status: 1,
+  //       create_time: Math.floor(Date.now() / 1000) - 5400,
+  //     },
+  //   },
+  // })
+}
+
+function classifyRoomToZone(room: RoomRecord): 'poker' | 'mahjong' | null {
+  const gameType = Number(room.game_type)
+  if (!Number.isFinite(gameType)) {
+    return null
+  }
+  if (gameType <= 4) return 'poker'
+  if (gameType === 6) return 'mahjong'
+  return null
+}
+
+// 首页扑克/麻将统计直接复用共享牌桌列表，避免和 gameList 数据源分叉。
+function refreshHomePokerMahjongStatsFromStore(): void {
+  const nextStats = createEmptyZoneStats()
+  roomListStore.records.forEach((room) => {
+    // 对齐 C# RequestTableDataListForClubOrTribe：先按俱乐部/联盟关系过滤可见牌桌。
+    if (
+      !checkIsShowForClubAndTribe(
+        room,
+        selectedClubId.value,
+        selectedTribeId.value,
+        true,
+        displayPlatformDiamond.value,
+      )
+    ) {
+      return
+    }
+
+    const zone = classifyRoomToZone(room)
+    if (!zone) {
+      return
+    }
+
+    nextStats[zone].tables += 1
+    const playersNum = getRoomPlayerCount(room)
+    nextStats[zone].players += playersNum
+  })
+
+  homeRoomStats.value = {
+    ...homeRoomStats.value,
+    poker: nextStats.poker,
+    mahjong: nextStats.mahjong,
+  }
+  persistHomeRoomStatsCache(homeRoomStats.value)
+}
+
+// 从牛仔列表响应中提取在线人数：优先使用 data.online，其次汇总 records[*].online。
+function extractCowboyOnlineCount(raw: unknown): number {
+  if (!raw || typeof raw !== 'object') {
+    return 0
+  }
+  const data = raw as Record<string, unknown>
+  // 服务端直接返回 online 时，首页只使用这个字段。
+  if ('online' in data) {
+    return toSafeNumber(data.online)
+  }
+
+  const records = Array.isArray(data.records) ? data.records : []
+  if (records.length) {
+    return records.reduce((total, item) => {
+      const record = item as Record<string, unknown>
+      return total + toSafeNumber(record.online)
+    }, 0)
+  }
+
+  // 兼容 data.data 的嵌套结构。
+  return extractCowboyOnlineCount(data.data)
+}
+
+// 首页小游戏统计：使用 /api/gc/cowboy/room/list，仅取 online 字段。
+async function fetchHomeMiniGameStats(): Promise<void> {
+  // 牛仔列表接口暂不支持体验账号；小游戏入口启用前，游客保持公开占位数据。
+  if (!gameStore.isRealUser) {
+    return
+  }
+  const response = await getCowboyRoomListApi({
+    limit: 100,
+    offset: 0,
+  })
+  const online = Number(response.code) === 0 ? extractCowboyOnlineCount(response.data) : 0
+
+  homeRoomStats.value = {
+    ...homeRoomStats.value,
+    miniGame: {
+      tables: 0,
+      players: online,
+    },
+  }
+  persistHomeRoomStatsCache(homeRoomStats.value)
+}
+
+// 首页 MTT 统计：和 MttContent 走同一份过滤口径（排麻将 + club/tribe 可见性），
+// 保证「首页显示 N 桌 M 人」和「进入 MTT 列表后看到的赛事数 / 报名总人数」完全一致。
+// tables = 可见赛事数；players = 可见赛事 participants 之和。
+function refreshHomeMttStatsFromStore(): void {
+  const visibleRecords = filterVisibleMttRecords(
+    mttListStore.records,
+    mttListStore.mttIdMetaMap,
+    selectedClubId.value,
+    selectedTribeId.value,
+    appConfigStore.clubDisplayPlatformMtt,
+    displayPlatformDiamond.value,
+  )
+  const players = visibleRecords.reduce((sum, item) => sum + toSafeNumber(item.participants), 0)
+
+  homeRoomStats.value = {
+    ...homeRoomStats.value,
+    mtt: {
+      tables: visibleRecords.length,
+      players,
+    },
+  }
+  persistHomeRoomStatsCache(homeRoomStats.value)
+}
+
+async function updateNoticeMarquee(): Promise<void> {
+  await nextTick()
+
+  const containerWidth = noticeScrollRef.value?.clientWidth || 0
+  const itemWidth = noticeItemRef.value?.scrollWidth || 0
+  if (!containerWidth || !itemWidth) {
+    shouldScrollNotice.value = false
+    noticeDistancePx.value = 0
+    noticeDurationSec.value = 0
+    return
+  }
+
+  // 文本较短时保持静态展示，不触发滚动。
+  if (itemWidth <= containerWidth) {
+    shouldScrollNotice.value = false
+    noticeDistancePx.value = 0
+    noticeDurationSec.value = 0
+    return
+  }
+
+  // 固定速度滚动：根据总位移距离自动算时长，保证长短文本速度一致。
+  const distance = itemWidth + NOTICE_GAP_PX
+  noticeDistancePx.value = distance
+  noticeDurationSec.value = Number((distance / NOTICE_SPEED_PX_PER_SEC).toFixed(3))
+  shouldScrollNotice.value = true
+}
+
+watch(noticeText, () => {
+  void updateNoticeMarquee()
+})
+
+watch(requestedHomeSection, () => {
+  if (homeContentReady.value) {
+    commitHomeContentMode()
+  }
+})
+
+watch(
+  () => gameStore.isRealUser,
+  (isRealUser) => {
+    if (isRealUser) {
+      void fetchHomeMiniGameStats().catch((error) => {
+        console.warn('[home] fetch mini game stats failed:', error)
+      })
+    }
+  },
+)
+
+watch(
+  [() => roomListStore.records, selectedClubId, selectedTribeId, displayPlatformDiamond],
+  () => {
+    refreshHomePokerMahjongStatsFromStore()
+    if (homeContentReady.value) {
+      commitHomeContentMode()
+    }
+  },
+  {
+    deep: false,
+  },
+)
+
+watch(
+  [
+    () => mttListStore.records,
+    () => mttListStore.mttIdList,
+    selectedClubId,
+    selectedTribeId,
+    // 全局配置异步到达后重算，平台 MTT 可见性依赖 club_display_platform_mtt。
+    () => appConfigStore.clubDisplayPlatformMtt,
+    displayPlatformDiamond,
+  ],
+  () => {
+    refreshHomeMttStatsFromStore()
+    if (homeContentReady.value) {
+      commitHomeContentMode()
+    }
+  },
+  {
+    deep: false,
+  },
+)
+
+async function bootstrapHomeContent(): Promise<void> {
+  // 本地缓存和渠道 /default 可以在壳渲染后立刻启动，但都不能阻塞 Vue 首次挂载。
+  const restoreConfigCacheReady = appConfigStore.restorePublicConfigCache().catch((error) => {
+    console.warn('[home] restore public config cache failed:', error)
+  })
+  const initialIsChannelPackage = isChannelPackage.value
+  let channelClubReady: Promise<ClubInfo | null> = initialIsChannelPackage
+    ? userInfoStore.ensureChannelDefaultClub()
+    : Promise.resolve(null)
+
+  // 游客登录和 login/config 后置到首帧之后，避免与首页壳争抢主线程和网络调度。
+  await waitForH5FirstPaint()
+
+  // 公开配置不携带 token，可以和会话校验并行；任何 user/* 请求必须等旧 token
+  // 校验/恢复完成，避免刷新时拿刚被 pagehide/logout 释放的体验 token 抢跑。
+  const publicConfigReady = restoreConfigCacheReady.then(() =>
+    appConfigStore.ensureGuestGlobalConfig(true),
+  )
+  const sessionReady = ensureExperienceSession().catch((error) => {
+    console.warn('[home] resolve session identity failed:', error)
+    return false
+  })
+  const configReady = sessionReady.then(async (ready) => {
+    const sessionKey = gameStore.sessionToken.trim()
+    if (ready && sessionKey && !gameStore.isGuestAccount) {
+      return appConfigStore.ensureFreshGlobalConfig(sessionKey)
+    }
+    await publicConfigReady
+    return false
+  })
+
+  // 本地可能保留已被 pagehide/logout 释放的体验 token。牌桌与赛事无论是否已有
+  // token，都必须等会话校验完成后再请求，不能让 contrast/rooms 携带旧 token 抢跑。
+  const loadHomeLists = async (): Promise<void> => {
+    await Promise.allSettled([
+      roomListStore.bootstrapRoomList(),
+      mttListStore.bootstrapMttList(),
+    ])
+  }
+  const listsReady = sessionReady.then(async (ready) => {
+    if (!ready || !gameStore.sessionToken.trim()) return
+    await loadHomeLists()
+  })
+  const websocketReady = sessionReady.then((ready) => {
+    if (!ready || !gameStore.sessionToken.trim()) return
+    startHomeWebSocketAfterCocosReady()
+  })
+
+  await Promise.allSettled([
+    restoreConfigCacheReady,
+    channelClubReady,
+    sessionReady,
+    configReady,
+    listsReady,
+    websocketReady,
+  ])
+
+  // 全局域名配置可能把“未知域名”重新识别为渠道入口，此时补齐 /default。
+  if (!initialIsChannelPackage && isChannelPackage.value) {
+    channelClubReady = userInfoStore.ensureChannelDefaultClub()
+    await channelClubReady
+  }
+
+  ensureClubDataReady()
+  if (gameStore.isRealUser) {
+    void fetchHomeMiniGameStats().catch((error) => {
+      console.warn('[home] fetch mini game stats failed:', error)
+    })
+  }
+
+  // 两份列表及其共同过滤上下文全部稳定后，一次提交统计和页面模式。
+  refreshHomePokerMahjongStatsFromStore()
+  refreshHomeMttStatsFromStore()
+  commitHomeContentMode()
+  homeContentReady.value = true
+
+  // 配置与 /default 已稳定后再确认一次 banner scope；运行时缓存会自动去重。
+  void fetchLobbyBannerImages().catch((error) => {
+    console.warn('[home] refresh lobby banner failed:', error)
+  })
+}
+
+onMounted(() => {
+  // 首页和两个列表页共用 store；俱乐部、身份和配置就绪后一次性提交首屏。
+  void bootstrapHomeContent()
+  void waitForH5FirstPaint().then(() =>
+    fetchLobbyBannerImages().catch((error) => {
+      console.warn('[home] fetch lobby banner failed:', error)
+    }),
+  )
+  void updateNoticeMarquee()
+
+  if (typeof ResizeObserver !== 'undefined') {
+    noticeResizeObserver = new ResizeObserver(() => {
+      void updateNoticeMarquee()
+    })
+    if (noticeScrollRef.value) {
+      noticeResizeObserver.observe(noticeScrollRef.value)
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  stopHomeWsBridgeReadyListener?.()
+  stopHomeWsBridgeReadyListener = null
+  if (noticeResizeObserver) {
+    noticeResizeObserver.disconnect()
+    noticeResizeObserver = null
+  }
+})
+</script>
+
+<template>
+  <ChannelCHome
+    v-if="isVersionC"
+    :ready="homeContentReady"
+    :club-management="canManageChannelClub"
+  />
+  <div
+    v-else
+    class="home-page"
+    :class="{ 'home-page--mtt': homeContentReady && homeContentMode === 'mtt' }"
+  >
+    <!-- 0. 正式首页统一承载游客/真实账号；游客仅额外显示注册、登录入口。 -->
+    <HomeTopBar />
+
+    <!-- 1. 顶部俱乐部介绍轮播图 -->
+    <div class="home-header">
+      <HomeBannerSwiper :images="bannerImages" />
+    </div>
+
+    <!-- 2. 公告栏 -->
+    <div class="notice-bar">
+      <img class="notice-icon" src="@/assets/icons/icon_notice.svg" :alt="t('Serverbulletin')" />
+      <div class="notice-marquee">
+        <span class="notice-label mr-4"> {{ $txt('Serverbulletin') }}: </span>
+        <div ref="noticeScrollRef" class="notice-scroll">
+          <div
+            class="notice-track"
+            :class="{ 'is-scroll': shouldScrollNotice }"
+            :style="noticeTrackStyle"
+          >
+            <span ref="noticeItemRef" class="notice-item">
+              {{ noticeText }}
+            </span>
+            <span v-if="shouldScrollNotice" class="notice-item" aria-hidden="true">
+              {{ noticeText }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 俱乐部控件 -->
+    <ChannelClubInfoPanel />
+
+    <!-- 渠道包单类型直接展示列表；赛事和牌桌并存时展示专区入口。 -->
+    <div
+      class="home-swap-container"
+      :aria-busy="isChannelPackage && !homeContentReady"
+    >
+      <Transition name="home-swap">
+        <div
+          v-if="homeContentReady && homeContentMode === 'mtt'"
+          key="mtt"
+          class="home-swap-panel"
+        >
+          <MttContent class="home-mtt-content" scroll-key="home-mtt" />
+        </div>
+        <div
+          v-else-if="homeContentReady && homeContentMode === 'poker'"
+          key="poker"
+          class="home-poker-content home-swap-panel"
+        >
+          <PokerGameList embedded scroll-key="home-poker" />
+        </div>
+        <div
+          v-else-if="showOfficialHomeSections || homeContentReady"
+          key="default"
+          class="home-default-sections home-swap-panel"
+        >
+          <!-- 4. 游戏模块 -->
+          <div class="section-header">
+            <span class="section-title">{{ t('UIHome_Text3') }}</span>
+          </div>
+          <div class="game-center-scroll">
+            <div class="game-center-track">
+              <!-- MTT赛事专区 -->
+              <div class="game-scroll-card game-card-mtt" @click="goToMttList">
+                <img class="zone-lg-bg" src="@/assets/icons/game_zone_mtt_lg.png" alt="MTT" />
+                <div class="zone-info">
+                  <div class="zone-header">
+                    <span class="zone-title"> {{ t('UIHomeMttArea') }} </span>
+                    <img
+                      class="zone-mini-icon"
+                      src="@/assets/icons/game_zone_mtt_mini.png"
+                      alt=""
+                    />
+                  </div>
+                  <div class="zone-desc">
+                    <span>{{ t('UIHomeMttPokerTip') }}</span>
+                  </div>
+                  <p class="zone-sub-desc">{{ t('UIHomeMttAreaTip') }}</p>
+                </div>
+                <div class="zone-online-bar">
+                  <span class="online-text"> {{ t('UIClub_Mlist_zaixian') }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_table_mini.png" alt="" />
+                  <span class="online-num"> {{ mttTablesText }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_people_mini.png" alt="" />
+                  <span class="online-num"> {{ mttPlayersText }} </span>
+                </div>
+              </div>
+
+              <!-- 扑克专区 -->
+              <div class="game-scroll-card poker-card" @click="goToGameList">
+                <img
+                  class="zone-lg-bg"
+                  src="@/assets/icons/game_zone_poker_lg.png"
+                  :alt="t('UIClub_Text15')"
+                />
+                <div class="poker-overlay"></div>
+                <div class="zone-info poker-info">
+                  <div class="zone-header">
+                    <span class="zone-title"> {{ t('UIHomePokerArea') }} </span>
+                    <img
+                      class="zone-mini-icon poker-mini"
+                      src="@/assets/icons/game_zone_poker_mini.png"
+                      alt=""
+                    />
+                  </div>
+                  <div class="poker-desc-area">
+                    <p class="zone-sub-desc">{{ t('UITexasRule_texas') }}</p>
+                    <p class="zone-sub-desc">{{ t('UITexasRule_omaha') }}</p>
+                    <p class="zone-sub-desc">{{ t('PokerType_2') }}</p>
+                  </div>
+                </div>
+                <div class="zone-online-bar">
+                  <span class="online-text"> {{ t('UIClub_Mlist_zaixian') }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_table_mini.png" alt="" />
+                  <span class="online-num"> {{ pokerTablesText }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_people_mini.png" alt="" />
+                  <span class="online-num"> {{ pokerPlayersText }} </span>
+                </div>
+              </div>
+
+              <!-- 小游戏专区 -->
+              <div
+                v-if="false"
+                class="game-scroll-card game-card-minigame"
+                @click="openMiniGamePanel"
+              >
+                <img
+                  class="zone-lg-bg"
+                  src="@/assets/icons/game_zone_minigame_lg.png"
+                  :alt="t('UIClub_Text24')"
+                />
+                <div class="zone-info">
+                  <div class="zone-header">
+                    <span class="zone-title"> {{ t('UIHomeMinigameArea') }} </span>
+                    <img
+                      class="zone-mini-icon"
+                      src="@/assets/icons/game_zone_minigame_mini.png"
+                      alt=""
+                    />
+                  </div>
+                  <p class="zone-desc">{{ t('UIData_YGvXd5iXr_011') }}</p>
+                </div>
+                <div class="zone-online-bar">
+                  <span class="online-text"> {{ t('UIClub_Mlist_zaixian') }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_people_mini.png" alt="" />
+                  <span class="online-num"> {{ miniGamePlayersText }} </span>
+                </div>
+              </div>
+
+              <!-- 麻将专区 -->
+              <div
+                v-if="false"
+                class="game-scroll-card game-card-mahjong"
+                @click="showGameToast(t('UIClub_InDeve'))"
+              >
+                <img
+                  class="zone-lg-bg"
+                  src="@/assets/icons/game_zone_mahjong_lg.png"
+                  :alt="t('Mahjong_Name')"
+                />
+                <div class="zone-info">
+                  <div class="zone-header">
+                    <span class="zone-title"> {{ t('UIHomeMahjongArea') }} </span>
+                    <img
+                      class="zone-mini-icon"
+                      src="@/assets/icons/game_zone_mahjong_mini.png"
+                      alt=""
+                    />
+                  </div>
+                  <div class="zone-desc">
+                    <div class="mr-4">{{ t('Mahjong_BloodFight') }}</div>
+                    <div class="mr-4">{{ t('Mahjong_BloodRiver') }}</div>
+                    <div class="mr-4">{{ t('Mahjong_Standard') }}</div>
+                  </div>
+                </div>
+                <div class="zone-online-bar">
+                  <span class="online-text"> {{ t('UIClub_Mlist_zaixian') }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_table_mini.png" alt="" />
+                  <span class="online-num"> {{ mahjongTablesText }} </span>
+                  <img class="online-icon" src="@/assets/icons/game_zone_people_mini.png" alt="" />
+                  <span class="online-num"> {{ mahjongPlayersText }} </span>
+                </div>
+              </div>
+
+              <!-- 即将开放 -->
+              <div class="game-scroll-card coming-soon-card coming-soon-right">
+                <img
+                  class="zone-lg-bg"
+                  src="@/assets/icons/game_zone_comming_lg.png"
+                  :alt="t('UIHomeComingSoon')"
+                />
+                <div class="coming-soon-overlay"></div>
+                <span class="coming-soon-text"> {{ t('UIHomeComingSoon') }}</span>
+              </div>
+
+              <!-- 桌面端补齐第四张卡片，移动端维持原来的三张。 -->
+              <div
+                class="game-scroll-card coming-soon-card coming-soon-right desktop-only-game-card"
+              >
+                <img
+                  class="zone-lg-bg"
+                  src="@/assets/icons/game_zone_comming_lg.png"
+                  :alt="t('UIHomeComingSoon')"
+                />
+                <div class="coming-soon-overlay"></div>
+                <span class="coming-soon-text"> {{ t('UIHomeComingSoon') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. 即将开放横向滚动 -->
+          <div class="section-header">
+            <span class="section-title">{{ t('UIHome_Text4') }}</span>
+          </div>
+          <div class="coming-soon-scroll">
+            <div class="coming-soon-track">
+              <div v-for="i in 4" :key="i" class="coming-soon-scroll-card">
+                <div class="coming-soon-scroll-card__overlay"></div>
+                <span class="coming-soon-scroll-card__text">{{ t('UIHomeComingSoon') }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </div>
+  </div>
+  <div v-if="showChannelFloatingActions" class="floating-action-area">
+    <button
+      v-if="canManageChannelClub"
+      class="floating-menu-btn"
+      type="button"
+      :aria-label="t('UIClub_ClubManager')"
+      @click="goToClubDetail"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use '@/styles/mixins' as *;
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 0 0.4rem 2.6rem;
+  background: transparent;
+  min-height: max-content;
+  box-sizing: border-box;
+  overscroll-behavior-y: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  :deep(.group-item) {
+    padding: 0.2667rem 0.2rem 0.45rem;
+  }
+}
+
+// 仅有 MTT 时，首页固定顶部信息区，把剩余高度全部交给赛事列表滚动。
+// 页面自身不再超过 MainLayout 的内容区，避免外层滚动容器同时滚动。
+.home-page.home-page--mtt {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.home-header {
+  width: 100%;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.notice-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.06rem;
+  padding: 0rem 0.18rem;
+  background-color: #fff;
+  border: 0.302px solid rgba(0, 0, 0, 0.16);
+  border-radius: 1rem;
+  height: 0.5rem;
+  min-height: 0.5rem;
+  box-sizing: border-box;
+}
+
+.notice-icon {
+  width: 0.43rem;
+  height: 0.43rem;
+  flex-shrink: 0;
+}
+
+.notice-marquee {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-label {
+  font-size: 0.28rem;
+  color: #000;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notice-scroll {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.notice-track {
+  display: inline-flex;
+  align-items: center;
+  min-width: max-content;
+  gap: var(--notice-gap, 48px);
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.notice-track.is-scroll {
+  animation: notice-scroll var(--notice-duration, 16s) linear infinite;
+}
+
+.notice-item {
+  font-size: 0.28rem;
+  line-height: 0.6rem;
+  color: #000;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+@keyframes notice-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-1 * var(--notice-distance, 0px)));
+  }
+}
+
+.home-mtt-content {
+  padding: 0.1rem 0.38rem 0rem;
+
+  :deep(.mtt-group) {
+    margin-bottom: 0;
+  }
+}
+
+// 保持和 .home-page 的直接子级同样的纵向堆叠 + 间距。
+.home-default-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 0 0.4rem;
+}
+
+// 默认模块 <=> MTT 列表切换的横向推入（新面板从右滑入，旧面板向左滑出）。
+.home-swap-container {
+  position: relative;
+  // overflow: hidden;
+  // width: 100%;
+  margin-left: -0.4rem;
+  margin-right: -0.4rem;
+  min-height: 5rem;
+}
+
+.home-page--mtt .home-swap-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.home-page--mtt .home-swap-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+.home-page--mtt .home-mtt-content {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+.home-swap-panel {
+  width: 100%;
+}
+
+.home-poker-content {
+  :deep(.room-tabs) {
+    margin-right: 0;
+    margin-left: 0;
+  }
+  :deep(.group-list) {
+    padding: 0 0.2rem;
+  }
+}
+
+.home-swap-enter-active,
+.home-swap-leave-active {
+  transition: transform 0.32s ease;
+  will-change: transform;
+}
+
+// 切换期间旧面板脱离流，避免撑高容器；新面板在流内决定容器高度。
+.home-swap-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.home-swap-enter-from {
+  transform: translateX(100%);
+}
+.home-swap-enter-to {
+  transform: translateX(0);
+}
+.home-swap-leave-from {
+  transform: translateX(0);
+}
+.home-swap-leave-to {
+  transform: translateX(-100%);
+}
+
+.section-header {
+  padding: 0.12rem 0 0;
+  .section-title {
+    font-size: 0.38rem;
+    font-weight: 700;
+    margin-bottom: 0rem;
+    color: #fff;
+    font-family: 'HONOR Sans CN', sans-serif;
+
+    @include theme-light {
+      color: #000;
+    }
+  }
+}
+
+.game-center-scroll {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.game-center-track {
+  display: flex;
+  gap: 0.15rem;
+  width: max-content;
+}
+
+.game-scroll-card {
+  flex-shrink: 0;
+  width: 2.95rem;
+  // 同时兜底窄高(14PM 932)与窄矮(SE 667):用 vh 做陡峭斜率,clamp 在两端各自落到 min/max。
+  height: clamp(2.8rem, calc(25vh - 65px), 3.91rem);
+  border-radius: 0.37rem;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: #54b78d;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.26rem 0.2rem 0.2rem;
+  box-sizing: border-box;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.zone-lg-bg {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.zone-mini-icon {
+  margin-top: 0.08rem;
+  width: 0.3rem;
+  height: 0.3rem;
+}
+
+.zone-info {
+  z-index: 1;
+  .zone-header {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.zone-title {
+  font-size: 0.33rem;
+  font-weight: 800;
+  color: #fff;
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.poker-desc-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.zone-desc {
+  font-size: 0.22rem;
+  font-weight: 400;
+  color: #fff;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.zone-sub-desc {
+  font-size: 0.22rem;
+  font-weight: 400;
+  color: #fff;
+  margin: 0.06rem 0 0;
+}
+
+.zone-online-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  background: rgba(56, 55, 55, 0.61);
+  border-radius: 1rem;
+  padding: 0.06rem 0.2rem;
+  margin-top: 0.18rem;
+  height: 0.4rem;
+  width: 100%;
+  z-index: 2;
+}
+
+.online-text {
+  font-size: 0.22rem;
+  color: #fff;
+}
+
+.online-icon {
+  width: 0.22rem;
+  height: 0.22rem;
+  margin-left: 0.1rem;
+  object-fit: contain;
+}
+
+.online-num {
+  font-size: 0.22rem;
+  color: #fff;
+}
+
+.poker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.poker-mini {
+  z-index: 1;
+}
+
+.poker-info {
+  position: relative;
+  z-index: 1;
+  padding-left: 0;
+  flex: 1;
+}
+
+.coming-soon-card {
+  padding: 0;
+}
+
+.desktop-only-game-card {
+  display: none;
+}
+
+.coming-soon-right {
+  position: relative;
+  border-radius: 0.56rem;
+  overflow: hidden;
+}
+
+.coming-soon-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.coming-soon-text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+  font-size: 0.36rem;
+  font-weight: 700;
+  color: #fff;
+  margin: auto;
+  padding: 1rem 0;
+  width: 100%;
+}
+
+.coming-soon-scroll {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.coming-soon-track {
+  display: flex;
+  gap: 0.15rem;
+  padding-bottom: 0.1rem;
+  width: max-content;
+}
+
+.coming-soon-scroll-card {
+  flex-shrink: 0;
+  width: 2.95rem;
+  height: clamp(2rem, calc(35vh - 158px), 3.91rem);
+  border-radius: 0.51rem;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 0.01rem solid rgba(249, 249, 249, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.coming-soon-scroll-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: url('@/assets/images/home_comming_soon_2.png') center / cover no-repeat;
+  border-radius: inherit;
+}
+
+.coming-soon-scroll-card__text {
+  position: relative;
+  z-index: 1;
+  font-size: 0.29rem;
+  font-weight: 500;
+  color: #fff;
+  font-family: 'HONOR Sans CN', sans-serif;
+}
+
+.floating-action-area {
+  position: fixed;
+  right: 0.48rem;
+  bottom: calc(2.82rem + env(safe-area-inset-bottom));
+  z-index: 23;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.14rem;
+}
+
+.floating-menu-btn {
+  width: 0.86rem;
+  height: 0.86rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #056a57 0%, #01382f 75%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.07rem;
+  box-shadow: 0 0.12rem 0.26rem rgba(0, 0, 0, 0.34);
+}
+
+.floating-menu-btn span {
+  width: 0.23rem;
+  height: 0.055rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+}
+</style>

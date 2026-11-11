@@ -1,0 +1,101 @@
+/* CC UIPersonalSettings uses a 1100-unit frame. Scale dimensions together;
+   the title and tabs stay fixed while only the content pane scrolls. */
+.mx-game,.mx-table,.mx-settings-overlay,.mx-buyin-overlay{overflow:clip}
+.mx-settings-overlay{position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;padding:16px 8px;min-height:0;color:#fff;--settings-unit:.27px}
+.mx-settings-overlay[hidden],.mx-settings-page[hidden],.mx-settings-desk[hidden]{display:none}
+.mx-settings-overlay[data-short=true],.mx-buyin-overlay[data-short=true]{padding-block:0}
+.mx-settings-panel{position:relative;width:var(--dialog-width,min(100%,600px));max-height:100%;overflow:auto;overscroll-behavior:contain;padding:26px 20px 22px;scrollbar-width:thin;scrollbar-color:#fff6 transparent;font-size:16px}
+.mx-settings-panel h2{margin:0 26px 26px;text-align:center;font-size:22px;font-weight:400}
+.mx-settings-panel h3{font-size:16px;font-weight:400;margin:18px 0 12px}
+.mx-settings-panel button{font:inherit;color:inherit;cursor:pointer;background:#ffffff18;border:1px solid transparent;border-radius:999px;padding:10px}
+.mx-settings-panel .mx-settings-close{position:absolute;right:16px;top:12px;background:none;font-size:30px;padding:0 8px}
+.mx-settings-panel [aria-pressed=true]{border-color:#05e7ae;background-color:#05e7ae24}
+.mx-settings-panel button:focus-visible,.mx-settings-panel input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.mx-personal-settings{display:flex;flex-direction:column;overflow:clip;padding:calc(30 * var(--settings-unit)) 0 calc(80 * var(--settings-unit));font-size:calc(40 * var(--settings-unit))}
+.mx-settings-overlay[data-short=true]>.mx-personal-settings{height:100%}
+.mx-personal-settings>h2{height:calc(131.5 * var(--settings-unit));margin:0 0 calc(25 * var(--settings-unit));display:flex;align-items:center;justify-content:center;font-size:calc(70 * var(--settings-unit));line-height:1.1;color:#eef5ff}
+.mx-personal-settings>h2,.mx-personal-settings>.mx-settings-tabs,.mx-personal-settings>.mx-settings-status{flex-shrink:0}
+.mx-settings-tabs{display:flex;align-items:center;justify-content:space-between;width:calc(810 * var(--settings-unit));height:calc(70 * var(--settings-unit));margin:0 auto calc(25 * var(--settings-unit));padding:0}
+.mx-personal-settings .mx-settings-tabs button{position:relative;flex:none;display:flex;align-items:center;justify-content:center;width:calc(220 * var(--settings-unit));height:100%;padding:0;border:0;background:none;color:#fff;font-size:calc(55 * var(--settings-unit));line-height:1.2;border-radius:0;white-space:normal}
+.mx-settings-tab-selected{position:absolute;width:87.27%;height:calc(8 * var(--settings-unit));left:6.365%;bottom:calc(-12 * var(--settings-unit));background-repeat:no-repeat;visibility:hidden;pointer-events:none}
+.mx-personal-settings[data-language=en] .mx-settings-tabs button,.mx-personal-settings[data-language=pt] .mx-settings-tabs button{font-size:calc(36 * var(--settings-unit));line-height:1}
+.mx-personal-settings[data-language=pt] .mx-settings-custom h3{font-size:calc(34 * var(--settings-unit))}
+.mx-settings-tabs [aria-selected=true] .mx-settings-tab-selected{visibility:visible}
+.mx-settings-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff70 transparent;touch-action:pan-y}
+.mx-settings-page{min-height:0}
+.mx-settings-appearance{padding-top:calc(15 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-appearance>h3{width:88.636%;height:calc(60 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit));display:flex;align-items:center;font-size:calc(45 * var(--settings-unit));line-height:1.2}
+/* PokerCardTypeItem: option 310×130; each of the four cards is 62×91. */
+.mx-settings-decks{display:flex;gap:0;align-items:center;padding-left:calc(40 * var(--settings-unit));margin-bottom:calc(20 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-deck{position:relative;display:flex;align-items:center;justify-content:center;flex:none;width:calc(310 * var(--settings-unit));height:calc(130 * var(--settings-unit));padding:0;gap:0;border:0;border-radius:0;background-color:transparent;background-repeat:no-repeat}
+.mx-personal-settings .mx-settings-deck[aria-pressed=true]{background-color:transparent;border-color:transparent}
+.mx-settings-card-selected{position:absolute;inset:0;visibility:hidden;background-repeat:no-repeat}
+.mx-settings-deck[aria-pressed=true] .mx-settings-card-selected{visibility:visible}
+.mx-personal-settings .mx-settings-deck .mx-card{position:relative;flex:none;align-self:center;width:20%;max-width:none;height:auto;min-height:0;aspect-ratio:120/176;transform:none;left:auto;top:auto;border-radius:calc(5 * var(--settings-unit));z-index:1}
+/* DeskTypeItem: 214×353 card with an 88×171 thumbnail, not a stretched full tile. */
+.mx-settings-desks{display:grid;grid-template-columns:repeat(4,calc(214 * var(--settings-unit)));gap:calc(43.9 * var(--settings-unit)) calc(42 * var(--settings-unit));width:calc(1050 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit));padding:0 calc(30 * var(--settings-unit)) calc(30 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-desk{position:relative;width:100%;height:calc(353 * var(--settings-unit));min-width:0;padding:0;border:0;border-radius:0;background-color:transparent;background-repeat:no-repeat;overflow:visible}
+.mx-personal-settings .mx-settings-desk[aria-pressed=true]{background-color:transparent;border-color:transparent}
+.mx-settings-desk-selected{position:absolute;left:-21.73%;top:-13.03%;width:143.46%;height:126.06%;visibility:hidden;background-repeat:no-repeat;pointer-events:none}
+.mx-settings-desk[aria-pressed=true] .mx-settings-desk-selected{visibility:visible}
+.mx-settings-desk-thumb{position:absolute;display:block;left:29.44%;top:17.28%;width:41.12%;height:48.44%;border-radius:calc(12 * var(--settings-unit));object-fit:cover;object-position:center;background-repeat:no-repeat}
+.mx-settings-desk-name{position:absolute;left:9.58%;top:76.35%;width:80.84%;height:10.76%;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:calc(30 * var(--settings-unit));color:#fff;line-height:1}
+.mx-settings-panel .mx-settings-expand{display:flex;align-items:center;justify-content:center;gap:calc(8 * var(--settings-unit));height:calc(60 * var(--settings-unit));margin:0 auto;background:none;font-size:calc(50 * var(--settings-unit));padding:0;border:0;line-height:1.2}
+.mx-settings-expand-arrow{width:calc(25 * var(--settings-unit));height:calc(25 * var(--settings-unit));border-right:calc(4 * var(--settings-unit)) solid #fff7;border-bottom:calc(4 * var(--settings-unit)) solid #fff7;transform:translateY(-20%) rotate(45deg)}
+.mx-settings-expand[aria-expanded=true] .mx-settings-expand-arrow{transform:translateY(20%) rotate(225deg)}
+/* CC ShorCutButton: pot badge above a 165-unit circle. */
+.mx-settings-quick{padding:calc(20 * var(--settings-unit)) 0 0}
+.mx-personal-settings .mx-settings-quick>h3{width:calc(940 * var(--settings-unit));min-height:calc(63 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit));font-size:calc(40 * var(--settings-unit));line-height:1.3;display:flex;align-items:center}
+.mx-settings-modes{display:flex;width:calc(940 * var(--settings-unit));gap:calc(20 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-modes button{flex:none;width:calc(216 * var(--settings-unit));height:calc(80 * var(--settings-unit));border:0;padding:0 calc(10 * var(--settings-unit));background:rgba(60,60,60,.4);font-size:calc(30 * var(--settings-unit));line-height:1.2}
+.mx-personal-settings .mx-settings-modes [aria-pressed=true]{background:rgba(255,253,253,.6);color:#000}
+.mx-settings-shortcuts{display:flex;justify-content:space-between;align-items:start;width:calc(895 * var(--settings-unit));height:calc(200 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit))}
+.mx-settings-shortcuts:has(> :nth-child(5)){width:calc(945 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-shortcut{position:relative;flex:none;width:calc(165 * var(--settings-unit));height:calc(195 * var(--settings-unit));padding:0;border:0;background:none}
+.mx-personal-settings .mx-settings-shortcut[aria-pressed=true]{background:none}
+.mx-settings-pot-ratio{position:absolute;left:0;bottom:0;display:flex;align-items:center;justify-content:center;width:100%;height:calc(165 * var(--settings-unit));border-radius:50%;background:rgba(60,60,60,.4);font-size:calc(60 * var(--settings-unit))}
+.mx-settings-shortcut[aria-pressed=true] .mx-settings-pot-ratio{background:#05e7ae}
+.mx-settings-pot-label{position:absolute;left:1%;top:0;z-index:1;display:flex;align-items:center;justify-content:center;width:98%;height:calc(49 * var(--settings-unit));border-radius:999px;background:rgba(16,133,103,.7);font-size:calc(30 * var(--settings-unit));line-height:1}
+.mx-settings-custom{position:relative;width:calc(948 * var(--settings-unit));height:calc(346 * var(--settings-unit));margin:auto;border-radius:calc(65 * var(--settings-unit));background:rgba(60,60,60,.4);padding:calc(35 * var(--settings-unit)) calc(74 * var(--settings-unit)) 0}
+.mx-personal-settings .mx-settings-custom h3{margin:0;text-align:center;font-size:calc(40 * var(--settings-unit));line-height:1.26}
+.mx-settings-slider{position:absolute;left:calc(74 * var(--settings-unit));right:calc(74 * var(--settings-unit));top:calc(158 * var(--settings-unit));height:calc(100 * var(--settings-unit))}
+.mx-settings-range-track{position:absolute;top:calc(45 * var(--settings-unit));height:calc(10 * var(--settings-unit));width:100%;background:linear-gradient(to right,#05e7ae var(--ratio-position),#ffffff59 var(--ratio-position));pointer-events:none}
+.mx-personal-settings .mx-settings-range{appearance:none;-webkit-appearance:none;position:absolute;inset:0;width:100%;height:100%;margin:0;background:transparent;cursor:pointer;touch-action:pan-y}
+.mx-settings-range{width:100%;accent-color:#05e7ae;margin:20px 0}
+.mx-settings-ratio{display:block;text-align:center;font-size:30px}
+.mx-settings-slider .mx-settings-ratio{position:absolute;left:var(--ratio-position);top:calc(-42 * var(--settings-unit));transform:translateX(-50%);font-size:calc(40 * var(--settings-unit));line-height:1.26;pointer-events:none}
+.mx-settings-range-handle{position:absolute;left:var(--ratio-position);top:calc(12.5 * var(--settings-unit));transform:translateX(-50%);width:calc(75 * var(--settings-unit));height:calc(75 * var(--settings-unit));pointer-events:none}
+.mx-personal-settings .mx-settings-range::-webkit-slider-runnable-track{background:transparent}
+.mx-personal-settings .mx-settings-range::-moz-range-track{background:transparent}
+.mx-personal-settings .mx-settings-range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:calc(75 * var(--settings-unit));height:calc(75 * var(--settings-unit));background:transparent;border:0}
+.mx-personal-settings .mx-settings-range::-moz-range-thumb{width:calc(75 * var(--settings-unit));height:calc(75 * var(--settings-unit));background:transparent;border:0}
+.mx-settings-range-limits{position:absolute;left:calc(74 * var(--settings-unit));right:calc(74 * var(--settings-unit));bottom:calc(35 * var(--settings-unit));display:flex;justify-content:space-between;font-size:calc(40 * var(--settings-unit));line-height:1.26}
+/* System settings: two 470×211 translucent cards, matching CC. */
+.mx-settings-system{display:grid;grid-template-columns:repeat(2,calc(470 * var(--settings-unit)));justify-content:center;gap:calc(20 * var(--settings-unit));padding:calc(30 * var(--settings-unit)) 0;min-height:calc(280 * var(--settings-unit))}
+.mx-settings-system-row{position:relative;height:calc(211 * var(--settings-unit));border-radius:calc(50 * var(--settings-unit));background:rgba(60,60,60,.4)}
+.mx-settings-system-label{position:absolute;left:calc(25 * var(--settings-unit));top:calc(25 * var(--settings-unit));right:calc(65 * var(--settings-unit));font-size:calc(40 * var(--settings-unit));line-height:1.26}
+.mx-settings-info{position:absolute;right:calc(37.5 * var(--settings-unit));top:calc(28 * var(--settings-unit));width:calc(45 * var(--settings-unit));height:calc(45 * var(--settings-unit))}
+.mx-settings-switch-state{position:absolute;left:calc(25 * var(--settings-unit));bottom:calc(28 * var(--settings-unit));font-size:calc(32 * var(--settings-unit));line-height:1.3}
+.mx-settings-panel .mx-settings-switch{position:absolute;right:calc(20 * var(--settings-unit));bottom:calc(22 * var(--settings-unit));width:calc(149 * var(--settings-unit));height:calc(71 * var(--settings-unit));border:0;background:#555;padding:0}
+.mx-settings-switch:after{content:'';position:absolute;width:calc(63 * var(--settings-unit));height:calc(63 * var(--settings-unit));left:calc(4 * var(--settings-unit));top:calc(4 * var(--settings-unit));border-radius:50%;background:white;transition:transform .15s}
+.mx-settings-panel .mx-settings-switch[aria-checked=true]{background:#05e7ae}
+.mx-settings-switch[aria-checked=true]:after{transform:translateX(calc(78 * var(--settings-unit)))}
+.mx-settings-status{color:#ffe9cf;margin:10px 0 0;font-size:14px}.mx-settings-status:empty{display:none}
+.mx-personal-settings .mx-settings-status{margin-inline:calc(60 * var(--settings-unit));font-size:calc(40 * var(--settings-unit))}
+.mx-settings-panel .mx-bringout-confirm{display:block;min-width:150px;margin:20px auto 0;padding:15px 30px;background:linear-gradient(145deg,#00dfb5,#007d63);border-top:1px solid #fff9}.mx-bringout-confirm:disabled{opacity:.45}
+/* UITexasMenu labels: x=100 in a 500-wide, left-aligned label under
+   the 553-wide background, so the text starts at 126.5 design units. */
+.mx-menu-row-label,.mx-menu-item-label{position:absolute;left:calc(126.5 * var(--menu-unit));right:calc(75 * var(--menu-unit));top:50%;transform:translateY(-50%);font-size:calc(var(--menu-label-size,55) * var(--menu-unit));line-height:1.2;text-align:left;white-space:nowrap}
+.mx-menu-item-label{right:calc(190 * var(--menu-unit))}
+.mx-menu-green-label{position:absolute;left:calc(1.5 * var(--menu-unit));width:calc(500 * var(--menu-unit));top:50%;transform:translateY(-50%);text-align:center;font-size:calc(55 * var(--menu-unit));line-height:1.2}
+.mx-menu-item-background{position:absolute;inset:calc(6.5 * var(--menu-unit)) 0;background-repeat:no-repeat;pointer-events:none}
+.mx-menu-green .mx-menu-item-background{inset:0}
+.mx-menu-item{margin-right:calc(30 * var(--menu-unit))}
+.mx-menu-store{font-size:calc(48 * var(--menu-unit));text-align:center;white-space:pre-line;margin:0 calc(30 * var(--menu-unit)) 0 0;color:#fff}
+.mx-operation-quick{position:absolute;bottom:calc(100% + 12px);left:0;right:0;display:flex;justify-content:center;gap:6px;pointer-events:auto}
+.mx-operation-quick[hidden]{display:none}.mx-quick-bet{flex:1;max-width:75px;min-width:0;white-space:pre-line;font:inherit;font-size:12px;color:#fff;border:1px solid #ffffff90;border-radius:14px;padding:8px 3px;background:linear-gradient(135deg,#9ba4b633,#bbc1ce55);box-shadow:inset 0 0 6px #fff5;backdrop-filter:blur(2px)}
+/* Preserve the existing buy-in surface, adapting its frame and scroll ownership. */
+.mx-buyin-overlay{padding:16px 8px;min-height:0}.mx-buyin-panel{width:var(--dialog-width,min(100%,288px));max-height:100%;transform:none;display:flex;flex-direction:column;overflow:hidden}
+.mx-buyin-overlay[data-short=true]>.mx-buyin-panel{height:100%}
+.mx-buyin-title,.mx-buyin-confirm{flex-shrink:0}.mx-buyin-confirm{align-self:center}
+.mx-buyin-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff70 transparent;padding-inline:8px;margin-inline:-8px}

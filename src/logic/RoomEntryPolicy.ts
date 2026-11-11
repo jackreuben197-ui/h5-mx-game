@@ -1,0 +1,18 @@
+import type { RoomRecord } from '@silenthill/agreement-web';
+import type { RoomTarget } from '../core/types.js';
+export class RoomEntryPolicy {
+  check(target: RoomTarget, room: RoomRecord.AsObject): void {
+    if (room.rid !== target.roomID) throw new Error('房间信息与请求不匹配');
+    if (room.status >= 3) throw new Error('房间已关闭或结束');
+    if (
+      target.matchID !== 0 ||
+      room.roomType >> 9 === 1 ||
+      room.gameType !== 0 ||
+      room.pokerType !== 0
+    )
+      throw new Error('当前先接入普通德州房间');
+    if (!Number.isInteger(room.seatCount) || room.seatCount < 2 || room.seatCount > 9)
+      throw new Error(`房间座位数无效（${room.seatCount}）`);
+    if (room.encryptCards > 0) throw new Error('加密牌房间尚未接入');
+  }
+}

@@ -1,0 +1,239 @@
+import { postDiamondConfigApi, postPrivateUcConfigApi } from '@/api/config'
+import { getUserClubApi, getUserInfoApi } from '@/api/user'
+import {
+  forwardDiamondConfigToCocos,
+  forwardGlobalConfigToCocos,
+  forwardPrivateUcChargeConfigToCocos,
+  forwardUserClubToCocos,
+} from '@/bridge/sync/h5BusinessSync'
+import StorageKey from '@/constants/storageKey'
+import { setLocale, type LocaleCode } from '@/i18n'
+import LoginSession from '@/session/loginSession'
+import { useAppConfigStore } from '@/stores/appConfig'
+import { useGameStore } from '@/stores/game'
+import { pinia } from '@/stores/pinia'
+import { useUserInfoStore } from '@/stores/userInfo'
+import { localStore } from '@/utils/localStore'
+import { isH5OnlyDevMode } from '@/utils/h5OnlyDev'
+import { ensureMultiLanguageTemplateLoaded } from '@/utils/multiLanguageTemplate'
+import { readClubListCache } from '@/utils/userClubListCache'
+import { isChannelPackageHost, normalizePrivateUcConfig } from '@/utils/channelPackage'
+
+let inFlightToken = ''
+let inFlightPromise: Promise<PostAuthProfileSyncResult> | null = null
+
+interface PostAuthProfileSyncResult {
+  userInfoSynced: boolean
+  userClubSynced: boolean
+}
+
+export interface PostAuthSyncResult extends PostAuthProfileSyncResult {
+  websocketRequired: boolean
+  websocketSynced: boolean
+}
+
+function combinePostAuthSync(
+  websocketSync: Promise<boolean>,
+  profileSync: Promise<PostAuthProfileSyncResult>,
+): Promise<PostAuthSyncResult> {
+  const websocketRequired = !isH5OnlyDevMode()
+  // 纯 H5 测试保留后台 WS 推送，但真实身份确认不受 WS 连接失败或超时影响。
+  return Promise.all([websocketRequired ? websocketSync : false, profileSync]).then(
+    ([websocketSynced, profile]) => ({
+      websocketRequired,
+      websocketSynced,
+      ...profile,
+    }),
+  )
+}
+
+// 登录成功 / 启动时持有有效 token 都走这里：把首页无关的拉取/同步集中起来，避免必须切到首页才触发。
+export function syncPostAuthData(): Promise<PostAuthSyncResult> {
+  const gameStore = useGameStore(pinia)
+  const token = gameStore.sessionToken.trim()
+  if (!token || gameStore.isGuestAccount) {
+    return Promise.resolve({
+      websocketRequired: !isH5OnlyDevMode(),
+      websocketSynced: false,
+      userInfoSynced: false,
+      userClubSynced: false,
+    })
+  }
+
+  const isPrivateUcPackage = isChannelPackageHost()
+  const appConfigStore = useAppConfigStore(pinia)
+  forwardPrivateUcChargeConfigToCocos(
+    isPrivateUcPackage ? appConfigStore.privateUcChargeConfig : [],
+  )
+  if (isPrivateUcPackage) {
+    forwardDiamondConfigToCocos(appConfigStore.diamondConfig ?? {})
+  }
+
+  // WS 保活独立于资料同步：同一 token 已同步过时，仍允许刷新/路由切换兜底恢复 WS。
+  const wsReady = LoginSession.EnsureWS()
+    .then(() => true)
+    .catch((error) => {
+      console.warn('[post-auth-sync] ensure ws failed:', error)
+      return false
+    })
+
+  if (!gameStore.shouldSyncIdentity(token)) {
+    return combinePostAuthSync(
+      wsReady,
+      Promise.resolve({ userInfoSynced: true, userClubSynced: true }),
+    )
+  }
+
+  if (inFlightPromise && inFlightToken === token) {
+    return combinePostAuthSync(wsReady, inFlightPromise)
+  }
+
+  inFlightToken = token
+  inFlightPromise = runPostAuthSync(token).finally(() => {
+    if (inFlightToken === token) {
+      inFlightToken = ''
+      inFlightPromise = null
+    }
+  })
+  return combinePostAuthSync(wsReady, inFlightPromise)
+}
+
+async function runPostAuthSync(token: string): Promise<PostAuthProfileSyncResult> {
+  const gameStore = useGameStore(pinia)
+  const appConfigStore = useAppConfigStore(pinia)
+  const userInfoStore = useUserInfoStore(pinia)
+  const isPrivateUcPackage = isChannelPackageHost()
+
+  // 体验账号退出时会清理用户状态。真实账号同步前重新加载渠道公开配置，
+  // 保证 diamond_room_switch、h5_menu 等 CMS 字段在登录切换后仍然存在。
+  if (isChannelPackageHost()) {
+    await userInfoStore.ensureChannelDefaultClub()
+  }
+
+  await appConfigStore
+    .restorePublicConfigCache()
+    .then(() => {
+      if (appConfigStore.globalConfig) {
+        forwardGlobalConfigToCocos(appConfigStore.globalConfig)
+      }
+      if (isPrivateUcPackage) {
+        forwardDiamondConfigToCocos(appConfigStore.diamondConfig ?? {})
+      } else if (appConfigStore.diamondConfig) {
+        forwardDiamondConfigToCocos(appConfigStore.diamondConfig)
+      }
+      if (isPrivateUcPackage) {
+        forwardPrivateUcChargeConfigToCocos(appConfigStore.privateUcChargeConfig)
+      }
+    })
+    .catch((error) => {
+      console.warn('[post-auth-sync] restore public config cache failed:', error)
+    })
+
+  // 上一次登录已知 userId 时，先用用户级 IndexedDB 缓存填充 clubList，再发请求静默刷新。
+  if (gameStore.loginUserId && !userInfoStore.clubList.length) {
+    try {
+      const cached = await readClubListCache(gameStore.loginUserId)
+      if (cached.length && !userInfoStore.clubList.length) {
+        userInfoStore.setClubList(cached)
+        forwardUserClubToCocos({ code: 0, message: '', data: cached })
+      }
+    } catch (error) {
+      console.warn('[post-auth-sync] hydrate club list cache failed:', error)
+    }
+  }
+
+  const userInfoSync = getUserInfoApi()
+    .then((userInfo) => {
+      if (gameStore.sessionToken.trim() !== token) {
+        return false
+      }
+      const user = userInfo.user as Record<string, unknown>
+      const userId = String(user.p_u_id ?? user.pUid ?? user.userid ?? user.un_id ?? '')
+      const userName = String(user.nickname ?? gameStore.loginAccount ?? '')
+
+      gameStore.setLoginUser({
+        account: gameStore.loginAccount || userName,
+        nickname: userName,
+        userId,
+      })
+      const languageCode = resolveLanguageCode(user)
+      const localSavedLanguage = localStore.getItem<string>(StorageKey.Language, '')
+      if (!localSavedLanguage && languageCode) {
+        setLocale(languageCode as LocaleCode)
+      }
+      return true
+    })
+    .catch((error) => {
+      console.warn('[post-auth-sync] sync user info failed:', error)
+      return false
+    })
+
+  const userClubSync = getUserClubApi()
+    .then(() => gameStore.sessionToken.trim() === token)
+    .catch((error) => {
+      console.warn('[post-auth-sync] sync user club failed:', error)
+      return false
+    })
+
+  // 配置和多语言不参与身份确认，后台刷新即可；登录弹窗只等待用户、俱乐部和 WS。
+  void Promise.allSettled([
+    appConfigStore
+      .ensureFreshGlobalConfig(token)
+      .then((loaded) => {
+        if (loaded && appConfigStore.globalConfig) {
+          forwardGlobalConfigToCocos(appConfigStore.globalConfig)
+        }
+      })
+      .catch((error) => {
+        console.warn('[post-auth-sync] sync global config failed:', error)
+      }),
+
+    // 私域版本只拉独立 UC 收费配置，不请求钻石收费列表。
+    isPrivateUcPackage
+      ? postPrivateUcConfigApi({})
+          .then((res) => {
+            if (gameStore.sessionToken.trim() !== token) return
+            if (Number(res.code) === 0 && res.data) {
+              appConfigStore.setPrivateUcConfig(normalizePrivateUcConfig(res.data))
+            }
+            forwardDiamondConfigToCocos(appConfigStore.diamondConfig ?? {})
+            forwardPrivateUcChargeConfigToCocos(appConfigStore.privateUcChargeConfig)
+          })
+          .catch((error) => {
+            console.warn('[post-auth-sync] sync private UC config failed:', error)
+            forwardDiamondConfigToCocos(appConfigStore.diamondConfig ?? {})
+            forwardPrivateUcChargeConfigToCocos(appConfigStore.privateUcChargeConfig)
+          })
+      : postDiamondConfigApi({})
+          .then((res) => {
+            if (res.code === 0 && res.data) {
+              appConfigStore.setDiamondConfig(res.data)
+              forwardDiamondConfigToCocos(appConfigStore.diamondConfig)
+            }
+          })
+          .catch((error) => {
+            console.warn('[post-auth-sync] sync diamond config failed:', error)
+          }),
+
+    ensureMultiLanguageTemplateLoaded().catch((error) => {
+      console.warn('[post-auth-sync] sync multi-language template failed:', error)
+    }),
+  ])
+
+  const [userInfoSynced, userClubSynced] = await Promise.all([userInfoSync, userClubSync])
+  if (userInfoSynced && userClubSynced && gameStore.sessionToken.trim() === token) {
+    gameStore.markIdentitySynced(token)
+  }
+  return { userInfoSynced, userClubSynced }
+}
+
+function resolveLanguageCode(user: Record<string, unknown>): string {
+  const languageKeys = ['language', 'client_language', 'system_language', 'lt']
+  for (const key of languageKeys) {
+    const value = user[key]
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
+  }
+  return ''
+}

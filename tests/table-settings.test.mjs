@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {pb,record,snapshot} from './helpers/protocol-fixture.mjs';
+import {GameplayTableSettingBasic} from '../.test-build/logic/GameplayTableSettingBasic.js';
+import {GameplayTableSetting} from '../.test-build/logic/GameplayTableSetting.js';
+import {GameplayTableSettingData} from '../.test-build/data/GameplayTableSettingData.js';
+import {GameplayTableSettingDataProvider} from '../.test-build/logic/GameplayTableSettingDataProvider.js';
+import {GlobalConfigStore} from '../.test-build/data/GlobalConfigStore.js';
+import {BindingScope} from '../.test-build/binding/BindingScope.js';
+import {bindEvent} from '../.test-build/binding/bindEvent.js';
+const base=()=>({record:record().toObject(), info:snapshot().toObject().roomInfo, hand:snapshot().toObject().handInfo});
+const L=k=>k==='UIAnteRandomJump7'?'{0}/{1}/{2}':k;
+test('CC basicInfo mapping preserves 1/2 flags, live room values, and special-game config priority',()=>{
+ const c=base();Object.assign(c.record,{randomSeat:2,calltime:2,onlyIos:2,forceShowCard:2,seatedMessaging:1,limitIpOn:1,criticalHit:1,ante:20,rounds:9,subConfigsList:[{criticalHit:1,ante:400,rounds:3,bombpot:0}]});
+ Object.assign(c.info,{limitIp:false,seatedMessaging:false,smallBlind:1000,currentMinRate:20,currentMaxRate:100});
+ const b=GameplayTableSettingBasic.from(c.record,c.info,c.hand);
+ assert.equal(b.randomSeated,false);assert.equal(b.hasCallTime,false);assert.equal(b.onlyIOS,false);assert.equal(b.forceShowCard,false);
+ assert.equal(b.seatedMessage,false);assert.equal(b.limitIP,false);assert.equal(b.criticalHitAnte,400);assert.equal(b.criticalHitRounds,3);
+ c.record.randomSeat=1;c.record.calltime=1;const on=GameplayTableSettingBasic.from(c.record,c.info,c.hand);
+ assert.equal(on.randomSeated,true);assert.equal(on.hasCallTime,true);
+ const rows=new GameplayTableSetting(b,{},L).getRows();
+ assert.equal(rows.find(r=>r.id==='blind').value,'10/20');
+ assert.equal(rows.find(r=>r.id==='bring_value').value,'400-2000');
+});
+test('CC permission-gated rows retain switches, modes, safety flags, and partial random-ante rejection',()=>{
+ const c=base();Object.assign(c.record,{randomSeat:2,secondPcsOn:1,insuranceOn:1,onlyIos:1,viewPlayerCards:2});
+ Object.assign(c.info,{delaySeeCard:true,limitIp:false,limitGps:true,antiCheatType:2,insuranceMode:2,seatedMessaging:true,randomAnte:'[100,200]'});
+ const b=GameplayTableSettingBasic.from(c.record,c.info,c.hand);
+ const hidden=new GameplayTableSetting(b,{},L).getRows();assert.ok(!hidden.some(r=>r.id==='UICreateTable_randSeat'));
+ const visible=new GameplayTableSetting(b,{room_random_seat:1,room_only_ios:2,room_random_ante:1,room_look_hand_card:1},L).getRows();
+ assert.equal(visible.find(r=>r.id==='UICreateTable_randSeat').enabled,false);
+ assert.ok(!visible.some(r=>r.id==='UICreateTable_iosTitle'));
+ assert.equal(visible.find(r=>r.id==='room_random_ante').enabled,false);
+ assert.equal(visible.find(r=>r.id==='UIGuildcreateroomtoggledoublecard').enabled,true);
+ assert.equal(visible.find(r=>r.id==='insurance').value,'UIEVInsurance');
+ assert.equal(visible.find(r=>r.id==='UIClub_RoomCreat_noh7zoAE').color,'#FF6666');
+ assert.equal(visible.find(r=>r.id==='room_look_hand_card').value,'UICreateTable_PayShowCardSingle');
+ c.info.randomAnte='[100,200,50]';const detail=new GameplayTableSetting(GameplayTableSettingBasic.from(c.record,c.info),{room_random_ante:1},L).getRows();
+ assert.equal(detail.find(r=>r.id==='room_random_ante').detail,'1.0/2.0/0.5');
+});
+test('room-scoped decorator updates only changed configuration, including reconnect values and permission changes',()=>{
+ class View{basic=[];permissions=[];onBasic(value){this.basic.push(value)}onPermissions(value){this.permissions.push(value)}}
+ bindEvent(GameplayTableSettingData.BASIC_CHANGED,'basic')(View.prototype,'onBasic',Object.getOwnPropertyDescriptor(View.prototype,'onBasic'));
+ bindEvent(GameplayTableSettingData.PERMISSIONS_CHANGED,'basic')(View.prototype,'onPermissions',Object.getOwnPropertyDescriptor(View.prototype,'onPermissions'));
+ const a=new GameplayTableSettingData(),b=new GameplayTableSettingData(),view=new View(),scope=new BindingScope(view),c=base();
+ a.update(c.record,c.info,c.hand);scope.bind({basic:a});assert.equal(view.basic.length,1);
+ a.update(structuredClone(c.record),structuredClone(c.info),{...c.hand,allBet:9000,publicCardsList:[1,2,3]});assert.equal(view.basic.length,1);
+ b.update(c.record,{...c.info,smallBlind:2000},c.hand);assert.equal(view.basic.length,1);
+ a.update(c.record,{...c.info,smallBlind:2000},c.hand);assert.equal(view.basic.length,2);assert.equal(view.basic[1].sbante.sb,2000);
+ a.roomPermissions={room_random_seat:1};assert.equal(view.permissions.length,2);
+ scope.destroy();a.update(c.record,c.info,c.hand);assert.equal(view.basic.length,2);
+});
+test('CC room permission provider caches per room, uses club endpoint, and falls back to global config',async()=>{
+ const calls=[],global=new GlobalConfigStore();global.setConfig({room_permissions:'{"room_only_ios":1}'});
+ const http={request:async(path,body)=>{calls.push({path,body});return {room_permissions:'{"room_random_seat":1,"room_only_ios":2}'}}};
+ const provider=new GameplayTableSettingDataProvider(http,global),r=record().toObject(),signal=new AbortController().signal;r.tribeId=42;
+ const permissions=await provider.getData(r,99,signal);assert.equal(permissions.room_random_seat,1);assert.equal(permissions.room_only_ios,2);
+ await provider.getData(r,99,signal);assert.equal(calls.length,1);assert.deepEqual(calls[0],{path:'/api/org/tribe/room_permissions',body:{club_id:99,tribe_id:42}});
+ const fallback=new GameplayTableSettingDataProvider({request:async()=>{throw new Error('offline')}},global);
+ assert.deepEqual(await fallback.getData(r,99,signal),{room_only_ios:1});
+ assert.deepEqual(provider.parsePermissions('bad json'),{});assert.deepEqual(provider.parsePermissions([]),{});
+ const abort=new AbortController();abort.abort();await assert.rejects(fallback.getData({...r},99,abort.signal),{name:'AbortError'});
+});

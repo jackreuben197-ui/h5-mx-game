@@ -1,0 +1,31 @@
+/* CC security/table-setting prefab proportions. Only content scrolls. */
+.mx-buyin-footer{display:flex;justify-content:center;flex-shrink:0}
+.mx-buyin-cancel{display:none}
+.mx-buyin-overlay[data-short] .mx-buyin-panel:is([data-step=security],[data-step=rules]){--su:var(--mx-setup-unit,.3px);box-sizing:border-box;padding:calc(65 * var(--su)) calc(66 * var(--su)) calc(65 * var(--su));height:auto;max-height:100%;gap:0}
+.mx-buyin-overlay[data-short] .mx-buyin-panel[data-step=rules]{height:min(100%,calc(2240 * var(--su)))}
+.mx-buyin-panel:is([data-step=security],[data-step=rules]) .mx-buyin-title{font-size:calc(64 * var(--su));line-height:1.35;margin:0 0 calc(45 * var(--su));padding:0;font-weight:400}
+.mx-buyin-panel:is([data-step=security],[data-step=rules]) .mx-buyin-body{flex:1 1 auto;min-height:0;padding:0 calc(12 * var(--su));margin:0 calc(-12 * var(--su));overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:thin}
+.mx-buyin-panel:is([data-step=security],[data-step=rules]) .mx-buyin-footer{gap:calc(35 * var(--su));padding-top:calc(55 * var(--su));margin:0}
+.mx-buyin-panel:is([data-step=security],[data-step=rules]) .mx-buyin-confirm,.mx-buyin-panel[data-step=security] .mx-buyin-cancel{width:calc(458 * var(--su));height:calc(178 * var(--su));margin:0;border-radius:999px;font-size:calc(48 * var(--su))!important;padding:0;font-weight:400;flex-shrink:1;line-height:1.2}
+.mx-buyin-panel[data-step=security] .mx-buyin-cancel{display:block;background:linear-gradient(135deg,#777e84aa,#454b59aa);border:1px solid #ffffff80;box-shadow:inset 0 1px 5px #ffffff80;color:white;cursor:pointer}
+.mx-room-settings{color:#f3f3f3;font-weight:400;font-size:calc(46 * var(--su));line-height:1.35;text-align:left}
+.mx-room-settings-warning{display:flex;align-items:center;gap:calc(22 * var(--su));padding:calc(18 * var(--su)) calc(24 * var(--su));margin-bottom:calc(28 * var(--su));background:#ffffff0e;border-radius:calc(26 * var(--su));font-size:calc(40 * var(--su))}
+.mx-room-settings-warning-icon{display:block;width:calc(45 * var(--su));height:calc(45 * var(--su));flex-shrink:0}
+.mx-room-settings-calltime{margin:0 0 calc(28 * var(--su));padding:calc(25 * var(--su));border-radius:calc(30 * var(--su));background:#0000001a;font-size:calc(40 * var(--su));white-space:pre-line}
+.mx-room-settings-heading{font-size:calc(40 * var(--su));font-weight:400;text-align:center;margin:calc(26 * var(--su)) 0 calc(24 * var(--su))}
+.mx-room-setting-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:calc(20 * var(--su));min-height:calc(86 * var(--su));padding:calc(16 * var(--su)) 0;border-bottom:1px solid #ffffff18}
+.mx-room-setting-heading{display:flex;align-items:center;min-width:0;gap:calc(16 * var(--su))}
+.mx-room-setting-label{overflow-wrap:anywhere}
+.mx-room-setting-state{display:flex;align-items:center;justify-content:flex-end;gap:calc(18 * var(--su));max-width:calc(390 * var(--su));text-align:right}
+.mx-room-setting-value{overflow-wrap:anywhere;white-space:pre-line}
+.mx-room-setting-info{display:block;appearance:none;-webkit-appearance:none;background-color:transparent;background-repeat:no-repeat;box-shadow:none;border:0;padding:0;flex-shrink:0;width:calc(45 * var(--su));height:calc(45 * var(--su));cursor:pointer}
+.mx-room-setting-switch{position:relative;display:block;width:calc(118 * var(--su));height:calc(58 * var(--su));flex-shrink:0;--mx-switch-color:#858585}
+.mx-room-setting-switch[data-on=true]{--mx-switch-color:#00d5ab}
+.mx-room-setting-switch-track{position:absolute;inset:0}
+.mx-room-setting-switch-knob{position:absolute;left:0;top:0;width:calc(58 * var(--su));height:calc(58 * var(--su))}
+.mx-room-setting-switch[data-on=true] .mx-room-setting-switch-knob{left:calc(60 * var(--su))}
+.mx-room-setting-detail{grid-column:1 / -1;font-size:calc(36 * var(--su));color:#ffc706;white-space:pre-line;margin:calc(12 * var(--su)) 0 0}
+.mx-room-settings-tooltip{position:absolute;z-index:2;left:6%;right:6%;top:32%;max-height:60%;overflow:auto;background:#39414bef;backdrop-filter:blur(3px);border:1px solid #ffffff50;border-radius:calc(35 * var(--su));padding:calc(48 * var(--su));box-shadow:0 4px 15px #0005;font-size:calc(40 * var(--su))}
+.mx-room-settings-tooltip p{white-space:pre-line;margin:calc(24 * var(--su)) 0 0}.mx-room-settings-tooltip strong{display:block;padding-right:calc(45 * var(--su));font-weight:400}
+.mx-room-settings-tip-close{position:absolute;right:calc(10 * var(--su));top:calc(10 * var(--su));color:white;background:transparent;border:0;font-size:calc(65 * var(--su));cursor:pointer}
+.mx-room-settings [hidden],.mx-room-settings[hidden],.mx-buyin-cancel[hidden]{display:none!important}

@@ -1,0 +1,30 @@
+import type { ClientMessageSeated, RoomInfo } from '@silenthill/agreement-web';
+import type { RoomTarget } from '../core/types.js';
+import type { BuyInQuote, BuyInSelection } from '../core/Seating.js';
+export class SeatedDataBuilder {
+  build(target: RoomTarget, info: RoomInfo.AsObject, quote: BuyInQuote, selection: BuyInSelection): ClientMessageSeated.AsObject {
+    const seatedData: ClientMessageSeated.AsObject = {
+      room:{roomId:target.roomID,matchId:target.matchID}, seatId:quote.seat, bringIn:0,
+      autoOnTable:0, autoUseWallet:false, returnOrNew:quote.returnOrNew,
+      store:0, clubId:0, applyBringIn:false, autoOnTableNoStore:false,
+      autoOnTableFix:0, depositAdvance:0, autoOnTableMax:0,
+    };
+    // CC RT_AUTO initialization, before the commit callback.
+    if(info.retainType === 1) {
+      seatedData.autoOnTable = info.limitRetainMinRate * info.smallBlind * 2;
+      seatedData.autoOnTableFix = info.limitRetainMinRate * info.smallBlind * 2;
+      seatedData.autoOnTableMax = info.limitRetainMaxRate * info.smallBlind * 2;
+    }
+    seatedData.bringIn = selection.amount;
+    seatedData.clubId = selection.clubID;
+    if(selection.autoAmount > 0) {
+      seatedData.autoOnTableNoStore = true;
+      seatedData.autoUseWallet = true;
+      seatedData.autoOnTable = selection.autoAmount;
+    } else if(info.retainType === 2) {
+      // CC BringInProviderTexas.commit: manual retained chips.
+      seatedData.store = selection.amount - (quote.returnAmount !== undefined ? info.deposit : 0) - info.limitRetainMinRate * info.smallBlind * 2;
+    }
+    return seatedData;
+  }
+}

@@ -1,0 +1,158 @@
+import dayjs from 'dayjs'
+import { defineStore } from 'pinia'
+import type { EnterTablePayload } from '@bridge-protocol'
+import StorageKey from '@/constants/storageKey'
+import { pushTokenClearToCocos, pushTokenToCocos } from '@/bridge/sync/tokenSync'
+import { useRoomListStore } from '@/stores/roomList'
+import { useMttListStore } from '@/stores/mttList'
+import { useUserInfoStore } from '@/stores/userInfo'
+import { isChannelPackageHost } from '@/utils/channelPackage'
+import { dzpkPersistStorage, localStore } from '@/utils/localStore'
+
+interface GameState {
+  sessionToken: string
+  isGuestAccount: boolean
+  websocketPort: number
+  loginAccount: string
+  loginNickname: string
+  loginUserId: string
+  syncedIdentityToken: string
+  lastEnterTable: EnterTablePayload | null
+  lastEnterAt: number
+  lastBridgeAck: string
+  lastBridgeAckAt: number
+}
+
+export const useGameStore = defineStore(
+  'h5-game-store',
+  {
+    state: (): GameState => ({
+      // 启动时从 dzpk_TOKEN 恢复 token，保证与 Cocos 键名一致。
+      sessionToken: localStore.getItem<string>(StorageKey.TOKEN, '') || '',
+      // 体验 token 与真实 token 都是有效 token，身份由体验登录来源及 user/info 判定。
+      isGuestAccount: false,
+      // 启动时恢复 websocket 端口缓存，对齐 Cocos LoginSession 的 SyncWS 能力。
+      websocketPort: Number(localStore.getItem<number | string>(StorageKey.WS_PORT, 0)) || 0,
+      loginAccount: '',
+      loginNickname: '',
+      loginUserId: '',
+      syncedIdentityToken: '',
+      lastEnterTable: null,
+      lastEnterAt: 0,
+      lastBridgeAck: '',
+      lastBridgeAckAt: 0,
+    }),
+    getters: {
+      isRealUser: (state): boolean =>
+        Boolean(state.sessionToken.trim()) && !state.isGuestAccount,
+    },
+    actions: {
+      setGuestAccount(isGuest: boolean): void {
+        this.isGuestAccount = isGuest
+        if (isGuest) {
+          useUserInfoStore().clearPrivateInfo()
+        }
+      },
+      setSessionToken(token: string): void {
+        this.sessionToken = token
+        // 双写到本地存储，便于非 Pinia 场景也能读取同一 token key。
+        localStore.setItem(StorageKey.TOKEN, token)
+        // 同步到 Cocos：避免 H5 dzpk_h5_TOKEN 与 Cocos dzpk_cc_TOKEN 错开。
+        if (token) {
+          pushTokenToCocos(token)
+        } else {
+          pushTokenClearToCocos()
+        }
+      },
+      setWebsocketPort(port: number): void {
+        const safePort = Number.isFinite(port) && port > 0 ? Math.floor(port) : 0
+        this.websocketPort = safePort
+        if (safePort > 0) {
+          localStore.setItem(StorageKey.WS_PORT, safePort)
+          localStore.setItem(StorageKey.WS_PORT_UPDATED_AT, Date.now())
+          return
+        }
+        localStore.removeItem(StorageKey.WS_PORT)
+        localStore.removeItem(StorageKey.WS_PORT_UPDATED_AT)
+      },
+      setLoginUser(payload: { account: string; nickname: string; userId: string }): void {
+        const previousUserId = this.loginUserId
+        this.loginAccount = payload.account
+        this.loginNickname = payload.nickname
+        this.loginUserId = payload.userId
+        // userId 真正就绪（从空 → 有值，或换号）时，两份动态列表都必须从
+        // token 临时 scope 切到 user scope，不能依赖进入某个页面后才补拉。
+        if (payload.userId && payload.userId !== previousUserId) {
+          useRoomListStore().bootstrapRoomList()
+          useMttListStore().bootstrapMttList()
+        }
+      },
+      // 身份确认结果只在当前 SPA 会话内有效；token 变化或刷新页面后必须重新确认。
+      shouldSyncIdentity(token: string): boolean {
+        const safeToken = token.trim()
+        if (!safeToken) {
+          return false
+        }
+        return this.syncedIdentityToken !== safeToken
+      },
+      markIdentitySynced(token: string): void {
+        const safeToken = token.trim()
+        if (safeToken) {
+          this.syncedIdentityToken = safeToken
+        }
+      },
+      clearLogin(): void {
+        // 仅清内存与同步状态；scope.meta 和 rooms 表保留，下次同账号登录走 hotSync 增量。
+        useRoomListStore().clearRoomList()
+        this.sessionToken = ''
+        this.websocketPort = 0
+        this.loginAccount = ''
+        this.loginNickname = ''
+        this.loginUserId = ''
+        this.syncedIdentityToken = ''
+        this.setGuestAccount(false)
+        // 渠道俱乐部来自公开 default 接口，决定名称、Banner scope 和 h5_menu；
+        // token 失效或退出登录只应清理用户私有资料，不能让渠道页退回默认文案和旧菜单。
+        const userInfoStore = useUserInfoStore()
+        if (isChannelPackageHost()) {
+          userInfoStore.clearPrivateInfo()
+        } else {
+          userInfoStore.clearInfo()
+        }
+        // 退出登录时同步清理 dzpk_TOKEN。
+        localStore.removeItem(StorageKey.TOKEN)
+        localStore.removeItem(StorageKey.TOKEN_EXPIREAT)
+        localStore.removeItem(StorageKey.WS_PORT)
+        localStore.removeItem(StorageKey.WS_PORT_UPDATED_AT)
+        // 同步到 Cocos：清空 LoginSession.Token + dzpk_cc_TOKEN。
+        pushTokenClearToCocos()
+        // 登录态清空时同步清理 MTT / 首页统计缓存。
+        localStore.removeItem(StorageKey.MTT_LIST_CACHE)
+        localStore.removeItem(StorageKey.HOME_ROOM_STATS_CACHE)
+      },
+      setLastEnterTable(payload: EnterTablePayload): void {
+        this.lastEnterTable = payload
+        this.lastEnterAt = dayjs().valueOf()
+      },
+      setBridgeAck(message: string): void {
+        this.lastBridgeAck = message
+        this.lastBridgeAckAt = dayjs().valueOf()
+      },
+    },
+    persist: {
+      // 与 Cocos StorageKey.LOGIN_DATA 对齐，最终落地为 dzpk_LOGIN_DATA。
+      key: StorageKey.LOGIN_DATA,
+      storage: dzpkPersistStorage,
+      pick: [
+        'sessionToken',
+        'isGuestAccount',
+        'websocketPort',
+        'loginAccount',
+        'loginNickname',
+        'loginUserId',
+        'lastEnterTable',
+        'lastEnterAt',
+      ],
+    },
+  },
+)

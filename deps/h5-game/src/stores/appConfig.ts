@@ -1,0 +1,437 @@
+import { defineStore } from 'pinia'
+import type { PrivateUcFeeType } from '@bridge-protocol'
+import { postBeforeLoginConfigApi, postGlobalConfigApi } from '@/api/config'
+import type {
+  DiamondConfigData,
+  DiamondConfigItem,
+  DiamondConfigMap,
+  DiamondSetting,
+  GlobalConfigData,
+  MttRecordFeeConfig,
+} from '@/api/models/config'
+import StorageKey from '@/constants/storageKey'
+import {
+  PUBLIC_STORE_APP_CONFIG,
+  PUBLIC_STORE_DIAMOND_CONFIG,
+  PUBLIC_STORE_UC_CONFIG,
+  readPublicCache,
+  readPublicCacheEntries,
+  replacePublicCacheEntries,
+} from '@/utils/indexedDB'
+import { localStore } from '@/utils/localStore'
+import {
+  CHANNEL_PACKAGE_UC_CHARGE_ENABLED,
+  configurePlatformDomains,
+  getPrivateUcChargeConfigs,
+  isChannelPackageHost,
+  type NormalizedPrivateUcConfig,
+  type PrivateUcChargeConfigItemExt,
+} from '@/utils/channelPackage'
+
+interface AppConfigState {
+  globalConfig: GlobalConfigData | null
+  platformDomainsReady: boolean
+  diamondConfig: DiamondConfigMap | null
+  privateUcChargeConfig: PrivateUcChargeConfigItemExt[]
+  privateUcMttRecordFeeConfig: MttRecordFeeConfig | null
+}
+
+let guestGlobalConfigPromise: Promise<void> | null = null
+let globalConfigRefreshPromise: Promise<boolean> | null = null
+let globalConfigRefreshSessionKey = ''
+let globalConfigLoadedSessionKey = ''
+
+// 兼容 global_config_resp 挂在 data 顶层或 data.data 内层两种返回结构（同 useLobbyBannerImages）。
+function extractGuestGlobalConfig(
+  data: Record<string, unknown> | null | undefined,
+): GlobalConfigData | null {
+  if (!data) return null
+  const inner = data.data as Record<string, unknown> | null | undefined
+  const resp = (data.global_config_resp ?? inner?.global_config_resp) as {
+    global_config?: unknown
+  } | null
+  const config = resp?.global_config ?? inner?.global_config
+  if (config && typeof config === 'object' && !Array.isArray(config)) {
+    return config as GlobalConfigData
+  }
+  return null
+}
+
+function toNum(v: unknown): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+function normalizeSettings(raw: unknown): DiamondSetting[] {
+  if (!Array.isArray(raw)) return []
+  return raw.map((item) => {
+    const row = item as Record<string, unknown>
+    return {
+      sb: Math.floor(toNum(row.sb)),
+      blind_type: Math.floor(toNum(row.blind_type)),
+      price: toNum(row.price),
+      discount_price: toNum(row.discount_price),
+      discount: row.discount === undefined ? 1 : toNum(row.discount),
+      record_floor: row.record_floor === undefined ? undefined : toNum(row.record_floor),
+      record_ratio: row.record_ratio === undefined ? undefined : toNum(row.record_ratio),
+      decimal_type: row.decimal_type === undefined ? undefined : Math.floor(toNum(row.decimal_type)),
+    }
+  })
+}
+
+function buildDiamondConfigMap(raw: DiamondConfigData): DiamondConfigMap {
+  const items = Array.isArray(raw?.data) ? raw.data : []
+  const map: DiamondConfigMap = {}
+  for (const row of items) {
+    const configType = Math.floor(toNum(row.config_type))
+    const typeExt = Math.floor(toNum(row.type_ext))
+    if (!configType || !typeExt) continue
+    if (!map[configType]) map[configType] = {}
+    map[configType][typeExt] = {
+      config_type: configType,
+      status: Math.floor(toNum(row.status)),
+      type_ext: typeExt,
+      start_time: Math.floor(toNum(row.start_time)),
+      end_time: Math.floor(toNum(row.end_time)),
+      setting: normalizeSettings(row.setting),
+    } satisfies DiamondConfigItem
+  }
+  return map
+}
+
+export const useAppConfigStore = defineStore('h5-appConfig-store', {
+  state: (): AppConfigState => ({
+    globalConfig: null,
+    platformDomainsReady: false,
+    diamondConfig: null,
+    privateUcChargeConfig: getPrivateUcChargeConfigs(),
+    privateUcMttRecordFeeConfig: null,
+  }),
+  getters: {
+    // 对齐 Unity GameCache._clubDisplayPlatformMtt：赛事列表是否展示平台创建的 MTT/SNG。
+    clubDisplayPlatformMtt(state): boolean {
+      return Number(state.globalConfig?.club_display_platform_mtt) === 1
+    },
+    getMttRecordFeeConfig(state): (goldType: number) => MttRecordFeeConfig | null {
+      return (goldType: number) => {
+        const d = state.globalConfig
+        if (!d) return null
+        const rawJson =
+          goldType === 4 ? d.record_fee_mtt_diamond :
+            goldType === 3 ? d.record_fee_mtt_scoreboard :
+              goldType === 2 ? d.record_fee_mtt_gc :
+                d.record_fee_mtt_uc
+        if (!rawJson) return null
+        try { return JSON.parse(rawJson) as MttRecordFeeConfig } catch { return null }
+      }
+    },
+    getPrivateUcChargePrice(state): (feeType: PrivateUcFeeType) => number {
+      return (feeType: PrivateUcFeeType) => {
+        if (!CHANNEL_PACKAGE_UC_CHARGE_ENABLED) return 0
+        const price = state.privateUcChargeConfig.find((item) => item.feeType === feeType)?.price
+        return typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : 0
+      }
+    },
+    getPrivateUcChargeConfig(state): (feeType: PrivateUcFeeType) => PrivateUcChargeConfigItemExt | null {
+      return (feeType: PrivateUcFeeType) =>
+        state.privateUcChargeConfig.find((item) => item.feeType === feeType) ?? null
+    },
+  },
+  actions: {
+    setGlobalConfig(config: GlobalConfigData): void {
+      this.globalConfig = config
+      this.platformDomainsReady = configurePlatformDomains(config)
+      void persistGlobalConfig(config, StorageKey.APP_CONFIG_CACHE)
+        .catch((error) => {
+          console.warn('[appConfig] persist app_config cache failed:', error)
+        })
+    },
+    // 游客（无 token）场景经免鉴权聚合接口补拉全局配置；登录用户走 postAuthSync 的 /config/global/config。
+    // 对齐 pokerqueen HotUpdateConfigCache：请求体为 { global_config_req: { last_update_time } }。
+    async ensureGuestGlobalConfig(forceRefresh = false): Promise<void> {
+      if (this.globalConfig && !forceRefresh) {
+        return
+      }
+      if (!guestGlobalConfigPromise) {
+        const configBeforeRequest = this.globalConfig
+        guestGlobalConfigPromise = postBeforeLoginConfigApi({
+          global_config_req: { last_update_time: 0 },
+        })
+          .then((response) => {
+            if (Number(response.code) !== 0 || !response.data) {
+              return
+            }
+            const config = extractGuestGlobalConfig(response.data)
+            // 普通补拉只填空；首屏后台刷新允许替换本地缓存，但不能覆盖期间
+            // 由真实登录 postAuthSync 写入的另一份新配置。域名尚未就绪时，
+            // 必须用服务端响应替换缓存，不能因缓存抢先恢复而跳过域名配置。
+            if (
+              config &&
+              (!this.globalConfig ||
+                !this.platformDomainsReady ||
+                (forceRefresh && this.globalConfig === configBeforeRequest))
+            ) {
+              this.setGlobalConfig(config)
+            }
+          })
+          .catch((error) => {
+            console.warn('[appConfig] fetch guest global config failed:', error)
+          })
+          .finally(() => {
+            guestGlobalConfigPromise = null
+          })
+      }
+      await guestGlobalConfigPromise
+    },
+    async ensurePlatformDomainsReady(): Promise<boolean> {
+      // 缓存只用于首屏展示；本次会话必须先取得服务端域名列表，避免旧缓存
+      // 缺少新二维码域名时把“邀请码.平台域名”误当成俱乐部自定义域名。
+      if (!this.platformDomainsReady) {
+        await this.ensureGuestGlobalConfig(true)
+      }
+      return this.platformDomainsReady
+    },
+    // 登录态下每个 token 会话至少确认一次服务端最新配置；并发调用共享同一请求。
+    async ensureFreshGlobalConfig(sessionKey: string): Promise<boolean> {
+      const normalizedSessionKey = sessionKey.trim()
+      if (!normalizedSessionKey) return false
+      if (globalConfigLoadedSessionKey === normalizedSessionKey && this.globalConfig) return true
+
+      if (globalConfigRefreshPromise) {
+        await globalConfigRefreshPromise
+        if (globalConfigLoadedSessionKey === normalizedSessionKey && this.globalConfig) return true
+        return this.ensureFreshGlobalConfig(normalizedSessionKey)
+      }
+
+      globalConfigRefreshSessionKey = normalizedSessionKey
+      const currentTask = postGlobalConfigApi({})
+        .then((response) => {
+          if (globalConfigRefreshSessionKey !== normalizedSessionKey) return false
+          if (Number(response.code) !== 0 || !response.data) return false
+          this.setGlobalConfig(response.data)
+          globalConfigLoadedSessionKey = normalizedSessionKey
+          return true
+        })
+        .finally(() => {
+          if (globalConfigRefreshPromise !== currentTask) return
+          globalConfigRefreshPromise = null
+          globalConfigRefreshSessionKey = ''
+        })
+
+      globalConfigRefreshPromise = currentTask
+      return currentTask
+    },
+    setDiamondConfig(raw: DiamondConfigData): void {
+      const map = buildDiamondConfigMap(raw)
+      this.diamondConfig = map
+      void persistDiamondConfig(map, StorageKey.DIAMOND_CONFIG_CACHE)
+        .catch((error) => {
+          console.warn('[appConfig] persist diamond_config cache failed:', error)
+        })
+    },
+    setPrivateUcChargeConfig(items: PrivateUcChargeConfigItemExt[]): void {
+      this.privateUcChargeConfig = CHANNEL_PACKAGE_UC_CHARGE_ENABLED
+        ? items.map((item) => ({ ...item, price: Number(item.price) || 0 }))
+        : getPrivateUcChargeConfigs()
+    },
+    setPrivateUcConfig(config: NormalizedPrivateUcConfig, persistCache = true): void {
+      // IndexedDB 不能结构化克隆 Vue/Pinia 的响应式 Proxy。先保留普通对象，
+      // 再写入 store；持久化时也必须使用这些局部变量，不能从 this 上回读。
+      const chargeItems = CHANNEL_PACKAGE_UC_CHARGE_ENABLED
+        ? config.chargeItems.map((item) => ({ ...item, price: Number(item.price) || 0 }))
+        : getPrivateUcChargeConfigs()
+      const diamondConfig = CHANNEL_PACKAGE_UC_CHARGE_ENABLED ? config.diamondConfig : {}
+      const mttRecordFeeConfig = CHANNEL_PACKAGE_UC_CHARGE_ENABLED
+        ? config.mttRecordFeeConfig
+        : null
+
+      this.privateUcChargeConfig = chargeItems
+      this.diamondConfig = diamondConfig
+      this.privateUcMttRecordFeeConfig = mttRecordFeeConfig
+      if (persistCache) {
+        void persistPrivateUcConfig({
+          chargeItems,
+          diamondConfig,
+          mttRecordFeeConfig,
+        }).catch((error) => {
+          console.warn('[appConfig] persist uc_config cache failed:', error)
+        })
+      }
+    },
+    async restorePublicConfigCache(): Promise<void> {
+      // 必须先恢复全局域名配置，才能准确判断当前是否为渠道包。
+      const globalConfig = await restoreGlobalConfig(StorageKey.APP_CONFIG_CACHE)
+
+      // 网络刷新与缓存恢复可能并行；缓存只能填空，不能覆盖刚返回的新配置。
+      if (globalConfig && !this.globalConfig) {
+        this.globalConfig = globalConfig
+        configurePlatformDomains(globalConfig)
+      }
+
+      // 私域版本改用独立 UC 收费配置，不能再恢复旧的钻石收费缓存。
+      if (isChannelPackageHost()) {
+        const privateUcConfig = await restorePrivateUcConfig()
+        if (privateUcConfig) {
+          this.setPrivateUcConfig(privateUcConfig, false)
+        } else {
+          this.diamondConfig = null
+          this.privateUcMttRecordFeeConfig = null
+        }
+        return
+      }
+
+      const diamondConfig = await restoreDiamondConfig(StorageKey.DIAMOND_CONFIG_CACHE)
+      if (diamondConfig && !this.diamondConfig) {
+        this.diamondConfig = diamondConfig
+      }
+    },
+  },
+})
+
+async function persistGlobalConfig(
+  value: GlobalConfigData,
+  legacyKey: string,
+): Promise<void> {
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([key, itemValue]) => key && itemValue !== undefined)
+    .map(([key, itemValue]) => ({
+      key,
+      value: itemValue,
+    }))
+  await replacePublicCacheEntries(PUBLIC_STORE_APP_CONFIG, entries)
+  localStore.removeItem(legacyKey)
+}
+
+async function persistDiamondConfig(
+  value: DiamondConfigMap,
+  legacyKey: string,
+): Promise<void> {
+  const entries = Object.entries(value)
+    .map(([configType, configValue]) => ({
+      key: Number(configType),
+      value: configValue,
+    }))
+    .filter((entry) => Number.isFinite(entry.key) && entry.key > 0)
+  await replacePublicCacheEntries(PUBLIC_STORE_DIAMOND_CONFIG, entries)
+  localStore.removeItem(legacyKey)
+}
+
+const UC_CONFIG_CHARGE_ITEMS_KEY = 'charge_items'
+const UC_CONFIG_MTT_RECORD_FEE_KEY = 'mtt_record_fee_config'
+
+async function persistPrivateUcConfig(value: NormalizedPrivateUcConfig): Promise<void> {
+  const entries: Array<{ key: IDBValidKey; value: unknown }> = [
+    { key: UC_CONFIG_CHARGE_ITEMS_KEY, value: value.chargeItems },
+    { key: UC_CONFIG_MTT_RECORD_FEE_KEY, value: value.mttRecordFeeConfig },
+    ...Object.entries(value.diamondConfig)
+      .map(([configType, configValue]) => ({
+        key: Number(configType),
+        value: configValue,
+      }))
+      .filter((entry) => Number.isFinite(entry.key) && entry.key > 0),
+  ]
+  await replacePublicCacheEntries(PUBLIC_STORE_UC_CONFIG, entries)
+}
+
+async function restoreGlobalConfig(
+  legacyKey: string,
+): Promise<GlobalConfigData | null> {
+  const entries = await readPublicCacheEntries<unknown>(PUBLIC_STORE_APP_CONFIG)
+  const keyedEntries = entries.filter((entry) => entry.key !== 'cache')
+  if (keyedEntries.length > 0) {
+    return keyedEntries.reduce<GlobalConfigData>((config, entry) => {
+      config[String(entry.key)] = entry.value
+      return config
+    }, {})
+  }
+
+  const legacyIndexedDBCache = await readPublicCache<GlobalConfigData>(PUBLIC_STORE_APP_CONFIG)
+  if (legacyIndexedDBCache) {
+    await persistGlobalConfig(legacyIndexedDBCache, legacyKey)
+    return legacyIndexedDBCache
+  }
+
+  const legacyCache = localStore.getItem<GlobalConfigData | null>(legacyKey, null)
+  if (legacyCache) {
+    await persistGlobalConfig(legacyCache, legacyKey)
+    return legacyCache
+  }
+
+  return null
+}
+
+async function restoreDiamondConfig(
+  legacyKey: string,
+): Promise<DiamondConfigMap | null> {
+  const entries = await readPublicCacheEntries<Record<number, DiamondConfigItem>>(
+    PUBLIC_STORE_DIAMOND_CONFIG,
+  )
+  const keyedEntries = entries.filter((entry) => entry.key !== 'cache')
+  if (keyedEntries.length > 0) {
+    return keyedEntries.reduce<DiamondConfigMap>((config, entry) => {
+      const configType = Number(entry.key)
+      if (Number.isFinite(configType) && configType > 0) {
+        config[configType] = entry.value
+      }
+      return config
+    }, {})
+  }
+
+  const legacyIndexedDBCache = await readPublicCache<DiamondConfigMap>(PUBLIC_STORE_DIAMOND_CONFIG)
+  if (legacyIndexedDBCache) {
+    await persistDiamondConfig(legacyIndexedDBCache, legacyKey)
+    return legacyIndexedDBCache
+  }
+
+  const legacyCache = localStore.getItem<DiamondConfigMap | null>(legacyKey, null)
+  if (legacyCache) {
+    await persistDiamondConfig(legacyCache, legacyKey)
+    return legacyCache
+  }
+
+  return null
+}
+
+async function restorePrivateUcConfig(): Promise<NormalizedPrivateUcConfig | null> {
+  const entries = await readPublicCacheEntries<unknown>(PUBLIC_STORE_UC_CONFIG)
+  if (!entries.length) return null
+
+  let chargeItems: PrivateUcChargeConfigItemExt[] | null = null
+  let mttRecordFeeConfig: MttRecordFeeConfig | null = null
+  let hasMttRecordFeeEntry = false
+  const diamondConfig: DiamondConfigMap = {}
+
+  for (const entry of entries) {
+    if (entry.key === UC_CONFIG_CHARGE_ITEMS_KEY) {
+      if (Array.isArray(entry.value)) {
+        chargeItems = entry.value as PrivateUcChargeConfigItemExt[]
+      }
+      continue
+    }
+    if (entry.key === UC_CONFIG_MTT_RECORD_FEE_KEY) {
+      hasMttRecordFeeEntry = true
+      if (entry.value && typeof entry.value === 'object' && !Array.isArray(entry.value)) {
+        mttRecordFeeConfig = entry.value as MttRecordFeeConfig
+      }
+      continue
+    }
+
+    const configType = Number(entry.key)
+    if (
+      Number.isFinite(configType) &&
+      configType > 0 &&
+      entry.value &&
+      typeof entry.value === 'object' &&
+      !Array.isArray(entry.value)
+    ) {
+      diamondConfig[configType] = entry.value as Record<number, DiamondConfigItem>
+    }
+  }
+
+  if (!chargeItems && !hasMttRecordFeeEntry && !Object.keys(diamondConfig).length) return null
+  return {
+    chargeItems: chargeItems ?? getPrivateUcChargeConfigs(),
+    diamondConfig,
+    mttRecordFeeConfig,
+  }
+}

@@ -1,0 +1,231 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { showFailToast, showSuccessToast } from 'vant'
+import { useRouter } from 'vue-router'
+import { postMiscReportFeedbackQuestIonApi } from '@/api/misc'
+import mainBgUrl from '@/assets/images/main_bg.webp'
+import mainBgLightUrl from '@/assets/images/main_bg_light.png'
+import HeaderBack from '@/components/HeaderBack/HeaderBack.vue'
+import { t } from '@/i18n'
+
+const router = useRouter()
+
+// 背景素材由 CSS 根据 data-theme 选择，切换主题时无需重建页面。
+const backgroundStyle = computed(() => ({
+  '--record-report-bg-dark': `url(${mainBgUrl})`,
+  '--record-report-bg-light': `url(${mainBgLightUrl})`,
+}))
+
+const title = computed(() => 'Result')
+
+const reason = ref('')
+const selectedPreset = ref(t('UIClub_Error'))
+const submitting = ref(false)
+
+const presetList = [t('UIClub_Error'), t('UIClub_Text45')]
+
+const reasonCount = computed(() => reason.value.length)
+
+async function submitReport(): Promise<void> {
+  const detail = reason.value.trim()
+  if (!detail) {
+    showFailToast(t('UIChatReport009'))
+    return
+  }
+
+  submitting.value = true
+  try {
+    const response = await postMiscReportFeedbackQuestIonApi({
+      title: selectedPreset.value,
+      description: detail,
+    })
+    if (response.code !== 0) {
+      throw new Error(typeof response.msg === 'string' ? response.msg : t('UIClub_SubmitFail'))
+    }
+    showSuccessToast(t('UIClub_SubmitSuccess'))
+    void router.back()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : t('UIClub_SubmitFail')
+    showFailToast(message)
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="page-shell record-report-page" :style="backgroundStyle">
+    <HeaderBack :title="title" extra-padding />
+
+    <div class="content-wrap">
+      <section class="glass-card option-card">
+        <button
+          v-for="item in presetList"
+          :key="item"
+          type="button"
+          class="option-row"
+          @click="selectedPreset = item"
+        >
+          <span>{{ item }}</span>
+          <span
+            :class="['radio-circle', { 'radio-circle--checked': selectedPreset === item }]"
+          ></span>
+        </button>
+      </section>
+
+      <section class="glass-card input-card">
+        <div class="input-title">{{ t('UIChatReport009') }} {{ reasonCount }}/100</div>
+        <textarea
+          v-model="reason"
+          class="reason-input"
+          maxlength="100"
+          :placeholder="t('UIClub_Text44') + '...'"
+        ></textarea>
+      </section>
+
+      <VanButton
+        round
+        type="primary"
+        class="submit-btn"
+        :loading="submitting"
+        @click="submitReport"
+      >
+        {{ t('sr_r9ccGtey') }}
+      </VanButton>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+@use '@/styles/mixins' as *;
+
+.record-report-page {
+  position: relative;
+  height: 100dvh;
+  html[data-channel-package='1'] & {
+    height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+    min-height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+  }
+  padding: 0 0 2.2rem;
+  color: #f9f9f9;
+  background-image: var(--record-report-bg-dark);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  @include theme-light {
+    color: var(--c-text);
+    background-color: var(--c-page);
+    background-image: var(--record-report-bg-light);
+  }
+}
+
+.content-wrap {
+  position: relative;
+  padding: 0 0.49rem;
+}
+
+.glass-card {
+  border-radius: 0.42rem;
+  border: 0.02rem solid rgba(249, 249, 249, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(0.04rem);
+
+  @include theme-light {
+    border-color: transparent;
+    background: var(--c-surface);
+  }
+}
+
+.option-card {
+  margin-top: 0.38rem;
+  overflow: hidden;
+}
+
+.option-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  padding: 0.28rem 0.42rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.39rem;
+  border-bottom: 0.02rem solid rgba(255, 255, 255, 0.16);
+
+  @include theme-light {
+    color: var(--c-text);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.radio-circle {
+  @include theme-light {
+    border-color: rgba(32, 32, 32, 0.3);
+    box-shadow: none;
+  }
+
+  &--checked {
+    @include theme-light {
+      border-color: var(--c-brand);
+    }
+  }
+}
+
+.input-card {
+  margin-top: 0.28rem;
+  padding: 0.28rem 0.38rem;
+}
+
+.input-title {
+  font-size: 0.31rem;
+  color: rgba(255, 255, 255, 0.82);
+
+  @include theme-light {
+    color: var(--c-text);
+  }
+}
+
+.reason-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  margin-top: 0.24rem;
+  min-height: 2.6rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0.24rem;
+  color: #fff;
+  font-size: 0.34rem;
+  line-height: 1.4;
+  padding: 0.22rem;
+
+  @include theme-light {
+    background: #d3d3d3;
+    color: var(--c-text);
+  }
+
+  @include theme-light {
+    &::placeholder {
+      color: #888;
+    }
+  }
+}
+
+.submit-btn {
+  position: fixed;
+  left: 0.54rem;
+  right: 0.54rem;
+  bottom: calc(env(safe-area-inset-bottom) + 0.36rem);
+  height: 0.96rem;
+  font-size: 0.38rem;
+  font-weight: 700;
+  --van-button-primary-background: var(--c-brand);
+  --van-button-primary-border-color: var(--c-brand);
+}
+</style>

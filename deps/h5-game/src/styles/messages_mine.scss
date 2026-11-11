@@ -1,0 +1,241 @@
+@use './mixins' as *;
+
+.message-page,
+.mine-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 0.48rem;
+  color: var(--c-text);
+
+  @include theme-light {
+    color: var(--c-text);
+  }
+
+  .title-bar {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0.3rem;
+    .title {
+      font-size: 0.65rem;
+      font-weight: 510;
+      line-height: 120%;
+      text-shadow: 0 0.22rem 0.5rem rgba(0, 0, 0, 0.35);
+
+      @include theme-light {
+        text-shadow: none;
+      }
+    }
+    .currency-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.2);
+      min-height: 0.8rem;
+      padding: 0 0.24rem 0rem;
+      border-radius: 0.6rem;
+      overflow: hidden;
+      gap: 0.2rem;
+
+      @include theme-light {
+        color: #000;
+        background: #fff;
+        box-shadow: 0 0.04rem 0.14rem rgba(34, 34, 34, 0.08);
+      }
+
+      .icon-diamond {
+        width: 0.59rem;
+        height: 0.59rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        img {
+          width: 100%;
+        }
+      }
+      .num {
+        line-height: 140%;
+        font-size: 0.5rem;
+        font-weight: 700;
+      }
+      .icon-recharge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 0.47rem;
+        height: 0.47rem;
+        color: #dadada;
+
+        @include theme-light {
+          color: var(--c-brand);
+        }
+
+        img,
+        .icon-recharge-svg {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+  .card-bg-highlight {
+    border-radius: 1.4rem;
+    overflow: hidden;
+    width: 100%;
+    margin-top: 1.1rem;
+    padding: 1px;
+    background: linear-gradient(
+      159deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
+      rgba(255, 255, 255, 1) 100%
+    );
+
+    @include theme-light {
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 1.04rem;
+      padding: 0;
+      background: #fff;
+    }
+
+    .card-bg-outter {
+      width: 100%;
+      height: 5.41rem;
+      border-radius: 1.42rem;
+      overflow: hidden;
+      background: url('@/assets/images/card_bg.webp') center/cover no-repeat;
+      backdrop-filter: blur(20px);
+      /* 针对旧版 Safari 浏览器的兼容性写法 */
+      -webkit-backdrop-filter: blur(20px);
+      padding: 0.2rem;
+
+      @include theme-light {
+        border-radius: 1.04rem;
+        background: #fff;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .card-bg-innner {
+        width: 100%;
+        height: 100%;
+        border-radius: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+
+        @include theme-light {
+          border-radius: 0.96rem;
+          background: #fff;
+        }
+
+        .card-line1 {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+        .card-line2 {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          .button {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 0.1rem 0.1rem 0.1rem 0.36rem;
+
+            @include theme-light {
+              color: #fff;
+              background: var(--c-brand);
+            }
+            .text {
+              font-size: 0.33rem;
+              line-height: 100%;
+            }
+            .round-icon {
+              width: 0.75rem;
+              height: 0.75rem;
+              border-radius: 50%;
+              background-color: rgba(20, 20, 20, 0.48);
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-left: 0.2rem;
+              img {
+                width: 0.474rem;
+              }
+              .num {
+                font-size: 0.345rem;
+                line-height: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .card-bg-outter::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      /* 在这里设置你的背景图片 */
+      background-image: url('@/assets/images/card_border.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      /* 将伪元素放到内容底层 */
+      z-index: -1;
+
+      @include theme-light {
+        content: none;
+      }
+    }
+  }
+  .box-gallery {
+    margin-top: 0.913rem;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    .box-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      .img {
+        width: 1.62rem;
+        height: 1.62rem;
+        margin-bottom: 0.24rem;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .text {
+        font-size: 0.32rem;
+        line-height: 120%;
+
+        @include theme-light {
+          color: #000;
+        }
+      }
+    }
+  }
+}

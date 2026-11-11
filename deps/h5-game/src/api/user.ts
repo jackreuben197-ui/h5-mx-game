@@ -1,0 +1,736 @@
+import http, { type HttpRequestOptionsExt } from '@/api/http'
+import type { ApiResponse } from '@/api/models/common'
+import type {
+  LoginRequest,
+  LoginResponse,
+  LoginV2Request,
+  ExperienceLoginRequest,
+  OtherUserInfoData,
+  OtherUserInfoRequest,
+  UserCheckEmailData,
+  UserCheckEmailRequest,
+  UserInfoData,
+  UserInfoResponse,
+  UserAvatarsData,
+  UserCheckNicknameData,
+  UserBindEmailRequest,
+  UserBindPhoneRequest,
+  UserBindStatusData,
+  UserBindThirdPartyRequest,
+  UserCheckNicknameRequest,
+  UserCheckPhoneData,
+  UserCheckPhoneRequest,
+  UserGoldChangeLogData,
+  UserGoldChangeLogRequest,
+  UserModifyInfoRequest,
+  UserModifyInfoData,
+  UserModifyPasswordData,
+  UserModifyPasswordRequest,
+  UserMuteListData,
+  UserMyWalletsData,
+  UserRefreshData,
+  UserRefreshRequest,
+  UserRegisterData,
+  UserInviteRegisterData,
+  UserInviteRegisterRequest,
+  UserRegisterRequest,
+  UserRoomData,
+  UserRoomRequest,
+  UserRoomSettleDetailData,
+  UserRoomSettleDetailRequest,
+  UserSendCodeRequest,
+  UserDeleteCodeRequest,
+  UserDeleteCodeResponseData,
+  UserSendEmailCodeData,
+  UserSendEmailCodeRequest,
+  UserWsData,
+  UserWsResponse,
+  UserDeleteRequest,
+  UserDeleteResponseData,
+  UserVerifyPasswordRequest,
+  UserVerifyPasswordResponseData,
+  UserModifyQuickInfoRequest,
+  UserModifyQuickInfoResponseData,
+  UserModifyQuickSwitchRequest,
+  UserModifyQuickSwitchResponseData,
+  UserModifyBringInSwitchRequest,
+  UserModifyBringInSwitchResponseData,
+  UserBillRequest,
+  UserBillResponseData,
+  UserWalletRequest,
+  UserWalletResponseData,
+  UserDiamondsWalletRequest,
+  UserDiamondsWalletResponseData,
+  USDTApplyListRequest,
+  USDTApplyListResponseData,
+  USDTApplyRequest,
+  USDTApplyResponseData,
+  USDTApplyReadRequest,
+  USDTApplyReadResponseData,
+  NewSafetyRequest,
+  NewSafetyResponseData,
+  ClubSendDiamondsRequest,
+  ClubSendDiamondsResponseData,
+  UserAgencySendDiamondsRequest,
+  UserAgencySendDiamondsResponseData,
+  UserAgencyGoldGrantRequest,
+  UserAgencyGoldGrantResponseData,
+  UserLoginThirdPartyRequest,
+} from '@/api/models/user'
+import { forwardUserClubToCocos, forwardUserInfoToCocos } from '@/bridge/sync'
+import { useGameStore } from '@/stores/game'
+import { pinia } from '@/stores/pinia'
+import { type ClubInfo, useUserInfoStore } from '@/stores/userInfo'
+import { writeClubListCache } from '@/utils/userClubListCache'
+import { isExperienceUserInfo } from '@/session/experienceIdentity'
+
+type ApiRequestExtOptions = HttpRequestOptionsExt
+
+function isClubInfo(raw: unknown): raw is ClubInfo {
+  if (!raw || typeof raw !== 'object') {
+    return false
+  }
+  const club = raw as Record<string, unknown>
+  const clubId = club.club_id
+  return clubId !== undefined && clubId !== null && String(clubId).trim() !== ''
+}
+
+function extractClubList(raw: unknown, depth = 0): ClubInfo[] {
+  if (depth > 4 || raw === null || raw === undefined) {
+    return []
+  }
+
+  if (Array.isArray(raw)) {
+    const direct = raw.filter(isClubInfo)
+    if (direct.length) {
+      return direct
+    }
+
+    for (const item of raw) {
+      const nested = extractClubList(item, depth + 1)
+      if (nested.length) {
+        return nested
+      }
+    }
+    return []
+  }
+
+  if (isClubInfo(raw)) {
+    return [raw]
+  }
+
+  if (typeof raw !== 'object') {
+    return []
+  }
+
+  const obj = raw as Record<string, unknown>
+  const priorityKeys = ['list', 'records', 'clubs', 'club_list', 'items', 'data']
+  for (const key of priorityKeys) {
+    if (key in obj) {
+      const nested = extractClubList(obj[key], depth + 1)
+      if (nested.length) {
+        return nested
+      }
+    }
+  }
+
+  for (const value of Object.values(obj)) {
+    const nested = extractClubList(value, depth + 1)
+    if (nested.length) {
+      return nested
+    }
+  }
+
+  return []
+}
+
+function extractH5Menu(raw: unknown, depth = 0): number | undefined {
+  if (depth > 4 || !raw || typeof raw !== 'object') {
+    return undefined
+  }
+
+  const obj = raw as Record<string, unknown>
+  const menu = Number(obj.h5_menu)
+  if (Number.isFinite(menu)) {
+    return menu
+  }
+
+  const nestedValues = Array.isArray(raw) ? raw : Object.values(obj)
+  for (const value of nestedValues) {
+    const nested = extractH5Menu(value, depth + 1)
+    if (nested !== undefined) {
+      return nested
+    }
+  }
+  return undefined
+}
+
+// 体验账号登录：服务端按设备分配独立体验账号，H5 不传经纬度。
+export async function postUserExperienceLoginApi(
+  payload: ExperienceLoginRequest,
+): Promise<LoginResponse> {
+  const response = await http.post<ApiResponse<LoginResponse>>('/user/experience/login', payload, {
+    authToken: false,
+    suppressBusinessToast: true,
+  } satisfies HttpRequestOptionsExt)
+  const body = response.data
+  const token = String(body.data?.token || '').trim()
+  if (body.code !== 0) {
+    throw new Error(body.message || `体验账号登录失败: ${body.code}`)
+  }
+  if (!token) {
+    throw new Error('体验账号登录接口返回缺少 token')
+  }
+  return { ...body.data, token }
+}
+
+// 真实账号与体验账号共用同一登出接口。必须先确认服务端登出，再清本地 token。
+export async function postUserLogoutApi(token: string): Promise<ApiResponse<unknown>> {
+  const response = await http.post<ApiResponse<unknown>>(
+    '/user/logout',
+    {},
+    {
+      authToken: token,
+      allowGuestAccount: true,
+      suppressAuthRedirect: true,
+      suppressBusinessToast: true,
+      suppressBusinessCodes: [90010],
+    } satisfies HttpRequestOptionsExt,
+  )
+  return response.data
+}
+
+// 登录：返回 token 等登录态信息。
+export async function loginApi(payload: LoginRequest): Promise<LoginResponse> {
+  const res = await http.post<{ data?: LoginResponse; token?: string }>('/user/login', payload)
+  const token = res.data?.data?.token ?? res.data?.token
+
+  if (!token) {
+    throw new Error('登录接口返回缺少 token')
+  }
+
+  return { ...res.data?.data, ...res.data, token }
+}
+
+// 对齐 Cocos Login2：支持手机号/邮箱登录。
+export async function loginV2Api(payload: LoginV2Request): Promise<LoginResponse> {
+  try {
+    const res = await http.post<{ data?: LoginResponse; token?: string }>('/user/login2', payload)
+    const token = res.data?.data?.token ?? res.data?.token
+    if (!token) {
+      throw new Error('登录接口返回缺少 token')
+    }
+    return { ...res.data?.data, ...res.data, token }
+  } catch (error) {
+    // 兼容旧环境：若后端未部署 login2，则手机号登录回退到 /user/login。
+    const status = (error as { response?: { status?: number } })?.response?.status
+    if (status === 404 && payload.phone && !payload.email) {
+      return loginApi({
+        phone: payload.phone,
+        password: payload.password,
+        area: payload.area || '55',
+      })
+    }
+    throw error
+  }
+}
+
+// 用户信息：用于大厅初始化与用户态同步。
+export async function getUserInfoApi(): Promise<UserInfoData> {
+  const requestToken = useGameStore(pinia).sessionToken.trim()
+  const res = await http.post<UserInfoResponse>(
+    '/user/info',
+    {},
+    {
+      allowGuestAccount: true,
+      ...(requestToken ? { authToken: requestToken } : {}),
+    } satisfies HttpRequestOptionsExt,
+  )
+
+  const body = res.data
+  if (body.code !== 0) {
+    throw new Error(body.message || '获取用户信息失败')
+  }
+
+  if (!body.data?.user) {
+    throw new Error('用户信息为空')
+  }
+
+  const gameStore = useGameStore(pinia)
+  // 请求期间发生游客 → 真实用户或真实用户换号时，旧响应只能返回给调用方，
+  // 不得再修改全局身份、用户资料或同步给 Cocos。
+  if (requestToken && gameStore.sessionToken.trim() !== requestToken) {
+    return body.data
+  }
+  const experienceAccount = isExperienceUserInfo(body.data)
+  gameStore.setGuestAccount(experienceAccount)
+
+  // 与 Cocos 同步登录用户信息（msgtype=1），体验账号观战也需要这份身份数据。
+  forwardUserInfoToCocos(body.data)
+  // 体验账号不写入真实用户资料缓存，防止“我的/消息”误展示体验账号数据。
+  const userInfoStore = useUserInfoStore(pinia)
+  // setGuestAccount(true) 已统一清理游客不应保留的私有资料，这里不重复执行。
+  if (!experienceAccount) {
+    userInfoStore.setUserInfo(body.data)
+  }
+  return body.data
+}
+
+// 俱乐部信息：供 H5/CC 对齐用户俱乐部状态。
+export async function getUserClubApi(): Promise<ApiResponse<unknown>> {
+  const requestToken = useGameStore(pinia).sessionToken.trim()
+  const res = await http.post<ApiResponse<unknown>>(
+    '/org/club/user_club',
+    {},
+    requestToken
+      ? ({ authToken: requestToken } satisfies HttpRequestOptionsExt)
+      : undefined,
+  )
+  const body = res.data
+  if (body.code !== 0) {
+    throw new Error(body.message || '获取俱乐部信息失败')
+  }
+
+  // 换号期间旧账号的俱乐部响应不得覆盖新账号数据。
+  if (requestToken && useGameStore(pinia).sessionToken.trim() !== requestToken) {
+    return body
+  }
+
+  // 每次请求都更新 clubList 全局缓存；currentClub 默认取第一条，可手动切换。
+  const userInfoStore = useUserInfoStore(pinia)
+  const responseH5Menu = extractH5Menu(body.data)
+  const clubList = extractClubList(body.data).map((club) =>
+    club.h5_menu === undefined && responseH5Menu !== undefined
+      ? { ...club, h5_menu: responseH5Menu }
+      : club,
+  )
+  userInfoStore.setClubList(clubList)
+  // 落地到当前用户级 IndexedDB（user_cache_${userId}，H5/Cocos 共用），供下次启动秒开。
+  const gameStore = useGameStore(pinia)
+  if (gameStore.loginUserId) {
+    void writeClubListCache(gameStore.loginUserId, clubList)
+  }
+  // 把已标准化的 club 列表转发到 Cocos，避免服务端包装层级差异影响牌桌配置。
+  forwardUserClubToCocos({ ...body, data: clubList })
+  return body
+}
+
+// 同步 websocket 端口：对应 Cocos LoginSession.SyncWS。
+export async function getUserWsApi(): Promise<UserWsData> {
+  // 体验账号进入牌桌观战同样需要 WS 端口；坐下/买入仍由真实身份入口单独拦截。
+  const res = await http.post<UserWsResponse>(
+    '/user/ws',
+    {},
+    { allowGuestAccount: true } satisfies HttpRequestOptionsExt,
+  )
+  const body = res.data
+  if (body.code !== 0) {
+    throw new Error(body.message || '获取 websocket 端口失败')
+  }
+  return body.data || {}
+}
+
+// 对齐 cocos WebRefreshToken.API。
+export async function postUserRefreshApi(
+  payload: UserRefreshRequest = {},
+): Promise<ApiResponse<UserRefreshData>> {
+  const response = await http.post<ApiResponse<UserRefreshData>>('/user/refresh', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserCheckPhone.API。
+export async function postUserCheckPhoneApi(
+  payload: UserCheckPhoneRequest,
+  options: ApiRequestExtOptions = {},
+): Promise<ApiResponse<UserCheckPhoneData>> {
+  const response = await http.post<ApiResponse<UserCheckPhoneData>>(
+    '/user/check_phone',
+    payload,
+    options,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserSendCode.API。
+export async function postUserSendCodeApi(
+  payload: UserSendCodeRequest,
+): Promise<ApiResponse<Record<string, unknown>>> {
+  const response = await http.post<ApiResponse<Record<string, unknown>>>('/user/sendcode', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserCheckEmail.API。
+export async function postUserCheckEmailApi(
+  payload: UserCheckEmailRequest,
+): Promise<ApiResponse<UserCheckEmailData>> {
+  const response = await http.post<ApiResponse<UserCheckEmailData>>('/user/check_email', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserSendEmailCode.API。
+export async function postUserSendEmailCodeApi(
+  payload: UserSendEmailCodeRequest,
+): Promise<ApiResponse<UserSendEmailCodeData>> {
+  const response = await http.post<ApiResponse<UserSendEmailCodeData>>(
+    '/user/send_email_code',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserModifyPassword.API。
+export async function postUserModifyPasswordApi(
+  payload: UserModifyPasswordRequest,
+): Promise<ApiResponse<UserModifyPasswordData>> {
+  const response = await http.post<ApiResponse<UserModifyPasswordData>>(
+    '/user/modify/password',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserModifyUserInfo.API。
+export async function postUserModifyInfoApi(
+  payload: UserModifyInfoRequest,
+): Promise<ApiResponse<UserModifyInfoData>> {
+  const response = await http.post<ApiResponse<UserModifyInfoData>>(
+    '/user/modify/user_info',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserCheckNickname.API。
+export async function postUserCheckNicknameApi(
+  payload: UserCheckNicknameRequest,
+): Promise<ApiResponse<UserCheckNicknameData>> {
+  const response = await http.post<ApiResponse<UserCheckNicknameData>>(
+    '/user/check_nickname',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserRegister.API。
+export async function postUserInviteRegisterApi(
+  payload: UserInviteRegisterRequest,
+): Promise<ApiResponse<UserInviteRegisterData>> {
+  const response = await http.post<ApiResponse<UserInviteRegisterData>>(
+    '/user/invite_register',
+    payload,
+  )
+  return response.data
+}
+
+export async function postUserRegisterApi(
+  payload: UserRegisterRequest,
+): Promise<ApiResponse<UserRegisterData>> {
+  const response = await http.post<ApiResponse<UserRegisterData>>('/user/register', payload)
+  return response.data
+}
+
+// 对齐 cocos WebOtherUserInfo.API。
+export async function getOtherUserInfoApi(
+  userId: number | string,
+  payload: OtherUserInfoRequest = {},
+): Promise<ApiResponse<OtherUserInfoData[]>> {
+  const endpoint = `/user/${userId}/info`
+  const response = await http.post<ApiResponse<OtherUserInfoData[]>>(endpoint, payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserRoom.API。
+export async function getUserRoomApi(
+  roomId: number | string,
+  payload: UserRoomRequest = {},
+): Promise<ApiResponse<UserRoomData>> {
+  const endpoint = `/user/room/${roomId}`
+  const response = await http.post<ApiResponse<UserRoomData>>(endpoint, payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserRoomSettleDetail.API。
+export async function getUserRoomSettleDetailApi(
+  roomId: number | string,
+  payload: UserRoomSettleDetailRequest = {},
+): Promise<ApiResponse<UserRoomSettleDetailData>> {
+  const endpoint = `/user/room_settle/detail/${roomId}`
+  const response = await http.post<ApiResponse<UserRoomSettleDetailData>>(endpoint, payload)
+  return response.data
+}
+
+// 对齐 cocos /api/user/bind_status。
+export async function postUserBindStatusApi(
+  payload: Record<string, unknown> = {},
+): Promise<ApiResponse<UserBindStatusData>> {
+  const response = await http.post<ApiResponse<UserBindStatusData>>('/user/bind_status', payload)
+  return response.data
+}
+
+// 对齐 cocos /api/user/bind_email。
+export async function postUserBindEmailApi(
+  payload: UserBindEmailRequest,
+): Promise<ApiResponse<Record<string, unknown>>> {
+  const response = await http.post<ApiResponse<Record<string, unknown>>>(
+    '/user/bind_email',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos /api/user/bind_phone。
+export async function postUserBindPhoneApi(
+  payload: UserBindPhoneRequest,
+): Promise<ApiResponse<Record<string, unknown>>> {
+  const response = await http.post<ApiResponse<Record<string, unknown>>>(
+    '/user/bind_phone',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos /api/user/bind_third_party。
+export async function postUserBindThirdPartyApi(
+  payload: UserBindThirdPartyRequest,
+): Promise<ApiResponse<Record<string, unknown>>> {
+  const response = await http.post<ApiResponse<Record<string, unknown>>>(
+    '/user/bind_third_party',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos /api/user/get_avatars。
+export async function postUserAvatarsApi(
+  payload: Record<string, unknown> = {},
+): Promise<ApiResponse<UserAvatarsData>> {
+  const response = await http.post<ApiResponse<UserAvatarsData>>('/user/get_avatars', payload)
+  return response.data
+}
+
+// 对齐 cocos /api/user/mute/list。
+export async function postUserMuteListApi(
+  payload: Record<string, unknown> = {},
+): Promise<ApiResponse<UserMuteListData>> {
+  const response = await http.post<ApiResponse<UserMuteListData>>('/user/mute/list', payload)
+  return response.data
+}
+
+// 对齐 cocos /api/user/my_wallets。
+export async function postUserMyWalletsApi(
+  payload: Record<string, unknown> = {},
+): Promise<ApiResponse<UserMyWalletsData>> {
+  const response = await http.post<ApiResponse<UserMyWalletsData>>('/user/my_wallets', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserDeleteCode.API
+export async function postUserDeleteCodeApi(
+  payload: UserDeleteCodeRequest = {} as UserDeleteCodeRequest,
+): Promise<ApiResponse<UserDeleteCodeResponseData>> {
+  const response = await http.post<ApiResponse<UserDeleteCodeResponseData>>(
+    '/user/send_verify_code',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserDelete.API
+export async function postUserDeleteApi(
+  payload: UserDeleteRequest = {} as UserDeleteRequest,
+): Promise<ApiResponse<UserDeleteResponseData>> {
+  const response = await http.post<ApiResponse<UserDeleteResponseData>>('/user/delete', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserVerifyPassword.API
+export async function postUserVerifyPasswordApi(
+  payload: UserVerifyPasswordRequest = {} as UserVerifyPasswordRequest,
+): Promise<ApiResponse<UserVerifyPasswordResponseData>> {
+  const response = await http.post<ApiResponse<UserVerifyPasswordResponseData>>(
+    '/user/quick_password/verify',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserModifyQuickInfo.API
+export async function postUserModifyQuickInfoApi(
+  payload: UserModifyQuickInfoRequest = {} as UserModifyQuickInfoRequest,
+): Promise<ApiResponse<UserModifyQuickInfoResponseData>> {
+  const response = await http.post<ApiResponse<UserModifyQuickInfoResponseData>>(
+    '/user/quick_password/modify',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserModifyQuickSwitch.API
+export async function postUserModifyQuickSwitchApi(
+  payload: UserModifyQuickSwitchRequest = {} as UserModifyQuickSwitchRequest,
+): Promise<ApiResponse<UserModifyQuickSwitchResponseData>> {
+  const response = await http.post<ApiResponse<UserModifyQuickSwitchResponseData>>(
+    '/user/modify/quick/login/switch',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserModifyBringInSwitch.API
+export async function postUserModifyBringInSwitchApi(
+  payload: UserModifyBringInSwitchRequest = {} as UserModifyBringInSwitchRequest,
+): Promise<ApiResponse<UserModifyBringInSwitchResponseData>> {
+  const response = await http.post<ApiResponse<UserModifyBringInSwitchResponseData>>(
+    '/user/modify/bringin/password/switch',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserBill.API
+export async function postUserBillApi(
+  payload: UserBillRequest = {} as UserBillRequest,
+): Promise<ApiResponse<UserBillResponseData>> {
+  const response = await http.post<ApiResponse<UserBillResponseData>>('/user/wallets_log', payload)
+  return response.data
+}
+
+// 对齐 cocos WebUserWallet.API
+export async function postUserWalletApi(
+  payload: UserWalletRequest = {} as UserWalletRequest,
+): Promise<ApiResponse<UserWalletResponseData>> {
+  const response = await http.post<ApiResponse<UserWalletResponseData>>('/user/my_wallets', payload)
+  return response.data
+}
+
+// 对齐 cocos HttpUserDiamondsProtocol.API
+export async function postUserDiamondsWalletApi(
+  payload: UserDiamondsWalletRequest = {} as UserDiamondsWalletRequest,
+): Promise<ApiResponse<UserDiamondsWalletResponseData>> {
+  const response = await http.post<ApiResponse<UserDiamondsWalletResponseData>>(
+    '/user/user_diamonds_wallet',
+    payload,
+  )
+  return response.data
+}
+
+// /api/user/gold_change/log —玩家资金变动明细。
+export async function postUserGoldChangeLogApi(
+  payload: UserGoldChangeLogRequest = {},
+  clubId?: number | string,
+): Promise<ApiResponse<UserGoldChangeLogData>> {
+  const response = await http.post<ApiResponse<UserGoldChangeLogData>>(
+    '/user/gold_change/log',
+    payload,
+    { xClub: clubId },
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUSDTApplyList.API
+export async function postUSDTApplyListApi(
+  payload: USDTApplyListRequest = {} as USDTApplyListRequest,
+): Promise<ApiResponse<USDTApplyListResponseData>> {
+  const response = await http.post<ApiResponse<USDTApplyListResponseData>>(
+    '/user/trader/apply/list',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUSDTApply.API
+export async function postUSDTApplyApi(
+  payload: USDTApplyRequest = {} as USDTApplyRequest,
+): Promise<ApiResponse<USDTApplyResponseData>> {
+  const response = await http.post<ApiResponse<USDTApplyResponseData>>(
+    '/user/trader/apply',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUSDTApplyRead.API
+export async function postUSDTApplyReadApi(
+  payload: USDTApplyReadRequest = {} as USDTApplyReadRequest,
+): Promise<ApiResponse<USDTApplyReadResponseData>> {
+  const response = await http.post<ApiResponse<USDTApplyReadResponseData>>(
+    '/user/trader/apply/read',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebNewSafety.API
+export async function postNewSafetyApi(
+  payload: NewSafetyRequest = {} as NewSafetyRequest,
+): Promise<ApiResponse<NewSafetyResponseData>> {
+  const response = await http.post<ApiResponse<NewSafetyResponseData>>(
+    '/user/freeze/public/list',
+    payload,
+  )
+  return response.data
+}
+
+// 对齐 cocos WebClubSendDiamonds.API
+export async function postClubSendDiamondsApi(
+  payload: ClubSendDiamondsRequest = {} as ClubSendDiamondsRequest,
+  clubId?: number | string,
+): Promise<ApiResponse<ClubSendDiamondsResponseData>> {
+  const headers =
+    clubId === undefined || clubId === null || String(clubId).trim() === ''
+      ? undefined
+      : { 'X-Club': String(clubId) }
+  const response = await http.post<ApiResponse<ClubSendDiamondsResponseData>>(
+    '/user/club/creator/grant',
+    payload,
+    { headers },
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserAgencySendDiamonds.API
+export async function postUserAgencySendDiamondsApi(
+  payload: UserAgencySendDiamondsRequest = {} as UserAgencySendDiamondsRequest,
+  clubId?: number | string,
+): Promise<ApiResponse<UserAgencySendDiamondsResponseData>> {
+  const headers =
+    clubId === undefined || clubId === null || String(clubId).trim() === ''
+      ? undefined
+      : { 'X-Club': String(clubId) }
+  const response = await http.post<ApiResponse<UserAgencySendDiamondsResponseData>>(
+    '/user/agent/diamonds/grant',
+    payload,
+    { headers },
+  )
+  return response.data
+}
+
+// 对齐 cocos WebUserAgencyGoldGrant.API
+export async function postUserAgencyGoldGrantApi(
+  payload: UserAgencyGoldGrantRequest = {} as UserAgencyGoldGrantRequest,
+  clubId?: number | string,
+): Promise<ApiResponse<UserAgencyGoldGrantResponseData>> {
+  const headers =
+    clubId === undefined || clubId === null || String(clubId).trim() === ''
+      ? undefined
+      : { 'X-Club': String(clubId) }
+  const response = await http.post<ApiResponse<UserAgencyGoldGrantResponseData>>(
+    '/user/agent/gold/grant',
+    payload,
+    { headers },
+  )
+  return response.data
+}
+
+// 第三方登录，目前支持telegram mini app登录
+export async function postUserThirdPartyApi(
+  payload: UserLoginThirdPartyRequest = {} as UserLoginThirdPartyRequest,
+  options: ApiRequestExtOptions = {},
+): Promise<ApiResponse<LoginResponse>> {
+  const response = await http.post<ApiResponse<LoginResponse>>(
+    '/user/login_third_party',
+    payload,
+    options,
+  )
+  return response.data
+}

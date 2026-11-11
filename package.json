@@ -1,0 +1,29 @@
+{
+  "name": "h5-mx-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "check": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
+    "build": "npm run check && vite build && vite build --config vite.host.config.ts && npm run build:types",
+    "preview": "vite preview --host 127.0.0.1",
+    "assets:import": "python3 scripts/import-cc-assets.py",
+    "build:types": "tsc -p tsconfig.types.json && node scripts/write-type-entry.mjs",
+    "assets:pack": "node scripts/pack-assets.mjs",
+    "prebuild": "npm run assets:pack"
+  },
+  "devDependencies": {
+    "sharp": "0.34.5",
+    "typescript": "5.9.3",
+    "vite": "7.3.7"
+  },
+  "dependencies": {
+    "@silenthill/agreement-web": "git+ssh://git@github.com/kingofake/agreement-web.git#921be247732066cdae55477ce3a81c29fbbb6b6c",
+    "@silenthill/h5-cc-i18n": "github:guysoup027/h5-cc-i18n#46f6c805dd2144e0c7fb8b7bd9486f3ed8edc437"
+  }
+}

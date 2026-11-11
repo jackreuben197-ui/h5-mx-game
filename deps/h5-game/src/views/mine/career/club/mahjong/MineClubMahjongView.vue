@@ -1,0 +1,657 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { showFailToast } from 'vant'
+import { useRouter } from 'vue-router'
+import { postRoomCenterHistoryListApi, postStatsUserStatsApi } from '@/api/stats'
+import mainBgUrl from '@/assets/images/main_bg.webp'
+import HeaderBack from '@/components/HeaderBack/HeaderBack.vue'
+import { useUserInfoStore } from '@/stores/userInfo'
+import { formatUC } from '@/utils/roomVisibility'
+import { formatDateTime, toTimestampMs } from '@/utils/time'
+import dayjs from 'dayjs'
+import { t } from '@/i18n'
+
+interface SummaryMetric {
+  label: string
+  value: string
+}
+
+interface RecordCard {
+  id: string
+  roomName: string
+  roomId: string
+  matchId: string
+  endDay: string
+  endMonth: string
+  endTimeRaw: string
+  blind: string
+  hands: string
+  duration: string
+  endAt: string
+  profit: string
+}
+
+const router = useRouter()
+const userInfoStore = useUserInfoStore()
+
+// 主容器背景图：全页面共用一张底图。
+const backgroundStyle = computed(() => ({
+  backgroundImage: `url(${mainBgUrl})`,
+}))
+
+const title = computed(() => t('UIMahjong_Record'))
+
+const timeTabs = [
+  t('UIData_Today'),
+  '7' + t('UIHappyShop_ActivityShopDay'),
+  '30' + t('UIHappyShop_ActivityShopDay'),
+  t('UIMine_VIP_dataAll'),
+]
+const selectedTime = ref(timeTabs[0])
+const loading = ref(false)
+
+const leftMetrics = ref<SummaryMetric[]>([
+  { label: t('UIData_YGvXd5iXr_005'), value: '0' },
+  { label: t('UIMahjong_ExposedKong'), value: '0' },
+])
+
+const rightMetrics = ref<SummaryMetric[]>([
+  { label: t('UIFantasy_allwinCount'), value: '0' },
+  { label: t('UIMahjong_ConcealedKong'), value: '0' },
+])
+
+const bottomMetrics = ref<SummaryMetric[]>([
+  { label: t('UIMahjong_SelfDraw'), value: '0' },
+  { label: t('UIMahjong_LoseDiscard'), value: '0' },
+  { label: t('UIMahjong_WinDiscard'), value: '0' },
+])
+
+const todayProfit = ref('0')
+
+const records = ref<RecordCard[]>([])
+
+function profitTitle(): string {
+  switch (selectedTime.value) {
+    case t('UIData_Today'):
+      return t('UIBill_payLookHandCardTodayWin')
+    case '7' + t('UIHappyShop_ActivityShopDay'):
+      return '7' + t('UIClub_Income')
+    case '30' + t('UIHappyShop_ActivityShopDay'):
+      return '30' + t('UIClub_Income')
+    case t('UIMine_VIP_dataAll'):
+      return t('UIClub_Income2')
+    default:
+      return t('UIBill_payLookHandCardTodayWin')
+  }
+}
+
+const profitTitleText = computed(() => profitTitle())
+
+function isFirstOfDate(index: number): boolean {
+  if (index === 0) return true
+  const current = dayjs(toTimestampMs(records.value[index].endTimeRaw))
+  const prev = dayjs(toTimestampMs(records.value[index - 1].endTimeRaw))
+  return current.format('YYYY-MM-DD') !== prev.format('YYYY-MM-DD')
+}
+
+function toSafeNumber(value: unknown): number {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+function formatSigned(value: number): string {
+  const abs = Math.abs(value).toLocaleString('en-US')
+  if (value === 0) {
+    return '0'
+  }
+  return value > 0 ? `+${abs}` : `-${abs}`
+}
+
+function formatDuration(seconds: unknown): string {
+  const totalSeconds = toSafeNumber(seconds)
+  if (totalSeconds <= 0) {
+    return '--'
+  }
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  if (hours <= 0) {
+    return `${minutes}m`
+  }
+  return `${hours}h ${minutes}m`
+}
+
+function extractRecords(value: unknown, depth = 0): Record<string, unknown>[] {
+  if (depth > 4 || value === null || value === undefined) {
+    return []
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is Record<string, unknown> => !!item && typeof item === 'object',
+    )
+  }
+
+  if (typeof value !== 'object') {
+    return []
+  }
+
+  const obj = value as Record<string, unknown>
+  for (const key of ['records', 'list', 'items', 'data']) {
+    const nested = extractRecords(obj[key], depth + 1)
+    if (nested.length) {
+      return nested
+    }
+  }
+
+  return []
+}
+
+function mapRecord(row: Record<string, unknown>, index: number): RecordCard {
+  const roomId = String(row.RoomID ?? row.room_id ?? row.id ?? '')
+  const matchId = String(row.MatchID ?? row.match_id ?? '')
+  const endTimeRaw = String(row.end_time ?? row.Time ?? '')
+  const endTs = toTimestampMs(endTimeRaw)
+  const change = toSafeNumber(row.Change ?? row.change ?? row.profit)
+
+  return {
+    id: roomId || matchId || String(index + 1),
+    roomName: String(row.Name ?? row.name ?? row.game_room_name ?? t('UIClub_TableGame2')),
+    roomId,
+    matchId,
+    endDay: endTs > 0 ? dayjs(endTs).format('DD') : '',
+    endMonth: endTs > 0 ? dayjs(endTs).format('MMM') : '',
+    endTimeRaw,
+    blind: String(row.blinds ?? row.blind ?? row.small_blind ?? '--'),
+    hands: String(toSafeNumber(row.Count ?? row.count ?? row.hand_num)),
+    duration: formatDuration(row.player_duration),
+    endAt: endTs > 0 ? formatDateTime(endTimeRaw) : '--',
+    profit: formatSigned(change),
+  }
+}
+
+function resolveTimeType(): number {
+  switch (selectedTime.value) {
+    case t('UIData_Today'):
+      return 1
+    case '7' + t('UIHappyShop_ActivityShopDay'):
+      return 2
+    case '30' + t('UIHappyShop_ActivityShopDay'):
+      return 3
+    case t('UIMine_VIP_dataAll'):
+      return 4
+    default:
+      return 1
+  }
+}
+
+function extractStatsFromResponse(data: unknown): void {
+  const roomData = (data as Record<string, unknown>)?.room_data as
+    | Record<string, unknown>
+    | undefined
+  if (!roomData) return
+
+  leftMetrics.value = [
+    {
+      label: t('UIData_YGvXd5iXr_005'),
+      value: toSafeNumber(roomData.total_game_cnt).toLocaleString('en-US'),
+    },
+    {
+      label: t('UIMahjong_ExposedKong'),
+      value: toSafeNumber(roomData.mj_exposed_kong_count).toLocaleString('en-US'),
+    },
+  ]
+
+  rightMetrics.value = [
+    {
+      label: t('UIFantasy_allwinCount'),
+      value: toSafeNumber(roomData.full_win).toLocaleString('en-US'),
+    },
+    {
+      label: t('UIMahjong_ConcealedKong'),
+      value: toSafeNumber(roomData.mj_concealed_kong_count).toLocaleString('en-US'),
+    },
+  ]
+
+  bottomMetrics.value = [
+    {
+      label: t('UIMahjong_SelfDraw'),
+      value: toSafeNumber(roomData.mj_win_self_draw_count).toLocaleString('en-US'),
+    },
+    {
+      label: t('UIMahjong_LoseDiscard'),
+      value: toSafeNumber(roomData.mj_lose_discard_count).toLocaleString('en-US'),
+    },
+    {
+      label: t('UIMahjong_WinDiscard'),
+      value: toSafeNumber(roomData.mj_win_discard_count).toLocaleString('en-US'),
+    },
+  ]
+
+  todayProfit.value = formatUC(toSafeNumber(roomData.total_earn))
+}
+
+async function fetchStatsSummary(): Promise<void> {
+  try {
+    const response = await postStatsUserStatsApi({
+      game_types: [6],
+      time_type: resolveTimeType(),
+      filter_type: 1,
+      room_type: 0,
+      ...(userInfoStore.currentClub?.club_id ? { club_id: userInfoStore.currentClub.club_id } : {}),
+    })
+    if (response.code !== 0) {
+      throw new Error(typeof response.msg === 'string' ? response.msg : t('UIClub_LoadFail7'))
+    }
+    extractStatsFromResponse(response.data)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : t('UIClub_LoadFail7')
+    showFailToast(message)
+  }
+}
+
+async function fetchMahjongHistory(): Promise<void> {
+  loading.value = true
+  try {
+    const response = await postRoomCenterHistoryListApi({
+      limit: 30,
+      offset: 0,
+      game_types: [6],
+      time_type: resolveTimeType(),
+      ...(userInfoStore.currentClub?.club_id ? { club_id: userInfoStore.currentClub.club_id } : {}),
+    })
+    if (response.code !== 0) {
+      throw new Error(typeof response.msg === 'string' ? response.msg : t('UIClub_LoadFail8'))
+    }
+
+    const rawList = extractRecords(response.data?.records)
+    records.value = rawList.map((row, index) => mapRecord(row, index))
+  } catch (error) {
+    records.value = []
+    const message = error instanceof Error ? error.message : t('UIClub_LoadFail8')
+    showFailToast(message)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function refreshAll(): Promise<void> {
+  await Promise.all([fetchStatsSummary(), fetchMahjongHistory()])
+}
+
+function goDetail(item: RecordCard): void {
+  void router.push({
+    path: '/mine/career/club/mahjong/detail',
+    query: {
+      room_id: item.roomId || undefined,
+      match_id: item.matchId || undefined,
+    },
+  })
+}
+
+function selectTimeTab(tab: string): void {
+  selectedTime.value = tab
+  void refreshAll()
+}
+
+onMounted(() => {
+  void refreshAll()
+})
+</script>
+
+<template>
+  <div class="page-shell mahjong-page" :style="backgroundStyle">
+    <HeaderBack :title="title" extra-padding />
+
+    <div class="content-wrap">
+      <section class="glass-card stats-card">
+        <div class="time-tabs">
+          <button
+            v-for="item in timeTabs"
+            :key="item"
+            type="button"
+            class="time-tab"
+            :class="{ active: selectedTime === item }"
+            @click="selectTimeTab(item)"
+          >
+            {{ item }}
+          </button>
+        </div>
+
+        <div class="main-metrics">
+          <div class="metric-col">
+            <div v-for="item in leftMetrics" :key="item.label" class="metric-item">
+              <span class="metric-label">{{ item.label }}</span>
+              <span class="metric-value">{{ item.value }}</span>
+            </div>
+          </div>
+
+          <div class="profit-box">
+            <div class="profit-title">{{ profitTitleText }} <span class="info-dot">i</span></div>
+            <div class="profit-value">{{ todayProfit }}</div>
+          </div>
+
+          <div class="metric-col right">
+            <div v-for="item in rightMetrics" :key="item.label" class="metric-item">
+              <span class="metric-label">{{ item.label }}</span>
+              <span class="metric-value">{{ item.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-metrics">
+          <div v-for="item in bottomMetrics" :key="item.label" class="bottom-item">
+            <span class="metric-label">{{ item.label }}</span>
+            <span class="metric-value">{{ item.value }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="list-wrap">
+        <p v-if="loading" class="list-status">{{ t('SuperView2') }}...</p>
+        <p v-else-if="!records.length" class="list-status">{{ t('UIClub_No6') }}</p>
+        <article
+          v-for="(item, index) in records"
+          :key="item.id"
+          class="glass-card record-card"
+          :class="{ 'is-first-of-date': isFirstOfDate(index) }"
+          @click="goDetail(item)"
+        >
+          <div class="timeline">
+            <span v-if="isFirstOfDate(index)" class="date-label">
+              {{ item.endMonth }}<br />{{ item.endDay }}
+            </span>
+            <span v-else class="date-label"></span>
+          </div>
+          <div class="card-content">
+            <div class="card-head">
+              <div>{{ item.roomName }}</div>
+              <div class="id">ID: {{ item.roomId }}</div>
+            </div>
+            <div class="line"></div>
+            <div class="card-body">
+              <div class="meta">
+                <div>
+                  <span>{{ t('UIJackPotInfo_blindLevel') }}:</span>
+                  <span>{{ item.blind }}</span>
+                </div>
+                <div>
+                  <span>{{ t('UIMine_RecordItemsNormal_3RCUa3w8') }}:</span>
+                  <span>{{ item.hands }}</span>
+                </div>
+                <div>
+                  <span>{{ t('UIClub_Text36') }}:</span>
+                  <span>{{ item.duration }}</span>
+                </div>
+                <div>
+                  <span>{{ t('RecordDetail102') }}:</span>
+                  <span>{{ item.endAt }}</span>
+                </div>
+              </div>
+              <div class="profit" :class="{ pos: item.profit.startsWith('+') }">
+                {{ item.profit }}
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.mahjong-page {
+  position: relative;
+  height: 100dvh;
+  html[data-channel-package='1'] & {
+    height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+    min-height: var(--app-full-height, var(--app-viewport-height, 100dvh));
+  }
+  padding: 0 0 0.8rem;
+  color: #f9f9f9;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.content-wrap {
+  position: relative;
+  padding: 0 0.49rem;
+}
+
+.glass-card {
+  border-radius: 0.42rem;
+  border: 0.02rem solid rgba(249, 249, 249, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(0.04rem);
+}
+
+.stats-card {
+  margin-top: 0.3rem;
+  padding: 0.3632rem 0.67864rem 0.36739rem 0.67864rem;
+}
+
+.time-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.08rem;
+  border-radius: 0.5rem;
+  padding: 0.08rem;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.time-tab {
+  border: 0;
+  border-radius: 0.42rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.40541rem;
+  padding: 0.18rem 0;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.18);
+    font-weight: 700;
+  }
+}
+
+.main-metrics {
+  margin-top: 0.28rem;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: center;
+}
+
+.metric-col.right {
+  text-align: center;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.metric-label {
+  font-size: 0.27027rem;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.metric-value {
+  font-size: 0.35472rem;
+  font-weight: 600;
+}
+
+.profit-box {
+  text-align: center;
+
+  .profit-title {
+    font-size: 0.33821rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.08rem;
+  }
+
+  .profit-value {
+    margin-top: 0.12rem;
+    font-size: 0.71789rem;
+    font-weight: 700;
+    color: #ff132b;
+  }
+}
+
+.info-dot {
+  width: 0.26rem;
+  height: 0.26rem;
+  border-radius: 50%;
+  border: 0.02rem solid rgba(255, 255, 255, 0.7);
+  font-size: 0.2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-metrics {
+  margin-top: 0.22rem;
+  padding-top: 0.18rem;
+  border-top: 0.02rem solid rgba(255, 255, 255, 0.16);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.1rem;
+}
+
+.bottom-item {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.list-wrap {
+  margin-top: 0.28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.list-status {
+  text-align: center;
+  font-size: 0.3rem;
+  opacity: 0.8;
+  margin: 0.22rem 0;
+}
+
+.record-card {
+  padding: 0.28rem;
+  display: grid;
+  grid-template-columns: 0.8rem 1fr;
+  gap: 0.2rem;
+}
+
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.1rem;
+
+  .date-label {
+    font-size: 0.32rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0.02rem;
+    height: calc(100% - 0.3rem);
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.record-card:not(.is-first-of-date) .timeline {
+  &::after {
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.35) 0,
+      rgba(255, 255, 255, 0.35) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+}
+
+.record-card.is-first-of-date .timeline {
+  &::after {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.card-content {
+  .line {
+    height: 0.02rem;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0.18rem 0;
+  }
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.43rem;
+
+  .id {
+    font-size: 0.29rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+}
+
+.card-body {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.2rem;
+}
+
+.meta {
+  display: grid;
+  gap: 0.07rem;
+
+  > div {
+    font-size: 0.29rem;
+    display: flex;
+    gap: 0.08rem;
+    color: rgba(255, 255, 255, 0.86);
+
+    span:first-child {
+      min-width: 1.4rem;
+      color: rgba(255, 255, 255, 0.66);
+    }
+  }
+}
+
+.profit {
+  align-self: center;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #ff8ba4;
+
+  &.pos {
+    color: #68ea9f;
+  }
+}
+</style>

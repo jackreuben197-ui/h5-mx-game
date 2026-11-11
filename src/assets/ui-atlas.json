@@ -1,0 +1,524 @@
+{
+  "width": 2048,
+  "height": 2209,
+  "frames": {
+    "avatar": {
+      "x": 2,
+      "y": 2,
+      "width": 160,
+      "height": 160,
+      "source": "src/assets/raw/ui/avatar.png"
+    },
+    "avatarAlt": {
+      "x": 166,
+      "y": 2,
+      "width": 199,
+      "height": 198,
+      "source": "src/assets/raw/ui/avatarAlt.png"
+    },
+    "border": {
+      "x": 369,
+      "y": 2,
+      "width": 199,
+      "height": 199,
+      "source": "src/assets/raw/ui/border.png"
+    },
+    "empty": {
+      "x": 572,
+      "y": 2,
+      "width": 199,
+      "height": 199,
+      "source": "src/assets/raw/ui/empty.png"
+    },
+    "info": {
+      "x": 775,
+      "y": 2,
+      "width": 192,
+      "height": 67,
+      "source": "src/assets/raw/ui/info.png"
+    },
+    "line": {
+      "x": 971,
+      "y": 2,
+      "width": 161,
+      "height": 3,
+      "source": "src/assets/raw/ui/line.png"
+    },
+    "dealer": {
+      "x": 1136,
+      "y": 2,
+      "width": 99,
+      "height": 99,
+      "source": "src/assets/raw/ui/dealer.png"
+    },
+    "chip": {
+      "x": 1239,
+      "y": 2,
+      "width": 77,
+      "height": 77,
+      "source": "src/assets/raw/ui/chip.png"
+    },
+    "fold": {
+      "x": 1320,
+      "y": 2,
+      "width": 147,
+      "height": 147,
+      "source": "src/assets/raw/ui/fold.png"
+    },
+    "call": {
+      "x": 1471,
+      "y": 2,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/call.png"
+    },
+    "raise": {
+      "x": 1612,
+      "y": 2,
+      "width": 146,
+      "height": 146,
+      "source": "src/assets/raw/ui/raise.png"
+    },
+    "setting": {
+      "x": 1762,
+      "y": 2,
+      "width": 89,
+      "height": 89,
+      "source": "src/assets/raw/ui/setting.png"
+    },
+    "chat": {
+      "x": 1855,
+      "y": 2,
+      "width": 130,
+      "height": 180,
+      "source": "src/assets/raw/ui/chat.png"
+    },
+    "pool": {
+      "x": 2,
+      "y": 205,
+      "width": 264,
+      "height": 73,
+      "source": "src/assets/raw/ui/pool.png"
+    },
+    "report": {
+      "x": 270,
+      "y": 205,
+      "width": 77,
+      "height": 77,
+      "source": "src/assets/raw/ui/report.png"
+    },
+    "replay": {
+      "x": 351,
+      "y": 205,
+      "width": 75,
+      "height": 75,
+      "source": "src/assets/raw/ui/replay.png"
+    },
+    "emoji": {
+      "x": 430,
+      "y": 205,
+      "width": 75,
+      "height": 75,
+      "source": "src/assets/raw/ui/emoji.png"
+    },
+    "cert": {
+      "x": 509,
+      "y": 205,
+      "width": 203,
+      "height": 113,
+      "source": "src/assets/raw/ui/cert.png"
+    },
+    "addChips": {
+      "x": 716,
+      "y": 205,
+      "width": 186,
+      "height": 101,
+      "source": "src/assets/raw/ui/addChips.png"
+    },
+    "timerRing": {
+      "x": 906,
+      "y": 205,
+      "width": 396,
+      "height": 396,
+      "source": "src/assets/raw/ui/timerRing.png"
+    },
+    "timerDot": {
+      "x": 1306,
+      "y": 205,
+      "width": 128,
+      "height": 128,
+      "source": "src/assets/raw/ui/timerDot.png"
+    },
+    "actionBubble": {
+      "x": 1438,
+      "y": 205,
+      "width": 126,
+      "height": 73,
+      "source": "src/assets/raw/ui/actionBubble.png"
+    },
+    "clubDefault": {
+      "x": 2,
+      "y": 605,
+      "width": 531,
+      "height": 530,
+      "source": "src/assets/raw/ui/clubDefault.png"
+    },
+    "walletID": {
+      "x": 537,
+      "y": 605,
+      "width": 192,
+      "height": 126,
+      "source": "src/assets/raw/ui/walletID.png"
+    },
+    "infoTip": {
+      "x": 733,
+      "y": 605,
+      "width": 45,
+      "height": 45,
+      "source": "src/assets/raw/ui/infoTip.png"
+    },
+    "arrowDown": {
+      "x": 782,
+      "y": 605,
+      "width": 37,
+      "height": 37,
+      "source": "src/assets/raw/ui/arrowDown.png"
+    },
+    "tableBack": {
+      "x": 823,
+      "y": 605,
+      "width": 65,
+      "height": 87,
+      "source": "src/assets/raw/ui/tableBack.png"
+    },
+    "dialogConfirm": {
+      "x": 892,
+      "y": 605,
+      "width": 459,
+      "height": 179,
+      "source": "src/assets/raw/ui/dialogConfirm.png"
+    },
+    "sliderHandle": {
+      "x": 1355,
+      "y": 605,
+      "width": 475,
+      "height": 275,
+      "source": "src/assets/raw/ui/sliderHandle.png"
+    },
+    "switchTrack": {
+      "x": 1834,
+      "y": 605,
+      "width": 149,
+      "height": 71,
+      "source": "src/assets/raw/ui/switchTrack.png"
+    },
+    "switchKnob": {
+      "x": 2,
+      "y": 1139,
+      "width": 63,
+      "height": 63,
+      "source": "src/assets/raw/ui/switchKnob.png"
+    },
+    "navigation": {
+      "x": 69,
+      "y": 1139,
+      "width": 402,
+      "height": 56,
+      "source": "src/assets/raw/ui/navigation.png"
+    },
+    "voice": {
+      "x": 475,
+      "y": 1139,
+      "width": 75,
+      "height": 76,
+      "source": "src/assets/raw/ui/voice.png"
+    },
+    "cardBack": {
+      "x": 554,
+      "y": 1139,
+      "width": 45,
+      "height": 67,
+      "source": "src/assets/raw/ui/cardBack.png"
+    },
+    "cardHighlight": {
+      "x": 603,
+      "y": 1139,
+      "width": 126,
+      "height": 183,
+      "source": "src/assets/raw/ui/cardHighlight.png"
+    },
+    "winBoard": {
+      "x": 733,
+      "y": 1139,
+      "width": 192,
+      "height": 113,
+      "source": "src/assets/raw/ui/winBoard.png"
+    },
+    "menuShowBB": {
+      "x": 929,
+      "y": 1139,
+      "width": 553,
+      "height": 149,
+      "source": "src/assets/raw/ui/menuShowBB.png"
+    },
+    "menuGreen": {
+      "x": 1486,
+      "y": 1139,
+      "width": 553,
+      "height": 168,
+      "source": "src/assets/raw/ui/menuGreen.png"
+    },
+    "deskThumb1": {
+      "x": 2,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb1.png"
+    },
+    "deskThumb2": {
+      "x": 94,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb2.png"
+    },
+    "deskThumb3": {
+      "x": 186,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb3.png"
+    },
+    "deskThumb4": {
+      "x": 278,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb4.png"
+    },
+    "deskThumb5": {
+      "x": 370,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb5.png"
+    },
+    "deskThumb6": {
+      "x": 462,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb6.png"
+    },
+    "deskThumb7": {
+      "x": 554,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb7.png"
+    },
+    "deskThumb8": {
+      "x": 646,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb8.png"
+    },
+    "deskThumb9": {
+      "x": 738,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb9.png"
+    },
+    "deskThumb10": {
+      "x": 830,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb10.png"
+    },
+    "deskThumb11": {
+      "x": 922,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb11.png"
+    },
+    "deskThumb12": {
+      "x": 1014,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb12.png"
+    },
+    "deskThumb13": {
+      "x": 1106,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb13.png"
+    },
+    "deskThumb14": {
+      "x": 1198,
+      "y": 1326,
+      "width": 88,
+      "height": 171,
+      "source": "src/assets/raw/ui/deskThumb14.png"
+    },
+    "menuSetting": {
+      "x": 1290,
+      "y": 1326,
+      "width": 553,
+      "height": 145,
+      "source": "src/assets/raw/ui/menuSetting.png"
+    },
+    "menuRules": {
+      "x": 2,
+      "y": 1501,
+      "width": 553,
+      "height": 145,
+      "source": "src/assets/raw/ui/menuRules.png"
+    },
+    "menuInsurance": {
+      "x": 559,
+      "y": 1501,
+      "width": 553,
+      "height": 145,
+      "source": "src/assets/raw/ui/menuInsurance.png"
+    },
+    "menuBringIn": {
+      "x": 1116,
+      "y": 1501,
+      "width": 553,
+      "height": 145,
+      "source": "src/assets/raw/ui/menuBringIn.png"
+    },
+    "menuKeepSeat": {
+      "x": 2,
+      "y": 1650,
+      "width": 553,
+      "height": 145,
+      "source": "src/assets/raw/ui/menuKeepSeat.png"
+    },
+    "settingsTabSelected": {
+      "x": 559,
+      "y": 1650,
+      "width": 192,
+      "height": 8,
+      "source": "src/assets/raw/ui/settingsTabSelected.png"
+    },
+    "settingsDeskOption": {
+      "x": 755,
+      "y": 1650,
+      "width": 215,
+      "height": 353,
+      "source": "src/assets/raw/ui/settingsDeskOption.png"
+    },
+    "settingsDeskSelected": {
+      "x": 974,
+      "y": 1650,
+      "width": 315,
+      "height": 453,
+      "source": "src/assets/raw/ui/settingsDeskSelected.png"
+    },
+    "settingsCardOption": {
+      "x": 1293,
+      "y": 1650,
+      "width": 310,
+      "height": 130,
+      "source": "src/assets/raw/ui/settingsCardOption.png"
+    },
+    "settingsCardSelected": {
+      "x": 1607,
+      "y": 1650,
+      "width": 310,
+      "height": 130,
+      "source": "src/assets/raw/ui/settingsCardSelected.png"
+    },
+    "recordDiamond": {
+      "x": 1921,
+      "y": 1650,
+      "width": 53,
+      "height": 43,
+      "source": "src/assets/raw/ui/recordDiamond.png"
+    },
+    "recordRoom": {
+      "x": 1978,
+      "y": 1650,
+      "width": 50,
+      "height": 44,
+      "source": "src/assets/raw/ui/recordRoom.png"
+    },
+    "recordPeople": {
+      "x": 2,
+      "y": 2107,
+      "width": 57,
+      "height": 44,
+      "source": "src/assets/raw/ui/recordPeople.png"
+    },
+    "recordPrev": {
+      "x": 63,
+      "y": 2107,
+      "width": 100,
+      "height": 100,
+      "source": "src/assets/raw/ui/recordPrev.png"
+    },
+    "recordNext": {
+      "x": 167,
+      "y": 2107,
+      "width": 100,
+      "height": 100,
+      "source": "src/assets/raw/ui/recordNext.png"
+    },
+    "recordClose": {
+      "x": 271,
+      "y": 2107,
+      "width": 39,
+      "height": 39,
+      "source": "src/assets/raw/ui/recordClose.png"
+    },
+    "recordDetails": {
+      "x": 314,
+      "y": 2107,
+      "width": 35,
+      "height": 21,
+      "source": "src/assets/raw/ui/recordDetails.png"
+    },
+    "recordPosition": {
+      "x": 353,
+      "y": 2107,
+      "width": 100,
+      "height": 68,
+      "source": "src/assets/raw/ui/recordPosition.png"
+    },
+    "recordSlider": {
+      "x": 457,
+      "y": 2107,
+      "width": 90,
+      "height": 90,
+      "source": "src/assets/raw/ui/recordSlider.png"
+    },
+    "recordFavorite": {
+      "x": 551,
+      "y": 2107,
+      "width": 80,
+      "height": 80,
+      "source": "src/assets/raw/ui/recordFavorite.png"
+    },
+    "emojiUc": {
+      "x": 635,
+      "y": 2107,
+      "width": 63,
+      "height": 63,
+      "source": "src/assets/raw/ui/emojiUc.png"
+    },
+    "emojiDiamond": {
+      "x": 702,
+      "y": 2107,
+      "width": 34,
+      "height": 34,
+      "source": "src/assets/raw/ui/emojiDiamond.png"
+    }
+  }
+}

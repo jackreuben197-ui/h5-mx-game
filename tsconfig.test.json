@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-build",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/core/**/*.ts",
+    "src/data/**/*.ts",
+    "src/binding/**/*.ts",
+    "src/logic/**/*.ts",
+    "src/net/**/*.ts",
+    "src/host/MxRoomHost.ts",
+    "src/host/HostTransport.ts",
+    "src/host/H5EntryController.ts",
+    "src/demo/host.ts",
+    "src/host/H5BridgeTransport.ts",
+    "src/image-resources.d.ts"
+  ]
+}

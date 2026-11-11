@@ -1,0 +1,14 @@
+import bgmUrl from '../assets/audio/bgm.mp3';
+export const bgm = new URL(bgmUrl, import.meta.url).href;
+import dealUrl from '../assets/audio/deal.mp3';
+export const deal = new URL(dealUrl, import.meta.url).href;
+import foldUrl from '../assets/audio/fold.mp3';
+export const fold = new URL(foldUrl, import.meta.url).href;
+import checkUrl from '../assets/audio/check.mp3';
+export const check = new URL(checkUrl, import.meta.url).href;
+import chipsUrl from '../assets/audio/chips.mp3';
+export const chips = new URL(chipsUrl, import.meta.url).href;
+import allinUrl from '../assets/audio/allin.mp3';
+export const allin = new URL(allinUrl, import.meta.url).href;
+import turnUrl from '../assets/audio/turn.mp3';
+export const turn = new URL(turnUrl, import.meta.url).href;
