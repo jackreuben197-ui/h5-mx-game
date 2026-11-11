@@ -63,7 +63,7 @@ MX 旧机器路径是 `/Users/magicd/repos/github/h5-mx-game`。上表提交仅�
 - Runtime 固定在 Spine 3.8；来源、许可证及兼容补丁在 `src/effects/spine/vendor/README.md`。WebGL clipping 给 Cocos core 显式传 stride=2，否则部分表情没有几何；不可随意删改补丁或升级 runtime。
 - `npm run dev` 使用散图；预加载保留解码对象，进度与实际资源加载同步。`npm run build` 通过 prebuild 合并 UI/牌面 atlas 和桌布产物，减少 HTTP 请求。不要每次改样式先重做 atlas。
 - `src/assets/image-sources.json`、`emoji-sources.json` 记录 CC 来源；`npm run assets:import -- <CC目录>` 复制对应原资源，不生成 atlas。
-- Spine 资源还在 `src/effects/spine/assets`、`src/assets/emoji` 等目录；沿用原 Spine atlas，不与 UI 图集混打。素材无需原始 Spine 工程即可播放已有导出数据。
+- 严格分开资源与代码：`src/assets` 只放素材、图集和资源清单，不放 TS/JS/CSS；代码目录不放图片、音频、字体或骨骼素材。所有 Spine 素材统一在 `src/assets/spine`（win、allin-self、allin-other、desks、emoji），表情音效在 `src/assets/audio/emoji`。加载/渲染代码保留在 `src/effects/spine`，LoadingAssets 在 `src/core`；vendor runtime 与许可证仍是代码依赖。沿用原 Spine atlas，不与 UI 图集混打。素材无需原始 Spine 工程即可播放已有导出数据。
 - 图片/音频/字体/`.skel` 由根 `.gitattributes` 走 Git LFS；`.json`、`.atlas`、SVG、源码仍作为普通文本。
 
 ## 6. 国际化约定（用户已确认）

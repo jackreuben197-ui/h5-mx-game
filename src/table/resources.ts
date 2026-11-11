@@ -1,7 +1,7 @@
 import { DeskBackgroundView } from './components/DeskBackgroundView.js';
 import { SpineEffects } from '../effects/SpineEffects.js';
 import settings from '../data/TexasGamePersonalSettings.js';
-import { LoadingAssets } from '../assets/LoadingAssets.js';
+import { LoadingAssets } from '../core/LoadingAssets.js';
 import { i18nMgr } from '../i18n/i18nMgr.js';
 import { resources } from 'virtual:mx-images';
 export { resources };

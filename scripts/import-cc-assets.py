@@ -12,7 +12,7 @@ print(f"Copied {len(manifest['ccSources'])} original images; no atlas generated.
 
 emoji_manifest = json.loads((root / 'src/assets/emoji-sources.json').read_text())
 for target, original in emoji_manifest.items():
-    dest = root / 'src/assets/emoji' / target
+    dest = root / 'src/assets' / target
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source / original, dest)
 print(f"Copied {len(emoji_manifest)} original emoji assets; Spine atlases retained.")

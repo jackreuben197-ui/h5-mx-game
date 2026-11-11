@@ -2,14 +2,14 @@ import type { MagicEmojiDefinition } from '../../logic/MagicEmojiConfig.js';
 export interface EmojiSpineAsset { atlas: string; binary: Uint8Array; images: Map<string, HTMLImageElement>; }
 /** Original multi-page Spine atlases, loaded per category/effect; Vite hashes URLs at build. */
 export class EmojiSpineAssets {
-    private static urls = import.meta.glob<string>('../../assets/emoji/**/*', {eager: true, query: '?url', import: 'default'});
+    private static urls = import.meta.glob<string>(['../../assets/spine/emoji/**/*', '../../assets/audio/emoji/**/*'], {eager: true, query: '?url', import: 'default'});
     private static pending = new Map<string, Promise<EmojiSpineAsset>>();
     static url(path: string): string {
-        const url = this.urls[`../../assets/emoji/${path}`];
+        const url = this.urls[`../../assets/${path}`];
         if (!url) throw new Error(`Missing emoji asset: ${path}`);
         return new URL(url, import.meta.url).href;
     }
-    static sound(config: MagicEmojiDefinition): string { return this.url(`audio/${config.sound.split('/').at(-1)}.mp3`); }
+    static sound(config: MagicEmojiDefinition): string { return this.url(`audio/emoji/${config.sound.split('/').at(-1)}.mp3`); }
     static load(config: MagicEmojiDefinition): Promise<EmojiSpineAsset> {
         let pending = this.pending.get(config.spine);
         if (!pending) {
@@ -19,7 +19,7 @@ export class EmojiSpineAssets {
         return pending;
     }
     private static async read(config: MagicEmojiDefinition): Promise<EmojiSpineAsset> {
-        const path = `spine/${config.spine.split('/').slice(-2).join('/')}`;
+        const path = `spine/emoji/${config.spine.split('/').slice(-2).join('/')}`;
         const read = async (suffix: string) => {
             const response = await fetch(this.url(path + suffix), {signal: AbortSignal.timeout(15000)});
             if (!response.ok) throw new Error(`Emoji resource HTTP ${response.status}`);

@@ -1,4 +1,4 @@
-import { LoadingAssets } from './assets/LoadingAssets.js';
+import { LoadingAssets } from './core/LoadingAssets.js';
 import { TestMenuView } from './table/components/TestMenuView.js';
 import { i18nMgr } from './i18n/i18nMgr.js';
 import './table/table.css';

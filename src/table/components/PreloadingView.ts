@@ -1,4 +1,4 @@
-import { LoadingAssets } from '../../assets/LoadingAssets.js';
+import { LoadingAssets } from '../../core/LoadingAssets.js';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../i18n/i18nMgr.js';
 import type { ClientState } from '../../core/types.js';

@@ -22,7 +22,7 @@ npm test
 npm run build
 ```
 
-根 `.gitattributes` 跟踪图片、音频、Spine `.skel` 和字体，包括 `src/assets`、`src/effects/spine/assets` 及历史 QA 截图。JSON、Spine `.atlas`、SVG、代码保留普通文本。LFS 不改变工作区中的原图，不影响 Vite/Sharp；子模块按自己的规则管理。
+根 `.gitattributes` 跟踪图片、音频、Spine `.skel` 和字体，覆盖 `src/assets` 中的素材（历史 QA 截图目录已忽略）。JSON、Spine `.atlas`、SVG、代码保留普通文本。LFS 不改变工作区中的原图，不影响 Vite/Sharp；子模块按自己的规则管理。
 
 提交时必须包含 `.gitattributes`、原资源和相关源码。正常 `git push` 由 LFS pre-push hook 上传对象；新机器用 `git lfs pull` 下载。若资源文件开头是 `version https://git-lfs.github.com/spec/v1`，说明拿到的是指针，应先拉取 LFS 内容再运行项目。请保证远端支持 LFS、账号有相应权限/存储额度。
 
@@ -75,7 +75,8 @@ const game = mountMxGame(containerDiv, { layout: 'portrait' });
 | `src/table/dialog-glass.css` | 统一弹窗蒙版、透明玻璃和扩散光晕；菜单保留非对称例外 |
 | `src/effects/spine` | WIN/ALLIN、桌布、表情渲染及锁定的 Spine 3.8 runtime |
 | `src/i18n` | 共享 i18n 适配和临时 supplement，未来归并外部词库 |
-| `src/assets` / `scripts` | 原资源、来源清单、复制与构建图集 |
+| `src/assets` | 只放原资源、图集和来源清单；Spine 在 `spine/`，表情音效在 `audio/emoji/` |
+| `scripts` | 资源复制与构建图集脚本 |
 
 `components` 工厂支持替换座位、公共牌、底池等 UI。金额沿用 CC 工具类，ShowBB 不重复实现。配置弹窗读取当前房间数据与权限，不能手填展示状态。
 

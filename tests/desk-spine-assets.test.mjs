@@ -6,7 +6,7 @@ import spine from '../src/effects/spine/vendor/spine38.js';
 const desks = [[9,'33background'],[10,'44paizuo'],[11,'skeleton'],[12,'77Background'],[13,'nature_japan88'],[14,'backgroud99']];
 for (const [type, name] of desks) {
   test(`Table ${type}: original animation renders two loops, including meshes / clipping / additive slots`, () => {
-    const base = new URL(`../src/effects/spine/assets/desks/${type}/${name}.`, import.meta.url);
+    const base = new URL(`../src/assets/spine/desks/${type}/${name}.`, import.meta.url);
     const png = readFileSync(new URL(`${base}png`));
     const texture = { getImage: () => ({width:png.readUInt32BE(16),height:png.readUInt32BE(20)}),setFilters(){},setWraps(){} };
     const atlas = new spine.TextureAtlas(readFileSync(new URL(`${base}atlas`),'utf8'), () => texture);

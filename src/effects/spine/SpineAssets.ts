@@ -1,12 +1,12 @@
-import winAtlas from './assets/win/skeleton.atlas?raw';
-import winJson from './assets/win/skeleton.json?raw';
-import winImage from './assets/win/skeleton.png?url';
-import selfAtlas from './assets/allin-self/skeleton.atlas?raw';
-import selfBinary from './assets/allin-self/skeleton.skel?url';
-import selfImage from './assets/allin-self/skeleton.png?url';
-import otherAtlas from './assets/allin-other/skeleton.atlas?raw';
-import otherBinary from './assets/allin-other/skeleton.skel?url';
-import otherImage from './assets/allin-other/skeleton.png?url';
+import winAtlas from '../../assets/spine/win/skeleton.atlas?raw';
+import winJson from '../../assets/spine/win/skeleton.json?raw';
+import winImage from '../../assets/spine/win/skeleton.png?url';
+import selfAtlas from '../../assets/spine/allin-self/skeleton.atlas?raw';
+import selfBinary from '../../assets/spine/allin-self/skeleton.skel?url';
+import selfImage from '../../assets/spine/allin-self/skeleton.png?url';
+import otherAtlas from '../../assets/spine/allin-other/skeleton.atlas?raw';
+import otherBinary from '../../assets/spine/allin-other/skeleton.skel?url';
+import otherImage from '../../assets/spine/allin-other/skeleton.png?url';
 import type { SeatEffect } from '../SeatEffects.js';
 export interface SpineAsset { atlas: string; data: string | Uint8Array; image: HTMLImageElement; }
 /** Original CC atlases stay intact; URL imports also work with hashed build assets. */
