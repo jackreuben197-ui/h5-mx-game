@@ -12,3 +12,7 @@ import allinUrl from '../assets/audio/allin.mp3';
 export const allin = new URL(allinUrl, import.meta.url).href;
 import turnUrl from '../assets/audio/turn.mp3';
 export const turn = new URL(turnUrl, import.meta.url).href;
+import alertUrl from '../assets/audio/action-alert.mp3';
+export const alert = new URL(alertUrl, import.meta.url).href;
+import threeUrl from '../assets/audio/countdown-three.mp3';
+export const three = new URL(threeUrl, import.meta.url).href;

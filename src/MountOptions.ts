@@ -9,5 +9,5 @@ export interface MountOptions {
   components?: TableComponents;
   onState?: (state: ClientState) => void;
   onLeave?: () => void;
-  onNavigate?: (action: 'report' | 'replay' | 'emoji' | 'voice') => void;
+  onNavigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void;
 }

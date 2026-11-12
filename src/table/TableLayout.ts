@@ -19,7 +19,7 @@ export class TableLayout {
     this.suggest = Math.min(1, Math.max(this.height / 2688, 0.85));
     const offset = this.suggest < 1 ? 20 : 100;
     this.seats.initWithContainer(
-      this.width > this.height ? this.width * 0.8 : this.width,
+      this.width > this.height ? this.width * 0.8 : this.width - 40,
       this.height - (this.landscape ? 0 : 200 * this.suggest) - offset * this.suggest,
       -offset * this.suggest,
     );
@@ -69,7 +69,7 @@ export class TableLayout {
       result.set(id, {
         betX, betY, betIconX,
         x: landscapeSeat?.x ?? this.width / 2 + p.position.x,
-        y: landscapeSeat?.y ?? -p.position.y,
+        y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
         edge: landscapeSeat?.edge ?? 'portrait',
         cardsX: face ? 0 : centeredBack ? 55 : left ? 160 : -160,

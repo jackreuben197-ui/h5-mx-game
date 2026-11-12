@@ -13,11 +13,13 @@ export interface TableComponents {
   pot?: (data: PotData) => { total: HTMLElement; pool: HTMLElement; destroy(): void };
   actions?: (command: (action: Action, amount?: number) => Promise<void>) => {
     root: HTMLElement;
+    setScale?(scale: number): void;
     render(snapshot: TableSnapshot): void;
     destroy(): void;
   };
-  navigation?: (navigate?: (action: 'report' | 'replay' | 'emoji' | 'voice') => void) => {
+  navigation?: (navigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void) => {
     root: HTMLElement;
+    render?(snapshot: TableSnapshot): void;
     destroy?(): void;
   };
 }

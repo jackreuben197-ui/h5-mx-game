@@ -86,6 +86,26 @@ test('positive return-table chips seat directly while zero chips opens buy-in', 
   assert.equal(submitted.length,1);
 });
 
+test('return-to-game keeps the dialog closed while deciding whether bring-in is needed', async t => {
+  let resolvePrepare;
+  const quote={id:3,seat:0,roomName:'桌',smallBlind:1000,min:30000,max:30000,step:2000,
+    wallets:[{club_id:5,gold:50000,club_name:'俱乐部'}],returnOrNew:1,returnAmount:30000,
+    returnClubID:5,canAuto:false,autoReturn:true,security:{ip:false,gps:false,delay:false,media:false}};
+  const buyIn=new BuyInController({prepare:()=>new Promise(resolve=>{resolvePrepare=resolve;}),submit:async()=>{},standup:async()=>false});
+  t.after(()=>buyIn.destroy());
+  const opening=buyIn.open(0);
+  assert.equal(buyIn.data.state.step,'closed','no loading prompt before the return decision');
+  resolvePrepare(quote);
+  await opening;
+  assert.equal(buyIn.data.state.step,'closed','auto return never opens the buy-in dialog');
+  quote.mode='add';quote.autoReturn=false;quote.returnAmount=undefined;quote.returnClubID=undefined;
+  const next=buyIn.open(0);
+  assert.equal(buyIn.data.state.step,'closed','zero-chip bring-in also waits for actual quote');
+  resolvePrepare(quote);
+  await next;
+  assert.equal(buyIn.data.state.step,'amount','show the real bring-in dialog when CC needs one');
+});
+
 test('CC return_table with positive chips sends Seated immediately without opening buy-in', async t => {
   const transport=new FakeTransport(),signal=new AbortController();
   const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:200,http:{baseURL:'https://test.invalid/api',fetch:async url=>Response.json({code:0,data:

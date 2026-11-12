@@ -71,6 +71,7 @@ export class SeatView implements SeatComponent {
     )
       this.cards.render(state, old);
     this.cards.emphasize(state);
+    this.cards.selection(state);
     this.effects.render(state);
     this.previous = state;
   }

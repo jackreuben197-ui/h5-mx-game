@@ -90,18 +90,18 @@ export class RoomRecordsService implements RoomRecords {
             records: (value?.records ?? []).map(record => ({ name: String(record.name || ''), in_num: Number(record.in_num || 0), in_amount: Number(record.in_amount || 0), out_num: Number(record.out_num || 0), out_amount: Number(record.out_amount || 0), user_random_id: Number(record.user_random_id || 0) })) });
         return selected;
     }
-    replay(hand: number): Promise<ReplayHandData | null> {
+    replay(hand: number, refresh = false): Promise<ReplayHandData | null> {
         if (this.replayTask)
             return this.replayHand === hand ? this.replayTask : Promise.reject(new Error('牌谱正在加载，请稍候'));
         this.replayHand = hand;
-        return this.replayTask = this.loadReplay(hand).finally(() => { this.replayTask = undefined; this.replayHand = -1; });
+        return this.replayTask = this.loadReplay(hand, refresh).finally(() => { this.replayTask = undefined; this.replayHand = -1; });
     }
-    private async loadReplay(hand: number): Promise<ReplayHandData | null> {
+    private async loadReplay(hand: number, refresh = false): Promise<ReplayHandData | null> {
         if (!Number.isInteger(hand) || hand < 1)
             throw new Error('无效手数');
         this.signal.throwIfAborted();
         this.data.replay.pendingHandNum = hand;
-        const cached = this.data.replay.getCached(hand) ?? await this.storage.get(hand, this.signal);
+        const cached = refresh ? undefined : this.data.replay.getCached(hand) ?? await this.storage.get(hand, this.signal);
         this.signal.throwIfAborted();
         if (cached?.s?.hand === hand) {
             this.data.replay.applyReplay(cached);
@@ -230,6 +230,8 @@ export class RoomRecordsService implements RoomRecords {
         this.requireGift(userRID);
         if (![10, 50, 100, 200, 500, 1000].includes(amount)) throw new Error('无效钻石数量');
         await this.post('/api/user/diamond/send', {target_user_id: userRID, send_type: 2, amount, room_id: this.target.roomID});
+        this.signal.throwIfAborted();
+        this.data.emoji.diamondGiftEvent({senderID:this.userRID,receiverID:userRID,amount}, 'local');
     }
     async historyQuote(data: ReplayHandData): Promise<HistoryQuote> {
         const info = this.data.snapshot?.roomInfo, record = this.data.record;

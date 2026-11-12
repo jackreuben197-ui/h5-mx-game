@@ -29,6 +29,7 @@ export class EnterRoomMapper {
       seen.add(player.seatId);
       if (!Number.isSafeInteger(player.chip) || player.chip < 0)
         throw new Error('玩家筹码超出安全整数范围');
+      if(!player.keepSeatDeadline&&player.keepSeatLeftTime>0)player.keepSeatDeadline=Date.now()/1000+player.keepSeatLeftTime;
       let cards = [...player.cardsList];
       if (player.seatId === mySeat) {
         if (
@@ -49,6 +50,11 @@ export class EnterRoomMapper {
         [actions.RAISE]: '加注',
         [actions.BET]: '下注',
         [actions.ALLIN]: '全下',
+        [actions.STRADDLE]: '抓',
+        [actions.POST]: '补盲',
+        [actions.POSTANTE]: '补前注',
+        [actions.SB]: '小盲',
+        [actions.BB]: '大盲',
       };
       return {
         seat: player.seatId,
@@ -61,6 +67,16 @@ export class EnterRoomMapper {
         avatar: player.avatar || undefined,
         cards,
         folded: player.action === actions.FOLD,
+        winPercent100: (player as typeof player & { winPercent100?: number }).winPercent100 ??
+          (player.winCardsInfo && player.winCardsInfo.lcCount > 0
+            ? Math.min(10000, Math.round(player.winCardsInfo.wcCount * 10000 / player.winCardsInfo.lcCount))
+            : undefined),
+        canPlayStatus: player.status,
+        isAutoop: player.isAutoop,
+        keepSeatDeadline: player.keepSeatDeadline,
+        keepSeatReason: player.keepSeatReason,
+        roundActioned: player.roundActioned,
+        showCardsSelection: [...((player as typeof player & {showCardsSelection?: number[]}).showCardsSelection ?? [])],
         action: names[player.action] ?? '',
       };
     });
@@ -76,16 +92,26 @@ export class EnterRoomMapper {
       menu: {
         insurance: !!s.roomInfo?.insurance, retainType: s.roomInfo?.retainType ?? 0,
         retainMinRate: room.retainMinRate, storeChips: s.myInfo?.storeChips ?? 0,
-        keepingSeat: !!s.playersList.find(p=>p.seatId===mySeat)?.keepSeatLeftTime,
+        keepingSeat: !!s.playersList.find(p=>p.seatId===mySeat && (p.keepSeatDeadline || p.keepSeatLeftTime || p.keepSeatReason)),
         keepSeatDuration: room.keepSeatDuration,
       },
       countdowns,
+      roundBet: hand?.roundBet ?? 0,
+      delayTimes: mineOp?.delayTimes ?? 0,
+      canAddTime: !!mineOp && (mineOp.delayTimes ?? 0) < (room.limitDelayTimes || 2),
+      willStandup: !!s.myInfo?.willStandup,
       roomID: target.roomID,
       matchID: target.matchID,
       handNum: hand?.handNum ?? 0,
       handEnded: s.gameStatus === this.pb.Def.GameStatus.HAND_END,
+      watch: data.watch.handNum === hand?.handNum ? {
+        peek: data.watch.peek, reveal: data.watch.reveal,
+        peekCost: data.watch.peekCost, revealCost: data.watch.revealCost,
+        revealFree: data.watch.revealFree,
+      } : undefined,
       revision,
       name: room.name,
+      antiCheatType: s.roomInfo?.antiCheatType,
       seatCount: room.seatCount,
       mySeat,
       players,

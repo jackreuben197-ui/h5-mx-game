@@ -12,7 +12,8 @@ export class BuyInController {
     if(this.data.state.busy || this.preparing) return;
     const generation = ++this.generation;
     this.preparing = true;
-    this.data.update({step:seat > 0 ? 'closed' : 'loading',quote:undefined,error:'',busy:false});
+    // CC waits for the return/bring-in decision before opening a dialog.
+    this.data.update({step:'closed',quote:undefined,error:'',busy:false});
     try {
       if(!this.actions) throw new Error('当前入口尚不支持坐下');
       const quote = await this.actions.prepare(seat);

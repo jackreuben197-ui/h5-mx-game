@@ -103,7 +103,7 @@ export class BuyInView {
       this.autoArea.hidden=!q.canAuto;this.auto.checked=s.auto;
     }
     this.error.textContent=s.error;
-    this.confirm.hidden=s.step==='loading';i18nLabel.bind(this.confirm, () => s.busy?i18nMgr.Get("MX_Submitting", [], "正在提交…"):s.step==='security'?i18nMgr.Get("UITableSetting_nextPage", [], "下一页"):i18nMgr.Get("UITexas_confirm", [], "确定"));
+    this.confirm.hidden=s.step==='loading';i18nLabel.bind(this.confirm, () => s.step==='security'?i18nMgr.Get("UITableSetting_nextPage", [], "下一页"):i18nMgr.Get("UITexas_confirm", [], "确定"));
     this.confirm.disabled=s.busy;this.close.disabled=s.busy;this.slider.disabled=s.busy||q?.min===q?.max;this.auto.disabled=s.busy;
   }
   onFrameResize(width:number,height:number):void {

@@ -4,6 +4,6 @@ export function KeepSeat(body: ServerMessageKeepSeat.AsObject, context: MessageC
   const player = context.player(body.seatId);
   player.keepSeatDeadline = body.keep && body.leftTime > 0 ? body.deadline : 0;
   player.keepSeatLeftTime = body.keep ? body.leftTime : 0;
-  player.keepSeatReason = body.keepSeatReason;
+  player.keepSeatReason = body.keep ? body.keepSeatReason : context.pb.Def.KeepSeatReason.KSR_NONE;
   return true;
 }

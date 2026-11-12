@@ -2,7 +2,7 @@ import { GameplayTableSettingDataProvider } from '../logic/GameplayTableSettingD
 import { EmojiService } from '../logic/EmojiService.js';
 import { GlobalConfigStore } from '../data/GlobalConfigStore.js';
 import { DiamondModel, type DiamondConfig } from '../data/DiamondModel.js';
-import { PrivateUcChargeStore } from '../data/PrivateUcChargeStore.js';
+import { PrivateUcChargeStore, PrivateUcFee } from '../data/PrivateUcChargeStore.js';
 import { RoomRecordsService } from '../logic/RoomRecordsService.js';
 import { SetAutoOnTableRequest } from '../net/requests/SetAutoOnTableRequest.js';
 import { BringOutRules } from '../logic/BringOutRules.js';
@@ -26,6 +26,13 @@ import { HttpClient, type HttpOptions } from '../net/http/HttpClient.js';
 import { UserInfoRequest } from '../net/http/UserInfoRequest.js';
 import { SyncEnterRequest } from '../net/requests/SyncEnterRequest.js';
 import { ActionRequest } from '../net/requests/ActionRequest.js';
+import { AddTimeRequest } from '../net/requests/AddTimeRequest.js';
+import { AgreePostRequest } from '../net/requests/AgreePostRequest.js';
+import { ShowdownRequest } from '../net/requests/ShowdownRequest.js';
+import { SettlementWatchRequest } from '../net/requests/SettlementWatchRequest.js';
+import { i18nMgr } from '../i18n/i18nMgr.js';
+import { canWatchPlayerCards, canWatchPublicCards } from '../logic/ViewPlayerCardsConfig.js';
+import { DiamondConfigType, resolvePrivateUcDiamondConfigType } from '../logic/DiamondConfigType.js';
 import { TexasMessageHandler } from '../net/messages/texas/TexasMessageHandler.js';
 import { MessageContext } from '../net/messages/MessageContext.js';
 import { EnterRoomProcedure } from '../logic/EnterRoomProcedure.js';
@@ -47,6 +54,9 @@ interface RoomContext {
   walletClubID?: number;
   quote?: BuyInQuote;
   seatingBusy?: boolean;
+  agreedPost?: string;
+  showdownPending?: boolean;
+  watchPending?: boolean;
 }
 /** HTTP / WS orchestration. Handlers update room data; projection drives observable UI models. */
 export class MxRoomHost implements RoomHost {
@@ -67,6 +77,76 @@ export class MxRoomHost implements RoomHost {
   getTableSettings() { return this.roomData.tableSettings; }
   private updateTableSettings(): void { this.roomData.tableSettings.update(this.roomData.record,this.roomData.snapshot?.roomInfo,this.roomData.snapshot?.handInfo); }
   private current?: RoomContext;
+  private project(data: ProtocolRoomData, target: RoomTarget): TableSnapshot {
+    const snapshot = new EnterRoomMapper(this.pb!).map(data,target,++this.revision);
+    snapshot.roomLogo = this.session.roomLogo(data.record?.clubId || target.clubID || 0);
+    snapshot.privateUc=this.globalConfig.isChannelDiamondFreeMode;
+    if(snapshot.watch)snapshot.watch.privateUc=this.globalConfig.isChannelDiamondFreeMode;
+    const own = data.snapshot?.operatorList.find(op=>op.seatId===data.snapshot?.myInfo?.seatId && !op.isInsurance && !op.isAgreeSecondPc);
+    snapshot.canAddTime = !!own && own.delayTimes < this.globalConfig.resolveGameDelayTimes(data.record?.limitDelayTimes);
+    if(snapshot.canAddTime&&data.record){
+      const times=Math.min(5,own!.delayTimes+1),room=data.record,privateUc=this.globalConfig.isChannelDiamondFreeMode;
+      const ext=this.diamonds.getDiamondConfigTypeExt(room.originType,room.shareTable,false,times);
+      snapshot.addTimeCost=this.diamonds.getPrice(2,ext,data.snapshot?.roomInfo?.smallBlind??0,privateUc);
+    }
+    return snapshot;
+  }
+  private maybeAgreePost(context: RoomContext): void {
+    const state=this.roomData.snapshot,seat=state?.myInfo?.seatId;
+    const player=state?.playersList.find(p=>p.seatId===seat);
+    if(!context.ready||!seat||player?.status!==this.pb?.Def.CanPlayStatus.NEED_POST){context.agreedPost=undefined;return;}
+    const key=`${seat}:${state?.handInfo?.handNum??0}`;
+    if(context.agreedPost===key)return;
+    context.agreedPost=key;
+    void this.agreePost(context.target,context.signal).catch(error=>this.report(error));
+  }
+  private watchCurrent(context: RoomContext, handNum: number): boolean {
+    return this.current===context && context.ready && !context.signal.aborted &&
+      this.roomData.watch.handNum===handNum && this.roomData.snapshot?.handInfo?.handNum===handNum &&
+      this.roomData.snapshot.gameStatus===this.pb?.Def.GameStatus.HAND_END;
+  }
+  private publishWatch(context: RoomContext): void {
+    if(this.current===context&&context.ready&&!context.signal.aborted)
+      context.receive({type:'snapshot',snapshot:this.project(this.roomData,context.target)});
+  }
+  private async watchPrice(type: DiamondConfigType, ext: number, times=0): Promise<number> {
+    const privateUc=this.globalConfig.isChannelDiamondFreeMode;
+    if(!privateUc)await this.diamonds.reqDiamondConfig(type);
+    const price=this.diamonds.getPrice(privateUc?resolvePrivateUcDiamondConfigType(type):type,ext,this.roomData.snapshot?.roomInfo?.smallBlind??0,privateUc);
+    return privateUc&&type===DiamondConfigType.DiamondConfigTypePayWatchOtherCard
+      ? this.privateUc.applyTieredPrice(PrivateUcFee.ViewOnePlayer,price,times):price;
+  }
+  private async prepareSettlementWatch(context: RoomContext): Promise<void> {
+    const state=this.roomData.snapshot,record=this.roomData.record,watch=this.roomData.watch,handNum=watch.handNum;
+    if(!state||!record||!handNum||context.target.matchID>0)return;
+    const basic={shareTable:record.shareTable,originType:record.originType,tribeID:record.tribeId};
+    const seated=(state.myInfo?.seatId??0)>0;
+    const wantPeek=watch.peek&&canWatchPlayerCards(basic,seated,this.globalConfig);
+    const wantReveal=watch.reveal&&canWatchPublicCards(basic,seated,this.globalConfig);
+    watch.peek=false;watch.reveal=false;this.publishWatch(context);
+    const request=new SettlementWatchRequest(this.client,this.pb!);
+    await Promise.all([
+      wantPeek?(async()=>{
+        const times=await request.peekTimes(context.target,context.signal);
+        const type=record.viewPlayerCards===2?DiamondConfigType.DiamondConfigTypePayWatchOtherCard:DiamondConfigType.DiamondConfigTypePayWatchOtherCardWatchAll;
+        const ext=record.viewPlayerCards===2?(seated?3:1):(seated?12:11)+10*Math.min(times,4);
+        const cost=await this.watchPrice(type,ext,times);
+        if(!this.watchCurrent(context,handNum))return;
+        watch.peekPayTimes=times;watch.peekCost=cost;watch.peek=true;this.publishWatch(context);
+      })().catch(error=>this.report(error)):undefined,
+      wantReveal?(async()=>{
+        let free=0;
+        if(this.globalConfig.isChannelDiamondFreeMode&&this.globalConfig.viewPublicCards.freeCount>0){
+          const result=await this.http.request<{free_count?:number}>('/api/roomcenter/history/view_public_cards/free_count',{}, {signal:context.signal,clubID:record.clubId});
+          free=Number(result?.free_count)||0;
+        }
+        const viewAll=this.globalConfig.viewPublicCards.viewType===2;
+        const cost=free>0?0:await this.watchPrice(viewAll?DiamondConfigType.DiamondConfigTypeViewPublicCardsAll:DiamondConfigType.DiamondConfigTypeViewPublicCards,viewAll?0:watch.revealRound*1000);
+        if(!this.watchCurrent(context,handNum)||(this.roomData.snapshot?.handInfo?.publicCardsList.length??5)>=5)return;
+        watch.revealCost=cost;watch.revealFree=free>0;watch.reveal=true;this.publishWatch(context);
+      })().catch(error=>this.report(error)):undefined,
+    ]);
+  }
   private records?: RoomRecordsService;
   private emojis?: EmojiService;
   constructor(
@@ -90,6 +170,8 @@ export class MxRoomHost implements RoomHost {
         if(message.action==='syncPrivateUcChargeConfig')this.privateUc.setFromH5Sync({items:configPayload?.items});
         const previousToken = this.session.token;
         this.session.update(message.action, message.payload);
+        if (message.action === 'syncUserClub' && this.current?.entered && this.roomData.snapshot && this.pb)
+          this.current.receive({ type: 'snapshot', snapshot: this.project(this.roomData, this.current.target) });
         if (previousToken && previousToken !== this.session.token) {
           this.current = undefined;
           this.roomData.clear();
@@ -181,7 +263,7 @@ export class MxRoomHost implements RoomHost {
     const data = await new EnterRoomProcedure(this.client, pb).run(target, signal);
     signal.throwIfAborted();
     if (this.current !== context) throw new DOMException('房间会话已更换', 'AbortError');
-    const snapshot = new EnterRoomMapper(pb).map(data, target, ++this.revision);
+    const snapshot = this.project(data,target);
     this.roomData = data;
     this.updateTableSettings();
     context.entered = true;
@@ -191,6 +273,7 @@ export class MxRoomHost implements RoomHost {
       if (!context.ready) break;
       this.apply(packet, context);
     }
+    this.maybeAgreePost(context);
     this.warmRoomPanels(context);
     return snapshot;
   }
@@ -243,11 +326,7 @@ export class MxRoomHost implements RoomHost {
         this.roomData.snapshot = original;
         return;
       }
-      const snapshot = new EnterRoomMapper(this.pb!).map(
-        this.roomData,
-        context.target,
-        ++this.revision,
-      );
+      const snapshot = this.project(this.roomData,context.target);
       snapshot.presentation = message.presentation;
       if (message.presentation === 'deal')
         snapshot.dealOrder = [...(this.roomData.snapshot?.handInfo?.dealOrderList ?? [])];
@@ -263,6 +342,9 @@ export class MxRoomHost implements RoomHost {
         context.pendingTurn = undefined;
       this.updateTableSettings();
       context.receive({ type: 'snapshot', snapshot });
+      if(packet.code===this.pb!.Code.MSG_S_WINNER)
+        void this.prepareSettlementWatch(context);
+      this.maybeAgreePost(context);
       if (packet.code === this.pb!.Code.MSG_D_SEATED || packet.code === this.pb!.Code.MSG_S_SEATED_OTHERS)
         this.warmRoomPanels(context, packet.code === this.pb!.Code.MSG_D_SEATED);
     } catch (error) {
@@ -272,11 +354,7 @@ export class MxRoomHost implements RoomHost {
   }
   private disableActions(context: RoomContext): void {
     if (!this.pb || !this.roomData.snapshot) return;
-    const snapshot = new EnterRoomMapper(this.pb).map(
-      this.roomData,
-      context.target,
-      ++this.revision,
-    );
+    const snapshot = this.project(this.roomData,context.target);
     context.receive({
       type: 'snapshot',
       snapshot: { ...snapshot, actions: [], betting: undefined },
@@ -309,7 +387,10 @@ export class MxRoomHost implements RoomHost {
       const candidate = new ProtocolRoomData();
       candidate.record = this.roomData.record;
       candidate.snapshot = snapshot;
-      const mapped = new EnterRoomMapper(this.pb!).map(candidate, context.target, ++this.revision);
+      if(this.roomData.watch.handNum===snapshot.handInfo?.handNum&&snapshot.gameStatus===this.pb!.Def.GameStatus.HAND_END)
+        Object.assign(candidate.watch,this.roomData.watch);
+      else this.roomData.watch.clear();
+      const mapped = this.project(candidate,context.target);
       // Keep room-scoped panel subscriptions/cache stable across authoritative resync.
       this.roomData.snapshot = snapshot;
       this.updateTableSettings();
@@ -317,6 +398,7 @@ export class MxRoomHost implements RoomHost {
       context.pendingTurn = undefined;
       context.ready = true;
       context.receive({ type: 'snapshot', snapshot: mapped });
+      this.maybeAgreePost(context);
       this.warmRoomPanels(context);
       for (const packet of context.packets.splice(0)) {
         if (!context.ready) break;
@@ -511,12 +593,81 @@ export class MxRoomHost implements RoomHost {
     try{await new KeepSeatRequest(this.client,this.pb!).execute(target,keep,duration,signal);}
     finally{c.seatingBusy=false;}
   }
+  async addTime(target:RoomTarget,signal:AbortSignal):Promise<void> {
+    const c=this.seatContext(target),s=this.roomData.snapshot!;
+    const op=s.operatorList.find(o=>o.seatId===s.myInfo?.seatId && !o.isInsurance && !o.isAgreeSecondPc);
+    if(!op||op.delayTimes>=this.globalConfig.resolveGameDelayTimes(this.roomData.record?.limitDelayTimes))throw new Error('当前不能加时');
+    await new AddTimeRequest(this.client,this.pb!).execute(target,op.delayTimes,signal);
+    if(this.current!==c||signal.aborted)return;
+    // The 1014 reply is also projected by TexasMessageHandler.AddTime.
+  }
+  async agreePost(target:RoomTarget,signal:AbortSignal):Promise<void> {
+    this.seatContext(target);
+    const s=this.roomData.snapshot!,p=s.playersList.find(p=>p.seatId===s.myInfo?.seatId);
+    if(p?.status!==this.pb!.Def.CanPlayStatus.NEED_POST)return;
+    await new AgreePostRequest(this.client,this.pb!).execute(target,signal);
+  }
+  async showdown(target:RoomTarget,cardIndex:number,signal:AbortSignal):Promise<void> {
+    const c=this.seatContext(target),s=this.roomData.snapshot!,seat=s.myInfo?.seatId;
+    const p=s.playersList.find(p=>p.seatId===seat);
+    if(c.showdownPending||!p||(p.status!==this.pb!.Def.CanPlayStatus.NORMAL&&p.status!==this.pb!.Def.CanPlayStatus.AGREE_POST)||p.action===this.pb!.Def.Action.NONE||p.action===this.pb!.Def.Action.FOLD||!p.cardsList[cardIndex]||p.cardsList[cardIndex]<=0)throw new Error('当前不能亮出这张牌');
+    const hand=s.handInfo?.handNum;
+    const selection=[...((p as typeof p & {showCardsSelection?:number[]}).showCardsSelection??new Array(p.cardsList.length).fill(0))];
+    selection[cardIndex]=selection[cardIndex]===1?0:1;
+    c.showdownPending=true;
+    try{
+      await new ShowdownRequest(this.client,this.pb!).execute(target,selection,signal);
+      const latest=this.roomData.snapshot;
+      if(this.current===c&&!signal.aborted&&latest&&latest.handInfo?.handNum===hand&&latest.myInfo?.seatId===seat){
+        const current=latest.playersList.find(v=>v.seatId===seat) as (typeof p & {showCardsSelection?:number[]})|undefined;
+        if(current){current.showCardsSelection=selection;c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});}
+      }
+    }finally{c.showdownPending=false;}
+  }
+  async watchSettlement(target:RoomTarget,kind:'peek'|'reveal',signal:AbortSignal):Promise<void>{
+    const context=this.seatContext(target),watch=this.roomData.watch,handNum=watch.handNum;
+    if(!this.watchCurrent(context,handNum)||context.watchPending||!watch[kind])throw new Error('本手看牌操作已失效');
+    context.watchPending=true;
+    watch[kind]=false;this.publishWatch(context);
+    const request=new SettlementWatchRequest(this.client,this.pb!);
+    try{
+      if(kind==='peek'){
+        await request.peek(target,signal);
+        // CC ViewPlayerCards acknowledges the purchase; ShowViewCards (1127) reveals opponents.
+        if(this.current===context&&!signal.aborted)
+          this.transport.send('showToast',{type:'success',message:i18nMgr.Get('UITexas_LookCardFlipSuccessTips',[],'翻牌成功，详情可去牌谱查看')});
+      }else{
+        const count=this.roomData.snapshot?.handInfo?.publicCardsList.length??0;
+        if(count>=5)throw new Error('公共牌已经全部显示');
+        const round=this.globalConfig.viewPublicCards.viewType===2?0:count===0?this.pb!.Def.Round.PREFLOP:count===3?this.pb!.Def.Round.FLOP:count===4?this.pb!.Def.Round.TURN:-1;
+        if(round<0)throw new Error('公共牌状态无效');
+        const result=await request.reveal(target,round,signal);
+        if(this.watchCurrent(context,handNum)){
+          const hand=this.roomData.snapshot!.handInfo!;
+          hand.publicCardsList=[...hand.publicCardsList,...result.publicCardsList];
+          if(result.publicCards2List.length)hand.secondPublicCardsList=[...hand.publicCardsList.slice(0,5-result.publicCards2List.length),...result.publicCards2List];
+          watch.revealRound=Number(result.round)||0;
+          watch.reveal=hand.publicCardsList.length<5;
+          this.publishWatch(context);
+          if(watch.reveal)void this.prepareSettlementWatch(context);
+        }
+      }
+    }catch(error){if(this.watchCurrent(context,handNum)){watch[kind]=true;this.publishWatch(context);}throw error;}
+    finally{context.watchPending=false;}
+  }
   async standup(target: RoomTarget, signal: AbortSignal): Promise<boolean> {
     const c = this.seatContext(target);
     if(!this.roomData.snapshot?.myInfo?.seatId) return false;
     if(c.seatingBusy) throw new Error('座位请求正在处理');
     c.seatingBusy = true;
-    try { return await new StandupRequest(this.client,this.pb!).execute(target,signal); }
+    try {
+      const pending=await new StandupRequest(this.client,this.pb!).execute(target,signal);
+      if(pending&&this.current===c&&this.roomData.snapshot?.myInfo){
+        this.roomData.snapshot.myInfo.willStandup=true;
+        c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});
+      }
+      return pending;
+    }
     finally { c.seatingBusy = false; }
   }
   destroy(): void {

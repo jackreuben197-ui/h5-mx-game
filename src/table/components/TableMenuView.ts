@@ -12,7 +12,6 @@ export class TableMenuView {
   private trigger = element('button', 'mx-menu');
   private bb = element('button', 'mx-menu-item mx-menu-bb');
   private stand = element('button', 'mx-menu-item mx-menu-green');
-  readonly status = element('p', 'mx-menu-status');
   private store = element('p','mx-menu-store');
   private bringIn!: HTMLButtonElement;
   private bringOut!: HTMLButtonElement;
@@ -21,10 +20,10 @@ export class TableMenuView {
   private state?: TableSnapshot;
   private opened = false;
   private disposed = false;
-  constructor(leave: () => void, toggleBB?: () => boolean, standup?: () => Promise<string>, actions: {
+  constructor(leave: () => void, toggleBB?: () => boolean, standup?: () => Promise<void>, actions: {
     settings: () => void; rules: (insurance: boolean) => void;
     bringIn: () => void; bringOut?: () => void; keepSeat?: (keep: boolean) => Promise<void>;
-  } = {settings:()=>{},rules:()=>{},bringIn:()=>{}}) {
+  } = {settings:()=>{},rules:()=>{},bringIn:()=>{}}, private showError: (error: unknown) => void = () => {}) {
     this.trigger.type = 'button';
     i18nLabel.bind(this.trigger, () => i18nMgr.Get('UIMine_btn_setting'), 'aria-label');
     this.trigger.setAttribute('aria-expanded', 'false');
@@ -65,10 +64,9 @@ export class TableMenuView {
       if (!standup || this.stand.disabled) return;
       this.setOpen(false); this.stand.disabled = true;
       try {
-        const message = await standup();
-        if (!this.disposed) this.status.textContent = message;
+        await standup();
       } catch (error) {
-        if (!this.disposed) this.status.textContent = error instanceof Error ? error.message : i18nMgr.Get('MX_UnableToStandUp');
+        if (!this.disposed) this.showError(error);
       } finally { this.stand.disabled = false; }
     };
     this.stand.dataset.available = String(!!standup);
@@ -89,13 +87,12 @@ export class TableMenuView {
       if(!actions.keepSeat||this.keep.disabled)return;
       this.keep.disabled=true;
       void actions.keepSeat(!this.state?.menu?.keepingSeat).catch(error=>{
-        if(!this.disposed)this.status.textContent=error instanceof Error?error.message:String(error);
+        if(!this.disposed)this.showError(error);
       }).finally(()=>{if(!this.disposed)this.keep.disabled=false;});
     });
     this.panel.append(this.store,personal,rules,this.insurance,this.bringIn,this.bringOut,this.keep,this.bb,this.stand,exit);
     this.overlay.append(shade, this.panel); this.overlay.inert = true;
     this.overlay.setAttribute('aria-hidden', 'true');
-    this.status.setAttribute('role', 'status');
     this.overlay.onkeydown = event => {
       if (event.key === 'Escape') { event.preventDefault(); this.setOpen(false); }
       if (event.key === 'Tab') {
@@ -113,7 +110,6 @@ export class TableMenuView {
     this.overlay.setAttribute('aria-hidden', String(!open));
     this.trigger.setAttribute('aria-expanded', String(open));
     if (open) {
-      this.status.textContent = '';
       this.panel.querySelector<HTMLButtonElement>('button:not([disabled]):not([hidden])')?.focus({ preventScroll: true });
     } else this.trigger.focus({ preventScroll: true });
   }
@@ -138,6 +134,6 @@ export class TableMenuView {
   destroy(): void {
     this.disposed = true;
     this.overlay.onkeydown = null;
-    this.overlay.remove(); this.status.remove(); this.root.remove();
+    this.overlay.remove(); this.root.remove();
   }
 }

@@ -9,6 +9,7 @@ import { StringHelper } from '../../logic/StringHelper.js';
 import { SpriteAtlas } from '../SpriteAtlas.js';
 import { element } from '../dom.js';
 import { RecordDialogView } from './RecordDialogView.js';
+import type { TableConfirmDialog } from './TableConfirmDialog.js';
 
 const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
 const props = [
@@ -32,7 +33,7 @@ export class PlayerInfoView {
   get currentSeat(): number { return this.root.hidden ? 0 : this.player?.seat ?? 0; }
   get currentUserRID(): number | undefined { return this.player?.userRid; }
 
-  constructor(private records?: RoomRecords, private emojis?: RoomEmojis, private onRemark?: (userRID: number, remark: string, nickname: string) => void) {
+  constructor(private records?: RoomRecords, private emojis?: RoomEmojis, private onRemark?: (userRID: number, remark: string, nickname: string) => void, private confirmDialog?: TableConfirmDialog) {
     this.root.classList.add('mx-player-profile-overlay');
     this.dialog.panel.setAttribute('aria-label', t('MX_PlayerStats', '玩家资料'));
     i18nMgr.register(this);
@@ -72,20 +73,19 @@ export class PlayerInfoView {
   private async run(action: () => Promise<void>, done?: () => void): Promise<void> {
     if (this.busy) return;
     this.busy = true; this.dialog.status.textContent = '';
+    const giftButtons=this.dialog.panel.querySelectorAll<HTMLButtonElement>('.mx-player-profile-gift-grid button');
+    giftButtons.forEach(button=>button.disabled=true);
     try { await action(); done?.(); }
     catch (error) { this.dialog.status.textContent = error instanceof Error ? error.message : String(error); }
-    finally { this.busy = false; }
+    finally { this.busy = false; giftButtons.forEach(button=>button.disabled=false); }
   }
-  private confirm(message: string, action: () => void): void {
-    this.root.querySelector('.mx-player-profile-confirm')?.remove();
-    const layer = element('div','mx-player-profile-confirm');
-    const panel = element('div','mx-player-profile-confirm-panel mx-dialog-glass');
-    panel.setAttribute('role','alertdialog'); panel.setAttribute('aria-modal','true');
-    panel.append(element('p','',message));
-    const buttons = element('div','mx-player-profile-confirm-buttons');
-    const cancel = element('button','',t('MX_Cancel','取消')); cancel.type='button'; cancel.onclick=()=>layer.remove();
-    const okay = element('button','',t('MX_Confirm','确定')); okay.type='button'; okay.onclick=()=>{layer.remove(); action();};
-    buttons.append(cancel,okay); panel.append(buttons); layer.append(panel); this.root.append(layer); okay.focus();
+  private confirm(message: () => string, action: () => void): void {
+    this.confirmDialog?.open({
+      owner: 'player-admin', message,
+      cancel: () => t('MX_Cancel','取消'),
+      commit: () => t('MX_Confirm','确定'),
+      onCancel: () => {}, onCommit: action,
+    });
   }
 
   private render(): void {
@@ -166,14 +166,18 @@ export class PlayerInfoView {
     if (this.tab === 'gift') {
       if (!this.canGift()) {this.tab = 'data'; this.renderBody(); return;}
       const gift = element('div','mx-player-profile-gift');
-      gift.append(element('div','mx-player-profile-balance',`${t('MX_DiamondBalance','钻石余额')}: ${this.balance === undefined ? '—' : this.balance.toLocaleString('en-US')}`));
       const choices = element('div','mx-player-profile-gift-grid');
       for (const amount of [10,50,100,200,500,1000]) {
-        const button = element('button','',`💎 ${amount}`); button.type = 'button';
-        button.onclick = () => this.confirm(`${t('MX_GiftDiamonds','赠送钻石')} ${amount}?`, () => void this.run(() => this.records!.giftDiamonds(this.player!.userRid!,amount), () => this.close()));
+        const button = element('button','mx-player-profile-gift-choice'); button.type = 'button';
+        const icon=element('span','mx-player-profile-gift-icon');SpriteAtlas.paint(icon,'giftDiamond');
+        button.append(icon,element('span','mx-player-profile-gift-amount',String(amount)));
+        button.onclick = () => void this.run(() => this.records!.giftDiamonds(this.player!.userRid!,amount), () => this.close());
         choices.append(button);
       }
-      gift.append(choices); body.append(gift); return;
+      const balance=element('div','mx-player-profile-balance');
+      const balanceIcon=element('span','mx-player-profile-balance-icon');SpriteAtlas.paint(balanceIcon,'recordDiamond');
+      balance.append(balanceIcon,element('span','',`${t('MX_DiamondBalance','钻石余额')}: ${this.balance === undefined ? '—' : this.balance.toLocaleString('en-US')}`));
+      gift.append(choices,balance); body.append(gift); return;
     }
     if (this.tab === 'data') {
       const room = stats?.room_data;
@@ -263,8 +267,8 @@ export class PlayerInfoView {
       const controls = element('div','mx-player-profile-controls');
       const add = (label: string, click: () => void) => {const button = element('button','',label); button.type='button'; button.onclick=click; controls.append(button);};
       const admin = this.records!.data.record!.roomAdmin!;
-      if (admin.userStandUp === 1) add(t('MX_AdminStand','站起玩家'), () => this.confirm(t('UITexasRoomManagerOpTips7','确认让该玩家站起？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'stand'), () => this.close())));
-      if (admin.userLeave === 1) add(t('MX_AdminLeave','踢出玩家'), () => this.confirm(t('UITexasRoomManagerOpTips8','确认踢出该玩家？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'leave'), () => this.close())));
+      if (admin.userStandUp === 1) add(t('MX_AdminStand','站起玩家'), () => this.confirm(() => t('UITexasRoomManagerOpTips7','确认让该玩家站起？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'stand'), () => this.close())));
+      if (admin.userLeave === 1) add(t('MX_AdminLeave','踢出玩家'), () => this.confirm(() => t('UITexasRoomManagerOpTips8','确认踢出该玩家？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'leave'), () => this.close())));
       add(this.muted ? t('MX_Unmute','取消禁言') : t('MX_Mute','禁言'), () => void this.run(() => this.records!.setPlayerMuted(this.player!.userRid!,!this.muted), () => {this.muted = !this.muted; this.renderActions();}));
       actions.append(controls);
     }
@@ -275,9 +279,9 @@ export class PlayerInfoView {
   onFrameResize(width: number, height: number): void {
     // The admin controls and two rows of props share this frame with the stats.
     // Fit the complete CC-style dialog, rather than clipping its last row.
-    const scale = Math.min(width / 340, height / 650, 1);
+    const scale = Math.min(width / 340, height / 680, 1);
     this.root.style.setProperty('--player-profile-unit', `${scale}px`);
   }
-  close(): void { ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.root.querySelector('.mx-player-profile-confirm')?.remove(); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }
+  close(): void { ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.confirmDialog?.close('player-admin'); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }
   destroy(): void { this.close(); this.dialog.destroy(); }
 }

@@ -10,6 +10,7 @@ import { BringIn } from './BringIn.js';
 import { StoreChips } from './StoreChips.js';
 import { Seated } from './Seated.js';
 import { Showcards } from './Showcards.js';
+import { ShowViewCards } from './ShowViewCards.js';
 import { SeatedOthers } from './SeatedOthers.js';
 import { StartInfo } from './StartInfo.js';
 import { PublicCards } from './PublicCards.js';
@@ -21,7 +22,10 @@ import { Standup } from './Standup.js';
 import { KeepSeat } from './KeepSeat.js';
 import { Winner } from './Winner.js';
 import { AddTimeOthers } from './AddTimeOthers.js';
+import { AddTime } from './AddTime.js';
+import { PostStatusChange } from './PostStatusChange.js';
 import { HandClear } from './HandClear.js';
+import { RoomUserSendDiamond } from './RoomUserSendDiamond.js';
 /** CC TexasMessageHandler switch layout. Decode, call the named message, update data. */
 export class TexasMessageHandler {
   constructor(private pb: HoldemRuntime) {}
@@ -37,6 +41,7 @@ export class TexasMessageHandler {
       case Code.MSG_D_STORE_CHIPS:
       case Code.MSG_D_SEATED:
       case Code.MSG_S_SHOWCARDS:
+      case Code.MSG_S_SHOW_VIEW_CARDS:
       case Code.MSG_S_SEATED_OTHERS:
       case Code.MSG_S_START_INFO:
       case Code.MSG_S_PUBLIC_CARDS:
@@ -48,7 +53,11 @@ export class TexasMessageHandler {
       case Code.MSG_S_KEEP_SEAT:
       case Code.MSG_S_WINNER:
       case Code.MSG_S_ADD_TIME_OTHERS:
+      case Code.MSG_D_ADD_TIME:
+      case Code.MSG_D_AGREE_POST:
+      case Code.MSG_S_POST_STATUS_CHANGE:
       case Code.MSG_S_HAND_CLEAR:
+      case Code.MSG_S_ROOM_USER_SEND_DIAMOND:
         return true;
       default:
         return false;
@@ -75,6 +84,8 @@ export class TexasMessageHandler {
         return Seated(pb.ServerMessageSeated.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_SHOWCARDS:
         return Showcards(pb.ServerMessageShowcards.deserializeBinary(packet.body).toObject(), context);
+      case Code.MSG_S_SHOW_VIEW_CARDS:
+        return ShowViewCards(pb.ServerMessageShowViewCards.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_SEATED_OTHERS:
         return SeatedOthers(pb.ServerMessageSeatedOthers.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_START_INFO:
@@ -97,8 +108,19 @@ export class TexasMessageHandler {
         return Winner(pb.ServerMessageWinner.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_ADD_TIME_OTHERS:
         return AddTimeOthers(pb.ServerMessageAddTimeOthers.deserializeBinary(packet.body).toObject(), context);
+      case Code.MSG_D_ADD_TIME:
+        return AddTime(pb.ServerMessageAddTime.deserializeBinary(packet.body).toObject(), context);
+      case Code.MSG_D_AGREE_POST: {
+        const result=pb.ServerMessageAgreePost.deserializeBinary(packet.body);
+        if(result.getStatus()!==0)throw new Error(`补盲失败（${result.getStatus()}）`);
+        return false;
+      }
+      case Code.MSG_S_POST_STATUS_CHANGE:
+        return PostStatusChange(pb.ServerMessagePostStatusChange.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_HAND_CLEAR:
         return HandClear(pb.ServerMessageHandClear.deserializeBinary(packet.body).toObject(), context);
+      case Code.MSG_S_ROOM_USER_SEND_DIAMOND:
+        return RoomUserSendDiamond(pb.ServerMessageRoomUserSendDiamond.deserializeBinary(packet.body).toObject(), context);
       default:
         return false;
     }

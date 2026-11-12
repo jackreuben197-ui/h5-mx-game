@@ -16,7 +16,7 @@ export function PublicCards(body: ServerMessagePublicCards.AsObject, context: Me
     body.publicCardsArrayList.length === count &&
     body.publicCardsArrayList.every((v, i) => current[before + i] === v)
   )
-    return false;
+    return context.allInWinPercent(body.allinUsersList);
   const combined = [...current, ...body.publicCardsArrayList];
   if (
     before < 0 ||
@@ -47,6 +47,7 @@ export function PublicCards(body: ServerMessagePublicCards.AsObject, context: Me
     if (player.action !== Action.FOLD && player.action !== Action.ALLIN)
       player.action = Action.NONE;
   }
+  context.allInWinPercent(body.allinUsersList);
   context.operators(body.nextOperator);
   return true;
 }

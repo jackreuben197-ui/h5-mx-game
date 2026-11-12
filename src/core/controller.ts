@@ -157,6 +157,18 @@ export class GameController<T> {
     if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.keepSeat)throw new Error('房间已离开');
     return this.host.keepSeat(this.state.target,keep,this.session.signal);
   }
+  async addTime(): Promise<void> {
+    if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.addTime)throw new Error('房间已离开');
+    return this.host.addTime(this.state.target,this.session.signal);
+  }
+  async showdown(cardIndex:number): Promise<void> {
+    if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.showdown)throw new Error('房间已离开');
+    return this.host.showdown(this.state.target,cardIndex,this.session.signal);
+  }
+  async watchSettlement(kind:'peek'|'reveal'):Promise<void>{
+    if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.watchSettlement)throw new Error('房间已离开');
+    return this.host.watchSettlement(this.state.target,kind,this.session.signal);
+  }
   leave(): void {
     if (this.state.phase === 'destroyed') return;
     ++this.generation;

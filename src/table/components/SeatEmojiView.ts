@@ -1,7 +1,8 @@
 import type { RoomEmojis } from '../../core/RoomEmojis.js';
 import type { EmojiSpineRenderer } from '../../effects/spine/EmojiSpineRenderer.js';
+import type { DiamondGiftEffect } from '../../effects/DiamondGiftEffect.js';
 import { ThrowPropSpinePlayer } from '../../effects/spine/ThrowPropSpinePlayer.js';
-import { TexasGameRoomDataEmoji, type EmojiBroadcastData, type ThrowPropBroadcastData } from '../../data/TexasGameRoomDataEmoji.js';
+import { TexasGameRoomDataEmoji, type EmojiBroadcastData, type ThrowPropBroadcastData, type DiamondGiftBroadcastData } from '../../data/TexasGameRoomDataEmoji.js';
 import MagicEmojiConfig from '../../logic/MagicEmojiConfig.js';
 import { BindingScope } from '../../binding/BindingScope.js';
 import { bindEvent } from '../../binding/bindEvent.js';
@@ -17,11 +18,31 @@ export class SeatEmojiView {
     private active = new Map<number, object>();
     private sounds = new Map<number, () => void>();
     private propPlayer?: ThrowPropSpinePlayer;
-    constructor(private service: RoomEmojis, private table: HTMLElement, private sound: TableSound) { this.bindings.bind({emoji: service.data}); }
+    private diamond?: DiamondGiftEffect;
+    private diamondPending?: Promise<DiamondGiftEffect>;
+    constructor(private service: RoomEmojis, private table: HTMLElement, private sound: TableSound) {
+        this.bindings.bind({emoji: service.data});
+        if(!service.config.isChannelDiamondFreeMode)
+            void import('../../effects/DiamondGiftEffect.js').then(({DiamondGiftEffect})=>DiamondGiftEffect.preload()).catch(()=>undefined);
+    }
     @bindEvent(TexasGameRoomDataEmoji.EMOJI, {dataSource: 'emoji', initIgnore: true})
     private onEmoji(data: EmojiBroadcastData): void { void this.play(data); }
     @bindEvent(TexasGameRoomDataEmoji.THROW_PROP, {dataSource: 'emoji', initIgnore: true})
     private onThrowProp(data: ThrowPropBroadcastData): void { void this.playProp(data); }
+    @bindEvent(TexasGameRoomDataEmoji.DIAMOND_GIFT, {dataSource:'emoji',initIgnore:true})
+    private onDiamondGift(data: DiamondGiftBroadcastData): void {
+        if(this.service.config.isChannelDiamondFreeMode)return;
+        void this.getDiamond().then(effect=>effect.play(data)).catch(error=>{if(!this.dead)console.warn('[MX diamond] animation failed',error);});
+    }
+    private getDiamond():Promise<DiamondGiftEffect>{
+        return this.diamondPending ??= import('../../effects/DiamondGiftEffect.js').then(({DiamondGiftEffect})=>{
+            if(this.dead)throw new DOMException('Disposed','AbortError');
+            return this.diamond=new DiamondGiftEffect(this.root,userRID=>{
+                const seat=this.service.seatForUser(userRID);
+                return seat?this.table.querySelector<HTMLElement>(`.mx-seat[data-seat="${seat}"] .mx-avatar-fallback`):null;
+            },()=>this.getRenderer());
+        }).catch(error=>{this.diamondPending=undefined;throw error;});
+    }
     private async getRenderer(): Promise<EmojiSpineRenderer> {
         return this.pending ??= import('../../effects/spine/EmojiSpineRenderer.js').then(({EmojiSpineRenderer}) => {
             if (this.dead) throw new DOMException('Disposed', 'AbortError');
@@ -67,5 +88,5 @@ export class SeatEmojiView {
             }
         } catch (error) { if (!this.dead) console.warn('[MX emoji] animation load failed', error); }
     }
-    destroy(): void { this.dead = true; this.bindings.destroy(); this.active.clear(); this.sounds.forEach(stop => stop()); this.sounds.clear(); this.propPlayer?.destroy(); this.renderer?.destroy(); this.root.remove(); }
+    destroy(): void { this.dead = true; this.bindings.destroy(); this.active.clear(); this.sounds.forEach(stop => stop()); this.sounds.clear(); this.propPlayer?.destroy(); this.diamond?.destroy(); this.renderer?.destroy(); this.root.remove(); }
 }

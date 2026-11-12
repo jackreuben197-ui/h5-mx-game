@@ -1,6 +1,6 @@
 {
   "width": 2048,
-  "height": 2423,
+  "height": 3326,
   "frames": {
     "avatar": {
       "x": 2,
@@ -79,530 +79,684 @@
       "height": 146,
       "source": "src/assets/raw/ui/raise.png"
     },
-    "setting": {
+    "betPercent": {
       "x": 1762,
       "y": 2,
+      "width": 144,
+      "height": 143,
+      "source": "src/assets/raw/ui/betPercent.png"
+    },
+    "betValue": {
+      "x": 1910,
+      "y": 2,
+      "width": 116,
+      "height": 46,
+      "source": "src/assets/raw/ui/betValue.png"
+    },
+    "returnGame": {
+      "x": 2,
+      "y": 205,
+      "width": 296,
+      "height": 77,
+      "source": "src/assets/raw/ui/returnGame.png"
+    },
+    "autoFoldOff": {
+      "x": 302,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoFoldOff.png"
+    },
+    "autoFoldOn": {
+      "x": 443,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoFoldOn.png"
+    },
+    "autoCallOff": {
+      "x": 584,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoCallOff.png"
+    },
+    "autoCallOn": {
+      "x": 725,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoCallOn.png"
+    },
+    "autoOff": {
+      "x": 866,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoOff.png"
+    },
+    "autoOn": {
+      "x": 1007,
+      "y": 205,
+      "width": 137,
+      "height": 137,
+      "source": "src/assets/raw/ui/autoOn.png"
+    },
+    "raiseTrack": {
+      "x": 1148,
+      "y": 205,
+      "width": 146,
+      "height": 835,
+      "source": "src/assets/raw/ui/raiseTrack.png"
+    },
+    "setting": {
+      "x": 1298,
+      "y": 205,
       "width": 89,
       "height": 89,
       "source": "src/assets/raw/ui/setting.png"
     },
     "chat": {
-      "x": 1855,
-      "y": 2,
+      "x": 1391,
+      "y": 205,
       "width": 130,
       "height": 180,
       "source": "src/assets/raw/ui/chat.png"
     },
     "pool": {
-      "x": 2,
+      "x": 1525,
       "y": 205,
       "width": 264,
       "height": 73,
       "source": "src/assets/raw/ui/pool.png"
     },
     "report": {
-      "x": 270,
+      "x": 1793,
       "y": 205,
       "width": 77,
       "height": 77,
       "source": "src/assets/raw/ui/report.png"
     },
     "replay": {
-      "x": 351,
+      "x": 1874,
       "y": 205,
       "width": 75,
       "height": 75,
       "source": "src/assets/raw/ui/replay.png"
     },
     "emoji": {
-      "x": 430,
+      "x": 1953,
       "y": 205,
       "width": 75,
       "height": 75,
       "source": "src/assets/raw/ui/emoji.png"
     },
     "cert": {
-      "x": 509,
-      "y": 205,
+      "x": 2,
+      "y": 1044,
       "width": 203,
       "height": 113,
       "source": "src/assets/raw/ui/cert.png"
     },
     "addChips": {
-      "x": 716,
-      "y": 205,
+      "x": 209,
+      "y": 1044,
       "width": 186,
       "height": 101,
       "source": "src/assets/raw/ui/addChips.png"
     },
     "timerRing": {
-      "x": 906,
-      "y": 205,
+      "x": 399,
+      "y": 1044,
       "width": 396,
       "height": 396,
       "source": "src/assets/raw/ui/timerRing.png"
     },
     "timerDot": {
-      "x": 1306,
-      "y": 205,
+      "x": 799,
+      "y": 1044,
       "width": 128,
       "height": 128,
       "source": "src/assets/raw/ui/timerDot.png"
     },
     "actionBubble": {
-      "x": 1438,
-      "y": 205,
+      "x": 931,
+      "y": 1044,
       "width": 126,
       "height": 73,
       "source": "src/assets/raw/ui/actionBubble.png"
     },
     "clubDefault": {
-      "x": 2,
-      "y": 605,
+      "x": 1061,
+      "y": 1044,
       "width": 531,
       "height": 530,
       "source": "src/assets/raw/ui/clubDefault.png"
     },
     "walletID": {
-      "x": 537,
-      "y": 605,
+      "x": 1596,
+      "y": 1044,
       "width": 192,
       "height": 126,
       "source": "src/assets/raw/ui/walletID.png"
     },
     "infoTip": {
-      "x": 733,
-      "y": 605,
+      "x": 1792,
+      "y": 1044,
       "width": 45,
       "height": 45,
       "source": "src/assets/raw/ui/infoTip.png"
     },
     "arrowDown": {
-      "x": 782,
-      "y": 605,
+      "x": 1841,
+      "y": 1044,
       "width": 37,
       "height": 37,
       "source": "src/assets/raw/ui/arrowDown.png"
     },
     "tableBack": {
-      "x": 823,
-      "y": 605,
+      "x": 1882,
+      "y": 1044,
       "width": 65,
       "height": 87,
       "source": "src/assets/raw/ui/tableBack.png"
     },
     "dialogConfirm": {
-      "x": 892,
-      "y": 605,
+      "x": 2,
+      "y": 1578,
       "width": 459,
       "height": 179,
       "source": "src/assets/raw/ui/dialogConfirm.png"
     },
+    "cardTypeBg": {
+      "x": 465,
+      "y": 1578,
+      "width": 120,
+      "height": 60,
+      "source": "src/assets/raw/ui/cardTypeBg.png"
+    },
+    "giftDiamond": {
+      "x": 589,
+      "y": 1578,
+      "width": 148,
+      "height": 120,
+      "source": "src/assets/raw/ui/giftDiamond.png"
+    },
+    "giftFlyDiamond": {
+      "x": 741,
+      "y": 1578,
+      "width": 80,
+      "height": 74,
+      "source": "src/assets/raw/ui/giftFlyDiamond.png"
+    },
     "sliderHandle": {
-      "x": 1355,
-      "y": 605,
+      "x": 825,
+      "y": 1578,
       "width": 475,
       "height": 275,
       "source": "src/assets/raw/ui/sliderHandle.png"
     },
     "switchTrack": {
-      "x": 1834,
-      "y": 605,
+      "x": 1304,
+      "y": 1578,
       "width": 149,
       "height": 71,
       "source": "src/assets/raw/ui/switchTrack.png"
     },
     "switchKnob": {
-      "x": 2,
-      "y": 1139,
+      "x": 1457,
+      "y": 1578,
       "width": 63,
       "height": 63,
       "source": "src/assets/raw/ui/switchKnob.png"
     },
     "navigation": {
-      "x": 69,
-      "y": 1139,
+      "x": 1524,
+      "y": 1578,
       "width": 402,
       "height": 56,
       "source": "src/assets/raw/ui/navigation.png"
     },
     "voice": {
-      "x": 475,
-      "y": 1139,
+      "x": 1930,
+      "y": 1578,
       "width": 75,
       "height": 76,
       "source": "src/assets/raw/ui/voice.png"
     },
+    "effect": {
+      "x": 2,
+      "y": 1857,
+      "width": 75,
+      "height": 75,
+      "source": "src/assets/raw/ui/effect.png"
+    },
+    "camera": {
+      "x": 81,
+      "y": 1857,
+      "width": 75,
+      "height": 75,
+      "source": "src/assets/raw/ui/camera.png"
+    },
     "cardBack": {
-      "x": 554,
-      "y": 1139,
+      "x": 160,
+      "y": 1857,
       "width": 45,
       "height": 67,
       "source": "src/assets/raw/ui/cardBack.png"
     },
     "cardHighlight": {
-      "x": 603,
-      "y": 1139,
+      "x": 209,
+      "y": 1857,
       "width": 126,
       "height": 183,
       "source": "src/assets/raw/ui/cardHighlight.png"
     },
     "winBoard": {
-      "x": 733,
-      "y": 1139,
+      "x": 339,
+      "y": 1857,
       "width": 192,
       "height": 113,
       "source": "src/assets/raw/ui/winBoard.png"
     },
+    "toastBg": {
+      "x": 535,
+      "y": 1857,
+      "width": 307,
+      "height": 208,
+      "source": "src/assets/raw/ui/toastBg.png"
+    },
+    "winPercentTitle": {
+      "x": 846,
+      "y": 1857,
+      "width": 120,
+      "height": 53,
+      "source": "src/assets/raw/ui/winPercentTitle.png"
+    },
+    "winPercentValue": {
+      "x": 970,
+      "y": 1857,
+      "width": 156,
+      "height": 77,
+      "source": "src/assets/raw/ui/winPercentValue.png"
+    },
     "menuShowBB": {
-      "x": 929,
-      "y": 1139,
+      "x": 1130,
+      "y": 1857,
       "width": 553,
       "height": 149,
       "source": "src/assets/raw/ui/menuShowBB.png"
     },
     "menuGreen": {
-      "x": 1486,
-      "y": 1139,
+      "x": 2,
+      "y": 2069,
       "width": 553,
       "height": 168,
       "source": "src/assets/raw/ui/menuGreen.png"
     },
     "deskThumb1": {
-      "x": 2,
-      "y": 1326,
+      "x": 559,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb1.png"
     },
     "deskThumb2": {
-      "x": 94,
-      "y": 1326,
+      "x": 651,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb2.png"
     },
     "deskThumb3": {
-      "x": 186,
-      "y": 1326,
+      "x": 743,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb3.png"
     },
     "deskThumb4": {
-      "x": 278,
-      "y": 1326,
+      "x": 835,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb4.png"
     },
     "deskThumb5": {
-      "x": 370,
-      "y": 1326,
+      "x": 927,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb5.png"
     },
     "deskThumb6": {
-      "x": 462,
-      "y": 1326,
+      "x": 1019,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb6.png"
     },
     "deskThumb7": {
-      "x": 554,
-      "y": 1326,
+      "x": 1111,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb7.png"
     },
     "deskThumb8": {
-      "x": 646,
-      "y": 1326,
+      "x": 1203,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb8.png"
     },
     "deskThumb9": {
-      "x": 738,
-      "y": 1326,
+      "x": 1295,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb9.png"
     },
     "deskThumb10": {
-      "x": 830,
-      "y": 1326,
+      "x": 1387,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb10.png"
     },
     "deskThumb11": {
-      "x": 922,
-      "y": 1326,
+      "x": 1479,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb11.png"
     },
     "deskThumb12": {
-      "x": 1014,
-      "y": 1326,
+      "x": 1571,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb12.png"
     },
     "deskThumb13": {
-      "x": 1106,
-      "y": 1326,
+      "x": 1663,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb13.png"
     },
     "deskThumb14": {
-      "x": 1198,
-      "y": 1326,
+      "x": 1755,
+      "y": 2069,
       "width": 88,
       "height": 171,
       "source": "src/assets/raw/ui/deskThumb14.png"
     },
     "menuSetting": {
-      "x": 1290,
-      "y": 1326,
+      "x": 2,
+      "y": 2244,
       "width": 553,
       "height": 145,
       "source": "src/assets/raw/ui/menuSetting.png"
     },
     "menuRules": {
-      "x": 2,
-      "y": 1501,
+      "x": 559,
+      "y": 2244,
       "width": 553,
       "height": 145,
       "source": "src/assets/raw/ui/menuRules.png"
     },
     "menuInsurance": {
-      "x": 559,
-      "y": 1501,
+      "x": 1116,
+      "y": 2244,
       "width": 553,
       "height": 145,
       "source": "src/assets/raw/ui/menuInsurance.png"
     },
     "menuBringIn": {
-      "x": 1116,
-      "y": 1501,
+      "x": 2,
+      "y": 2393,
       "width": 553,
       "height": 145,
       "source": "src/assets/raw/ui/menuBringIn.png"
     },
     "menuKeepSeat": {
-      "x": 2,
-      "y": 1650,
+      "x": 559,
+      "y": 2393,
       "width": 553,
       "height": 145,
       "source": "src/assets/raw/ui/menuKeepSeat.png"
     },
     "settingsTabSelected": {
-      "x": 559,
-      "y": 1650,
+      "x": 1116,
+      "y": 2393,
       "width": 192,
       "height": 8,
       "source": "src/assets/raw/ui/settingsTabSelected.png"
     },
     "settingsDeskOption": {
-      "x": 755,
-      "y": 1650,
+      "x": 1312,
+      "y": 2393,
       "width": 215,
       "height": 353,
       "source": "src/assets/raw/ui/settingsDeskOption.png"
     },
     "settingsDeskSelected": {
-      "x": 974,
-      "y": 1650,
+      "x": 1531,
+      "y": 2393,
       "width": 315,
       "height": 453,
       "source": "src/assets/raw/ui/settingsDeskSelected.png"
     },
     "settingsCardOption": {
-      "x": 1293,
-      "y": 1650,
+      "x": 2,
+      "y": 2850,
       "width": 310,
       "height": 130,
       "source": "src/assets/raw/ui/settingsCardOption.png"
     },
     "settingsCardSelected": {
-      "x": 1607,
-      "y": 1650,
+      "x": 316,
+      "y": 2850,
       "width": 310,
       "height": 130,
       "source": "src/assets/raw/ui/settingsCardSelected.png"
     },
     "recordDiamond": {
-      "x": 1921,
-      "y": 1650,
+      "x": 630,
+      "y": 2850,
       "width": 53,
       "height": 43,
       "source": "src/assets/raw/ui/recordDiamond.png"
     },
     "recordRoom": {
-      "x": 1978,
-      "y": 1650,
+      "x": 687,
+      "y": 2850,
       "width": 50,
       "height": 44,
       "source": "src/assets/raw/ui/recordRoom.png"
     },
     "recordPeople": {
-      "x": 2,
-      "y": 2107,
+      "x": 741,
+      "y": 2850,
       "width": 57,
       "height": 44,
       "source": "src/assets/raw/ui/recordPeople.png"
     },
     "recordPrev": {
-      "x": 63,
-      "y": 2107,
+      "x": 802,
+      "y": 2850,
       "width": 100,
       "height": 100,
       "source": "src/assets/raw/ui/recordPrev.png"
     },
     "recordNext": {
-      "x": 167,
-      "y": 2107,
+      "x": 906,
+      "y": 2850,
       "width": 100,
       "height": 100,
       "source": "src/assets/raw/ui/recordNext.png"
     },
     "recordClose": {
-      "x": 271,
-      "y": 2107,
+      "x": 1010,
+      "y": 2850,
       "width": 39,
       "height": 39,
       "source": "src/assets/raw/ui/recordClose.png"
     },
     "recordDetails": {
-      "x": 314,
-      "y": 2107,
+      "x": 1053,
+      "y": 2850,
       "width": 35,
       "height": 21,
       "source": "src/assets/raw/ui/recordDetails.png"
     },
     "recordPosition": {
-      "x": 353,
-      "y": 2107,
+      "x": 1092,
+      "y": 2850,
       "width": 100,
       "height": 68,
       "source": "src/assets/raw/ui/recordPosition.png"
     },
     "recordSlider": {
-      "x": 457,
-      "y": 2107,
+      "x": 1196,
+      "y": 2850,
       "width": 90,
       "height": 90,
       "source": "src/assets/raw/ui/recordSlider.png"
     },
     "recordFavorite": {
-      "x": 551,
-      "y": 2107,
+      "x": 1290,
+      "y": 2850,
       "width": 80,
       "height": 80,
       "source": "src/assets/raw/ui/recordFavorite.png"
     },
     "emojiUc": {
-      "x": 635,
-      "y": 2107,
+      "x": 1374,
+      "y": 2850,
       "width": 63,
       "height": 63,
       "source": "src/assets/raw/ui/emojiUc.png"
     },
     "emojiDiamond": {
-      "x": 702,
-      "y": 2107,
+      "x": 1441,
+      "y": 2850,
       "width": 34,
       "height": 34,
       "source": "src/assets/raw/ui/emojiDiamond.png"
     },
     "playerProp1": {
-      "x": 740,
-      "y": 2107,
+      "x": 1479,
+      "y": 2850,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp1.png"
     },
     "playerProp2": {
-      "x": 899,
-      "y": 2107,
+      "x": 1638,
+      "y": 2850,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp2.png"
     },
     "playerProp3": {
-      "x": 1058,
-      "y": 2107,
+      "x": 1797,
+      "y": 2850,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp3.png"
     },
     "playerProp4": {
-      "x": 1217,
-      "y": 2107,
+      "x": 2,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp4.png"
     },
     "playerProp5": {
-      "x": 1376,
-      "y": 2107,
+      "x": 161,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp5.png"
     },
     "playerProp6": {
-      "x": 1535,
-      "y": 2107,
+      "x": 320,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp6.png"
     },
     "playerProp7": {
-      "x": 1694,
-      "y": 2107,
+      "x": 479,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp7.png"
     },
     "playerProp8": {
-      "x": 1853,
-      "y": 2107,
+      "x": 638,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp8.png"
     },
     "playerProp9": {
-      "x": 2,
-      "y": 2266,
+      "x": 797,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp9.png"
     },
     "playerProp10": {
-      "x": 161,
-      "y": 2266,
+      "x": 956,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp10.png"
     },
     "playerProp11": {
-      "x": 320,
-      "y": 2266,
+      "x": 1115,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp11.png"
     },
     "playerProp12": {
-      "x": 479,
-      "y": 2266,
+      "x": 1274,
+      "y": 3009,
       "width": 155,
       "height": 155,
       "source": "src/assets/raw/ui/playerProp12.png"
+    },
+    "operationExtra": {
+      "x": 1433,
+      "y": 3009,
+      "width": 190,
+      "height": 162,
+      "source": "src/assets/raw/ui/operationExtra.png"
+    },
+    "addTimeClock": {
+      "x": 1627,
+      "y": 3009,
+      "width": 50,
+      "height": 49,
+      "source": "src/assets/raw/ui/addTimeClock.png"
+    },
+    "raiseBubble": {
+      "x": 2,
+      "y": 3175,
+      "width": 530,
+      "height": 149,
+      "source": "src/assets/raw/ui/raiseBubble.png"
+    },
+    "raiseThumb": {
+      "x": 536,
+      "y": 3175,
+      "width": 150,
+      "height": 50,
+      "source": "src/assets/raw/ui/raiseThumb.png"
     }
   }
 }

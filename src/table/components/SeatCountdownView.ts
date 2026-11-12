@@ -10,17 +10,20 @@ export class SeatCountdownView {
   readonly root = element('div', 'mx-seat-timer');
   private ring = element('div', 'mx-seat-timer-ring');
   private handle = element('div', 'mx-seat-timer-dot');
+  private texture = element('div', 'mx-seat-timer-texture');
+  private keepLabel = element('span', 'mx-seat-keep-label');
+  private keepSeconds = element('span', 'mx-seat-keep-seconds');
   private points: { x: number; y: number }[] = [];
   private lengths: number[] = [];
   private totalLength = 0;
   private timer?: SeatCountdown;
+  private keep = false;
   private frame = 0;
   constructor() {
     this.root.hidden = true; i18nLabel.bind(this.root, () => i18nMgr.Get("MX_ActionCountdown", [], "操作倒计时"), 'aria-label');
-    const texture = element('div', 'mx-seat-timer-texture');
-    SpriteAtlas.mask(texture, 'timerRing', '#14fd00'); SpriteAtlas.mask(this.handle, 'timerDot', '#14fd00');
-    this.ring.append(texture);
-    this.root.append(this.ring, this.handle);
+    SpriteAtlas.mask(this.texture, 'timerRing', '#14fd00'); SpriteAtlas.mask(this.handle, 'timerDot', '#14fd00');
+    this.ring.append(this.texture);
+    this.root.append(this.ring, this.handle, this.keepLabel, this.keepSeconds);
     for (let i = 0; i < 24; i++) {
       const radian = (90 - i / 24 * 360) * Math.PI / 180;
       let x = Math.round(Math.cos(radian) * 50 * 100) / 100 * 199 / 100;
@@ -35,10 +38,22 @@ export class SeatCountdownView {
       this.lengths.push(length); this.totalLength += length;
     }
   }
-  render(timer?: SeatCountdown): void {
-    if (timer && this.timer?.deadline === timer.deadline && this.timer.totalTime === timer.totalTime) return;
+  render(timer?: SeatCountdown, keep = false, delayLeave = false): void {
+    i18nLabel.bind(this.keepLabel, () => i18nMgr.Get(delayLeave ? 'UIDelayLeave' : 'UITesas_Leave', [], delayLeave ? '暂离' : '留座'));
+    if (timer && this.timer?.deadline === timer.deadline && this.timer.totalTime === timer.totalTime && this.keep === keep) return;
     this.stop();
-    if (!timer || timer.totalTime <= 0 || timer.deadline <= Date.now() / 1000) return;
+    this.keep = keep;
+    this.root.dataset.kind = keep ? 'keep' : 'action';
+    if (!timer || timer.totalTime <= 0 || timer.deadline <= Date.now() / 1000) {
+      this.ring.hidden = true; this.handle.hidden = true;
+      this.keepSeconds.textContent = '';
+      this.root.hidden = !keep;
+      return;
+    }
+    this.ring.hidden = false; this.handle.hidden = false;
+    const color = keep ? '#0ee3fe' : '#14fd00';
+    this.texture.style.backgroundColor = color;
+    this.handle.style.backgroundColor = color;
     this.timer = timer; this.root.hidden = false; this.update();
   }
   private update = (): void => {
@@ -62,6 +77,7 @@ export class SeatCountdownView {
       target -= length;
     }
     this.root.dataset.remaining = String(Math.ceil(remaining));
+    if (this.keep) this.keepSeconds.textContent = `${Math.ceil(remaining)}s`;
     this.frame = requestAnimationFrame(this.update);
   };
   stop(): void { cancelAnimationFrame(this.frame); this.frame = 0; this.timer = undefined; this.root.hidden = true; }

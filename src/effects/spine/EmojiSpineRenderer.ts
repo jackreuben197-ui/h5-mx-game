@@ -1,6 +1,5 @@
 import spine from './vendor/spine38.js';
-import { EmojiSpineAssets } from './EmojiSpineAssets.js';
-import type { MagicEmojiDefinition } from '../../logic/MagicEmojiConfig.js';
+import { EmojiSpineAssets, type SpineClipConfig } from './EmojiSpineAssets.js';
 export interface EmojiAnchor { x: number; y: number; scale: number; maxSize?: number; clip?: DOMRectReadOnly; }
 interface Bounds { x: number; y: number; size: number; }
 interface Playing { skeleton: spine.Skeleton; state: spine.AnimationState; duration: number; elapsed: number; loop: boolean; anchor: () => EmojiAnchor | null; bounds?: Bounds; complete?: (finished: boolean) => void; }
@@ -43,7 +42,7 @@ export class EmojiSpineRenderer {
         this.canvas.addEventListener('webglcontextrestored', this.contextRestored);
         document.addEventListener('visibilitychange', this.visibility);
     }
-    private load(config: MagicEmojiDefinition): Promise<spine.SkeletonData> {
+    private load(config: SpineClipConfig): Promise<spine.SkeletonData> {
         let task = this.data.get(config.spine);
         if (!task) {
             task = EmojiSpineAssets.load(config).then(asset => {
@@ -58,7 +57,7 @@ export class EmojiSpineRenderer {
         }
         return task;
     }
-    async play(key: string, config: MagicEmojiDefinition, anchor: () => EmojiAnchor | null, loop = false, fit = false, complete?: (finished: boolean) => void): Promise<boolean> {
+    async play(key: string, config: SpineClipConfig, anchor: () => EmojiAnchor | null, loop = false, fit = false, complete?: (finished: boolean) => void): Promise<boolean> {
         this.stop(key);
         const token = {}; this.tokens.set(key, token);
         const data = await this.load(config);
@@ -70,7 +69,7 @@ export class EmojiSpineRenderer {
         this.playing.set(key, {skeleton, state, duration: animation.duration, elapsed: 0, loop, anchor, bounds: fit ? this.measure(data, config) : undefined, complete});
         this.wake(); return true;
     }
-    private measure(data: spine.SkeletonData, config: MagicEmojiDefinition): Bounds {
+    private measure(data: spine.SkeletonData, config: SpineClipConfig): Bounds {
         const key = config.spine + ':' + config.animation, cached = this.bounds.get(key); if (cached) return cached;
         const animation = data.findAnimation(config.animation)!, skeleton = new spine.Skeleton(data), offset = new spine.Vector2(), size = new spine.Vector2();
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

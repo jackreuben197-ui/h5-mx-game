@@ -20,6 +20,7 @@ export class BettingMapper {
       [A.RAISE, 'raise'],
       [A.BET, 'raise'],
       [A.ALLIN, 'allin'],
+      [A.STRADDLE, 'straddle'],
     ]);
     const limits = operator.actionsList;
     if (
@@ -35,6 +36,7 @@ export class BettingMapper {
     const raise = limits.find((l) => l.action === A.RAISE || l.action === A.BET);
     const call = limits.find((l) => l.action === A.CALL);
     const allIn = limits.find((l) => l.action === A.ALLIN);
+    const straddle = limits.find((l) => l.action === A.STRADDLE);
     return {
       actions: [...new Set(limits.map((l) => names.get(l.action)).filter((v): v is Action => !!v))],
       // CC passes ActionLimit.min/max directly to ClientMessageAction.amount.
@@ -45,6 +47,7 @@ export class BettingMapper {
         max: raise?.max ?? 0,
         step: 1,
         allIn: allIn?.min,
+        straddle: straddle?.min,
       },
     };
   }
@@ -60,6 +63,7 @@ export class BettingMapper {
       call: [A.CALL],
       raise: [A.RAISE, A.BET],
       allin: [A.ALLIN],
+      straddle: [A.STRADDLE],
     };
     const limit = op?.actionsList.find((l) => codes[action].includes(l.action));
     if (!limit || !this.map(data).actions.includes(action)) throw new Error('当前已不是该操作时机');

@@ -5,6 +5,9 @@ import { i18nMgr } from '../i18n/i18nMgr.js';
 import { ChipFormatter } from '../logic/ChipFormatter.js';
 import type { Action, TableSnapshot } from '../core/types.js';
 import { element as node } from './dom.js';
+import { AutoOperationView } from './components/AutoOperationView.js';
+import { SpriteAtlas } from './SpriteAtlas.js';
+import type { TableConfirmDialog } from './components/TableConfirmDialog.js';
 /** Fixed-size operation track. Editing never overlays cards or resizes the table. */
 export class ActionControls {
   readonly root = node('section', 'mx-operation');
@@ -12,21 +15,27 @@ export class ActionControls {
   private offSettings: () => void;
   private row = node('div', 'mx-operation-row');
   private editor = node('div', 'mx-raise-editor');
-  private confirmation = node('div', 'mx-fold-confirm');
-  private status = node('span', 'mx-operation-status');
+  private addTime = node('button','mx-add-time',()=>i18nMgr.Get('MX_AddTime',[],'加时'));
+  private auto: AutoOperationView;
   private amount = node('output', 'mx-raise-amount');
+  private percent = node('span', 'mx-raise-percent');
+  private raiseValue = node('span', 'mx-raise-value');
   private range = node('input', 'mx-raise-range');
-  private confirm = node('button', 'mx-raise-confirm', () => i18nMgr.Get("MX_ConfirmRaise", [], "确认加注"));
+  private confirm = node('button', 'mx-raise-confirm', () => i18nMgr.Get('UITexas_confirm', [], '确定'));
   private buttons = new Map<Action, HTMLButtonElement>();
   private state?: TableSnapshot;
-  private mode: 'actions' | 'raise' | 'fold' = 'actions';
+  private mode: 'actions' | 'raise' = 'actions';
   private key = '';
   private busy = false;
   private disposed = false;
+  private opScale = 0.2;
   constructor(
     private command: (action: Action, amount?: number) => Promise<void>,
     paint: (node: HTMLElement, key: 'fold' | 'call' | 'raise') => void,
+    private confirmDialog: TableConfirmDialog,
+    private addTimeCommand?:()=>Promise<void>,
   ) {
+    this.auto=new AutoOperationView(command);
     this.offSettings=settings.on(TexasGamePersonalSettings.SHORTCUTS_CHANGGE,()=>this.refresh());
     i18nLabel.bind(this.root, () => i18nMgr.Get("MX_TableActions", [], "牌桌操作"), 'aria-label');
     for (const [action, label] of [
@@ -35,6 +44,7 @@ export class ActionControls {
       ['call', "UITexas_call"],
       ['raise', "adaptation10045"],
       ['allin', "adaptation30074"],
+      ['straddle', "UITexas_straddle"],
     ] as const) {
       const b = node('button', `mx-operation-button mx-operation-${action}`, () => i18nMgr.Get(label));
       b.type = 'button';
@@ -48,11 +58,19 @@ export class ActionControls {
         if (action === 'raise') {
           this.mode = 'raise';
           this.range.value = '0';
+          this.amount.hidden = true;
           this.refresh();
           this.range.focus();
         } else if (action === 'fold' && this.state?.actions.includes('check')) {
-          this.mode = 'fold';
-          this.refresh();
+          this.confirmDialog.open({
+            owner: 'fold',
+            title: () => i18nMgr.Get('adaptation20037', [], '确定弃牌？'),
+            message: () => i18nMgr.Get('adaptation20038', [], '你可以让牌而不需要任何筹码'),
+            cancel: () => i18nMgr.Get('adaptation10315', [], '让牌'),
+            commit: () => i18nMgr.Get('adaptation10047', [], '弃牌'),
+            onCancel: () => { void this.submit('check'); },
+            onCommit: () => { void this.submit('fold'); },
+          });
         } else
           void this.submit(action, action === 'allin' ? this.state?.betting?.allIn : undefined);
       };
@@ -61,44 +79,51 @@ export class ActionControls {
     cancel.type = 'button';
     cancel.onclick = () => this.close();
     const track = node('label', 'mx-raise-track');
+    SpriteAtlas.paint(track,'raiseTrack');
+    SpriteAtlas.paint(this.amount,'raiseBubble');
+    const chip=node('span','mx-raise-chip');SpriteAtlas.paint(chip,'chip');
+    this.amount.append(this.percent,chip,this.raiseValue);
     track.append(this.amount, this.range);
     this.editor.append(cancel, track, this.confirm);
     this.range.type = 'range';
     this.range.min = '0';
     this.range.step = '1';
     i18nLabel.bind(this.range, () => i18nMgr.Get("MX_RaiseAmount", [], "加注金额"), 'aria-label');
-    this.range.oninput = () => this.updateAmount();
+    this.range.oninput = () => { this.amount.hidden = false; this.updateAmount(); };
+    const thumb=node('span','mx-raise-thumb');SpriteAtlas.paint(thumb,'raiseThumb');track.append(thumb);
     this.confirm.type = 'button';
+    SpriteAtlas.paint(this.confirm,'raise');
     this.confirm.onclick = () => {
       const selection = this.selection();
       if (selection) void this.submit(selection.action, selection.amount);
     };
-    const message = node('span', 'mx-fold-message', () => i18nMgr.Get("MX_YouCanCheckForFreeFoldAnyway", [], "现在可以免费过牌，仍要弃牌？"));
-    const fold = node('button', 'mx-confirm-fold', () => i18nMgr.Get("MX_FoldAnyway", [], "仍然弃牌"));
-    fold.type = 'button';
-    fold.onclick = () => {
-      void this.submit('fold');
-    };
-    const check = node('button', 'mx-confirm-check', () => i18nMgr.Get("UITexas_check", [], "过牌"));
-    check.type = 'button';
-    check.onclick = () => {
-      void this.submit('check');
-    };
-    this.confirmation.append(message, fold, check);
-    this.status.setAttribute('role', 'status');
-    this.root.append(this.quick,this.row, this.editor, this.confirmation, this.status);
+    this.addTime.type='button';
+    SpriteAtlas.paint(this.addTime,'operationExtra');
+    const clock=node('span','mx-add-time-clock');SpriteAtlas.paint(clock,'addTimeClock');
+    const duration=node('span','mx-add-time-duration','+30s');
+    const costIcon=node('span','mx-add-time-diamond');SpriteAtlas.paint(costIcon,'recordDiamond');
+    const cost=node('span','mx-add-time-cost');
+    this.addTime.replaceChildren(node('span','mx-add-time-line'),node('span','mx-add-time-line'));
+    this.addTime.children[0]!.append(clock,duration);
+    this.addTime.children[1]!.append(costIcon,cost);
+    this.addTime.onclick=()=>{if(!this.busy&&this.state?.canAddTime&&this.addTimeCommand)void this.addTimeCommand();};
+    this.root.append(this.auto.root,this.quick,this.row, this.editor, this.addTime);
     this.root.onkeydown = (e) => {
       if (e.key === 'Escape' && !this.busy) {
         e.preventDefault();
         this.close();
       }
     };
+    this.root.onclick = (e) => {
+      if (!this.busy && this.mode === 'raise' && (e.target === this.root || e.target === this.editor)) this.close();
+    };
     this.refresh();
   }
   private close() {
+    const previousMode = this.mode;
     this.mode = 'actions';
     this.refresh();
-    this.buttons.get('raise')?.focus();
+    this.buttons.get(previousMode === 'raise' ? 'raise' : 'fold')?.focus();
   }
   private selection(): { action: Action; amount: number } | undefined {
     const b = this.state?.betting;
@@ -112,9 +137,12 @@ export class ActionControls {
   private updateAmount() {
     const v = this.selection();
     if (!v) return;
-    i18nLabel.bind(this.amount, () => `${v.action === 'allin' ? i18nMgr.Get("adaptation30074", [], "全下") : i18nMgr.Get("adaptation10045", [], "加注")} ${ChipFormatter.format(v.amount, this.state?.smallBlind, this.state?.showBB)}`);
-    this.range.setAttribute('aria-valuetext', this.amount.textContent);
-    i18nLabel.bind(this.confirm, () => v.action === 'allin' ? i18nMgr.Get("MX_ConfirmAllIn", [], "确认全下") : i18nMgr.Get("MX_ConfirmRaise", [], "确认加注"));
+    const percent = Math.round(Number(this.range.value) / Math.max(1, Number(this.range.max)) * 100);
+    this.range.parentElement?.style.setProperty('--mx-raise-progress', `${percent}%`);
+    this.percent.textContent=`${percent}%`;
+    this.raiseValue.textContent=ChipFormatter.format(v.amount, this.state?.smallBlind, this.state?.showBB);
+    this.range.setAttribute('aria-valuetext', `${percent}% ${v.action === 'allin' ? i18nMgr.Get('adaptation30074', [], '全下') : i18nMgr.Get('adaptation10045', [], '加注')} ${this.raiseValue.textContent}`);
+    i18nLabel.bind(this.confirm, () => i18nMgr.Get('UITexas_confirm', [], '确定'));
   }
   private async submit(action: Action, amount?: number) {
     if (this.busy || !this.state?.actions.includes(action)) return;
@@ -138,33 +166,85 @@ export class ActionControls {
       this.key = key;
     }
     this.state = state;
-    this.root.hidden = !state.mySeat || !state.actions.length;
+    if (!state.actions.includes('fold') || !state.actions.includes('check')) this.confirmDialog.close('fold');
+    this.root.hidden = !state.mySeat;
     if (
-      (!state.actions.includes('raise') && this.mode === 'raise') ||
-      (!state.actions.includes('fold') && this.mode === 'fold')
+      (!state.actions.includes('raise') && this.mode === 'raise')
     )
       this.mode = 'actions';
     this.refresh();
+    this.auto.render(state);
+  }
+  setScale(scale: number): void {
+    this.opScale = scale;
+    const css = this.root.style;
+    css.setProperty('--mx-op-button-size', `${137 * scale}px`);
+    css.setProperty('--mx-op-scale', String(scale));
+    css.setProperty('--mx-raise-width', `${146*scale}px`);
+    css.setProperty('--mx-raise-height', `${833*scale}px`);
+    css.setProperty('--mx-raise-bubble-width', `${530*scale}px`);
+    css.setProperty('--mx-raise-bubble-height', `${154*scale}px`);
+    css.setProperty('--mx-raise-info-offset', `${502.108*scale}px`);
+    css.setProperty('--mx-raise-font-size', `${50*scale}px`);
+    css.setProperty('--mx-raise-chip-size', `${58*scale}px`);
+    css.setProperty('--mx-raise-thumb-height', `${50*scale}px`);
+    css.setProperty('--mx-raise-confirm-offset', `${521*scale}px`);
+    css.setProperty('--mx-raise-confirm-font', `${40*scale}px`);
+    css.setProperty('--mx-op-fold-size', `${147 * scale}px`);
+    css.setProperty('--mx-op-fold-x', `${-267.53 * scale}px`);
+    css.setProperty('--mx-op-main-x', `${275.647 * scale}px`);
+    css.setProperty('--mx-op-upper-y', `${200 * scale}px`);
+    css.setProperty('--mx-op-straddle-y', `${155.812 * scale}px`);
+    css.setProperty('--mx-op-add-x', `${-546 * scale}px`);
+    css.setProperty('--mx-op-add-y', `${65 * scale}px`);
+    css.setProperty('--mx-op-add-width', `${150 * scale}px`);
+    css.setProperty('--mx-op-add-height', `${120 * scale}px`);
+    css.setProperty('--mx-op-auto-gap', `${500 * scale}px`);
+    css.setProperty('--mx-op-quick-width', `${144 * scale}px`);
+    css.setProperty('--mx-op-quick-height', `${143 * scale}px`);
+    css.setProperty('--mx-op-quick-font', `${20*scale}px`);
+    css.setProperty('--mx-op-quick-ratio-font', `${40*scale}px`);
+    css.setProperty('--mx-op-quick-value-font', `${34*scale}px`);
+    css.setProperty('--mx-op-add-title', `${30*scale}px`);
+    css.setProperty('--mx-op-add-cost', `${28*scale}px`);
   }
   private refresh() {
+    this.root.dataset.mode = this.mode;
     this.quick.replaceChildren();
-    if(this.state)for(const item of ShortcutBet.calculate(settings.shortCuts,this.state)){
+    const items = this.state ? ShortcutBet.calculate(settings.shortCuts,this.state) : [];
+    const layout: Record<number, readonly [number, number][]> = {
+      1:[[-190,370]],2:[[-190,370],[190,370]],3:[[-250,300],[0,395],[250,300]],
+      4:[[-300,240],[-120,370],[120,370],[300,240]],
+      5:[[-350,240],[-190,370],[0,395],[190,370],[350,240]],
+    };
+    for(const [index,item] of items.entries()){
       const button=node('button','mx-quick-bet');button.type='button';
-      i18nLabel.bind(button,()=>`${item.label}\n${ChipFormatter.format(item.amount,this.state?.smallBlind,this.state?.showBB)}`);
+      const bg=node('span','mx-quick-bg');SpriteAtlas.paint(bg,'betPercent');
+      const ratio=node('span','mx-quick-ratio');
+      const title=node('span','mx-quick-title',()=>i18nMgr.Get('UITexas_Pot',[],'POT'));
+      const valueBg=node('span','mx-quick-value-bg');SpriteAtlas.paint(valueBg,'betValue');
+      const value=node('span','mx-quick-value');
+      i18nLabel.bind(ratio,()=>item.label);
+      i18nLabel.bind(value,()=>ChipFormatter.format(item.amount,this.state?.smallBlind,this.state?.showBB));
+      button.append(bg,title,ratio,valueBg,value);
+      const point=layout[items.length]?.[index];
+      if(point){button.style.left=`calc(50% + ${point[0]*this.opScale}px)`;button.style.top=`calc(50% - ${point[1]*this.opScale}px)`;}
       button.onclick=()=>void this.submit(item.action,item.amount);this.quick.append(button);
     }
-    this.quick.hidden=this.mode!=='actions'||!this.quick.childElementCount;
+    this.quick.hidden=!this.quick.childElementCount;
     const s = this.state,
       b = s?.betting,
       actions = s?.actions ?? [];
     const canRaise = !!b && b.step > 0 && b.max >= b.min && actions.includes('raise');
+    this.row.dataset.allinSecondary = String(actions.includes('allin') && (actions.includes('check') || actions.includes('call')) && !canRaise);
     this.buttons.forEach((button, action) => {
       button.hidden =
         !actions.includes(action) ||
         (action === 'check' && actions.includes('call')) ||
-        (action === 'raise' && !canRaise) ||
+        (action === 'raise' && (!canRaise || this.mode === 'raise')) ||
         (action === 'allin' && (canRaise || !b?.allIn));
       if (action === 'call') i18nLabel.bind(button, () => `${i18nMgr.Get("UITexas_call")}\n${ChipFormatter.format(b?.call ?? 0, s?.smallBlind, s?.showBB)}`);
+      if (action === 'straddle') i18nLabel.bind(button, () => `${i18nMgr.Get('UITexas_straddle',[],'抓')}\n${ChipFormatter.format(b?.straddle??0,s?.smallBlind,s?.showBB)}`);
     });
     if (canRaise && b) {
       this.range.max = String(
@@ -173,20 +253,14 @@ export class ActionControls {
       );
       this.updateAmount();
     }
-    this.row.hidden = this.mode !== 'actions' || !actions.length;
+    this.row.hidden = !actions.length;
     this.editor.hidden = this.mode !== 'raise';
-    this.confirmation.hidden = this.mode !== 'fold';
-    this.status.hidden = !!actions.length && !this.busy;
-    const mine = s?.players.find((p) => p.seat === s.mySeat);
-    i18nLabel.bind(this.status, () => this.busy
-      ? i18nMgr.Get("MX_Submitting", [], "正在提交…")
-      : s?.interaction === 'entry-only'
-        ? i18nMgr.Get("MX_SeatedActionsNotConnected", [], "已入桌 · 操作协议待接入")
-        : mine?.folded
-          ? i18nMgr.Get("MX_FoldedWaitingForHandToEnd", [], "已弃牌 · 等待本手结束")
-          : mine?.chips === 0
-            ? i18nMgr.Get("MX_AllInWaitingForOtherPlayers", [], "已全下 · 等待其他玩家")
-            : i18nMgr.Get("MX_WaitingForOtherPlayers", [], "等待其他玩家行动"));
+    this.addTime.hidden=!s?.canAddTime||!actions.length||!this.addTimeCommand;
+    if(s?.canAddTime){
+      this.addTime.setAttribute('aria-label',`${i18nMgr.Get('MX_AddTime',[],'加时')} +30s ${s.addTimeCost??0}`);
+      const price=this.addTime.querySelector('.mx-add-time-cost');if(price)price.textContent=String(s.addTimeCost??0);
+      const line=this.addTime.children[1] as HTMLElement;line.hidden=!!s.privateUc&&(s.addTimeCost??0)===0;
+    }
     this.root
       .querySelectorAll<HTMLButtonElement | HTMLInputElement>('button,input')
       .forEach((e) => (e.disabled = this.busy));
@@ -194,6 +268,7 @@ export class ActionControls {
   }
   destroy() {
     this.offSettings();
+    this.auto.destroy();
     this.disposed = true;
     this.root.remove();
   }

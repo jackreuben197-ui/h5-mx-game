@@ -23,6 +23,7 @@ export class HandCardsView {
     this.root.replaceChildren(
       ...shown.map((value, i) => {
         const wrapper = element('span', 'mx-card-slot');
+        wrapper.dataset.cardIndex=String(i);
         wrapper.append(new CardView(value, !face).root);
         place(
           wrapper,
@@ -35,6 +36,12 @@ export class HandCardsView {
     if (folding) void this.fold();
     if (old && state.presentation === 'deal' && p && shown.length && state.dealIndex >= 0)
       void this.deal(shown, state.dealIndex, state.mine);
+    this.selection(state);
+  }
+  selection(state:SeatState):void{
+    Array.from(this.root.children).forEach((slot,i)=>{
+      (slot as HTMLElement).classList.toggle('mx-card-selected',!!state.mine&&state.player?.showCardsSelection?.[i]===1);
+    });
   }
   private async deal(cards: readonly number[], index: number, mine: boolean) {
     if (this.motion.reduced()) return;

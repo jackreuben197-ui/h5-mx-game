@@ -9,6 +9,9 @@ export class TableSound {
   private disposed = false;
   private urls?: typeof import('./assets.js');
   private generation = 0;
+  private turnTimer?:ReturnType<typeof setInterval>;
+  private timerKey='';
+  private lastRemaining=Infinity;
   private visibility = () => { if (document.hidden) this.stop(); else if (this.enabled) void this.music(); };
   constructor() { this.root.hidden = true; document.addEventListener('visibilitychange', this.visibility); }
   async setEnabled(value: boolean): Promise<void> {
@@ -24,7 +27,7 @@ export class TableSound {
     }
     try { await this.bgm.play(); } catch { /* A later user gesture can retry. */ }
   }
-  private async effect(key: 'deal' | 'fold' | 'check' | 'chips' | 'allin' | 'turn'): Promise<void> {
+  private async effect(key: 'deal' | 'fold' | 'check' | 'chips' | 'allin' | 'turn' | 'alert' | 'three'): Promise<void> {
     if (!this.enabled || document.hidden) return;
     const generation = this.generation;
     const urls = this.urls ??= await import('./assets.js');
@@ -47,6 +50,22 @@ export class TableSound {
   }
   present(state: TableSnapshot): void {
     const old = this.previous; this.previous = state;
+    const timer=state.actions.length?state.countdowns?.find(v=>v.seat===state.mySeat):undefined;
+    const key=timer?`${state.roomID}:${state.handNum}:${timer.deadline}`:'';
+    if(key!==this.timerKey){
+      if(this.turnTimer)clearInterval(this.turnTimer);
+      this.turnTimer=undefined;this.timerKey=key;this.lastRemaining=Infinity;
+      if(timer){
+        const tick=()=>{
+          const left=Math.ceil(timer.deadline-Date.now()/1000);
+          if(left<=0){if(this.turnTimer)clearInterval(this.turnTimer);this.turnTimer=undefined;return;}
+          if(left<=Math.floor(timer.totalTime/3)&&this.lastRemaining>Math.floor(timer.totalTime/3))void this.effect('alert');
+          if(left<=3&&this.lastRemaining>3)void this.effect('three');
+          this.lastRemaining=left;
+        };
+        tick();this.turnTimer=setInterval(tick,250);
+      }
+    }
     if (!old || state.presentation === 'sync') return;
     if (state.presentation === 'deal' && old.handNum !== state.handNum) void this.effect('deal');
     if (state.community.length > old.community.length) void this.effect('deal');
@@ -65,6 +84,7 @@ export class TableSound {
     this.effects.forEach(a => { a.pause(); a.removeAttribute('src'); a.remove(); }); this.effects.clear();
   }
   destroy(): void {
+    if(this.turnTimer)clearInterval(this.turnTimer);
     this.disposed = true; this.generation++; this.stop();
     this.bgm?.removeAttribute('src'); this.root.remove(); this.previous = undefined;
     document.removeEventListener('visibilitychange', this.visibility);

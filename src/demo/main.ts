@@ -19,7 +19,7 @@ const game = mountGame(document.querySelector<HTMLDivElement>('#game')!, {
   host,
   layout: 'auto',
   onNavigate(action) {
-    const label = { report: '战绩', replay: '牌谱', emoji: '表情', voice: '语音' }[action];
+    const label = { report: '战绩', replay: '牌谱', emoji: '表情', effect: '窗花', voice: '语音', camera: '视频' }[action];
     log(`${label}：导航事件已触发，业务面板待接入`);
     const notice = document.querySelector<HTMLElement>('.mx-error');
     if (notice) notice.textContent = `${label}面板尚未接入（当前为布局演示）`;

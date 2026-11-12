@@ -6,6 +6,8 @@ export class HostSessionData {
   nickname = '';
   avatar = '';
   sex = 0;
+  private roomLogos = new Map<number, string>();
+  roomLogo(clubID: number): string { return this.roomLogos.get(clubID) ?? ''; }
   update(action: string, payload: unknown): void {
     if (!payload || typeof payload !== 'object') return;
     const p = payload as Record<string, unknown>;
@@ -18,6 +20,18 @@ export class HostSessionData {
       this.avatar = String(p.avatar ?? '');
       this.sex = Number(p.sex) || 0;
     }
+    if (action === 'syncUserClub') {
+      const response = p.response as { data?: unknown } | undefined;
+      if (!Array.isArray(response?.data)) return;
+      this.roomLogos.clear();
+      for (const value of response.data) {
+        if (!value || typeof value !== 'object') continue;
+        const club = value as Record<string, unknown>;
+        const id = Number(club.club_id), logo = club.room_logo;
+        if (Number.isSafeInteger(id) && id > 0 && typeof logo === 'string' && logo.trim())
+          this.roomLogos.set(id, logo.trim());
+      }
+    }
   }
   clear(): void {
     this.token = '';
@@ -26,5 +40,6 @@ export class HostSessionData {
     this.nickname = '';
     this.avatar = '';
     this.sex = 0;
+    this.roomLogos.clear();
   }
 }

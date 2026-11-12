@@ -18,4 +18,8 @@ export interface SeatingActions {
   rules?(insurance: boolean): void;
   storeChips?(amount: number): Promise<void>;
   keepSeat?(keep: boolean): Promise<void>;
+  addTime?(): Promise<void>;
+  agreePost?(): Promise<void>;
+  showdown?(cardIndex: number): Promise<void>;
+  watchSettlement?(kind: 'peek' | 'reveal'): Promise<void>;
 }

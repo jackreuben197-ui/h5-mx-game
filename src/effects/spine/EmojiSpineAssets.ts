@@ -1,8 +1,9 @@
 import type { MagicEmojiDefinition } from '../../logic/MagicEmojiConfig.js';
+export type SpineClipConfig = Pick<MagicEmojiDefinition, 'spine' | 'animation'> & Partial<Pick<MagicEmojiDefinition, 'propCode' | 'type' | 'sound'>> & {assetGroup?: 'emoji' | 'prop' | 'diamond'};
 export interface EmojiSpineAsset { atlas: string; binary: Uint8Array; images: Map<string, HTMLImageElement>; }
 /** Original multi-page Spine atlases, loaded per category/effect; Vite hashes URLs at build. */
 export class EmojiSpineAssets {
-    private static urls = import.meta.glob<string>(['../../assets/spine/emoji/**/*', '../../assets/audio/emoji/**/*', '../../assets/spine/prop/**/*', '../../assets/audio/prop/**/*'], {eager: true, query: '?url', import: 'default'});
+    private static urls = import.meta.glob<string>(['../../assets/spine/emoji/**/*', '../../assets/audio/emoji/**/*', '../../assets/spine/prop/**/*', '../../assets/audio/prop/**/*', '../../assets/spine/diamond/**/*'], {eager: true, query: '?url', import: 'default'});
     private static pending = new Map<string, Promise<EmojiSpineAsset>>();
     static url(path: string): string {
         const url = this.urls[`../../assets/${path}`];
@@ -10,7 +11,7 @@ export class EmojiSpineAssets {
         return new URL(url, import.meta.url).href;
     }
     static sound(config: MagicEmojiDefinition): string { return this.url(`audio/emoji/${config.sound.split('/').at(-1)}.mp3`); }
-    static load(config: MagicEmojiDefinition): Promise<EmojiSpineAsset> {
+    static load(config: SpineClipConfig): Promise<EmojiSpineAsset> {
         let pending = this.pending.get(config.spine);
         if (!pending) {
             pending = this.read(config).catch(error => { this.pending.delete(config.spine); throw error; });
@@ -18,8 +19,8 @@ export class EmojiSpineAssets {
         }
         return pending;
     }
-    private static async read(config: MagicEmojiDefinition): Promise<EmojiSpineAsset> {
-        const path = `spine/${config.assetGroup || 'emoji'}/${config.spine.split('/').slice(-2).join('/')}`;
+    private static async read(config: SpineClipConfig): Promise<EmojiSpineAsset> {
+        const path = config.assetGroup === 'diamond' ? `spine/diamond/${config.spine.split('/').at(-1)}` : `spine/${config.assetGroup || 'emoji'}/${config.spine.split('/').slice(-2).join('/')}`;
         const read = async (suffix: string) => {
             const response = await fetch(this.url(path + suffix), {signal: AbortSignal.timeout(15000)});
             if (!response.ok) throw new Error(`Emoji resource HTTP ${response.status}`);

@@ -40,7 +40,10 @@ import { SeatView, type SeatComponent } from './components/SeatView.js';
 import { PublicCardsView } from './components/PublicCardsView.js';
 import { PotView } from './components/PotView.js';
 import { NavigationView } from './components/NavigationView.js';
+import { SettlementWatchView } from './components/SettlementWatchView.js';
 import { TableMenuView } from './components/TableMenuView.js';
+import { TableToastView } from './components/TableToastView.js';
+import { TableConfirmDialog } from './components/TableConfirmDialog.js';
 import { ActionControls } from './action-controls.js';
 import { SpriteAtlas } from './SpriteAtlas.js';
 import { element, place } from './dom.js';
@@ -81,12 +84,15 @@ export class TableView {
   private settingsOff: (() => void)[] = [];
   private appearanceGeneration = 0;
   private menu: TableMenuView;
+  private toast = new TableToastView();
+  private confirmDialog = new TableConfirmDialog();
   private sound = new TableSound();
   private soundControl: SoundControlView;
   private board: ReturnType<NonNullable<TableComponents['publicCards']>>;
   private pot: ReturnType<NonNullable<TableComponents['pot']>>;
   private controls: ReturnType<NonNullable<TableComponents['actions']>>;
   private navigation: ReturnType<NonNullable<TableComponents['navigation']>>;
+  private settlementWatch: SettlementWatchView;
   private resize: ResizeObserver;
   private onVisible = () => {
     if (!document.hidden) this.presenter.restore();
@@ -94,12 +100,14 @@ export class TableView {
   constructor(
     command: (action: Action, amount?: number) => Promise<void>,
     leave: () => void,
-    navigate?: (action: 'report' | 'replay' | 'emoji' | 'voice') => void,
+    navigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void,
     private options: { emojis?: RoomEmojis; records?: RoomRecords; testControls?: HTMLElement; layout?: 'portrait' | 'auto'; components?: TableComponents; seating?: SeatingActions } = {},
   ) {
     // Preview starts muted without overwriting the CC production preference.
     if (import.meta.env.DEV) settings.soundOn = false;
     this.soundControl = new SoundControlView(this.sound);
+    // CC keeps the sound switch in personal settings, not as a table overlay.
+    this.soundControl.root.hidden = true;
     const components = options.components ?? {};
     this.bringOut=new BringOutView(async amount=>{if(!options.seating?.storeChips)throw new Error('当前入口不支持带出');await options.seating.storeChips(amount);});
     this.buyIn = new BuyInController(options.seating); this.buyInView = new BuyInView(this.buyIn);
@@ -110,8 +118,23 @@ export class TableView {
         const state = data.state;
         if (state.player?.userRid === userRID && !state.mine) data.state = {...state, player: {...state.player, name: remark || nickname}};
       }
-    });
+    }, this.confirmDialog);
     this.seats.onclick = event => {
+      const returnButton=(event.target as HTMLElement).closest<HTMLElement>('.mx-return-game');
+      if(returnButton){
+        const state=this.data.info.snapshot,p=state?.players.find(v=>v.seat===state.mySeat);
+        if(p){
+          if(p.chips>0&&p.keepSeatReason!==3)void options.seating?.keepSeat?.(false).catch(error=>this.toast.show(error));
+          else void this.buyIn.open(0);
+        }
+        return;
+      }
+      const card=(event.target as HTMLElement).closest<HTMLElement>('.mx-seat-mine .mx-card-slot');
+      if(card){
+        const index=Number(card.dataset.cardIndex);
+        if(Number.isInteger(index))void options.seating?.showdown?.(index).catch(error=>this.toast.show(error));
+        return;
+      }
       const avatar = (event.target as HTMLElement).closest<HTMLElement>('.mx-avatar-hit');
       if (avatar) {
         const seatID = Number(avatar.closest<HTMLElement>('.mx-seat')?.dataset.seat);
@@ -126,7 +149,9 @@ export class TableView {
     this.board =
       components.publicCards?.(this.data.publicCards) ?? new PublicCardsView(this.data.publicCards);
     this.pot = components.pot?.(this.data.pot) ?? new PotView(this.data.pot);
-    this.controls = components.actions?.(command) ?? new ActionControls(command, SpriteAtlas.paint);
+    this.controls = components.actions?.(command) ?? new ActionControls(command, SpriteAtlas.paint, this.confirmDialog, options.seating?.addTime);
+    this.settlementWatch=new SettlementWatchView(kind=>options.seating?.watchSettlement?.(kind)??Promise.reject(new Error('当前入口不支持看牌')),
+      error=>this.toast.show(error));
     if (options.records) {
       this.report = new ReportView(new ReportController(options.records));
       this.history = new HistoryView(new HistoryController(options.records));
@@ -135,12 +160,12 @@ export class TableView {
       this.emoji = new EmojiView(new EmojiController(options.emojis));
       this.seatEmoji = new SeatEmojiView(options.emojis, this.root, this.sound);
     }
-    const onNavigate = (action: 'report' | 'replay' | 'emoji' | 'voice') => {
+    const onNavigate = (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => {
       if (action === 'report' && this.report) { this.emoji?.controller.close(); this.history?.controller.close(); this.report.open(); }
       else if (action === 'replay' && this.history) { this.emoji?.controller.close(); this.report?.controller.close(); this.history.open(); }
       else if (action === 'emoji' && this.emoji) {
         this.report?.controller.close(); this.history?.controller.close();
-        if (!this.emoji.open()) this.menu.status.textContent = i18nMgr.Get('adaptation10016', [], '请先坐下');
+        if (!this.emoji.open()) this.toast.show(i18nMgr.Get('adaptation10016', [], '请先坐下'));
       } else navigate?.(action);
     };
     this.navigation = components.navigation?.(onNavigate) ?? new NavigationView(onNavigate);
@@ -151,16 +176,13 @@ export class TableView {
         const snapshot = this.data.info.snapshot;
         if (snapshot) this.presenter.present({ ...snapshot, showBB: this.showBB, presentation: 'sync' });
         return this.showBB;
-      }, options.seating ? async () => {
-        const pending = await options.seating!.standup();
-        return pending ? i18nMgr.Get("MX_StandUpAfterThisHand", [], "本手结束后站起") : i18nMgr.Get("MX_StandUpRequested", [], "已请求站起");
-      } : undefined, {
+      }, options.seating ? async () => { await options.seating!.standup(); } : undefined, {
         settings:()=>this.personalSettings.open(),
         rules:(insurance)=>options.seating?.rules?.(insurance),
         bringIn:()=>this.buyIn.open(0),
         bringOut:()=>{const state=this.data.info.snapshot;if(state)this.bringOut.open(state);},
         keepSeat:async keep=>{if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
-      });
+      }, error=>this.toast.show(error));
     this.settingsOff.push(settings.on(Settings.SHOW_BB,()=>{
       this.showBB=settings.showBB;const snapshot=this.data.info.snapshot;
       if(snapshot)this.presenter.present({...snapshot,showBB:this.showBB,presentation:'sync'});
@@ -173,7 +195,7 @@ export class TableView {
         this.root.style.backgroundImage=`url("${url}")`;
         void this.deskBackground.show(settings.deskType, url);
         this.stage.querySelectorAll<HTMLElement>('.mx-card[data-card-value]').forEach(card=>CardView.paint(card,Number(card.dataset.cardValue),card.dataset.smallBack==='true'));
-      }catch(error){this.menu.status.textContent=error instanceof Error?error.message:String(error);}
+      }catch(error){this.toast.show(error);}
     };
     this.settingsOff.push(settings.on(Settings.DESK_TYPE_CHANGE,()=>void appearance()),settings.on(Settings.POKER_CARD_TYPE_CHANGE,()=>void appearance()));
     void appearance();
@@ -188,10 +210,11 @@ export class TableView {
       this.menu.root,
     );
     this.viewport.append(this.stage);
-    this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.menu.status, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
+    this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.settlementWatch.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.toast.root, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
     if (this.report && this.history) this.root.append(this.report.root, this.history.root);
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
     this.root.append(this.playerInfo.root);
+    this.root.append(this.confirmDialog.root);
     if (import.meta.env.DEV && options.testControls) {
       this.allInTest = new AllInTestView(this.effects, this.seatViews);
       options.testControls.append(this.allInTest.root);
@@ -233,9 +256,19 @@ export class TableView {
       this.seatViews.get(id)?.place(position, positionMode);
     i18nLabel.bind(this.info, () => [state.name, i18nMgr.Get("MX_HoldEmRegularNoLimit", [], "德州-普通-无限注"), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].join('\n'));
     const own = this.layout.positions(state).get(state.mySeat);
-    if (own && !this.layout.landscape) this.controls.root.style.top = `${(own.y + own.cardsY * own.scale) * this.layout.unit - 28}px`;
+    if (own && !this.layout.landscape) {
+      const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
+      this.controls.root.style.top = `${operationTop}px`;
+      this.controls.root.style.setProperty('--mx-operation-row-y', `${operationTop}px`);
+      // CC Operation.adjustPostion places freeCallNode 910 scaled units above my seat.
+      this.controls.root.style.setProperty('--mx-raise-center-y', `${(own.y - 910 * own.scale) * this.layout.unit}px`);
+      this.controls.setScale?.(own.scale * this.layout.unit);
+    }
     this.sound.present(state);
+    this.settlementWatch.setScale(this.layout.unit);
+    this.navigation.render?.(state);
     this.controls.render(state);
+    this.settlementWatch.render(state);
     this.menu.render(state);
     this.allInTest?.update(state);
   }
@@ -253,9 +286,10 @@ export class TableView {
     this.root.dataset.orientation = landscape ? 'landscape' : 'portrait';
     const { width, height } = this.viewport.getBoundingClientRect();
     if (width <= 0 || height <= 0) return;
-    this.layout.resize(width, landscape ? height : height + this.navigation.root.getBoundingClientRect().height, landscape);
+    this.layout.resize(width, landscape ? height : box.height, landscape);
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
+    this.toast.setScale(l.unit);
     Object.assign(this.stage.style, {
       left: '0px',
       top: '0px',
@@ -307,11 +341,14 @@ export class TableView {
     this.board.destroy();
     this.pot.destroy();
     this.controls.destroy();
+    this.settlementWatch.destroy();
     this.navigation.destroy?.();
     this.buyIn.destroy();
     this.buyInView.destroy();
     this.soundControl.destroy();
     this.menu.destroy();
+    this.toast.destroy();
+    this.confirmDialog.destroy();
     this.sound.destroy();
     this.data.destroy();
     this.root.remove();

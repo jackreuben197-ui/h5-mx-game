@@ -1,5 +1,5 @@
 import { HostSessionData } from '../../data/HostSessionData.js';
-import type { Player, Operator } from '@silenthill/agreement-web';
+import type { Player, Operator, PlayerAllInShowCardWinCardsLength } from '@silenthill/agreement-web';
 import type { TableSnapshot } from '../../core/types.js';
 import type { ProtocolRoomData } from '../../data/ProtocolRoomData.js';
 import type { HoldemRuntime } from '../../net/ProtocolRuntime.js';
@@ -24,6 +24,17 @@ export class MessageContext {
     if (operator?.cardsList.length && operator.seatId === this.state.myInfo?.seatId)
       this.player(operator.seatId).cardsList = [...operator.cardsList];
   }
+  allInWinPercent(users: PlayerAllInShowCardWinCardsLength.AsObject[]): boolean {
+    let changed = false;
+    for (const item of users) {
+      if (item.leftCardsCount <= 0) continue;
+      const player = this.state.playersList.find(player => player.seatId === item.seatId) as (Player.AsObject & { winPercent100?: number }) | undefined;
+      if (!player) continue;
+      const percent = Math.min(10000, Math.round(item.winCardsCount * 10000 / item.leftCardsCount));
+      if (player.winPercent100 !== percent) { player.winPercent100 = percent; changed = true; }
+    }
+    return changed;
+  }
   clearHand(): void {
     this.state.settlement = undefined;
     for (const p of this.state.playersList) {
@@ -32,6 +43,8 @@ export class MessageContext {
       p.roundBet = 0;
       p.handBet = 0;
       p.roundActioned = false;
+      (p as Player.AsObject & { winPercent100?: number }).winPercent100 = undefined;
+      p.winCardsInfo = undefined;
     }
     const hand = this.state.handInfo;
     if (hand) {

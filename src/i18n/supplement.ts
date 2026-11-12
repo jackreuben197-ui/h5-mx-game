@@ -4,6 +4,7 @@ export const supplement: Record<string, Record<string, string>> = {
   MX_Retry: {"cn": "重试", "zh": "重試", "en": "Retry", "pt": "Tentar novamente"},
   MX_AverageProfit: {"cn": "场均盈亏", "zh": "場均盈虧", "en": "Average profit", "pt": "Lucro médio"},
   MX_WinRate: {"cn": "胜率", "zh": "勝率", "en": "Win rate", "pt": "Taxa de vitória"},
+  MX_MyWinRate: {"cn": "我的胜率", "zh": "我的勝率", "en": "My win rate", "pt": "Minha chance de vitória"},
   MX_TotalGames: {"cn": "总局数", "zh": "總局數", "en": "Games", "pt": "Partidas"},
   MX_HandType: {"cn": "牌型", "zh": "牌型", "en": "Hand rank", "pt": "Tipo de mão"},
   MX_Loading: {"cn": "加载中…", "zh": "載入中…", "en": "Loading…", "pt": "Carregando…"},
@@ -74,36 +75,6 @@ export const supplement: Record<string, Record<string, string>> = {
     "zh": "確認全下",
     "en": "Confirm all-in",
     "pt": "Confirmar all-in"
-  },
-  "MX_Submitting": {
-    "cn": "正在提交…",
-    "zh": "正在提交…",
-    "en": "Submitting…",
-    "pt": "Enviando…"
-  },
-  "MX_SeatedActionsNotConnected": {
-    "cn": "已入桌 · 操作协议待接入",
-    "zh": "已入桌 · 操作協議待接入",
-    "en": "Seated · Actions not connected",
-    "pt": "Na mesa · Ações não conectadas"
-  },
-  "MX_FoldedWaitingForHandToEnd": {
-    "cn": "已弃牌 · 等待本手结束",
-    "zh": "已棄牌 · 等待本手結束",
-    "en": "Folded · Waiting for hand to end",
-    "pt": "Desistiu · Aguardando o fim da mão"
-  },
-  "MX_AllInWaitingForOtherPlayers": {
-    "cn": "已全下 · 等待其他玩家",
-    "zh": "已全下 · 等待其他玩家",
-    "en": "All-in · Waiting for other players",
-    "pt": "All-in · Aguardando outros jogadores"
-  },
-  "MX_WaitingForOtherPlayers": {
-    "cn": "等待其他玩家行动",
-    "zh": "等待其他玩家行動",
-    "en": "Waiting for other players",
-    "pt": "Aguardando outros jogadores"
   },
   "MX_SeatAndBuyIn": {
     "cn": "坐下与带入",
@@ -260,18 +231,6 @@ export const supplement: Record<string, Record<string, string>> = {
     "zh": "牌桌資源載入失敗，請重試",
     "en": "Table resources failed to load. Try again.",
     "pt": "Falha ao carregar a mesa. Tente novamente."
-  },
-  "MX_StandUpAfterThisHand": {
-    "cn": "本手结束后站起",
-    "zh": "本手結束後站起",
-    "en": "Stand up after this hand",
-    "pt": "Levantar após esta mão"
-  },
-  "MX_StandUpRequested": {
-    "cn": "已请求站起",
-    "zh": "已請求站起",
-    "en": "Stand-up requested",
-    "pt": "Solicitação para levantar enviada"
   },
   "MX_HoldEmRegularNoLimit": {
     "cn": "德州-普通-无限注",

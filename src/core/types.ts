@@ -19,10 +19,18 @@ export interface Player {
   avatar?: string;
   roundBet?: number;
   folded?: boolean;
+  /** CC all-in odds in hundredths of a percent, supplied by the server. */
+  winPercent100?: number;
+  canPlayStatus?: number;
+  isAutoop?: boolean;
+  keepSeatDeadline?: number;
+  keepSeatReason?: number;
+  roundActioned?: boolean;
+  showCardsSelection?: readonly number[];
   cards: readonly number[];
   action: string;
 }
-export type Action = 'fold' | 'check' | 'call' | 'raise' | 'allin';
+export type Action = 'fold' | 'check' | 'call' | 'raise' | 'allin' | 'straddle';
 /** Normalized UI amounts are chips to commit NOW, not a protocol round-total. */
 export interface BettingTurn {
   id: string;
@@ -31,11 +39,13 @@ export interface BettingTurn {
   max: number;
   step: number;
   allIn?: number;
+  straddle?: number;
 }
 export interface SeatCountdown { seat: number; deadline: number; totalTime: number; }
 export interface TableSnapshot {
   /** Protocol HAND_END, used to clear persistent per-hand presentation. */
   handEnded?: boolean;
+  watch?: { peek: boolean; reveal: boolean; peekCost?: number; revealCost?: number; revealFree?: boolean; privateUc?: boolean };
   roomID: number;
   matchID: number;
   handNum: number;
@@ -45,6 +55,8 @@ export interface TableSnapshot {
   dealOrder?: readonly number[];
   dealerSeat?: number;
   name: string;
+  roomLogo?: string;
+  antiCheatType?: number;
   players: readonly Player[];
   community: readonly number[];
   communityEmphasis?: CardEmphasis;
@@ -59,6 +71,12 @@ export interface TableSnapshot {
   uniqueID?: string;
   actingSeat?: number;
   countdowns?: readonly SeatCountdown[];
+  roundBet?: number;
+  canAddTime?: boolean;
+  addTimeCost?: number;
+  privateUc?: boolean;
+  delayTimes?: number;
+  willStandup?: boolean;
   mySeat: number;
   seatCount: number;
   actions: readonly Action[];
@@ -83,6 +101,10 @@ export interface RoomHost {
   showRules?(target: RoomTarget, insurance: boolean): void;
   storeChips?(target: RoomTarget, amount: number, signal: AbortSignal): Promise<void>;
   keepSeat?(target: RoomTarget, keep: boolean, signal: AbortSignal): Promise<void>;
+  addTime?(target: RoomTarget, signal: AbortSignal): Promise<void>;
+  agreePost?(target: RoomTarget, signal: AbortSignal): Promise<void>;
+  showdown?(target: RoomTarget, cardIndex: number, signal: AbortSignal): Promise<void>;
+  watchSettlement?(target: RoomTarget, kind: 'peek' | 'reveal', signal: AbortSignal): Promise<void>;
   getTableSettings?(): import('../data/GameplayTableSettingData.js').GameplayTableSettingData;
   prepareSeat?(target: RoomTarget, seat: number, signal: AbortSignal): Promise<BuyInQuote>;
   sitDown?(target: RoomTarget, selection: BuyInSelection, signal: AbortSignal): Promise<void>;

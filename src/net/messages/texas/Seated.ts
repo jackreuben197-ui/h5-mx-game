@@ -24,6 +24,7 @@ export function Seated(body: ServerMessageSeated.AsObject, context: MessageConte
     deposit: body.deposit,
     keepSeatDeadline: body.keepSeatDeadline,
     keepSeatLeftTime: body.keepSeatLeftTime,
+    keepSeatReason: body.keepSeatDeadline>0?context.pb.Def.KeepSeatReason.KSR_TAKE_SEAT:context.pb.Def.KeepSeatReason.KSR_NONE,
     inSquid: body.squidIn,
   });
   context.state.playersList = [

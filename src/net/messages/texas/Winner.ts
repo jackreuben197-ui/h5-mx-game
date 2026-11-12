@@ -16,5 +16,14 @@ export function Winner(body: ServerMessageWinner.AsObject, context: MessageConte
   context.state.settlement = new SettlementMapper().map(body.handNum, body.resultsList,
     context.state.myInfo?.seatId ?? 0, new Set(context.state.playersList.map(p => p.seatId)));
   context.data.report.applyWinnerResult(body, context.pb.Def.EHCType.EHC_MUSHROOM);
+  const room=context.data.record,seat=context.state.myInfo?.seatId??0;
+  const mineResult=body.resultsList.find(result=>result.seatId===seat);
+  const eligible=!seat || (!!mineResult&&!mineResult.standUp);
+  const watch=context.data.watch;
+  watch.clear();watch.handNum=body.handNum;
+  // Permission is completed by the host after settlement, once the current H5 config is available.
+  watch.peek=eligible && (room?.viewPlayerCards??0)!==0;
+  watch.reveal=eligible && (context.state.handInfo?.publicCardsList.length??0)<5;
+  watch.revealRound=Number(body.round)||0;
   return true;
 }

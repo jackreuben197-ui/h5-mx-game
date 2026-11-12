@@ -55,7 +55,7 @@ export class GameClient {
             (action, amount) => this.controller.command(action, amount),
             () => this.leave(),
             options.onNavigate,
-            { emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'portrait', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep) } },
+            { emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'portrait', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep), addTime:()=>this.controller.addTime(), showdown:index=>this.controller.showdown(index), watchSettlement:kind=>this.controller.watchSettlement(kind) } },
           );
           root.prepend(this.table.root);
         }

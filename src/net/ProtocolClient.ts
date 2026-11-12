@@ -78,6 +78,12 @@ export class ProtocolClient {
     this.rpcSeed = (this.rpcSeed % 0xfffffffe) + 1;
     return this.rpcSeed;
   }
+  /** CC fire-and-forget messages such as AgreePost still use the H5 WS bridge. */
+  send(code:number,roomID:number,matchID:number,body:{serializeBinary():Uint8Array},signal:AbortSignal):void{
+    signal.throwIfAborted();
+    if(this.disposed)throw new Error('房间连接已关闭');
+    this.transport.send('wsSend',{dataType:'binary',data:this.codec.encode(code,this.token(),roomID,matchID,body.serializeBinary())},0);
+  }
   request<T>(
     code: number,
     roomID: number,
@@ -142,6 +148,13 @@ export class ProtocolClient {
     });
   }
   private receive(packet: Packet): void {
+    // Trace settlement messages before request matching or room filtering.
+    // Do not log tokens, binary payloads, or private card values.
+    if (import.meta.env?.DEV && [1026, 1101, 1127, 1119].includes(packet.code)) {
+      console.info(`[MX WS receive ${packet.code}]`, {
+        roomID: packet.roomID, matchID: packet.matchID, bodyBytes: packet.body.length,
+      });
+    }
     if (packet.code === 99) {
       this.failAll(new Error('服务端拒绝房间请求（99）'));
       return;

@@ -149,7 +149,7 @@ export class DemoHost implements RoomHost {
       throw new Error('加注金额超出范围');
     if (action === 'allin' && amount !== b.allIn) throw new Error('全下金额已更新');
     const paid =
-      action === 'call' ? b.call : action === 'raise' || action === 'allin' ? amount! : 0;
+      action === 'call' ? b.call : action === 'raise' || action === 'allin' ? amount! : action==='straddle'?b.straddle??0:0;
     if (paid > mine.chips) throw new Error('筹码不足');
     this.roundPaid.set(mine.seat, (this.roundPaid.get(mine.seat) ?? 0) + paid);
     const label = {
@@ -158,6 +158,7 @@ export class DemoHost implements RoomHost {
       call: `跟注 ${paid}`,
       raise: `加注 ${paid}`,
       allin: `全下 ${paid}`,
+      straddle: `抓 ${s.betting?.straddle ?? 0}`,
     }[action];
     this.publish({
       players: s.players.map((p) =>
