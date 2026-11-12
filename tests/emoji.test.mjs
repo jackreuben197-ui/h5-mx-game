@@ -51,7 +51,9 @@ test('Emoji uses H5 binary bridge, waits for 1019, ignores self echo and scopes 
  reply(c);await pending;assert.deepEqual(plays,[{type:710,userID:104}]);
  reply(c);echo(c,104);echo(c,105,999);await tick();assert.equal(plays.length,1);
  echo(c,105);await tick();assert.deepEqual(plays[1],{type:710,userID:105});assert.equal(c.updates.length,0,'emoji does not republish a whole table snapshot');
- assert.deepEqual(c.http[0].body.api_list,[62]);assert.deepEqual(c.http[0].body.get_chat_shop_prop_list_req.prop_types,[1,4]);
+ const propCalls=c.http.filter(item=>item.body.api_list?.includes(62));
+ assert.equal(propCalls.length,1,'entry prefetch and opening the panel share the prop list');
+ assert.deepEqual(propCalls[0].body.get_chat_shop_prop_list_req.prop_types,[1,4]);
 });
 test('Failed, malformed and unseated emoji messages do not play or send',async t=>{
  const c=await setup(t),plays=[];c.service.data.on(TexasGameRoomDataEmoji.EMOJI,e=>plays.push(e));
@@ -64,4 +66,20 @@ test('CC owned prop consumes inventory once and broadcasts with CT_NONE',async t
  const c=await setup(t,[prop({prop_amount:2,game_prop_id:88})]);const pending=c.service.send(c.service.data.propList[0]);await tick();
  const body=pb.ClientMessageBroadcastMsg.deserializeBinary(c.sent.find(p=>p.code===pb.Code.MSG_D_BROADCAST_MSG).body).toObject();assert.equal(body.consume,pb.Def.ConsumeType.CT_NONE);
  reply(c);await pending;await tick();const consumed=c.http.filter(x=>x.url.endsWith('/user_prop/used'));assert.equal(consumed.length,1);assert.equal(consumed[0].body.prop_id,88);assert.equal(consumed[0].body.quantity,1);
+});
+test('throw prop keeps CC eligibility, target and 1019/1121 deduplication',async t=>{
+ const c=await setup(t,[prop({prop_id:7,prop_type:4,prop_code:'tomato_Button',prop_amount:1,game_prop_id:88})]);
+ const events=[];c.service.data.on(TexasGameRoomDataEmoji.THROW_PROP,e=>events.push(e));
+ await assert.rejects(c.service.throwProp(104,c.service.data.propList[0],600),/不能扔/);
+ const pending=c.service.throwProp(105,c.service.data.propList[0],600);await tick();
+ const message=c.sent.find(p=>p.code===pb.Code.MSG_D_BROADCAST_MSG),body=pb.ClientMessageBroadcastMsg.deserializeBinary(message.body).toObject();
+ assert.equal(body.msgType,pb.Def.BroadcastMsgType.BC_MSG_THROW);assert.equal(body.consume,pb.Def.ConsumeType.CT_NONE);
+ const envelope=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(body.extra),s=>s.charCodeAt(0))));
+ assert.deepEqual(JSON.parse(envelope.data),{name:'中文昵称',target_user_id:105,user_id:104,type:600});
+ reply(c);await pending;assert.deepEqual(events,[{type:600,userID:104,targetUserID:105}]);
+ const msg=new pb.ServerMessageGetMsg();msg.setExtra(new TextEncoder().encode(JSON.stringify({code:1000,data:JSON.stringify({user_id:104,target_user_id:105,type:600})})));
+ c.transport.frame(pb.Code.MSG_S_GET_MSG,1001,0,msg);await tick();assert.equal(events.length,1);
+ msg.setExtra(new TextEncoder().encode(JSON.stringify({code:1000,data:JSON.stringify({user_id:105,target_user_id:104,type:600})})));
+ c.transport.frame(pb.Code.MSG_S_GET_MSG,1001,0,msg);await tick();assert.deepEqual(events[1],{type:600,userID:105,targetUserID:104});
+ assert.equal(c.http.filter(x=>x.url.endsWith('/user_prop/used')).length,1);
 });

@@ -3,7 +3,7 @@ import { EmojiSpineAssets } from './EmojiSpineAssets.js';
 import type { MagicEmojiDefinition } from '../../logic/MagicEmojiConfig.js';
 export interface EmojiAnchor { x: number; y: number; scale: number; maxSize?: number; clip?: DOMRectReadOnly; }
 interface Bounds { x: number; y: number; size: number; }
-interface Playing { skeleton: spine.Skeleton; state: spine.AnimationState; duration: number; elapsed: number; loop: boolean; anchor: () => EmojiAnchor | null; bounds?: Bounds; complete?: () => void; }
+interface Playing { skeleton: spine.Skeleton; state: spine.AnimationState; duration: number; elapsed: number; loop: boolean; anchor: () => EmojiAnchor | null; bounds?: Bounds; complete?: (finished: boolean) => void; }
 /** One transparent context for all previews or all seat emojis; no game engine dependencies. */
 export class EmojiSpineRenderer {
     private canvas = document.createElement('canvas');
@@ -58,7 +58,7 @@ export class EmojiSpineRenderer {
         }
         return task;
     }
-    async play(key: string, config: MagicEmojiDefinition, anchor: () => EmojiAnchor | null, loop = false, fit = false, complete?: () => void): Promise<boolean> {
+    async play(key: string, config: MagicEmojiDefinition, anchor: () => EmojiAnchor | null, loop = false, fit = false, complete?: (finished: boolean) => void): Promise<boolean> {
         this.stop(key);
         const token = {}; this.tokens.set(key, token);
         const data = await this.load(config);
@@ -84,8 +84,8 @@ export class EmojiSpineRenderer {
         const result = {x: (minX + maxX) / 2, y: (minY + maxY) / 2, size: Math.max(maxX - minX, maxY - minY, 1)};
         this.bounds.set(key, result); return result;
     }
-    stop(key: string): void { this.tokens.delete(key); const item = this.playing.get(key); this.playing.delete(key); item?.complete?.(); this.wake(); }
-    clear(): void { this.tokens.clear(); this.playing.forEach(item => item.complete?.()); this.playing.clear(); this.wake(); }
+    stop(key: string, finished = false): void { this.tokens.delete(key); const item = this.playing.get(key); this.playing.delete(key); item?.complete?.(finished); this.wake(); }
+    clear(): void { this.tokens.clear(); this.playing.forEach(item => item.complete?.(false)); this.playing.clear(); this.wake(); }
     private wake(): void { if (!this.frame && !this.dead && !this.lost && !document.hidden) this.frame = requestAnimationFrame(this.draw); }
     private draw = (time: number): void => {
         this.frame = 0; if (this.dead || this.lost) return;
@@ -100,7 +100,7 @@ export class EmojiSpineRenderer {
             for (const [key, item] of this.playing) {
                 const anchor = item.anchor();
                 item.elapsed += dt;
-                if (!anchor || (!item.loop && item.elapsed >= item.duration)) { this.stop(key); continue; }
+                if (!anchor || (!item.loop && item.elapsed >= item.duration)) { this.stop(key, !!anchor && item.elapsed >= item.duration); continue; }
                 item.state.update(dt); item.state.apply(item.skeleton);
                 const scale = item.bounds ? (anchor.maxSize ?? 130) / item.bounds.size : anchor.scale;
                 item.skeleton.scaleX = item.skeleton.scaleY = scale;

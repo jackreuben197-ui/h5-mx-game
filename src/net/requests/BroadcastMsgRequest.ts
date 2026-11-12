@@ -17,4 +17,13 @@ export class BroadcastMsgRequest {
         body.setMessage(''); body.setExtra(new TextEncoder().encode(JSON.stringify({code: BroadcastCode.BroadcastMsg, data: inner}))); body.setMsgType(msgType);
         return this.client.request(this.pb.Code.MSG_D_BROADCAST_MSG, target.roomID, target.matchID, body, this.pb.ServerMessageBroadcastMsg, signal);
     }
+    executeThrow(target: RoomTarget, signal: AbortSignal, session: HostSessionData, prop: UserPropData, type: number, targetUserRID: number) {
+        const inner = JSON.stringify({name: session.nickname, target_user_id: targetUserRID, user_id: session.userRID, type});
+        const room = new this.pb.Room(); room.setRoomId(target.roomID); room.setMatchId(target.matchID);
+        const body = new this.pb.ClientMessageBroadcastMsg(); body.setRoom(room);
+        body.setConsume(EmojiPropRules.isPropFree(prop) ? this.pb.Def.ConsumeType.CT_NONE : prop.priceID as Parameters<typeof body.setConsume>[0]);
+        body.setMessage(''); body.setExtra(new TextEncoder().encode(JSON.stringify({code: BroadcastCode.BroadcastMsg, data: inner})));
+        body.setMsgType(this.pb.Def.BroadcastMsgType.BC_MSG_THROW);
+        return this.client.request(this.pb.Code.MSG_D_BROADCAST_MSG, target.roomID, target.matchID, body, this.pb.ServerMessageBroadcastMsg, signal);
+    }
 }

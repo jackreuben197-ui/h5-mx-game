@@ -134,8 +134,8 @@ export class PersonalSettingsView {
     this.range.style.setProperty('--ratio-position',`calc(${progress*100}% + ${(0.5-progress)*75} * var(--settings-unit))`);
   }
   onFrameResize(width:number,height:number):void{
-    // Preserve CC's 1100-unit panel proportions; short viewports scroll the body.
-    const unit=Math.min(width/1440,Math.max(280,height*0.85)/1100,520/1100);
+    // CC scales this dialog uniformly below its 2200-unit height.
+    const unit=Math.min(width/1440,height/2200,520/1100);
     this.frameHeight=height;
     const panelWidth=Math.min(width-16,1100*unit);
     this.root.style.setProperty('--dialog-width',`${panelWidth}px`);

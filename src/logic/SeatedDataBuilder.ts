@@ -23,7 +23,8 @@ export class SeatedDataBuilder {
       seatedData.autoOnTable = selection.autoAmount;
     } else if(info.retainType === 2) {
       // CC BringInProviderTexas.commit: manual retained chips.
-      seatedData.store = selection.amount - (quote.returnAmount !== undefined ? info.deposit : 0) - info.limitRetainMinRate * info.smallBlind * 2;
+      const store = selection.amount - (quote.returnAmount !== undefined ? info.deposit : 0) - info.limitRetainMinRate * info.smallBlind * 2;
+      seatedData.store = quote.autoReturn ? Math.max(0, store) : store;
     }
     return seatedData;
   }

@@ -121,6 +121,16 @@ export class MxRoomHost implements RoomHost {
       this.records=new RoomRecordsService(this.roomData,c.target,this.session.userRID,this.client,this.pb,this.http,c.signal,this.transport,{global:this.globalConfig,diamonds:this.diamonds,privateUc:this.privateUc});
     return this.records;
   }
+  private warmRoomPanels(context: RoomContext, refreshProps = false): void {
+    if (this.current !== context || context.signal.aborted || !context.entered) return;
+    const playerIDs = this.roomData.snapshot?.playersList.filter(player => player.seatId > 0).map(player => player.userRid) ?? [];
+    void this.getRecords()?.prefetchPlayers(playerIDs).catch(error => {
+      if (!(error instanceof Error && error.name === 'AbortError')) console.warn('[MX player profile] Prefetch failed', error);
+    });
+    void this.getEmojis()?.refresh(refreshProps).catch(error => {
+      if (!(error instanceof Error && error.name === 'AbortError')) console.warn('[MX props] Prefetch failed', error);
+    });
+  }
   private report(error: unknown): void {
     if (error instanceof Error && error.name === 'AbortError') return;
     this.transport.send('showToast', {
@@ -181,6 +191,7 @@ export class MxRoomHost implements RoomHost {
       if (!context.ready) break;
       this.apply(packet, context);
     }
+    this.warmRoomPanels(context);
     return snapshot;
   }
   private receive(packet: Packet): void {
@@ -252,6 +263,8 @@ export class MxRoomHost implements RoomHost {
         context.pendingTurn = undefined;
       this.updateTableSettings();
       context.receive({ type: 'snapshot', snapshot });
+      if (packet.code === this.pb!.Code.MSG_D_SEATED || packet.code === this.pb!.Code.MSG_S_SEATED_OTHERS)
+        this.warmRoomPanels(context, packet.code === this.pb!.Code.MSG_D_SEATED);
     } catch (error) {
       this.roomData.snapshot = original;
       this.recover(error);
@@ -304,6 +317,7 @@ export class MxRoomHost implements RoomHost {
       context.pendingTurn = undefined;
       context.ready = true;
       context.receive({ type: 'snapshot', snapshot: mapped });
+      this.warmRoomPanels(context);
       for (const packet of context.packets.splice(0)) {
         if (!context.ready) break;
         this.apply(packet, context);
@@ -399,6 +413,11 @@ export class MxRoomHost implements RoomHost {
     // CC Sitdown return-table branch: bring out plus fee, less deposit must be positive.
     const returnAmount = compatible && compatible.to_wallet + compatible.fee - info.deposit > 0
       ? compatible.to_wallet + compatible.fee : undefined;
+    const bringToTable = returnAmount === undefined ? 0 : returnAmount - info.deposit;
+    const autoReturn = returnAmount !== undefined && (
+      info.retainType === 0 || info.retainType === 2 ||
+      (info.retainType === 1 && bringToTable >= info.limitRetainMinRate * info.smallBlind * 2)
+    );
     if(returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
       throw new Error('钱包余额不足以返场');
     if(info.antiCheatType === 3 || info.antiCheatType === 4) throw new Error('视频/人脸验证桌的坐下流程尚未接入');
@@ -408,7 +427,7 @@ export class MxRoomHost implements RoomHost {
       throw new Error('当前带入范围无效');
     const quote: BuyInQuote = { id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
       min,max,step:limits.step,wallets,deposit:limits.needDeposit ? info.deposit : 0,returnOrNew:result.return_table && (!last || compatible) ? 1 : 0,returnAmount,returnClubID:returnAmount !== undefined ? compatible?.club_id : undefined,
-      canAuto:info.retainType === 0 && returnAmount === undefined,
+      canAuto:info.retainType === 0 && returnAmount === undefined,autoReturn,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType >= 2} };
     c.quote = quote;
     return structuredClone(quote);

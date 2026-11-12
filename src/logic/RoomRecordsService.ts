@@ -6,6 +6,7 @@ import { HistoryPricing } from './HistoryPricing.js';
 import { canWatchPlayerCards, canWatchPublicCards } from './ViewPlayerCardsConfig.js';
 import { parseHistoryHand, hasHiddenCards, hasHiddenPublicCards, getViewPubRound } from './HistoryReplayModel.js';
 import type { RoomRecords } from '../core/RoomRecords.js';
+import type { PlayerProfile } from '../core/PlayerProfile.js';
 import type { RoomTarget } from '../core/types.js';
 import type { ProtocolRoomData } from '../data/ProtocolRoomData.js';
 import type { ReplayHandData } from '../data/ReplayHandData.js';
@@ -20,6 +21,8 @@ import { ReplayStorage } from '../host/ReplayStorage.js';
 import type { HostTransport } from '../host/HostTransport.js';
 export class RoomRecordsService implements RoomRecords {
     private roomersTask?: Promise<void>;
+    private profiles = new Map<number, PlayerProfile>();
+    private profileTasks = new Map<number, Promise<PlayerProfile | null>>();
     private replayTask?: Promise<ReplayHandData | null>;
     private replayHand = -1;
     private storage: ReplayStorage;
@@ -128,6 +131,105 @@ export class RoomRecordsService implements RoomRecords {
             room_data?: Record<string, number>[];
         }>(`/api/stats/other_user_stats/${userRID}`, {});
         return result?.room_data?.[0] ?? null;
+    }
+    peekPlayerProfile(userRID: number): PlayerProfile | undefined { return this.profiles.get(userRID); }
+    prefetchPlayers(userRIDs: number[]): Promise<void> {
+        const ids = [...new Set(userRIDs)].filter(id => Number.isSafeInteger(id) && id > 0 && !this.profiles.has(id) && !this.profileTasks.has(id));
+        if (!ids.length) return Promise.resolve();
+        const task = this.loadProfiles(ids);
+        for (const id of ids) {
+            const pending = task.then(profiles => profiles.get(id) ?? null).finally(() => { this.profileTasks.delete(id); });
+            this.profileTasks.set(id, pending);
+            // Entry prefetch has no immediate caller for each seat; keep failures retryable without an unhandled rejection.
+            void pending.catch(() => undefined);
+        }
+        return task.then(() => undefined);
+    }
+    playerProfile(userRID: number): Promise<PlayerProfile | null> {
+        if (!Number.isSafeInteger(userRID) || userRID <= 0) return Promise.reject(new Error('无效玩家'));
+        const cached = this.profiles.get(userRID);
+        if (cached) return Promise.resolve(cached);
+        const pending = this.profileTasks.get(userRID);
+        if (pending) return pending;
+        const task = this.loadProfiles([userRID]).then(profiles => profiles.get(userRID) ?? null).finally(() => { this.profileTasks.delete(userRID); });
+        this.profileTasks.set(userRID, task);
+        return task;
+    }
+    private async loadProfiles(userRIDs: number[]): Promise<Map<number, PlayerProfile>> {
+        const room = this.data.record;
+        if (!room) throw new Error('房间数据已失效');
+        const result = await this.post<{
+            user_info_by_rid_resp?: PlayerProfile['basic'][];
+            user_stats_by_user_rid_resp?: Array<{data?: PlayerProfile['stats']} & PlayerProfile['stats']> | ({data?: PlayerProfile['stats']} & PlayerProfile['stats']);
+        }>('/api/misc/combine', {
+            api_list: [24, 25],
+            user_info_by_rid_req: { user_random_id: userRIDs },
+            user_stats_by_user_rid_req: {
+                game_type: room.gameType, poker_type: room.pokerType,
+                gold_type: room.goldType, origin_type: room.originType,
+                room_id: this.target.roomID, user_random_id: userRIDs
+            }
+        });
+        const profiles = new Map<number, PlayerProfile>();
+        const responses = result?.user_stats_by_user_rid_resp;
+        const statsList = Array.isArray(responses) ? responses : responses ? [responses] : [];
+        for (const userRID of userRIDs) {
+            const basic = result?.user_info_by_rid_resp?.find(item => item?.random_num === userRID);
+            const raw = statsList.find(item => (item?.data ?? item)?.user_random_id === userRID)
+                ?? (userRIDs.length === 1 ? statsList.find(item => !(item?.data ?? item)?.user_random_id) : undefined);
+            const stats = raw?.data ?? raw;
+            if (basic || stats) {
+                const profile = {basic, stats};
+                this.profiles.set(userRID, profile);
+                profiles.set(userRID, profile);
+            }
+        }
+        return profiles;
+    }
+    private requireOther(userRID: number): void {
+        if (!Number.isSafeInteger(userRID) || userRID <= 0 || userRID === this.userRID || !this.data.record) throw new Error('玩家或房间已失效');
+    }
+    private requireManager(userRID: number, action?: 'stand' | 'leave'): void {
+        this.requireOther(userRID);
+        const admin = this.data.record?.roomAdmin;
+        if (!admin?.isAdmin || (action === 'stand' && admin.userStandUp !== 1) || (action === 'leave' && admin.userLeave !== 1)) throw new Error('没有房主操作权限');
+    }
+    private requireGift(userRID: number): void {
+        this.requireOther(userRID);
+        if (this.config.global.isChannelDiamondFreeMode || !this.data.snapshot?.playersList.some(p => p.userRid === this.userRID && p.seatId > 0)) throw new Error('当前不能赠送钻石');
+    }
+    async savePlayerRemark(userRID: number, remark: string): Promise<void> {
+        this.requireOther(userRID);
+        await this.post('/api/org/club/user/update', {club_id: this.data.record?.clubId || 0, user_id: userRID, remark_name: remark.trim(), remark_desc: ''});
+        const profile = this.profiles.get(userRID);
+        if (profile?.basic) profile.basic.remark_name = remark.trim();
+    }
+    private muteScope(): {club_id?: number; tribe_id?: number} {
+        const club_id = this.data.record?.clubId || 0, tribe_id = this.data.record?.tribeId || 0;
+        if (!club_id && !tribe_id) throw new Error('当前房间不支持禁言操作');
+        return {...(club_id ? {club_id} : {}), ...(tribe_id ? {tribe_id} : {})};
+    }
+    async playerMuted(userRID: number): Promise<boolean> {
+        this.requireManager(userRID);
+        const result = await this.post<{ids?: number[]}>('/api/user/mute/list', {...this.muteScope(), user_ids: [userRID]});
+        return !!result?.ids?.includes(userRID);
+    }
+    async setPlayerMuted(userRID: number, muted: boolean): Promise<void> {
+        this.requireManager(userRID);
+        await this.post('/api/user/mute', {...this.muteScope(), user_id: userRID, mute: muted});
+    }
+    async managePlayer(userRID: number, action: 'stand' | 'leave'): Promise<void> {
+        this.requireManager(userRID, action);
+        await this.post(action === 'stand' ? '/api/roomcenter/room/user_stand_up' : '/api/roomcenter/room/user_leave', {room_id: this.target.roomID, user_random_id: userRID});
+    }
+    async diamondBalance(): Promise<number> {
+        const value = await this.post<{diamonds_wallet?: {diamonds?: number}}>('/api/user/user_diamonds_wallet', {});
+        return Number(value?.diamonds_wallet?.diamonds || 0);
+    }
+    async giftDiamonds(userRID: number, amount: number): Promise<void> {
+        this.requireGift(userRID);
+        if (![10, 50, 100, 200, 500, 1000].includes(amount)) throw new Error('无效钻石数量');
+        await this.post('/api/user/diamond/send', {target_user_id: userRID, send_type: 2, amount, room_id: this.target.roomID});
     }
     async historyQuote(data: ReplayHandData): Promise<HistoryQuote> {
         const info = this.data.snapshot?.roomInfo, record = this.data.record;

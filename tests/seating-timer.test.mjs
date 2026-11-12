@@ -23,6 +23,8 @@ test('CC bring-in min/max and retain branches preserve protocol integer units', 
   assert.equal(auto.autoOnTable,20000);assert.equal(auto.autoOnTableFix,20000);assert.equal(auto.autoOnTableMax,200000);
   const returned=builder.build(target,{...room,retainType:2},{...q,returnAmount:30000},selection);
   assert.equal(returned.store,9500);
+  const smallReturn=builder.build(target,{...room,retainType:2},{...q,returnAmount:9468,autoReturn:true},{...selection,amount:9468});
+  assert.equal(smallReturn.store,0,'CC manual retain sends zero store when returned chips are below the retained minimum');
   const recharge=builder.build(target,room,q,{...selection,autoAmount:40000});
   assert.equal(recharge.autoUseWallet,true);assert.equal(recharge.autoOnTableNoStore,true);assert.equal(recharge.autoOnTable,40000);
 });

@@ -7,6 +7,7 @@ export interface MagicEmojiDefinition {
     spine: string;
     animation: string;
     sound: string;
+    assetGroup?: 'emoji' | 'prop';
 }
 
 export default class MagicEmojiConfig {

@@ -13,6 +13,7 @@ export class SeatIdentityView {
   private avatar = element('img', 'mx-avatar');
   private fallback = element('div', 'mx-avatar-fallback');
   private border = element('div', 'mx-avatar-border');
+  readonly avatarButton = element('button', 'mx-avatar-hit');
   private info = element('div', 'mx-player-info');
   private name = element('span', 'mx-player-name');
   private line = element('span', 'mx-player-line');
@@ -32,8 +33,10 @@ export class SeatIdentityView {
     this.info.append(this.name, this.line, this.chips);
     SpriteAtlas.paint(this.action, 'actionBubble');
     SpriteAtlas.paint(this.win, 'winBoard');
+    this.avatarButton.type = 'button';
+    this.avatarButton.hidden = true;
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
-    this.root.append(this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.action, this.info, this.win);
+    this.root.append(this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win);
   }
   destroy(): void { this.countdown.destroy(); }
   render(state: SeatState): void {
@@ -42,6 +45,8 @@ export class SeatIdentityView {
     SpriteAtlas.paint(this.fallback, p ? (this.seatID % 2 ? 'avatar' : 'avatarAlt') : 'empty');
     this.info.hidden = !p;
     this.border.hidden = !p;
+    this.avatarButton.hidden = !p;
+    this.avatarButton.setAttribute('aria-label', p ? `${i18nMgr.Get('MX_PlayerStats', [], '玩家资料')}: ${p.name}` : '');
     this.name.hidden = state.mine;
     this.line.hidden = state.mine;
     this.name.textContent = p?.name ?? '';

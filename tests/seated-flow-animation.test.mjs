@@ -69,3 +69,44 @@ test('successful sit-down closes buy-in and keeps the live seat move without an 
   assert.deepEqual(modes, ['seat']);
   assert.equal(host.roomData.snapshot.myInfo.totalChips, 200);
 });
+
+test('positive return-table chips seat directly while zero chips opens buy-in', async t => {
+  const submitted=[];
+  const quote={id:1,seat:4,roomName:'桌',smallBlind:1000,min:30000,max:30000,step:2000,
+    wallets:[{club_id:5,gold:50000,club_name:'俱乐部'}],returnOrNew:1,returnAmount:30000,
+    returnClubID:5,canAuto:false,autoReturn:true,security:{ip:false,gps:false,delay:false,media:false}};
+  const buyIn=new BuyInController({prepare:async()=>quote,submit:async selection=>{submitted.push(selection);},standup:async()=>false});
+  t.after(()=>buyIn.destroy());
+  await buyIn.open(4);
+  assert.equal(buyIn.data.state.step,'closed');
+  assert.deepEqual(submitted,[{quoteID:1,amount:30000,clubID:5,autoAmount:0}]);
+  quote.id=2;quote.returnAmount=undefined;quote.returnClubID=undefined;quote.autoReturn=false;
+  await buyIn.open(4);
+  assert.equal(buyIn.data.state.step,'security');
+  assert.equal(submitted.length,1);
+});
+
+test('CC return_table with positive chips sends Seated immediately without opening buy-in', async t => {
+  const transport=new FakeTransport(),signal=new AbortController();
+  const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:200,http:{baseURL:'https://test.invalid/api',fetch:async url=>Response.json({code:0,data:
+    String(url).endsWith('/user/info')?{user:{un_id:777,nickname:'测试玩家'}}:
+    {return_table:true,last_bring_out:{to_wallet:500,fee:0,club_id:1},wallet:[{club_id:1,club_name:'俱乐部',gold:10000}]}})}});
+  t.after(()=>{signal.abort();host.destroy()});
+  const initial=snapshot();initial.getMyInfo().setSeatId(0);
+  initial.setPlayersList(initial.getPlayersList().filter(p=>p.getSeatId()!==4));
+  initial.getRoomInfo().setCurrentMinRate(10);initial.getRoomInfo().setCurrentMaxRate(100);
+  transport.emit('enterTable',{token:'00000000000000000000000000000000'});
+  let seated;
+  transport.onSend=(action,payload)=>{
+    if(action!=='wsSend')return;const packet=outbound(payload.data);
+    if(packet.code===pb.Code.MSG_R_ROOMS){const reply=new pb.ServerMessageRooms(),room=record();room.setGoldType(1);reply.setRpcId(pb.ClientMessageRooms.deserializeBinary(packet.body).getRpcId());reply.setRoomsList([room]);transport.frame(packet.code,0,0,reply);}
+    else if(packet.code===pb.Code.MSG_D_ENTER_ROOM)transport.frame(packet.code,1001,0,initial);
+    else if(packet.code===pb.Code.MSG_D_SEATED){seated=pb.ClientMessageSeated.deserializeBinary(packet.body).toObject();const reply=new pb.ServerMessageSeated();reply.setRecvSeatId(4);reply.setChips(seated.bringIn);transport.frame(packet.code,1001,0,reply);}
+  };
+  const target={roomID:1001,matchID:0,roomType:0};await host.enter(target,signal.signal,()=>{});
+  const buyIn=new BuyInController({prepare:seat=>host.prepareSeat(target,seat,signal.signal),submit:value=>host.sitDown(target,value,signal.signal),standup:()=>host.standup(target,signal.signal)});
+  t.after(()=>buyIn.destroy());
+  await buyIn.open(4);
+  assert.equal(buyIn.data.state.step,'closed');
+  assert.equal(seated.bringIn,500);assert.equal(seated.returnOrNew,1);assert.equal(seated.clubId,1);
+});

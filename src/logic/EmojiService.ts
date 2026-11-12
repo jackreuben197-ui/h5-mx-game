@@ -11,15 +11,22 @@ import { BroadcastMsgRequest } from '../net/requests/BroadcastMsgRequest.js';
 import { EmojiPropRules } from './EmojiPropRules.js';
 import MagicEmojiConfig from './MagicEmojiConfig.js';
 import { i18nMgr } from '../i18n/i18nMgr.js';
+import { GameplayChatPropType } from './GameplayChatPropType.js';
+import { PropsID } from './BroadcastCode.js';
+const throwCodes: Record<number, string> = {602:'kiss_Button',609:'money_Button',608:'boxing_Button',605:'touch_Button',600:'tomato_Button',610:'fish_Button',611:'baseball_Button',603:'good_Button',604:'cheers_Button',607:'chicken_Button',601:'flower_Button',606:'shark_Button'};
 export class EmojiService implements RoomEmojis {
     readonly data;
+    get userRID(): number { return this.session.userRID; }
     private loading?: Promise<void>;
+    private loaded = false;
     private sending = false;
     constructor(private room: ProtocolRoomData, private target: RoomTarget, private session: HostSessionData, private client: ProtocolClient, private pb: HoldemRuntime, private http: HttpClient, private signal: AbortSignal, readonly config: GlobalConfigStore, private ready: () => boolean) { this.data = room.emoji; }
     seatForUser(userID: number): number | undefined { return this.room.snapshot?.playersList.find(p => p.userRid === userID && p.seatId > 0)?.seatId; }
     canSend(): boolean { return this.ready() && !this.signal.aborted && !!this.room.snapshot?.playersList.some(p => p.userRid === this.session.userRID && p.seatId > 0); }
-    refresh(): Promise<void> {
-        return this.loading ??= this.load().finally(() => this.loading = undefined);
+    refresh(force = false): Promise<void> {
+        if (this.loading) return this.loading;
+        if (this.loaded && !force) return Promise.resolve();
+        return this.loading = this.load().then(() => { this.loaded = true; }).finally(() => { this.loading = undefined; });
     }
     private async load(): Promise<void> {
         // CC UserStoreUtils.preparePropList: same combine API and ordering/filter arguments.
@@ -45,8 +52,24 @@ export class EmojiService implements RoomEmojis {
         } catch (error) { this.data.cancelPendingEmoji(); throw error; }
         finally { this.sending = false; }
     }
+    async throwProp(targetUserRID: number, prop: UserPropData, type: number): Promise<void> {
+        if (!this.canSend() || !this.seatForUser(targetUserRID) || targetUserRID === this.session.userRID || !this.ready()) throw new Error('当前不能扔道具');
+        if (this.sending) return;
+        const current = this.data.propList.find(p => p.propID === prop.propID && p.propCode === prop.propCode);
+        if (!current || current.propType !== GameplayChatPropType.THROW_PROP || throwCodes[type] !== current.propCode || type < PropsID.PROPSTOMATO || type > PropsID.PROPSBASEBALL) throw new Error('该道具暂不可用');
+        this.sending = true;
+        this.data.setPendingThrowProp({type, userID: this.session.userRID, targetUserID: targetUserRID});
+        try {
+            const task = new BroadcastMsgRequest(this.client, this.pb).executeThrow(this.target, this.signal, this.session, current, type, targetUserRID);
+            if (current.propAmount > 0) void this.consume(current.gamePropID).catch(() => undefined);
+            const result = await task;
+            this.signal.throwIfAborted();
+            if (result.status !== 0) throw new Error(`道具发送失败（${result.status}）`);
+        } catch (error) { this.data.cancelPendingThrowProp(); throw error; }
+        finally { this.sending = false; }
+    }
     private async consume(gamePropID: number): Promise<void> {
         await this.http.request('/api/prop/user_prop/used', {prop_id: gamePropID, type: 0, recipient_contact: '', quantity: 1, recipient_name: '', recipient_address: '', prop_bag_id: 0}, {signal: this.signal});
-        await this.refresh();
+        await this.refresh(true);
     }
 }

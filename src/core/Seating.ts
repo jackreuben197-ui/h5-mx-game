@@ -6,6 +6,7 @@ export interface BuyInQuote {
   returnOrNew: number;
   deposit?: number;
   returnAmount?: number; returnClubID?: number; canAuto: boolean;
+  autoReturn?: boolean;
   security: { ip: boolean; gps: boolean; delay: boolean; media: boolean };
 }
 export interface BuyInSelection { quoteID: number; amount: number; clubID: number; autoAmount: number; }

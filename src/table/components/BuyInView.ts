@@ -107,7 +107,7 @@ export class BuyInView {
     this.confirm.disabled=s.busy;this.close.disabled=s.busy;this.slider.disabled=s.busy||q?.min===q?.max;this.auto.disabled=s.busy;
   }
   onFrameResize(width:number,height:number):void {
-    const unit=Math.min(width/1440,600/1100);
+    const unit=Math.min(width/1440,height/2290,600/1100);
     this.root.dataset.short=String(height<2290*unit);
     this.root.style.setProperty('--mx-setup-unit',`${unit}px`);
     this.root.style.setProperty('--dialog-width',`${Math.min(width-16,1100*unit)}px`);

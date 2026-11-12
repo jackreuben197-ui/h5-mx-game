@@ -129,7 +129,19 @@
     "recordSlider": "ui/recordSlider.png",
     "recordFavorite": "ui/recordFavorite.png",
     "emojiUc": "ui/emojiUc.png",
-    "emojiDiamond": "ui/emojiDiamond.png"
+    "emojiDiamond": "ui/emojiDiamond.png",
+    "playerProp1": "ui/playerProp1.png",
+    "playerProp2": "ui/playerProp2.png",
+    "playerProp3": "ui/playerProp3.png",
+    "playerProp4": "ui/playerProp4.png",
+    "playerProp5": "ui/playerProp5.png",
+    "playerProp6": "ui/playerProp6.png",
+    "playerProp7": "ui/playerProp7.png",
+    "playerProp8": "ui/playerProp8.png",
+    "playerProp9": "ui/playerProp9.png",
+    "playerProp10": "ui/playerProp10.png",
+    "playerProp11": "ui/playerProp11.png",
+    "playerProp12": "ui/playerProp12.png"
   },
   "ccSources": {
     "desk.png": "assets/resources/dynamic/table/desk0.png",
@@ -326,7 +338,19 @@
     "ui/recordSlider.png": "assets/textures/widget/stepslider/barBtn.png",
     "ui/recordFavorite.png": "assets/textures/dialog/replay/star.png",
     "ui/emojiUc.png": "assets/textures/dialog/other/icon_coin.png",
-    "ui/emojiDiamond.png": "assets/resources/rc/other/emoji/diamond.png"
+    "ui/emojiDiamond.png": "assets/resources/rc/other/emoji/diamond.png",
+    "ui/playerProp1.png": "assets/textures/dialog/playerinfo/1.png",
+    "ui/playerProp2.png": "assets/textures/dialog/playerinfo/2.png",
+    "ui/playerProp3.png": "assets/textures/dialog/playerinfo/3.png",
+    "ui/playerProp4.png": "assets/textures/dialog/playerinfo/4.png",
+    "ui/playerProp5.png": "assets/textures/dialog/playerinfo/5.png",
+    "ui/playerProp6.png": "assets/textures/dialog/playerinfo/6.png",
+    "ui/playerProp7.png": "assets/textures/dialog/playerinfo/7.png",
+    "ui/playerProp8.png": "assets/textures/dialog/playerinfo/8.png",
+    "ui/playerProp9.png": "assets/textures/dialog/playerinfo/9.png",
+    "ui/playerProp10.png": "assets/textures/dialog/playerinfo/10.png",
+    "ui/playerProp11.png": "assets/textures/dialog/playerinfo/11.png",
+    "ui/playerProp12.png": "assets/textures/dialog/playerinfo/12.png"
   },
   "cards1": {
     "0": "cards1/0.png",

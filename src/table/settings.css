@@ -5,7 +5,7 @@
 .mx-settings-overlay[hidden],.mx-settings-page[hidden],.mx-settings-desk[hidden]{display:none}
 .mx-settings-overlay[data-short=true],.mx-buyin-overlay[data-short=true]{padding-block:0}
 .mx-settings-panel{position:relative;width:var(--dialog-width,min(100%,600px));max-height:100%;overflow:auto;overscroll-behavior:contain;padding:26px 20px 22px;scrollbar-width:thin;scrollbar-color:#fff6 transparent;font-size:16px}
-.mx-settings-panel h2{margin:0 26px 26px;text-align:center;font-size:22px;font-weight:400}
+.mx-settings-panel h2{margin:0 26px 26px;text-align:center;font-size:22px;font-weight:400;overflow-wrap:anywhere}
 .mx-settings-panel h3{font-size:16px;font-weight:400;margin:18px 0 12px}
 .mx-settings-panel button{font:inherit;color:inherit;cursor:pointer;background:#ffffff18;border:1px solid transparent;border-radius:999px;padding:10px}
 .mx-settings-panel .mx-settings-close{position:absolute;right:16px;top:12px;background:none;font-size:30px;padding:0 8px}

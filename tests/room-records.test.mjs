@@ -9,6 +9,7 @@ import ReportData from '../.test-build/data/TexasGameRoomDataReport.js';
 import {HistoryController} from '../.test-build/logic/HistoryController.js';
 import {parseHistoryHand} from '../.test-build/logic/HistoryReplayModel.js';
 import {HistoryPricing} from '../.test-build/logic/HistoryPricing.js';
+import {EnterRoomMapper} from '../.test-build/logic/EnterRoomMapper.js';
 import {GlobalConfigStore} from '../.test-build/data/GlobalConfigStore.js';
 import {DiamondModel} from '../.test-build/data/DiamondModel.js';
 import {canWatchPlayerCards} from '../.test-build/logic/ViewPlayerCardsConfig.js';
@@ -17,12 +18,12 @@ function hand(n=24){return {d:[14,29],u:104,s:{rid:1001,mid:0,unique:'room-one',
  table:{btn:4,sb:{sn:4,bet:10},bb:{sn:5,bet:20},seatcount:9,ante:0,pl:[{sn:4,c:1000,uid:104,name:'自己',avatar:''},{sn:5,c:1000,uid:105,name:'玩家',avatar:''}]},
  procedure:{ante:{pl:[]},preflop:{pl:[{sn:4,act:'bet',act_amt:100,c:900,pot_out:100,ins:0},{sn:5,act:'call',act_amt:100,c:900,pot_out:200,ins:0}]},flop:{pl:[],card:[2,18,36]},turn:{pl:[],card:[45]},river:{pl:[],card:[57],scard:[]}},
  result:[{sn:4,win:100,ins:0,fee:0,card:[14,29],card_type:2,maxcard_idx:[0,1,2,5,6],maxcard_idx2:[],sp_detail:[]},{sn:5,win:-100,ins:0,fee:0,card:[],card_type:0,maxcard_idx:[],maxcard_idx2:[],sp_detail:[]}]}};}
-async function setup(t){
+async function setup(t, combineValue){
  const transport=new FakeTransport(),session=new AbortController(),requests=[],httpCalls=[];
  const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:250,http:{baseUrl:'https://test.invalid/api',fetch:async(url,options)=>{
    httpCalls.push({url:String(url),body:JSON.parse(options.body)});
    const path=new URL(url).pathname;
-   const value=path.endsWith('get_round_status')?{records:[{remove:0}]}:path.endsWith('/watch/num')?{pay_times:0}:path.endsWith('user_diamonds_wallet')?{diamonds_wallet:{diamonds:100}}:path.endsWith('/diamond/config')?{data:[]}:{};
+   const value=path.endsWith('get_round_status')?{records:[{remove:0}]}:path.endsWith('/watch/num')?{pay_times:0}:path.endsWith('user_diamonds_wallet')?{diamonds_wallet:{diamonds:100}}:path.endsWith('/diamond/config')?{data:[]}:path.endsWith('/misc/combine')?combineValue??{}:{};
    return Response.json({code:0,data:value});
  }}});
  t.after(()=>{session.abort();host.destroy();});
@@ -40,6 +41,45 @@ async function setup(t){
  const updates=[];await host.enter({roomID:1001,matchID:0,roomType:0},session.signal,e=>updates.push(e));
  return {host,transport,session,requests,httpCalls,updates,records:host.getRecords()};
 }
+test('seat player profile uses CC combine API and keeps public info and All-in data read-only',async t=>{
+ const c=await setup(t,{user_info_by_rid_resp:[{random_num:105,nick_name:'玩家',remark_name:'朋友'}],user_stats_by_user_rid_resp:[{data:{user_random_id:105,room_data:{total_hand:42,vpip:27},pool_rate:350,allin_data:{active_count:5,active_profit_count:3}}}]});
+ const profile=await c.records.playerProfile(105);
+ assert.equal(profile.basic.remark_name,'朋友');assert.equal(profile.stats.room_data.total_hand,42);assert.equal(profile.stats.allin_data.active_profit_count,3);
+ const calls=c.httpCalls.filter(item=>item.url.endsWith('/misc/combine')&&item.body.api_list?.includes(24));
+ const call=calls[0];
+ assert.deepEqual(call.body.api_list,[24,25]);assert.ok(call.body.user_stats_by_user_rid_req.user_random_id.includes(105));
+ assert.equal(calls.length,1,'opening the cached player must reuse the entry request');
+ assert.equal(c.records.peekPlayerProfile(105),profile);
+ assert.equal(call.body.user_stats_by_user_rid_req.room_id,1001);
+ assert.equal(c.updates.length,0,'opening public information must not redraw the table');
+ const player=c.host.roomData.snapshot.playersList.find(p=>p.seatId===5);
+ assert.equal(player.userRid,105);
+ const mapped=new EnterRoomMapper(pb).map(c.host.roomData,{roomID:1001,matchID:0,roomType:0},0);
+ assert.equal(mapped.players.find(p=>p.seat===5).userRid,105);
+});
+test('player profile operations preserve CC admin, seating and gift gates',async t=>{
+ const c=await setup(t),r=c.records,room=c.host.roomData;
+ await assert.rejects(r.managePlayer(105,'stand'),/权限/);
+ await assert.rejects(r.setPlayerMuted(105,true),/权限/);
+ room.record.roomAdmin={isAdmin:true,userStandUp:1,userLeave:0};room.record.clubId=77;
+ await r.managePlayer(105,'stand');
+ await assert.rejects(r.managePlayer(105,'leave'),/权限/);
+ await r.setPlayerMuted(105,true);
+ await r.savePlayerRemark(105,'  好友  ');
+ assert.deepEqual(c.httpCalls.at(-1).body,{club_id:77,user_id:105,remark_name:'好友',remark_desc:''});
+ assert.ok(c.httpCalls.some(x=>x.url.endsWith('/room/user_stand_up')&&x.body.user_random_id===105));
+ assert.ok(c.httpCalls.some(x=>x.url.endsWith('/user/mute')&&x.body.mute===true));
+ await assert.rejects(r.savePlayerRemark(104,'自己'),/失效/);
+ await r.giftDiamonds(105,50);
+ assert.deepEqual(c.httpCalls.at(-1).body,{target_user_id:105,send_type:2,amount:50,room_id:1001});
+ room.snapshot.myInfo.seatId=0;
+ room.snapshot.playersList=room.snapshot.playersList.filter(p=>p.userRid!==104);
+ await assert.rejects(r.giftDiamonds(105,50),/不能赠送/);
+ room.snapshot.myInfo.seatId=4;
+ room.snapshot.playersList.push({userRid:104,seatId:4});
+ c.host.globalConfig.setConfig({channel_package_diamond_free_mode:true});
+ await assert.rejects(r.giftDiamonds(105,50),/不能赠送/);
+});
 test('Roomers travels through H5 bridge and updates only room-scoped report events',async t=>{
  const c=await setup(t),other=new ProtocolRoomData();let own=0,foreign=0;
  c.host.roomData.report.on(ReportData.PLAYERS_CHANGE,()=>own++);other.report.on(ReportData.PLAYERS_CHANGE,()=>foreign++);

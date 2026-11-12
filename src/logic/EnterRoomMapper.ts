@@ -52,6 +52,8 @@ export class EnterRoomMapper {
       };
       return {
         seat: player.seatId,
+        userRid: player.userRid,
+        sex: player.sex,
         settlement: s.settlement?.handNum === hand?.handNum ? s.settlement?.seats[player.seatId] : undefined,
         name: player.name,
         chips: player.chip,

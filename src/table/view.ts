@@ -8,7 +8,9 @@ import { ReportController } from '../logic/ReportController.js';
 import { HistoryController } from '../logic/HistoryController.js';
 import { ReportView } from './components/ReportView.js';
 import { HistoryView } from './components/HistoryView.js';
+import { PlayerInfoView } from './components/PlayerInfoView.js';
 import './records.css';
+import './player-info.css';
 import { DeskBackgroundView } from './components/DeskBackgroundView.js';
 import { AllInTestView } from './components/AllInTestView.js';
 import { SpineEffects } from '../effects/SpineEffects.js';
@@ -62,9 +64,11 @@ export class TableView {
   private info = element('div', 'mx-room-info');
   private previousTable?: TableSnapshot;
   private seatViews = new Map<number, SeatComponent>();
+  private remarkNames = new Map<number,string>();
   private allInTest?: AllInTestView;
   private report?: ReportView;
   private history?: HistoryView;
+  private playerInfo: PlayerInfoView;
   private emoji?: EmojiView;
   private seatEmoji?: SeatEmojiView;
   private layout = new TableLayout();
@@ -99,7 +103,22 @@ export class TableView {
     const components = options.components ?? {};
     this.bringOut=new BringOutView(async amount=>{if(!options.seating?.storeChips)throw new Error('当前入口不支持带出');await options.seating.storeChips(amount);});
     this.buyIn = new BuyInController(options.seating); this.buyInView = new BuyInView(this.buyIn);
+    this.playerInfo = new PlayerInfoView(options.records, options.emojis, (userRID, remark, nickname) => {
+      if (remark) this.remarkNames.set(userRID, remark); else this.remarkNames.delete(userRID);
+      for (const seat of this.seatViews.values()) {
+        const data = this.data.seats.get(Number(seat.root.dataset.seat));
+        const state = data.state;
+        if (state.player?.userRid === userRID && !state.mine) data.state = {...state, player: {...state.player, name: remark || nickname}};
+      }
+    });
     this.seats.onclick = event => {
+      const avatar = (event.target as HTMLElement).closest<HTMLElement>('.mx-avatar-hit');
+      if (avatar) {
+        const seatID = Number(avatar.closest<HTMLElement>('.mx-seat')?.dataset.seat);
+        const player = this.data.info.snapshot?.players.find(item => item.seat === seatID);
+        if (player) void this.playerInfo.open(player);
+        return;
+      }
       const seat = (event.target as HTMLElement).closest<HTMLElement>('.mx-empty-seat');
       if(seat && !this.data.info.snapshot?.mySeat) void this.buyIn.open(Number(seat.dataset.seat));
     };
@@ -172,6 +191,7 @@ export class TableView {
     this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.menu.status, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
     if (this.report && this.history) this.root.append(this.report.root, this.history.root);
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
+    this.root.append(this.playerInfo.root);
     if (import.meta.env.DEV && options.testControls) {
       this.allInTest = new AllInTestView(this.effects, this.seatViews);
       options.testControls.append(this.allInTest.root);
@@ -188,11 +208,12 @@ export class TableView {
   render(state: TableSnapshot): void {
     if (this.data.info.snapshot === state) return;
     this.resizeTable();
-    this.presenter.present({ ...state, showBB: this.showBB });
+    this.presenter.present({ ...state, players: state.players.map(player => player.userRid && this.remarkNames.has(player.userRid) && player.seat !== state.mySeat ? {...player, name: this.remarkNames.get(player.userRid)!} : player), showBB: this.showBB });
   }
   @bindEvent(TableInfoData.CHANGE, 'table')
   private onTable(state: TableSnapshot | null): void {
     if (!state) return;
+    if (this.playerInfo.currentSeat && !state.players.some(player => player.seat === this.playerInfo.currentSeat && player.userRid === this.playerInfo.currentUserRID)) this.playerInfo.close();
     const positionMode = SeatPositionMotion.mode(this.previousTable, state);
     this.previousTable = state;
     for (const [id, view] of this.seatViews)
@@ -224,6 +245,7 @@ export class TableView {
     this.personalSettings.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
+    this.playerInfo.onFrameResize(box.width,box.height);
     this.emoji?.onFrameResize(box.width,box.height);
     this.bringOut.onFrameResize(box.width,box.height);
     this.buyInView.onFrameResize(box.width,box.height);
@@ -273,6 +295,7 @@ export class TableView {
     this.personalSettings.destroy();
     this.report?.destroy();
     this.history?.destroy();
+    this.playerInfo.destroy();
     this.emoji?.destroy(); this.seatEmoji?.destroy();
     this.bringOut.destroy();
     this.resize.disconnect();

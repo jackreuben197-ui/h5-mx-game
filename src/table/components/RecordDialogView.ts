@@ -85,7 +85,7 @@ export class RecordDialogView {
     }
     onFrameResize(width: number, height: number): void {
         const panelWidth = Math.min(width * .82, 640);
-        const unit = this.dock ? panelWidth / 1242 : Math.min(width / 1440, 640 / 1242);
+        const unit = this.dock ? panelWidth / 1242 : Math.min(width / 1440, height / 2200, 640 / 1242);
         this.root.style.setProperty('--record-unit', `${unit}px`);
         this.root.style.setProperty('--record-width', `${(this.dock ? panelWidth : Math.min(width - 16, 1242 * unit))}px`);
         this.root.style.setProperty('--record-height', `${(this.dock ? height : Math.min(height - 24, 2200 * unit))}px`);

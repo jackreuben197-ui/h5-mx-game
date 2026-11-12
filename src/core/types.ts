@@ -12,6 +12,8 @@ export interface RoomTarget {
 export interface Player {
   settlement?: SeatSettlement;
   seat: number;
+  userRid?: number;
+  sex?: number;
   name: string;
   chips: number;
   avatar?: string;
