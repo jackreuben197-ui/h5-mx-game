@@ -20,6 +20,7 @@ import type {
 } from '@silenthill/agreement-web';
 /** Preserve full authority for subsequent protocol migrations; UI gets normalized data only. */
 export class ProtocolRoomData {
+  media?: import('../media/TableMedia.js').TableMedia;
   readonly chat = new TexasGameRoomDataChat(this);
   readonly tableSettings = new GameplayTableSettingData();
   readonly emoji = new TexasGameRoomDataEmoji();
@@ -58,6 +59,7 @@ export class ProtocolRoomData {
       this.insurance.start(mine, (s.handInfo?.publicCardsList.length ?? 0) >= 4 ? turnRound : flopRound, mine.invalidInsurancePotsList);
   }
   clear(): void {
+    this.media?.destroy(); this.media=undefined;
     this.chat.resetHistory();this.chat.clear();
     this.mtt?.clear(); this.mtt = undefined;
     this.tableSettings.clearData();

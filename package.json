@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@silenthill/agreement-web": "git+ssh://git@github.com/kingofake/agreement-web.git#921be247732066cdae55477ce3a81c29fbbb6b6c",
-    "@silenthill/h5-cc-i18n": "github:guysoup027/h5-cc-i18n#46f6c805dd2144e0c7fb8b7bd9486f3ed8edc437"
+    "@silenthill/h5-cc-i18n": "github:guysoup027/h5-cc-i18n#46f6c805dd2144e0c7fb8b7bd9486f3ed8edc437",
+    "agora-rtc-sdk-ng": "4.24.5"
   }
 }

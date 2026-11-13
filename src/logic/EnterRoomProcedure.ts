@@ -35,6 +35,7 @@ export class EnterRoomProcedure {
     const data=new ProtocolRoomData();
     data.snapshot=await new EnterRoomRequest(this.client,this.pb).execute(target,signal);signal.throwIfAborted();
     data.record={...new this.pb.RoomRecord().toObject(),rid:target.roomID,name,roomType:mtt.type,
+      antiCheatType:mtt.antiCheatType,antiCheatTimelimit:mtt.antiCheatTimelimit,antiCheatVideoType:mtt.antiCheatVideoType,antiCheatOrderType:mtt.antiCheatOrderType,videoVerifyType:mtt.videoVerifyType,
       gameType:mtt.gameType,pokerType:mtt.pokerType,limitBetType:mtt.limitBetType,seatCount:mtt.seatCount,
       limitDelayTimes:mtt.limitDelayTimes,delayViewCardOn:mtt.delayViewCardOn,
       clubId:target.clubID||mtt.clubId,tribeId:mtt.tribeId,originType:mtt.originType,goldType:mtt.goldType};

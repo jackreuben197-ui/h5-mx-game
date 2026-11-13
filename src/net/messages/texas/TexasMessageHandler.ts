@@ -1,3 +1,4 @@
+import { VideoMaskChange } from './VideoMaskChange.js';
 import { AutoOpActive } from './AutoOpActive.js';
 import { AddOn } from './AddOn.js';
 import { SyncHand } from './SyncHand.js';
@@ -49,6 +50,8 @@ export class TexasMessageHandler {
   accepts(code: number): boolean {
     const { Code } = this.pb;
     switch (code) {
+      case Code.MSG_S_VIDEO_MASK_CHANGE:
+      case Code.MSG_S_FORCE_VIDEO:
       case Code.MSG_S_UP_BLIND:
       case Code.MSG_S_SYNC_HAND:
       case Code.MSG_D_ADD_ON:
@@ -101,6 +104,8 @@ export class TexasMessageHandler {
   dispatch(packet: Packet, context: MessageContext): boolean {
     const pb = this.pb, { Code } = pb;
     switch (packet.code) {
+      case Code.MSG_S_VIDEO_MASK_CHANGE: return VideoMaskChange(pb.ServerMessageVideoMaskChange.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_FORCE_VIDEO: return false; // CC ForceVideo is intentionally empty; verification uses 902.
       case Code.MSG_D_AUTO_OP_ACTIVE: return AutoOpActive(pb.ServerMessageAutoOpActive.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_D_ADD_ON: return AddOn(pb.ServerMessageAddOn.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_S_SYNC_HAND: return SyncHand(pb.ServerMessageSyncHand.deserializeBinary(packet.body).toObject(),context);

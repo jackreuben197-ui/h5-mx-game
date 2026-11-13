@@ -1,3 +1,4 @@
+import { mediaImage } from './TableMediaView.js';
 import type { Player } from '../../core/types.js';
 import type { PlayerProfile } from '../../core/PlayerProfile.js';
 import type { RoomRecords } from '../../core/RoomRecords.js';
@@ -273,6 +274,20 @@ export class PlayerInfoView {
       if (admin.userLeave === 1) add(t('MX_AdminLeave','踢出玩家'), () => this.confirm(() => t('UITexasRoomManagerOpTips8','确认踢出该玩家？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'leave'), () => this.close())));
       add(this.muted ? t('MX_Unmute','取消禁言') : t('MX_Mute','禁言'), () => void this.run(() => this.records!.setPlayerMuted(this.player!.userRid!,!this.muted), () => {this.muted = !this.muted; this.renderActions();}));
       actions.append(controls);
+    }
+    const media=this.records?.media;
+    if(media?.config.isInVideoRoom&&this.isOther()&&this.player.userRid){
+      const uid=this.player.userRid;
+      const row=element('div','mx-player-profile-controls mx-player-media');
+      for(const kind of (media.setting.enableCamera?['audio','video']:['audio']) as Array<'audio'|'video'>){
+        const state=media.remoteState(kind,uid);
+        const button=element('button','',()=>i18nMgr.Get(`MX_${state.blocked?'Open':'Close'}${kind==='video'?'Video':'Audio'}`));
+        button.style.backgroundImage=`url("${mediaImage('btnbg')}")`;
+        const icon=element('img','');icon.src=mediaImage(kind==='video'?'videoicon':'sndicon');icon.alt='';button.prepend(icon);
+        button.disabled=!state.available;
+        button.onclick=()=>void this.run(()=>media.toggleRemote(kind,uid),()=>this.render());row.append(button);
+      }
+      actions.append(row);
     }
     if (actions.childElementCount) this.dialog.panel.append(actions);
   }

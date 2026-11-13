@@ -12,6 +12,7 @@ export interface SpecialOperations {
     readonly config: Pick<RoomRecords['config'], 'global' | 'diamonds'>;
 }
 export interface RoomRecords {
+    readonly media?: import('../media/TableMedia.js').TableMedia;
     readonly config: {
         global: GlobalConfigStore;
         diamonds: DiamondModel;

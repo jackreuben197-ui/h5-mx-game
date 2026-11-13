@@ -17,12 +17,13 @@ export class NavigationView {
       ['report', "UICareerRecord"],
       ['replay', "UITexas_History_paipu"],
       ['emoji', "UITexas_mainmenu_emoji"],
-      ['effect', "MX_TableEffect"],
+      ['effect', "UITexas_mainmenu_effect"],
       ['voice', "UITexas_mainmenu_audio"],
-      ['camera', "MX_TableCamera"],
+      ['camera', "UITexas_mainmenu_camera"],
     ] as const) {
       const button = element('button', 'mx-nav-button');
       button.type = 'button';
+      button.dataset.action=key;
       const icon = element('span', 'mx-nav-icon');
       icon.setAttribute('aria-hidden', 'true');
       SpriteAtlas.paint(icon, key);

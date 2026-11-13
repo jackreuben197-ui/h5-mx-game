@@ -235,3 +235,10 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 - 2026-11-13 安全卫士原图94×115，保留93×135点击区但background-size改为contain居中，消除纵向拉伸。Chrome mobile/touch 375×500实际组件截图 `/tmp/mx-shield-ratio.png`；本轮为组件视觉验证，未重新登录实服。
 - 钻石充值审核接入全局145 MSG_S_USER_USDT_ORDER_NOTIFY（不是133奖励通知；CC对应函数为空，状态和提示沿现用H5 MineShopView）：在MxRoomHost房间过滤之前解码，命名函数UserUsdtOrderNotify交给购买服务；2通过、3失败、4取消、5超时，使用原H5词条提示。同订单同状态去重，匹配当前order_no才关闭收款窗/倒计时，刷新可见充值页余额并使补充筹码缓存失效。走既有H5 wsMessage，不增加WebSocket；离桌abort清监听。
 - TypeScript check及6项定向回归通过，包括通过真实二进制bridge测试帧发送roomID=0的145、重复通知、终态过滤和离桌清理。本轮未触发真实后台审核推送，线上审核通过仍需实服补验；未提交或推送。
+
+- 2026-11-13 Agora DOM 音视频迁移（kong，尚未提交）：固定 agora-rtc-sdk-ng 4.24.5，沿 CC rtc/VP8、240×240、15fps、bitrateMax300 和 rtc_d_1-matchID-roomID 频道名，HTTP /api/misc/agora/token，Poker WS 仍经 H5 bridge。TableMedia 按房间管理采集、发布、订阅、续期、静音、退出及异步隔离；视频直接 SDK track.play 到头像 DOM，不复制到 Canvas。普通桌不实例化媒体控制器。
+- VideoModel 原配置分支保留：语音初始闭麦、全时长/强制模式不可关闭、随机 902 验证和麦序操作切换、HUMAN/EFFECT 的坐下与中途开关、四种窗花和禁止关闭规则；1133 VideoMaskChange 写入当前玩家，1132 ForceVideo 沿旧代码为空。MTT 入口保留防作弊字段。人脸验证 type4 仍未支持（旧 VideoModel 本身亦不支持），不能把视频迁移当成人脸认证完成。
+- 原窗花/麦克风/底栏/远端开关/玩家资料音视频按钮图片迁入 assets/raw/media 并登记 ccSources。跨端口图片转为 import.meta.url 绝对地址；远端开关和媒体桌底栏按旧 prefab 修正。玩家资料单人媒体开关复用现有操作区域；换座先解绑旧播放容器，站起/离桌停止并关闭采集轨道。说话检测沿旧300ms/0.6阈值，只显示当前最响者。浏览器拒绝采集后沿旧提示并3秒返回，使用 supplement 补充旧硬编码文案的多语言。
+- 实服验证：两授权账号分别登录 H5+MX 5174 与 CC7456，在竞技场2创建 0.1/0.2 六座“MX视频验证”（90235122，全时长+节能模式），真实坐下、Agora CONNECTED、新旧双向音视频发布订阅，双方视频240×240。实际点击窗花1→2→3→4→1，旧端玩家数据收到mask2；全桌关闭视频取消订阅后恢复，单人音频/视频开关点击生效。另在10/20“语音桌-2”（97365090）验证默认闭麦、双方开麦收发、闭麦且无摄像头轨道。最终实际站起：音视频原MediaStreamTrack均ended、DOM视频0个，并退出房间。
+- 浏览器验证用静音 Chrome + 测试音视频输入，通过真实 RTC/业务服务器；不是实体手机摄像头、听感、后台恢复或热功耗验收。使用持续 CDP 会话保持 mobile/touch/UA，临时连接的设备覆盖断开会让旧 Cocos恢复桌面尺寸，不能只用拉伸窗口。截图核对含390×844、375×500，临时文件 `/tmp/mx-rtc-dual2.png`、`/tmp/cc-rtc-dual.png`、`/tmp/mx-rtc-final-ui.png`、`/tmp/cc-voice-live.png`、`/tmp/mx-rtc-375x500.png`；中间截图为修改前状态，以最新截图和代码为准。早期 `/tmp/mx-voice-live.png` 捕获区域受浏览器表面尺寸影响，不可作完整手机截图依据。
+- TypeScript check和22项定向测试通过（含媒体配置、随机验证倒计时/禁关/结束保持开启、麦序、1133、换人/abort、入桌重连回归）；未跑完整构建。随机902、麦序桌、HUMAN/EFFECT配置、MTT强制视频、Token真实到期续期与真机自动播放权限尚未逐项在线触发，不能宣称这些分支已实服验收。两个账号在线互通已验收，但不代表6/9路满桌性能测试完成。

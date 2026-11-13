@@ -1,5 +1,10 @@
 // MX-only UI strings missing from the shared CC language package.
 export const supplement: Record<string, Record<string, string>> = {
+  MX_MediaPermission:{cn:'必须同意浏览器的音视频权限才能成功坐在视频桌',zh:'必須同意瀏覽器的音視訊權限才能成功坐在視訊桌',en:'Allow camera and microphone access before taking a seat.',pt:'Permita acesso à câmera e ao microfone antes de sentar.'},
+  MX_OpenAudio:{cn:'打开音频',zh:'開啟音訊',en:'Enable audio',pt:'Ativar áudio'},
+  MX_CloseAudio:{cn:'关闭音频',zh:'關閉音訊',en:'Disable audio',pt:'Desativar áudio'},
+  MX_OpenVideo:{cn:'打开视频',zh:'開啟視訊',en:'Enable video',pt:'Ativar vídeo'},
+  MX_CloseVideo:{cn:'关闭视频',zh:'關閉視訊',en:'Disable video',pt:'Desativar vídeo'},
   MX_Pay:{cn:'支付',zh:'支付',en:'Pay',pt:'Pagar'},
   MX_DiamondTraderOnly:{cn:'批发商专属',zh:'批發商專屬',en:'Wholesaler only',pt:'Exclusivo para atacadistas'},
   MX_Recommended:{cn:'推荐',zh:'推薦',en:'Recommended',pt:'Recomendado'},

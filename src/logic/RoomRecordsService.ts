@@ -25,6 +25,7 @@ import { PublicReplayRequest } from '../net/requests/PublicReplayRequest.js';
 import { ReplayStorage } from '../host/ReplayStorage.js';
 import type { HostTransport } from '../host/HostTransport.js';
 export class RoomRecordsService implements RoomRecords {
+  get media() { return this.data.media; }
     readonly diamondPurchase:DiamondPurchaseService;
     private safetyTask?:Promise<void>;
     private safetyUpdated=0;

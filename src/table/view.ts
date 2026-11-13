@@ -1,3 +1,5 @@
+import { TableMediaView } from './components/TableMediaView.js';
+import './media.css';
 import { TableToolsView } from './components/TableToolsView.js';
 import { TableChatView } from './components/TableChatView.js';
 import './mtt.css';
@@ -114,6 +116,7 @@ export class TableView {
   private secondBoard = new PublicCardsView(this.data.secondPublicCards);
   private pot: ReturnType<NonNullable<TableComponents['pot']>>;
   private controls: ReturnType<NonNullable<TableComponents['actions']>>;
+  private media?: TableMediaView;
   private navigation: ReturnType<NonNullable<TableComponents['navigation']>>;
   private settlementWatch: SettlementWatchView;
   private resize: ResizeObserver;
@@ -192,9 +195,11 @@ export class TableView {
       else if (action === 'emoji' && this.emoji) {
         this.report?.controller.close(); this.history?.controller.close();
         if (!this.emoji.open()) this.toast.show(i18nMgr.Get('adaptation10016', [], '请先坐下'));
-      } else navigate?.(action);
+      } else if((action==='camera'||action==='voice'||action==='effect')&&options.records?.media)void options.records.media.toggle(action).catch(error=>this.toast.show(error));
+      else navigate?.(action);
     };
     this.navigation = components.navigation?.(onNavigate) ?? new NavigationView(onNavigate);
+    if(options.records?.media){this.media=new TableMediaView(options.records.media,this.root,error=>this.toast.show(error));this.root.append(this.media.root);}
     this.root.style.backgroundImage = `url("${resources.desk}")`;
     const exit=()=>{try{options.records?.leaveTable?.();leave();}catch(error){this.toast.show(error);}};
     const requestLeave=()=>{
@@ -315,6 +320,7 @@ export class TableView {
     this.sound.present(state);
     this.settlementWatch.setScale(this.layout.unit);
     this.navigation.render?.(state);
+    this.media?.render();
     this.controls.render(state);
     this.settlementWatch.render(state);
     this.menu.render(state);
@@ -398,6 +404,7 @@ export class TableView {
     };
   }
   destroy(): void {
+    this.media?.destroy();
     this.secondPcs?.destroy();
     this.insurance?.destroy();
     this.squid?.destroy();

@@ -1,3 +1,5 @@
+import { AntiCheatRoomVideo } from '../net/messages/other/AntiCheatRoomVideo.js';
+import { TableMedia } from '../media/TableMedia.js';
 import { UserUsdtOrderNotify } from '../net/messages/other/UserUsdtOrderNotify.js';
 import { RoomPanelCache } from '../logic/RoomPanelCache.js';
 import type { BuyInWallet } from '../core/Seating.js';
@@ -283,7 +285,10 @@ export class MxRoomHost implements RoomHost {
     if (this.current !== context) throw new DOMException('房间会话已更换', 'AbortError');
     data.restoreSpecialOperations(pb.Def.Round.FLOP, pb.Def.Round.TURN);
     const snapshot = this.project(data,target);
+    this.roomData.media?.destroy();
     this.roomData = data;
+    if([2,3].includes(data.record?.antiCheatType??0))
+      data.media = new TableMedia(data,this.session.userRID,this.http,this.globalConfig,signal,message=>this.transport.send('showToast',{message}),target.matchID);
     if(data.mtt){
       const active=()=>this.current===context&&!signal.aborted;
       this.mttLifecycle=new MttRoomLifecycle(data,target,this.client,pb,this.transport,signal,active,
@@ -299,6 +304,7 @@ export class MxRoomHost implements RoomHost {
           data.mtt!.syncHandState(response.gameStatus);data.mtt!.setTableTransferWaiting(false);
           data.restoreSpecialOperations(pb.Def.Round.FLOP,pb.Def.Round.TURN);
           context.ready=true;
+          data.media?.sync();
           context.receive({type:'transfer',snapshot:this.project(data,target)});
           for(const packet of context.packets.splice(0))this.apply(packet,context);
         },()=>{if(active())context.receive({type:'snapshot',snapshot:this.project(data,target)});},
@@ -306,6 +312,7 @@ export class MxRoomHost implements RoomHost {
       signal.addEventListener('abort',()=>this.mttLifecycle?.destroy(),{once:true});
     }
     this.updateTableSettings();
+    data.media?.sync();
     context.entered = true;
     context.ready = true;
     this.transport.send('setHeartbeatMode', { mode: 'in-gameplay' });
@@ -319,6 +326,10 @@ export class MxRoomHost implements RoomHost {
   }
   private receive(packet: Packet): void {
     const context = this.current;
+    if(context?.entered&&!context.signal.aborted&&packet.code===902){
+      if(packet.roomID===context.target.roomID&&packet.matchID===context.target.matchID)AntiCheatRoomVideo(this.pb!.ServerMessageUtilAntiCheatRoomVideo.deserializeBinary(packet.body).toObject(),this.roomData.media);
+      return;
+    }
     if(context?.entered&&!context.signal.aborted&&this.pb&&packet.code===this.pb.Code.MSG_S_USER_USDT_ORDER_NOTIFY){
       const notice=this.pb.ServerMessageUserUsdtOrderNotify.deserializeBinary(packet.body).toObject();
       const service=this.getRecords()?.diamondPurchase;
@@ -396,6 +407,7 @@ export class MxRoomHost implements RoomHost {
       )
         context.pendingTurn = undefined;
       this.updateTableSettings();
+      this.roomData.media?.sync();
       context.receive({ type: 'snapshot', snapshot });
       if(packet.code===this.pb!.Code.MSG_S_WINNER)
         void this.prepareSettlementWatch(context);
@@ -456,6 +468,7 @@ export class MxRoomHost implements RoomHost {
       this.roomData.report.roomersFetched = false;
       context.pendingTurn = undefined;
       context.ready = true;
+      this.roomData.media?.sync();
       context.receive({ type: 'snapshot', snapshot: mapped });
       this.maybeAgreePost(context);
       this.warmRoomPanels(context);
@@ -536,6 +549,14 @@ export class MxRoomHost implements RoomHost {
     if(c.seatingBusy) throw new Error('坐下请求正在处理');
     c.quote = undefined;
     await this.refreshUser(signal);
+    try { await this.roomData.media?.prepareSeat(); }
+    catch(error) {
+      if(signal.aborted)throw error;
+      const timer=setTimeout(()=>{if(this.current===c&&!c.signal.aborted)c.receive({type:'closed',roomID:target.roomID,matchID:target.matchID,reason:''});},3000);
+      c.signal.addEventListener('abort',()=>clearTimeout(timer),{once:true});
+      throw new Error(i18nMgr.Get('MX_MediaPermission'));
+    }
+    signal.throwIfAborted();
     const result = await new RoomBringOutRequest(this.http).execute(target.roomID, signal);
     signal.throwIfAborted();
     if(this.seatContext(target, seat) !== c) throw new Error('房间会话已更换');
@@ -570,7 +591,8 @@ export class MxRoomHost implements RoomHost {
     );
     if(!direct && returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
       throw new Error('钱包余额不足以返场');
-    if(info.antiCheatType === 3 || info.antiCheatType === 4) throw new Error('视频/人脸验证桌的坐下流程尚未接入');
+    if(info.antiCheatType === 4) throw new Error('当前人脸验证桌尚未支持');
+
     const limits = new BringInRules(info).caculateCanBringMinMax();
     const min = returnAmount ?? limits.minAmount, max = returnAmount ?? limits.maxAmount;
     if(!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min < 0 || max < min || limits.step <= 0)
