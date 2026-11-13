@@ -215,3 +215,23 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 
 - 2026-11-13 更正“继续观战未实现”的根因：当前 MX `deps/h5-game` 实际是根仓库跟踪的旧文件副本（不是有效 gitlink），结算 Vue 缺少 `inTable/canContinueWatching/watchingPending` 分支。现有外部 `/Users/kongfanbing/data/h5-game` HEAD `e0afbd9` 的组件与 CC 所用 H5 一致，包含继续观战、返回大厅及桌内重购。已将临时 `/tmp/mx-h5-login-preview.config.mts` 的 shellConfig/root 指向该外部 H5，5174 服务已重启；4179 仍为 MX。外部 H5 源码、配置和依赖未修改。恢复此机器预览时必须使用该正确大厅，不能退回 deps 旧副本。
 - 本次 95981370 真实 H5 重购进入后收到 1112 → 1114 reason=1（accountChips=0、rebuyTimes=1）→ 原桌观战 1002 seat=0；显示可点击“继续观战/返回大厅”，实点继续观战后关闭面板，仍留 room=1，继续接收升盲。移动模拟390×844/touch=5，截图 `/tmp/mx-mtt-watch-real-choice.png`、`/tmp/mx-mtt-watch-real-after-click.png`。本场 server accountChips=0 使旧版同一 canRebuy 判断为 false，因此此次不是“弹窗重购按钮”实服验收；从赛事详情用俱乐部钱包重购已实际成功。外部组件3项测试与MX相关11项测试通过。此前继续观战入口未验收的记录被本条更新；余额差异仍不可擅自放开。
+
+- 2026-11-13 牌桌文字聊天/弹幕/客服和平台钻石桌带入：沿 CC TexasGameRoomDataChat、UIChatDlg、GetMsg/BroadcastMsg 迁入缓存、20条历史翻页、去重、未读红点、快捷文案、80字限制；文字用1121服务端最终文本，1019只确认，缺少自身广播时同步HTTP历史。发送弹幕仍按CC先普通聊天再bullet发送1019，八条滚动轨道，离桌销毁。聊天复用RecordDialogView并使用CC九宫格素材；客服沿H5 showPanel supportChat，普通币桌查询支付俱乐部，平台桌走官方客服。未修改外部H5或新建WebSocket。
+- 钻石桌 goldType=4 独立于币桌钱包，读取 user_diamonds_wallet，100协议单位/钻石，隐藏俱乐部钱包和自动补充；正筹码返桌直接Seated且不以当前可用钻石余额拦截，新增带入/补充则检查余额。保持记分牌和俱乐部钱包原分支。加密桌未处理；本轮没有迁移钻石充值支付页。
+- 真实H5“测试钻石桌-1”（90495058）：新版实际带入1000、再补充1000、站起后直接返桌恢复2K且无带入窗。新旧两个账号双向发送文字/弹幕，捕获新版1121/1019，旧版Label和新版DOM均显示对应消息；新版重新入桌后恢复服务端历史。实际打开官方客服，仅验证入口未向客服发送消息。快捷文案从服务端取到4条并显示选择列表；Chrome mobile/touch5的390×844及375×500截图核对聊天固定输入区。历史超过20条的翻页、钻石不足和0筹码返桌为定向测试覆盖，未制造大量真实消息或耗尽账户余额来验收。聊天记录中的表情目前文字占位，原座位Spine播放不变；非本轮文字聊天验收范围。
+- 本轮TypeScript check及聊天/坐下/表情15项定向回归通过，未重复完整构建。截图 `/tmp/mx-chat-restored.png`、`/tmp/mx-chat-375x500.png`、`/tmp/cc-chat-received.png`、`/tmp/mx-danmu-live.png`、`/tmp/mx-support-live.png`、`/tmp/mx-diamond-seated.png`、`/tmp/mx-diamond-added.png`、`/tmp/mx-diamond-return.png`，均为临时文件。代码留在kong工作区，尚未提交或推送。
+
+- 2026-11-13 补齐右上补充筹码和安全卫士：补充筹码沿原带入控制器，坐下且非赛事显示；安全卫士沿 CC tribeId 条件及 H5 safetyGuard 面板。真实保险-6 入桌未坐下可见安全卫士，实点打开原 H5 面板；钻石桌坐下后显示钻石补充图标。DEV 菜单下移避免遮挡入口。
+- 预选操作对照 CC AutoOperation/ToggleButton/UIAutoOperation.prefab，恢复原“看牌/弃牌”“自动看牌”“自动跟牌”词条和方形选中/未选中素材；未选中跟牌不显示金额，选中跟牌/全下金额独立一行。真实保险-6 第31手捕获未选中→单次点击→选中“20 / 自动跟牌”，Chrome mobile390×844、DPR3、touch5，已截图查看选中态；全下选中为代码对照，未在本轮实服另行触发。
+- 聊天中的原版表情改用共享 EmojiSpineRenderer 播放，按可见消息槽定位/裁剪，关闭和离桌清理。真实测试钻石桌发送表情后，经服务端历史显示原笑脸 Spine，截图 `/tmp/mx-chat-spine-live.png`。此前“聊天表情文字占位”的记录由本条替代。
+- 带入窗钻石购买 tab 迁入原商品、赠钻、批发商资格/申请中状态、支付渠道/折扣/汇率及下单链路，金额沿 CC 舍入顺序；收款窗展示服务器二维码、地址、金额和15分钟倒计时。真实商品/渠道加载，普通商品下单收到收款结果，未执行外部转账；实际到账刷新及批发商付费申请未在线验收，不可称支付全链路完成。截图 `/tmp/mx-diamond-receipt-live.png`；375×500 移动模式核对9渠道与底部按钮完整显示、商品九宫格修正，截图 `/tmp/mx-purchase-short-fixed.png`。上述临时截图不随 Git 迁移。
+- 本轮 TypeScript check、18项购买/聊天/表情/坐下定向回归及 git diff --check 通过，未重复全量构建。全部修改留在 kong，尚未提交或推送。
+
+- 2026-11-13 入口预加载：warmRoomPanels 在入桌、重连、坐下时预取钻石商品/渠道/资格、补充筹码钱包/钻石余额、客服支付俱乐部和安全卫士黑名单。RoomPanelCache 按房间合并请求、30秒有效期，失败可重试、abort 隔离、请求中失效不再标记新鲜；坐下/补充成功及购买/申请后失效。补充额度仍按当前 roomInfo/myInfo 重新计算，提交原验证保留。安全卫士复用 H5 的 dzpk_h5_TRIBE_BLACK_USER_LIST_CACHE，保持其他联盟条目；外部H5不改，ccStorageOp 的 dzpk_cc_ 前缀不能用于此缓存。
+- 申请批发商沿旧 ConfirmOrNotice 默认单按钮模式，在 TableConfirmDialog 增加长正文自适应、1000高亮和“支付1000钻石”；未提交付费申请。客服按 UIRoomTexas prefab 的200×100点击区、180×92.74背景、69×72图标和原九宫格修复。
+- 复制地址补剪贴板失败回退，在当前复制按钮显示成功/失败，地址可长按选择。本轮真实触摸组件复制测试显示“复制成功”，不是实服收款页全链路验收：真实测试充值下单返回 no usable address，未执行外部转账。申请窗口为实际组件独立视觉核对，375×500截图 `/tmp/mx-trader-confirm-final.png`；实服客服 `/tmp/mx-support-prefetch.png`。真实进入保险-6且未打开安全卫士前已缓存9条黑名单；钻石购买页真实加载。临时截图不随Git保存。
+- 本轮TypeScript检查及缓存/钻石购买/坐下13项定向回归通过；未全量构建，未提交或推送。
+
+- 2026-11-13 安全卫士原图94×115，保留93×135点击区但background-size改为contain居中，消除纵向拉伸。Chrome mobile/touch 375×500实际组件截图 `/tmp/mx-shield-ratio.png`；本轮为组件视觉验证，未重新登录实服。
+- 钻石充值审核接入全局145 MSG_S_USER_USDT_ORDER_NOTIFY（不是133奖励通知；CC对应函数为空，状态和提示沿现用H5 MineShopView）：在MxRoomHost房间过滤之前解码，命名函数UserUsdtOrderNotify交给购买服务；2通过、3失败、4取消、5超时，使用原H5词条提示。同订单同状态去重，匹配当前order_no才关闭收款窗/倒计时，刷新可见充值页余额并使补充筹码缓存失效。走既有H5 wsMessage，不增加WebSocket；离桌abort清监听。
+- TypeScript check及6项定向回归通过，包括通过真实二进制bridge测试帧发送roomID=0的145、重复通知、终态过滤和离桌清理。本轮未触发真实后台审核推送，线上审核通过仍需实服补验；未提交或推送。

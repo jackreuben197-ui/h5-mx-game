@@ -339,3 +339,12 @@
 
 /* CC middleLayout grows below the Sidepots grid when a second row is needed. */
 .mx-stage:has(.mx-side-pools > :nth-child(6)) .mx-room-info{margin-top:61px}
+/* UIAutoOperation: original square sprites; only selected call/all-in has a separate amount line. */
+.mx-table:not([data-orientation=landscape]) .mx-auto-operation button{border-radius:0;font-size:calc(30 / 137 * var(--mx-op-button-size,32px))!important;line-height:1.35;box-shadow:none;overflow:hidden}
+.mx-auto-operation button[aria-pressed=true]{box-shadow:none;background-color:transparent}
+
+.mx-confirm-long .mx-confirm-panel{aspect-ratio:auto;max-height:calc(100dvh - 24px)}
+.mx-confirm-long .mx-confirm-body{overflow:auto;min-height:0}
+.mx-confirm-long .mx-confirm-message{text-align:left;white-space:pre-line;line-height:1.65}
+.mx-confirm-highlight{color:#05e7ae}
+.mx-confirm-single .mx-confirm-buttons .mx-confirm-commit{width:70%}

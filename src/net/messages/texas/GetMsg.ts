@@ -1,7 +1,103 @@
 import type { ServerMessageGetMsg } from '@silenthill/agreement-web';
 import type { MessageContext } from '../MessageContext.js';
+import TexasGameRoomDataChat from '../../../data/TexasGameRoomDataChat.js';
 import { handleBroadcastExtra } from './BroadcastMsg.js';
+/** GetMsg extra 内层广播数据（对应 pokerqueen BroadcastMsg.Response 的结果）。 */
+interface BroadcastMsgData {
+    name?: string;
+    type?: number;
+    user_id?: number;
+    target_user_id?: number;
+    message?: string;
+    /** 1=表情（type 为 PropsID），2=文字，3=语音（对齐 Unity UIGameplayChatComponent） */
+    msgType?: number;
+    time?: number;
+    sex?: number;
+    headUrl?: string;
+    isDanmu?: boolean;
+    is_prologue?: boolean;
+}
+
+function decodeExtra(extra: Uint8Array | string): string | null {
+    try {
+        if (extra instanceof Uint8Array) {
+            return new TextDecoder('utf-8').decode(extra);
+        }
+        const bin = atob(extra.toString());
+        const u8 = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        return new TextDecoder('utf-8').decode(u8);
+    } catch (e) {
+        return null;
+    }
+}
+
+// GetMsg 1121
 export function GetMsg(data: ServerMessageGetMsg.AsObject, context: MessageContext): false {
+    const roomData = context.data;
+    // main 分支的座位实时动画路由：扔道具(600-611)→飞道具，魔法表情(≥700)→头像播 spine。
+    // 与下方“聊天面板记录”是两件事，互不冲突：魔法表情既在头像上播、也进聊天记录。
     handleBroadcastExtra(data.extra, context);
+    const json = decodeExtra(data.extra);
+    if (!json) return false;
+    let envelope: { code?: number; data?: unknown };
+    try {
+        envelope = JSON.parse(json);
+    } catch (e) {
+        return false;
+    }
+    // 1000=文字聊天/弹幕，10001=表情/道具（表情不在本次迁移范围，靠 type!==0 过滤）
+    if (envelope.code !== 1000 && envelope.code !== 10001) return false;
+    let broadcastMsg: BroadcastMsgData;
+    try {
+        broadcastMsg = typeof envelope.data === 'string' ? JSON.parse(envelope.data) : (envelope.data as BroadcastMsgData);
+    } catch (e) {
+        return false;
+    }
+    if (!broadcastMsg) return false;
+    const isSelfMessage = broadcastMsg.user_id === context.session.userID;
+    const timestamp = TexasGameRoomDataChat.normalizeTimestamp(broadcastMsg.time || Date.now());
+    // Unity 使用 GetMsg.Message 作为服务端处理后的最终文本；extra.message 只保留发送时的原文。
+    // 普通桌的屏蔽字由服务端替换，因此展示聊天和弹幕时必须优先使用顶层 message。
+    const displayMessage = data.message || broadcastMsg.message || '';
+    // 表情消息：msgType=1，type 为 PropsID（对齐 Unity UIGameplayChatComponent 判定标准）
+    if (broadcastMsg.msgType === 1 && typeof broadcastMsg.type === 'number') {
+        roomData.chat.addMessage(
+            {
+                userID: broadcastMsg.user_id,
+                name: broadcastMsg.name || '',
+                content: '',
+                headUrl: broadcastMsg.headUrl || '',
+                sex: broadcastMsg.sex || 0,
+                timestamp,
+                time: TexasGameRoomDataChat.formatTimestamp(timestamp),
+                emojiType: broadcastMsg.type
+            },
+            !isSelfMessage
+        );
+        return false;
+    }
+    // 只处理文本聊天/弹幕：type=0 且有内容
+    if (broadcastMsg.type !== 0 || !displayMessage) return false;
+    // 1019 只返回发送状态，不含屏蔽字处理后的文本；本人消息也必须使用这里的服务端最终文本。
+    if (broadcastMsg.isDanmu === true) {
+        roomData.chat.addDanmu({
+            name: broadcastMsg.name || '',
+            content: displayMessage
+        });
+        return false;
+    }
+    roomData.chat.addMessage(
+        {
+            userID: broadcastMsg.user_id,
+            name: broadcastMsg.name || '',
+            content: displayMessage,
+            headUrl: broadcastMsg.headUrl || '',
+            sex: broadcastMsg.sex || 0,
+            timestamp,
+            time: TexasGameRoomDataChat.formatTimestamp(timestamp)
+        },
+        !isSelfMessage
+    );
     return false;
 }

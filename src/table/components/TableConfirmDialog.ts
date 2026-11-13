@@ -1,3 +1,4 @@
+import { i18nMgr } from '../../i18n/i18nMgr.js';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { SpriteAtlas } from '../SpriteAtlas.js';
 import { element } from '../dom.js';
@@ -7,6 +8,9 @@ const confirmCancel = new URL('../../assets/raw/ui/confirmCancel.png', import.me
 
 export interface TableConfirmOptions {
   owner: string;
+  singleButton?: boolean;
+  longContent?: boolean;
+  highlightNumbers?: boolean;
   title?: () => string;
   message: () => string;
   cancel: () => string;
@@ -26,6 +30,7 @@ export class TableConfirmDialog {
   private current?: TableConfirmOptions;
 
   constructor() {
+    i18nMgr.register(this);
     const frame = dialogFrame();
     const body = element('div', 'mx-confirm-body');
     const textBg = element('div', 'mx-confirm-text-bg');
@@ -52,13 +57,22 @@ export class TableConfirmDialog {
 
   open(options: TableConfirmOptions): void {
     this.current = options;
+    this.cancel.hidden=!!options.singleButton;
+    this.root.classList.toggle('mx-confirm-long',!!options.longContent);
+    this.root.classList.toggle('mx-confirm-single',!!options.singleButton);
     this.title.hidden = !options.title;
     if (options.title) i18nLabel.bind(this.title, options.title);
-    i18nLabel.bind(this.message, options.message);
+    this.refreshLanguage();
     i18nLabel.bind(this.cancel, options.cancel);
     i18nLabel.bind(this.commit, options.commit);
     this.root.hidden = false;
     this.cancel.focus();
+  }
+
+  refreshLanguage():void {
+    const options=this.current;if(!options)return;
+    const text=options.message();
+    this.message.replaceChildren(...(options.highlightNumbers?text.split(/(1000)/g):[text]).map(part=>options.highlightNumbers&&part==='1000'?element('span','mx-confirm-highlight',part):document.createTextNode(part)));
   }
 
   isOpen(owner: string): boolean { return !this.root.hidden && this.current?.owner === owner; }

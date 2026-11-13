@@ -23,6 +23,12 @@ export interface RoomRecords {
         roomID: number;
         matchID: number;
     };
+    chatHistory?(older?:boolean,force?:boolean):Promise<void>;
+    sendChat?(text:string,danmu:boolean):Promise<void>;
+    chatQuickMessages?():Promise<unknown>;
+    diamondPurchase?: import('./DiamondPurchase.js').DiamondPurchase;
+    safetyGuard?():void;
+    supportChat?():Promise<void>;
     playerStats(userRID: number): Promise<Record<string, number> | null>;
     playerProfile(userRID: number): Promise<PlayerProfile | null>;
     peekPlayerProfile?(userRID: number): PlayerProfile | undefined;

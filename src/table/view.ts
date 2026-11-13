@@ -1,3 +1,5 @@
+import { TableToolsView } from './components/TableToolsView.js';
+import { TableChatView } from './components/TableChatView.js';
 import './mtt.css';
 import { MttTableStateView } from './components/MttTableStateView.js';
 import './jackpot.css';
@@ -103,6 +105,8 @@ export class TableView {
   private squid?:SquidView;
   private jackpot?:JackpotView;
   private mtt?:MttTableStateView;
+  private chat?:TableChatView;
+  private tableTools?:TableToolsView;
   private mushroomBoom?:MushroomBoomView;
   private sound = new TableSound();
   private soundControl: SoundControlView;
@@ -129,7 +133,7 @@ export class TableView {
     this.soundControl.root.hidden = true;
     const components = options.components ?? {};
     this.bringOut=new BringOutView(async amount=>{if(!options.seating?.storeChips)throw new Error('当前入口不支持带出');await options.seating.storeChips(amount);});
-    this.buyIn = new BuyInController(options.seating); this.buyInView = new BuyInView(this.buyIn);
+    this.buyIn = new BuyInController(options.seating); this.buyInView = new BuyInView(this.buyIn,options.records,this.confirmDialog);
     this.playerInfo = new PlayerInfoView(options.records, options.emojis, (userRID, remark, nickname) => {
       if (remark) this.remarkNames.set(userRID, remark); else this.remarkNames.delete(userRID);
       for (const seat of this.seatViews.values()) {
@@ -244,6 +248,7 @@ export class TableView {
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
     this.root.append(this.playerInfo.root);
     this.root.append(this.confirmDialog.root);
+    if(options.records){this.tableTools=new TableToolsView(options.records,()=>void this.buyIn.open(0));this.root.append(this.tableTools.root);}
     const specialOperations = options.specialOperations ?? options.records;
     if (specialOperations && options.seating) {
       this.secondPcs = new AgreeSecondPcsView(specialOperations, options.seating, error => this.toast.show(error));
@@ -252,6 +257,7 @@ export class TableView {
       this.stage.append(this.squid.root);
       this.jackpot=new JackpotView(specialOperations.data,()=>options.records?.openJackpot?.(),()=>queueMicrotask(()=>{if(this.root.isConnected)this.resizeTable();}));
       this.stage.append(this.jackpot.root);
+      if(options.records){this.chat=new TableChatView(options.records,e=>this.toast.show(e));this.root.append(this.chat.button,this.chat.support,this.chat.dialog.root,this.chat.danmu.root);}
       if(options.records?.data.mtt){this.mtt=new MttTableStateView(options.records,e=>this.toast.show(e),()=>this.refreshRoomInfo());this.stage.append(this.mtt.root);}
       this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
       this.root.append(this.mushroomBoom.guide.surface.root);
@@ -312,11 +318,14 @@ export class TableView {
     this.controls.render(state);
     this.settlementWatch.render(state);
     this.menu.render(state);
+    this.tableTools?.render(state);
     this.allInTest?.update(state);
   }
   private resizeTable(): void {
     const box = this.root.getBoundingClientRect();
     if (box.width <= 0 || box.height <= 0) return;
+    this.chat?.resize(box.width,box.height);
+    this.root.style.setProperty('--mx-chat-unit',`${box.width/1440}px`);
     this.personalSettings.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
@@ -393,6 +402,8 @@ export class TableView {
     this.insurance?.destroy();
     this.squid?.destroy();
     this.mushroomBoom?.destroy();
+    this.chat?.destroy();
+    this.tableTools?.destroy();
     this.jackpot?.destroy();
     this.mtt?.destroy();
     this.appearanceGeneration++;

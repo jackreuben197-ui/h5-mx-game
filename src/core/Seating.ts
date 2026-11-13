@@ -1,6 +1,7 @@
 export interface BuyInWallet { club_id: number; gold: number; club_name: string; club_random_id?: number; club_logo?: string; }
 export interface BuyInQuote {
-  funding?: 'wallet' | 'score';
+  funding?: 'wallet' | 'score' | 'diamond';
+  diamondBalance?: number;
   scoreClubID?: number;
   mode?: 'sit' | 'add';
   id: number; seat: number; roomName: string; smallBlind: number;

@@ -1,0 +1,9 @@
+{
+  "send.png": "assets/textures/dialog/chat/send.png",
+  "quick.png": "assets/textures/dialog/chat/chat.png",
+  "bubble.png": "assets/textures/dialog/chat/chatMsgBg.png",
+  "input.png": "assets/textures/dialog/bg/input_bg.png",
+  "panel.png": "assets/textures/dialog/bg/dialog_bg1_fix.png",
+  "support-bg.png": "assets/textures/scene/table/other/table_bg_im.png",
+  "support.png": "assets/textures/scene/table/icon/table_icon_im.png"
+}

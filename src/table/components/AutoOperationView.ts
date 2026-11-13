@@ -12,6 +12,7 @@ export class AutoOperationView {
   readonly root=element('div','mx-auto-operation');
   private buttons=new Map<Choice,HTMLButtonElement>();
   private selected?:Choice;
+  private state?:TableSnapshot;
   private roundKey='';
   private attemptedTurn='';
   constructor(private command:(action:Action,amount?:number)=>Promise<void>){
@@ -23,19 +24,17 @@ export class AutoOperationView {
     this.root.hidden=true;
   }
   render(s:TableSnapshot):void{
+    this.state=s;
     const key=`${s.roomID}:${s.handNum}:${s.community.length}`;
     if(key!==this.roundKey){this.roundKey=key;this.selected=undefined;this.attemptedTurn='';}
     const mine=s.players.find(p=>p.seat===s.mySeat);
     const eligible=!!mine&&s.handNum>0&&!s.handEnded&&!mine.folded&&mine.chips>0&&mine.cards.length>0&&!s.willStandup;
     this.root.hidden=!eligible||!!s.actions.length;
     if(!eligible){this.selected=undefined;this.paint();return;}
-    const {choice:right,amount}=validAutoRight(s.roundBet??0,mine!);
+    const {choice:right}=validAutoRight(s.roundBet??0,mine!);
     for(const [choice,button] of this.buttons){
       button.hidden=choice!=='fold'&&choice!==right;
-      const label=choice==='fold'?i18nMgr.Get('UITexas_fold',[], '弃牌'):
-        choice==='check'?i18nMgr.Get('UITexas_check',[],'过牌'):
-        choice==='call'?i18nMgr.Get('UITexas_call',[],'跟注'):i18nMgr.Get('adaptation30074',[],'全下');
-      i18nLabel.bind(button,()=>`${label}${choice==='call'||choice==='allin'?` ${ChipFormatter.format(amount,s.smallBlind,s.showBB)}`:''}`);
+
     }
     if(this.selected&&this.selected!=='fold'&&this.selected!==right)this.selected=undefined;
     this.paint();
@@ -51,6 +50,10 @@ export class AutoOperationView {
   private paint():void{
     for(const [choice,button] of this.buttons){
       const selected=this.selected===choice;
+      const keys={fold:'UITexas_autoFlod',check:'UITexas_autoCheck',call:'UITexas_autoCall',allin:'UITexas_autoAllin'};
+      const s=this.state,mine=s?.players.find(p=>p.seat===s.mySeat);
+      const value=s&&mine?validAutoRight(s.roundBet??0,mine).amount:0;
+      i18nLabel.bind(button,()=>`${selected&&(choice==='call'||choice==='allin')&&s?ChipFormatter.format(value,s.smallBlind,s.showBB)+'\n':''}${i18nMgr.Get(keys[choice])}`);
       button.setAttribute('aria-pressed',String(selected));
       SpriteAtlas.paint(button,choice==='fold'?(selected?'autoFoldOn':'autoFoldOff'):choice==='call'?(selected?'autoCallOn':'autoCallOff'):(selected?'autoOn':'autoOff'));
     }

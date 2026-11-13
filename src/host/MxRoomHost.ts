@@ -1,3 +1,6 @@
+import { UserUsdtOrderNotify } from '../net/messages/other/UserUsdtOrderNotify.js';
+import { RoomPanelCache } from '../logic/RoomPanelCache.js';
+import type { BuyInWallet } from '../core/Seating.js';
 import { MttRoomLifecycle } from '../logic/MttRoomLifecycle.js';
 import { EnterRoomRequest } from '../net/requests/EnterRoomRequest.js';
 import { GameplayTableSettingDataProvider } from '../logic/GameplayTableSettingDataProvider.js';
@@ -55,6 +58,7 @@ interface RoomContext {
   pendingTurn?: string;
   walletClubID?: number;
   quote?: BuyInQuote;
+  panelFunds?: RoomPanelCache<{wallet:BuyInWallet;diamondBalance?:number}>;
   seatingBusy?: boolean;
   agreedPost?: string;
   showdownPending?: boolean;
@@ -203,12 +207,17 @@ export class MxRoomHost implements RoomHost {
     const c=this.current;
     if(!c?.entered || c.signal.aborted || !this.pb)return;
     if(!this.records || this.records.data!==this.roomData)
-      this.records=new RoomRecordsService(this.roomData,c.target,this.session.userRID,this.client,this.pb,this.http,c.signal,this.transport,{global:this.globalConfig,diamonds:this.diamonds,privateUc:this.privateUc});
+      this.records=new RoomRecordsService(this.roomData,c.target,this.session.userRID,this.client,this.pb,this.http,c.signal,this.transport,{global:this.globalConfig,diamonds:this.diamonds,privateUc:this.privateUc},this.session);
     return this.records;
   }
   private warmRoomPanels(context: RoomContext, refreshProps = false): void {
     if (this.current !== context || context.signal.aborted || !context.entered) return;
     void this.getRecords()?.jackpotFeature.preload();
+    void this.getRecords()?.preloadPanels(refreshProps);
+    if(!context.target.matchID){
+      if(refreshProps)context.panelFunds?.invalidate();
+      void this.panelFunds(context).get().catch(()=>{});
+    }
     const playerIDs = this.roomData.snapshot?.playersList.filter(player => player.seatId > 0).map(player => player.userRid) ?? [];
     void this.getRecords()?.prefetchPlayers(playerIDs).catch(error => {
       if (!(error instanceof Error && error.name === 'AbortError')) console.warn('[MX player profile] Prefetch failed', error);
@@ -223,6 +232,10 @@ export class MxRoomHost implements RoomHost {
       type: 'fail',
       message: error instanceof Error ? error.message : '房间同步失败',
     });
+  }
+  private async diamondBalance(signal:AbortSignal):Promise<number>{
+    const result=await this.http.request<{diamonds_wallet?:{diamonds?:number}}>('/api/user/user_diamonds_wallet',{}, {signal});
+    return Number(result.diamonds_wallet?.diamonds??0);
   }
   async refreshUser(signal?: AbortSignal): Promise<void> {
     const { user } = await new UserInfoRequest(this.http).execute(signal);
@@ -306,6 +319,17 @@ export class MxRoomHost implements RoomHost {
   }
   private receive(packet: Packet): void {
     const context = this.current;
+    if(context?.entered&&!context.signal.aborted&&this.pb&&packet.code===this.pb.Code.MSG_S_USER_USDT_ORDER_NOTIFY){
+      const notice=this.pb.ServerMessageUserUsdtOrderNotify.deserializeBinary(packet.body).toObject();
+      const service=this.getRecords()?.diamondPurchase;
+      if(service&&UserUsdtOrderNotify(notice,service)){
+        context.panelFunds?.invalidate();
+        const keys:Record<number,string>={2:'UIClub_Text88',3:'UIClub_Text89',4:'UIClub_DoneCancel',5:'UIClub_Done3'};
+        this.transport.send('showToast',{type:notice.status===2?'success':'fail',message:i18nMgr.Get(keys[notice.status]!)});
+        void service.catalog().catch(()=>{});
+      }
+      return;
+    }
     if(context&&!context.signal.aborted&&this.mttLifecycle?.global(packet))return;
     if (
       !context ||
@@ -523,32 +547,37 @@ export class MxRoomHost implements RoomHost {
     this.roomData.tableSettings.roomPermissions=permissions;
     const info = this.roomData.snapshot!.roomInfo!;
     const score = this.roomData.record?.goldType === 3;
-    if(!score && this.roomData.record?.goldType !== 1) throw new Error('当前钱包类型的带入流程尚未接入');
+    const diamond = this.roomData.record?.goldType === 4;
+    const direct = score || diamond;
+    const diamondBalance = diamond ? await this.diamondBalance(signal) : undefined;
+    signal.throwIfAborted();
+    if(this.seatContext(target,seat)!==c)throw new Error('房间会话已更换');
+    if(!direct && this.roomData.record?.goldType !== 1) throw new Error('当前钱包类型的带入流程尚未接入');
     // CC restricts wallets to the entry club only in channel packages.
     // A normal alliance table may be funded by a different member club.
     const channelClubID = this.globalConfig.isChannelDiamondFreeMode ? (target.clubID || this.roomData.record!.clubId) : 0;
     const wallets = (result.wallet ?? []).filter(w => !this.globalConfig.isChannelDiamondFreeMode || (channelClubID > 0 && w.club_id === channelClubID));
-    if(!score && !wallets.length) throw new Error('未找到可用的支付钱包');
+    if(!direct && !wallets.length) throw new Error('未找到可用的支付钱包');
     const last = result.last_bring_out;
-    const compatible = last && (score || wallets.some(w => w.club_id === last.club_id)) ? last : undefined;
+    const compatible = last && (direct || wallets.some(w => w.club_id === last.club_id)) ? last : undefined;
     // CC Sitdown return-table branch: bring out plus fee, less deposit must be positive.
     const returnAmount = compatible && compatible.to_wallet + compatible.fee - info.deposit > 0
       ? compatible.to_wallet + compatible.fee : undefined;
     const bringToTable = returnAmount === undefined ? 0 : returnAmount - info.deposit;
     const autoReturn = returnAmount !== undefined && (
-      score || info.retainType === 0 || info.retainType === 2 ||
+      direct || info.retainType === 0 || info.retainType === 2 ||
       (info.retainType === 1 && bringToTable >= info.limitRetainMinRate * info.smallBlind * 2)
     );
-    if(!score && returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
+    if(!direct && returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
       throw new Error('钱包余额不足以返场');
     if(info.antiCheatType === 3 || info.antiCheatType === 4) throw new Error('视频/人脸验证桌的坐下流程尚未接入');
     const limits = new BringInRules(info).caculateCanBringMinMax();
     const min = returnAmount ?? limits.minAmount, max = returnAmount ?? limits.maxAmount;
     if(!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min < 0 || max < min || limits.step <= 0)
       throw new Error('当前带入范围无效');
-    const quote: BuyInQuote = { funding:score?'score':'wallet',scoreClubID:score?(compatible?.club_id ?? (wallets.length===1?wallets[0]!.club_id:target.clubID ?? this.roomData.record!.clubId)):undefined,id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
-      min,max,step:limits.step,wallets,deposit:limits.needDeposit ? info.deposit : 0,returnOrNew:result.return_table && (!last || compatible) ? 1 : 0,returnAmount,returnClubID:returnAmount !== undefined ? compatible?.club_id : undefined,
-      canAuto:!score && info.retainType === 0 && returnAmount === undefined,autoReturn,
+    const quote: BuyInQuote = { funding:diamond?'diamond':score?'score':'wallet',diamondBalance,scoreClubID:direct?(compatible?.club_id ?? (diamond?0:wallets.length===1?wallets[0]!.club_id:target.clubID ?? this.roomData.record!.clubId)):undefined,id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
+      min,max,step:limits.step,wallets:direct?[]:wallets,deposit:limits.needDeposit ? info.deposit : 0,returnOrNew:result.return_table && (!last || compatible) ? 1 : 0,returnAmount,returnClubID:returnAmount !== undefined ? compatible?.club_id : undefined,
+      canAuto:!direct && info.retainType === 0 && returnAmount === undefined,autoReturn,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType >= 2} };
     c.quote = quote;
     return structuredClone(quote);
@@ -562,14 +591,18 @@ export class MxRoomHost implements RoomHost {
       const limits=new BringInRules(info,mine.totalChips,this.roomData.snapshot!.playersList.find(p=>p.seatId===q.seat)?.deposit??0).caculateCanBringMinMax();
       if(selection.amount<limits.minAmount||selection.amount>limits.maxAmount)throw new Error('带入范围已改变，请重新打开');
     } else this.seatContext(target, q.seat);
+    c.panelFunds?.invalidate();
     const wallet = q.wallets.find(w => w.club_id === selection.clubID);
-    if((q.funding==='score' ? selection.clubID!==(q.returnClubID??q.scoreClubID??0) : !wallet) || (q.returnClubID !== undefined && q.returnClubID !== selection.clubID)) throw new Error('支付钱包已变更');
+    if((q.funding==='score'||q.funding==='diamond' ? selection.clubID!==(q.returnClubID??q.scoreClubID??0) : !wallet) || (q.returnClubID !== undefined && q.returnClubID !== selection.clubID)) throw new Error('支付钱包已变更');
     if(!Number.isSafeInteger(selection.amount) || selection.amount < q.min || selection.amount > q.max ||
        (selection.amount !== q.max && (selection.amount-q.min)%q.step !== 0)) throw new Error('带入金额超出范围');
     if(selection.autoAmount !== 0 && (!q.canAuto || !Number.isSafeInteger(selection.autoAmount) || selection.autoAmount < q.min || selection.autoAmount > q.max))
       throw new Error('自动补充金额无效');
     c.seatingBusy = true;
     try {
+      if(q.funding==='diamond' && !q.autoReturn && !this.globalConfig.isChannelDiamondFreeMode && selection.amount > await this.diamondBalance(signal)*100)throw new Error(i18nMgr.Get('UISend_diamondsNo'));
+      signal.throwIfAborted();
+      if(this.seatContext(target)!==c || c.quote!==q)throw new Error('带入信息已失效');
       if(q.mode==='add') {
         await new BringInRequest(this.client,this.pb!).execute(target,selection.amount,!!this.roomData.record?.limitBringIn,signal);
         c.quote=undefined;
@@ -586,12 +619,22 @@ export class MxRoomHost implements RoomHost {
         // Seated has already updated the authority and emitted the live seat move,
         // just as CC does. Immediate SyncEnter would cancel that move before the
         // buy-in dialog closes. Keep the existing add-chips reconciliation only.
-        if(q.mode==='add') await this.sync();
+        if(q.mode==='add') {
+          c.panelFunds?.invalidate();this.records?.diamondPurchase.invalidate();
+          await this.sync();
+        }
       }
     } catch(error) {
       if(this.current === c && !signal.aborted) { c.quote = undefined; void this.sync().catch(e=>this.report(e)); }
       throw error;
     } finally { c.seatingBusy = false; }
+  }
+  private panelFunds(c:RoomContext):RoomPanelCache<{wallet:BuyInWallet;diamondBalance?:number}>{
+    return c.panelFunds??=new RoomPanelCache(async()=>{
+      const diamond=this.roomData.record?.goldType===4;
+      const [,wallet,balance]=await Promise.all([this.refreshUser(c.signal),diamond?Promise.resolve({club_id:0,gold:0,club_name:''}):new RoomWalletRequest(this.http).execute(c.target.roomID,c.signal),diamond?this.diamondBalance(c.signal):Promise.resolve(undefined)]);
+      return {wallet,diamondBalance:balance};
+    },c.signal);
   }
   private async prepareBringIn(target: RoomTarget, signal: AbortSignal): Promise<BuyInQuote> {
     const c=this.seatContext(target);
@@ -599,16 +642,18 @@ export class MxRoomHost implements RoomHost {
     const seat=this.roomData.snapshot?.myInfo?.seatId;
     if(!seat)throw new Error('请先坐下');
     c.quote=undefined;
-    const [,wallet]=await Promise.all([this.refreshUser(signal),new RoomWalletRequest(this.http).execute(target.roomID,signal)]);
+    const {wallet,diamondBalance}=await this.panelFunds(c).get();
     signal.throwIfAborted();
     if(this.seatContext(target)!==c||this.roomData.snapshot?.myInfo?.seatId!==seat)throw new Error('座位已变更');
     const info=this.roomData.snapshot.roomInfo!,mine=this.roomData.snapshot.myInfo!,player=this.roomData.snapshot.playersList.find(p=>p.seatId===seat);
     const limits=new BringInRules(info,mine.totalChips,player?.deposit??0).caculateCanBringMinMax();
     if(limits.maxAmount<limits.minAmount||limits.step<=0)throw new Error('已达到当前最大带入额度');
-    const score=this.roomData.record?.goldType===3;
-    const q:BuyInQuote={funding:score?'score':'wallet',scoreClubID:score?(wallet?.club_id??c.walletClubID??target.clubID??this.roomData.record!.clubId):undefined,mode:'add',id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
-      min:limits.minAmount,max:limits.maxAmount,step:limits.step,wallets:score?[]:[wallet],returnOrNew:0,
-      deposit:limits.needDeposit?info.deposit-(player?.deposit??0):0,canAuto:!score&&info.retainType===0,
+    const score=this.roomData.record?.goldType===3,diamond=this.roomData.record?.goldType===4,direct=score||diamond;
+    signal.throwIfAborted();
+    if(this.seatContext(target)!==c)throw new Error('房间会话已更换');
+    const q:BuyInQuote={funding:diamond?'diamond':score?'score':'wallet',diamondBalance,scoreClubID:direct?(wallet?.club_id??c.walletClubID??target.clubID??this.roomData.record!.clubId):undefined,mode:'add',id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
+      min:limits.minAmount,max:limits.maxAmount,step:limits.step,wallets:direct?[]:[wallet],returnOrNew:0,
+      deposit:limits.needDeposit?info.deposit-(player?.deposit??0):0,canAuto:!direct&&info.retainType===0,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType>=2}};
     c.quote=q;return structuredClone(q);
   }

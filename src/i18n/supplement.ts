@@ -1,5 +1,18 @@
 // MX-only UI strings missing from the shared CC language package.
 export const supplement: Record<string, Record<string, string>> = {
+  MX_Pay:{cn:'支付',zh:'支付',en:'Pay',pt:'Pagar'},
+  MX_DiamondTraderOnly:{cn:'批发商专属',zh:'批發商專屬',en:'Wholesaler only',pt:'Exclusivo para atacadistas'},
+  MX_Recommended:{cn:'推荐',zh:'推薦',en:'Recommended',pt:'Recomendado'},
+  MX_DiamondTraderPay:{cn:'支付1000钻石',zh:'支付1000鑽石',en:'Pay 1,000 diamonds',pt:'Pagar 1.000 diamantes'},
+  MX_AddressCopied:{cn:'复制成功',zh:'複製成功',en:'Address copied',pt:'Endereço copiado'},
+  MX_AddressCopyFailed:{cn:'复制失败，请长按地址复制',zh:'複製失敗，請長按地址複製',en:'Copy failed. Select the address to copy it.',pt:'Não foi possível copiar. Selecione o endereço.'},
+  MX_CopyAddress:{cn:'复制地址',zh:'複製地址',en:'Copy address',pt:'Copiar endereço'},
+  MX_DiamondTraderTerms:{cn:'1、钻石批发商申请费为1000钻石，审核被拒后退还；\n2、申请通过后，需在60天内购买批发商专属钻石，否则资格将失效；\n3、批发商资格失效或者审批被拒需重新付费1000钻石申请；\n4、申请后，我们将通过系统消息联系您，请留意消息',zh:'申請費為1000鑽石，審核被拒後退還。通過後60天內須購買批發商專屬鑽石，否則資格失效；失效或被拒後重新申請須再次付費。請留意系統消息。',en:'Application costs 1,000 diamonds, refunded if rejected. Buy wholesaler diamonds within 60 days of approval to keep eligibility. Reapplication after expiration or rejection costs 1,000 diamonds. Watch system messages for updates.',pt:'A inscrição custa 1.000 diamantes, devolvidos se recusada. Após aprovação, compre diamantes exclusivos em 60 dias para manter a elegibilidade. Uma nova inscrição custa 1.000 diamantes. Acompanhe as mensagens do sistema.'},
+  MX_Chat: {cn:'聊天',zh:'聊天',en:'Chat',pt:'Chat'},
+  MX_Support: {cn:'客服',zh:'客服',en:'Support',pt:'Suporte'},
+  MX_ChatSend: {cn:'发送',zh:'發送',en:'Send',pt:'Enviar'},
+  MX_ChatQuick: {cn:'快捷语',zh:'快捷語',en:'Quick messages',pt:'Mensagens rápidas'},
+  MX_ChatAndDanmu: {cn:'同时发送弹幕',zh:'聊天+彈幕',en:'Chat + overlay',pt:'Chat + sobreposição'},
   MX_Close: {"cn": "关闭", "zh": "關閉", "en": "Close", "pt": "Fechar"},
   MX_Retry: {"cn": "重试", "zh": "重試", "en": "Retry", "pt": "Tentar novamente"},
   MX_AverageProfit: {"cn": "场均盈亏", "zh": "場均盈虧", "en": "Average profit", "pt": "Lucro médio"},

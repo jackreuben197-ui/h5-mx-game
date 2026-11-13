@@ -1,0 +1,247 @@
+import { EventSource } from '../binding/EventSource.js';
+import { observable } from '../binding/observable.js';
+import type { ProtocolRoomData } from './ProtocolRoomData.js';
+/** 单条聊天记录（对应 pokerqueen ChatManager.ChatMsgData）。 */
+export interface TexasChatMessage {
+    id?: number;
+    userID?: number;
+    name: string;
+    content: string;
+    headUrl: string;
+    sex: number;
+    timestamp: number;
+    /** 已格式化的 HH:mm 展示时间 */
+    time: string;
+    /**
+     * 表情消息的原始 type（Unity PropsID：500-509 免费表情 / 700-726 魔法表情）。
+     * 有值则为表情消息（msgType=1），undefined 为文字消息。
+     */
+    emojiType?: number;
+}
+
+export interface TexasDanmuMessage {
+    name: string;
+    content: string;
+}
+
+/**
+ * 牌桌聊天数据（对应 pokerqueen ChatManager 的缓存职责）。
+ *
+ * 数据来源：
+ *  - 实时：GetMsg(1121) 消息层解析服务端最终文本后 addMessage（包括本人消息）
+ *  - 若服务端不向发送者推送 1121，则在 1019 成功后由聊天视图同步最新服务端历史
+ */
+export default class TexasGameRoomDataChat extends EventSource {
+    public static readonly MESSAGE_ADDED = 'MESSAGE_ADDED';
+    public static readonly OUTGOING_TEXT_CONFIRMED = 'OUTGOING_TEXT_CONFIRMED';
+    public static readonly HISTORY_PAGE_MERGED = 'HISTORY_PAGE_MERGED';
+    public static readonly HISTORY_RESET = 'HISTORY_RESET';
+    public static readonly DANMU_ADDED = 'DANMU_ADDED';
+    public static readonly NEW_MESSAGE_ALERT_CHANGED = 'NEW_MESSAGE_ALERT_CHANGED';
+    public readonly roomData: ProtocolRoomData;
+    private _messages: TexasChatMessage[] = [];
+    private _pendingMessage: TexasChatMessage | null = null;
+    private _latestHistoryRevision = 0;
+    private _syncedHistoryRevision = 0;
+    private _chatDialogOpen: boolean = false;
+    private _historyInitialized: boolean = false;
+    private _historyLoading: boolean = false;
+    private _hasMoreHistory: boolean = true;
+    private _oldestHistoryID: number | null = null;
+    private _historyPrologueResolved: boolean = false;
+    /** 俱乐部开场白缓存（服务端后续同步可能不再返回） */
+    public prologue: string | null = null;
+    @observable(TexasGameRoomDataChat.NEW_MESSAGE_ALERT_CHANGED)
+    public hasNewMessageAlert: boolean = false;
+
+    constructor(roomData: ProtocolRoomData) {
+        super();
+        this.roomData = roomData;
+    }
+
+    /** 当前时间的 HH:mm 展示串 */
+    public static formatNowTime(): string {
+        return TexasGameRoomDataChat.formatTimestamp(Date.now());
+    }
+
+    public static normalizeTimestamp(time: number | string): number {
+        if (typeof time === 'number' && Number.isFinite(time) && time > 0) {
+            return time > 1e12 ? time : time * 1000;
+        }
+        if (typeof time === 'string' && time.length > 0) {
+            const numeric = Number(time);
+            if (Number.isFinite(numeric) && numeric > 0) {
+                return numeric > 1e12 ? numeric : numeric * 1000;
+            }
+            const parsed = Date.parse(time);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+        return 0;
+    }
+
+    /** 时间戳（秒或毫秒）或已格式化字符串 → HH:mm */
+    public static formatTimestamp(time: number | string): string {
+        const ms = TexasGameRoomDataChat.normalizeTimestamp(time);
+        if (ms > 0) {
+            const d = new Date(ms);
+            return `${d.getHours()}`.padStart(2, '0') + ':' + `${d.getMinutes()}`.padStart(2, '0');
+        }
+        return typeof time === 'string' ? time : '';
+    }
+
+    public get messages(): ReadonlyArray<TexasChatMessage> {
+        return this._messages;
+    }
+    public get historyInitialized(): boolean {
+        return this._historyInitialized;
+    }
+    public get historyLoading(): boolean {
+        return this._historyLoading;
+    }
+    public get hasMoreHistory(): boolean {
+        return this._hasMoreHistory;
+    }
+    public get oldestHistoryID(): number | null {
+        return this._oldestHistoryID;
+    }
+    public get latestHistoryRevision(): number {
+        return this._latestHistoryRevision;
+    }
+    public get needsLatestHistorySync(): boolean {
+        return this._syncedHistoryRevision < this._latestHistoryRevision;
+    }
+
+    public beginHistoryLoad(loadOlder: boolean, forceLatest: boolean = false): boolean {
+        if (this._historyLoading) return false;
+        if (loadOlder) {
+            if (!this._historyInitialized || !this._hasMoreHistory || this._oldestHistoryID === null) return false;
+        } else if (this._historyInitialized && !forceLatest) {
+            return false;
+        }
+        this._historyLoading = true;
+        return true;
+    }
+
+    public failHistoryLoad(): void {
+        this._historyLoading = false;
+    }
+
+    public setDefaultPrologue(prologue: string | null): void {
+        if (this._historyPrologueResolved) return;
+        this.prologue = prologue;
+    }
+
+    public resetHistory(): void {
+        this._messages.length = 0;
+        this._pendingMessage = null;
+        this._latestHistoryRevision = 0;
+        this._syncedHistoryRevision = 0;
+        this._historyInitialized = false;
+        this._historyLoading = false;
+        this._hasMoreHistory = true;
+        this._oldestHistoryID = null;
+        this._historyPrologueResolved = false;
+        this.prologue = null;
+        this.hasNewMessageAlert = false;
+        this._notifyHistoryReset();
+    }
+
+    private _notifyHistoryReset(): void { this.emit(TexasGameRoomDataChat.HISTORY_RESET); }
+
+    public setPendingMessage(msg: TexasChatMessage): void {
+        this._pendingMessage = msg;
+    }
+
+    /** 1019 不含过滤文本：表情可本地确认，文字则通知视图同步服务端最新记录。 */
+    public confirmPendingMessage(status: number): void {
+        const pending = this._pendingMessage;
+        this._pendingMessage = null;
+        if (status !== 0 || !pending) return;
+        if (pending.emojiType !== undefined) {
+            this.addMessage(pending);
+            return;
+        }
+        this._latestHistoryRevision++;
+        this._notifyOutgoingTextConfirmed();
+    }
+
+    private _notifyOutgoingTextConfirmed(): void { this.emit(TexasGameRoomDataChat.OUTGOING_TEXT_CONFIRMED); }
+
+    public markLatestHistorySynced(revision: number): void {
+        this._syncedHistoryRevision = Math.max(this._syncedHistoryRevision, revision);
+    }
+
+    public setChatDialogOpen(open: boolean): void {
+        this._chatDialogOpen = open;
+        if (open) {
+            this.hideNewMessageAlert();
+        }
+    }
+
+    public hideNewMessageAlert(): void {
+        this.hasNewMessageAlert = false;
+    }
+
+    public addMessage(msg: TexasChatMessage, showAlert: boolean = false): void {
+        if (this._messages.some(current => this._isSameMessage(current, msg))) return;
+        this._messages.push(msg);
+        if (showAlert && !this._chatDialogOpen) {
+            this.hasNewMessageAlert = true;
+        }
+        this._notifyMessageAdded(msg);
+    }
+
+    private _notifyMessageAdded(msg: TexasChatMessage): void { this.emit(TexasGameRoomDataChat.MESSAGE_ADDED, msg); }
+
+    public addDanmu(msg: TexasDanmuMessage): void { this.emit(TexasGameRoomDataChat.DANMU_ADDED, msg); }
+
+    public mergeHistoryPage(
+        history: TexasChatMessage[],
+        prologue: string | null,
+        prologueFromHistory: boolean,
+        pageOldestID: number | null,
+        hasMore: boolean,
+        initial: boolean
+    ): void {
+        const previousOldestID = this._oldestHistoryID;
+        if (prologueFromHistory) {
+            this.prologue = prologue;
+            this._historyPrologueResolved = true;
+        } else if (!this._historyPrologueResolved && prologue !== null) {
+            this.prologue = prologue;
+        }
+        const added: TexasChatMessage[] = [];
+        for (const msg of history) {
+            if (!this._messages.some(current => this._isSameMessage(current, msg))) {
+                this._messages.push(msg);
+                added.push(msg);
+            }
+        }
+        this._messages.sort(TexasGameRoomDataChat._compareMessage);
+        added.sort(TexasGameRoomDataChat._compareMessage);
+        this._historyLoading = false;
+        this._historyInitialized = true;
+        if (pageOldestID !== null) {
+            this._oldestHistoryID = previousOldestID === null ? pageOldestID : Math.min(previousOldestID, pageOldestID);
+        }
+        const cursorAdvanced = initial || (pageOldestID !== null && (previousOldestID === null || pageOldestID < previousOldestID));
+        this._hasMoreHistory = hasMore && pageOldestID !== null && cursorAdvanced;
+        this._notifyHistoryPageMerged(added, initial);
+    }
+
+    private _notifyHistoryPageMerged(added: TexasChatMessage[], initial: boolean): void { this.emit(TexasGameRoomDataChat.HISTORY_PAGE_MERGED, added, initial); }
+
+    private _isSameMessage(a: TexasChatMessage, b: TexasChatMessage): boolean {
+        if (a.id !== undefined && b.id !== undefined) {
+            return a.id === b.id;
+        }
+        if (a.timestamp <= 0 || b.timestamp <= 0 || a.timestamp !== b.timestamp) return false;
+        return a.userID === b.userID && a.content === b.content && a.emojiType === b.emojiType;
+    }
+
+    private static _compareMessage(a: TexasChatMessage, b: TexasChatMessage): number {
+        if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+        if (a.id !== undefined && b.id !== undefined) return a.id - b.id;
+        return 0;
+    }
+}

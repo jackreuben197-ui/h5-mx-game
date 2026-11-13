@@ -24,7 +24,7 @@ export class BuyInController {
         if(generation === this.generation) this.data.update({quote:undefined,busy:false});
         return;
       }
-      this.data.update({quote,amount:quote.min,clubID:quote.returnClubID ?? quote.scoreClubID ?? quote.wallets[0]?.club_id ?? 0,auto:false,step:quote.funding==='score' || quote.mode === 'add' || quote.returnAmount !== undefined ? 'amount' : 'security'});
+      this.data.update({quote,amount:quote.min,clubID:quote.returnClubID ?? quote.scoreClubID ?? quote.wallets[0]?.club_id ?? 0,auto:false,step:quote.funding==='score' || quote.funding==='diamond' || quote.mode === 'add' || quote.returnAmount !== undefined ? 'amount' : 'security'});
     } catch(error) { if(generation === this.generation) this.data.update({step:'loading',busy:false,error:error instanceof Error ? error.message : '带入信息获取失败'}); }
     finally { this.preparing = false; }
   }

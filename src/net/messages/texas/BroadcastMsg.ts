@@ -3,6 +3,7 @@ import type { MessageContext } from '../MessageContext.js';
 import { BroadcastCode, getMagicEmojiTypeBase, getThrowPropTypeBase, PropsID } from '../../../logic/BroadcastCode.js';
 /** CC 1019 confirms the pending self animation; never play optimistically. */
 export function BroadcastMsg(data: ServerMessageBroadcastMsg.AsObject, context: MessageContext): false {
+    context.data.chat.confirmPendingMessage(data.status);
     context.data.emoji.confirmPendingEmoji(data.status, userID => !!context.data.snapshot?.playersList.some(p => p.userRid === userID && p.seatId > 0));
     context.data.emoji.confirmPendingThrowProp(data.status, userID => !!context.data.snapshot?.playersList.some(p => p.userRid === userID && p.seatId > 0));
     return false;

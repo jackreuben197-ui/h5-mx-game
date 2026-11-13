@@ -1,3 +1,7 @@
+import { RoomPanelCache } from './RoomPanelCache.js';
+import { DiamondPurchaseService } from './DiamondPurchaseService.js';
+import { TableChatService } from './TableChatService.js';
+import type { HostSessionData } from '../data/HostSessionData.js';
 import { JackpotService } from './JackpotService.js';
 import type { GlobalConfigStore } from '../data/GlobalConfigStore.js';
 import type { DiamondModel } from '../data/DiamondModel.js';
@@ -21,6 +25,11 @@ import { PublicReplayRequest } from '../net/requests/PublicReplayRequest.js';
 import { ReplayStorage } from '../host/ReplayStorage.js';
 import type { HostTransport } from '../host/HostTransport.js';
 export class RoomRecordsService implements RoomRecords {
+    readonly diamondPurchase:DiamondPurchaseService;
+    private safetyTask?:Promise<void>;
+    private safetyUpdated=0;
+    private supportWallet?:RoomPanelCache<{club_id?:number}>;
+    private chatService?:TableChatService;
     readonly jackpotFeature: JackpotService;
     private roomersTask?: Promise<void>;
     private profiles = new Map<number, PlayerProfile>();
@@ -32,9 +41,50 @@ export class RoomRecordsService implements RoomRecords {
         global: GlobalConfigStore;
         diamonds: DiamondModel;
         privateUc: PrivateUcChargeStore;
-    }) {
+    },session?:HostSessionData) {
+        this.diamondPurchase=new DiamondPurchaseService(http,signal);
+        if(session)this.chatService=new TableChatService(data,target,session,client,pb,http,signal);
         this.jackpotFeature=new JackpotService(data,http,transport,signal);
         this.storage = new ReplayStorage(transport, userRID, target.roomID, target.matchID);
+    }
+    chatHistory(older=false,force=false):Promise<void>{return this.chatService?.history(older,force)??Promise.resolve();}
+    sendChat(text:string,danmu:boolean):Promise<void>{return this.chatService?.send(text,danmu)??Promise.resolve();}
+    chatQuickMessages():Promise<unknown>{return this.chatService?.quickMessages()??Promise.resolve([]);}
+    async preloadPanels(refresh=false):Promise<void>{
+        if(refresh)this.diamondPurchase.invalidate();
+        await Promise.allSettled([this.diamondPurchase.catalog(),this.prefetchSafety(),this.supportClub(),this.chatQuickMessages()]);
+    }
+    private supportClub():Promise<{club_id?:number}>{
+        if(this.data.record?.goldType!==1)return Promise.resolve({club_id:this.data.record?.clubId});
+        this.supportWallet??=new RoomPanelCache(()=>this.http.request(`/api/user/room/bringin/${this.target.roomID}`,{}, {signal:this.signal}),this.signal);
+        return this.supportWallet.get();
+    }
+    private prefetchSafety():Promise<void>{
+        const tribeId=this.data.record?.tribeId??0;
+        if(!tribeId||Date.now()-this.safetyUpdated<30000)return Promise.resolve();
+        if(this.safetyTask)return this.safetyTask;
+        return this.safetyTask=this.http.request<{data:{id:number;user_name:string;user_avatar:string;create_time:number|string;public_reason:string}[];total:number}>('/api/org/tribe/black/user/list',{offset:0,limit:100,tribe_id:tribeId},{signal:this.signal}).then(result=>{
+            this.signal.throwIfAborted();
+            const users=(result.data??[]).map(r=>{const numeric=Number(r.create_time),d=new Date(Number.isFinite(numeric)?(numeric<1e12?numeric*1000:numeric):r.create_time);return {id:r.id,userName:r.user_name?.trim()||'--',avatar:r.user_avatar||'',createTime:Number.isNaN(d.getTime())?'':`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`,reason:r.public_reason?.trim()||''};});
+            const now=Date.now();
+            // MX mounts in the H5 document. Use H5's cache contract, not ccStorageOp's dzpk_cc_ namespace.
+            try{
+                const key='dzpk_h5_TRIBE_BLACK_USER_LIST_CACHE';
+                const previous=JSON.parse(globalThis.localStorage.getItem(key)??'null');
+                const tribeMap=previous?.version===1?previous.tribeMap??{}:{};
+                globalThis.localStorage.setItem(key,JSON.stringify({version:1,updatedAt:now,tribeMap:{...tribeMap,[tribeId]:{updatedAt:now,total:result.total??users.length,users}}}));
+            }catch{/* Storage restrictions must not prevent entry; H5 can fetch on open. */}
+            this.safetyUpdated=now;
+        }).finally(()=>{this.safetyTask=undefined;});
+    }
+    safetyGuard():void{const tribeId=this.data.record?.tribeId??0;if(tribeId>0&&!this.signal.aborted)this.transport.send('showPanel',{panelType:'safetyGuard',props:{tribeId}});}
+    async supportChat():Promise<void>{
+        let clubId=this.data.record?.clubId??0;
+        if(this.data.record?.goldType===1){
+            try{const wallet=await this.supportClub();if(wallet.club_id)clubId=wallet.club_id;}catch{this.signal.throwIfAborted();}
+        }
+        this.signal.throwIfAborted();
+        this.transport.send('showPanel',{panelType:'supportChat',props:{tribeId:this.data.record?.tribeId??0,clubId}});
     }
     mttRegistration():void{this.data.mtt?.emit('registration');}
     openMttRecord():void {this.transport.send('showPanel',{panelType:'mttRecord',props:{matchId:this.target.matchID,tournamentName:this.data.mtt?.matchName}});}

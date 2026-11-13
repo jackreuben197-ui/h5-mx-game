@@ -1,5 +1,6 @@
 /** Numeric methods copied verbatim from CC helper/StringHelper.ts. */
 export class StringHelper {
+    static FormatString(str: string, ...replaces: (string | number)[]): string { return this.Format(str, replaces); }
     static Format(str: string, replaces: (string | number)[]): string {
         for (let i = 0; i < replaces.length; i++) {
             str = str.replace(`{${i}}`, `${replaces[i]}`);

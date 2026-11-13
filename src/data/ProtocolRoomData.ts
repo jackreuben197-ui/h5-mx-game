@@ -1,3 +1,4 @@
+import TexasGameRoomDataChat from './TexasGameRoomDataChat.js';
 import type TexasGameRoomDataMtt from './TexasGameRoomDataMtt.js';
 import { JackpotData } from './JackpotData.js';
 import { CallTimeData } from './CallTimeData.js';
@@ -19,6 +20,7 @@ import type {
 } from '@silenthill/agreement-web';
 /** Preserve full authority for subsequent protocol migrations; UI gets normalized data only. */
 export class ProtocolRoomData {
+  readonly chat = new TexasGameRoomDataChat(this);
   readonly tableSettings = new GameplayTableSettingData();
   readonly emoji = new TexasGameRoomDataEmoji();
   readonly report = new TexasGameRoomDataReport(this);
@@ -56,6 +58,7 @@ export class ProtocolRoomData {
       this.insurance.start(mine, (s.handInfo?.publicCardsList.length ?? 0) >= 4 ? turnRound : flopRound, mine.invalidInsurancePotsList);
   }
   clear(): void {
+    this.chat.resetHistory();this.chat.clear();
     this.mtt?.clear(); this.mtt = undefined;
     this.tableSettings.clearData();
     this.emoji.clearData();

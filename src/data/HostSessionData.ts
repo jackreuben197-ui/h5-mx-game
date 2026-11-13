@@ -7,6 +7,8 @@ export class HostSessionData {
   avatar = '';
   sex = 0;
   private roomLogos = new Map<number, string>();
+  private roomPrologues = new Map<number, string>();
+  roomPrologue(clubID: number): string | undefined { return this.roomPrologues.get(clubID); }
   roomLogo(clubID: number): string { return this.roomLogos.get(clubID) ?? ''; }
   update(action: string, payload: unknown): void {
     if (!payload || typeof payload !== 'object') return;
@@ -24,10 +26,12 @@ export class HostSessionData {
       const response = p.response as { data?: unknown } | undefined;
       if (!Array.isArray(response?.data)) return;
       this.roomLogos.clear();
+      this.roomPrologues.clear();
       for (const value of response.data) {
         if (!value || typeof value !== 'object') continue;
         const club = value as Record<string, unknown>;
         const id = Number(club.club_id), logo = club.room_logo;
+        if (id > 0 && typeof club.prologue === 'string') this.roomPrologues.set(id, Number(club.prologue_switch) === 2 ? '' : club.prologue);
         if (Number.isSafeInteger(id) && id > 0 && typeof logo === 'string' && logo.trim())
           this.roomLogos.set(id, logo.trim());
       }
@@ -41,5 +45,6 @@ export class HostSessionData {
     this.avatar = '';
     this.sex = 0;
     this.roomLogos.clear();
+    this.roomPrologues.clear();
   }
 }

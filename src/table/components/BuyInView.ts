@@ -1,3 +1,7 @@
+import { DiamondPurchaseView } from './DiamondPurchaseView.js';
+import type { RoomRecords } from '../../core/RoomRecords.js';
+import type { TableConfirmDialog } from './TableConfirmDialog.js';
+import '../diamond-purchase.css';
 import { GameplayTableSettingView } from './GameplayTableSettingView.js';
 import '../buyin-settings.css';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
@@ -37,7 +41,11 @@ export class BuyInView {
   private footer=element('div','mx-buyin-footer');
   private cancel=element('button','mx-buyin-cancel',()=>i18nMgr.Get('UIBackDialog_ticketsbtnClose'));
   private lastStep='';
-  constructor(private controller: BuyInController) {
+  private tabs=element('div','mx-buyin-tabs');
+  private purchase?:DiamondPurchaseView;
+  private diamondTab=false;
+  private frame?:{width:number;height:number};
+  constructor(private controller: BuyInController,private records?:RoomRecords,confirmDialog?:TableConfirmDialog) {
     this.settings=new GameplayTableSettingView(controller.settings);
     this.cancel.type='button';this.cancel.onclick=()=>controller.close();
     i18nMgr.register(this);
@@ -71,6 +79,11 @@ export class BuyInView {
     this.body.append(this.settings.root,this.details,this.amountBox,this.error);
     this.footer.append(this.cancel,this.confirm);
     this.panel.append(this.title,this.body,this.close,this.footer); this.root.append(this.panel);
+    if(records?.diamondPurchase&&confirmDialog){
+      this.purchase=new DiamondPurchaseView(records.diamondPurchase,confirmDialog);this.body.append(this.purchase.root);this.root.append(this.purchase.receipt.root);
+      for(const [diamond,key] of [[true,'UIMine_VIP_diamond'],[false,'UIClub_RoomSitApplyRecords_title']] as const){const button=element('button','',()=>i18nMgr.Get(key,[],diamond?'钻石':'带入申请'));button.onclick=()=>this.changeTab(diamond);button.dataset.diamond=String(diamond);this.tabs.append(button);}
+      this.panel.insertBefore(this.tabs,this.title);
+    }
     this.bindings.bind({buyin:controller.data});
   }
   refreshLanguage(): void { if (this.root.isConnected) this.render(this.controller.data.state); }
@@ -90,10 +103,11 @@ export class BuyInView {
       const money=StringHelper.GetLongString;
       const rows=s.step==='amount'?[[i18nMgr.Get("UITexas_smallBigBlind", [], "小盲/大盲"),`${money(q.smallBlind)}/${money(q.smallBlind*2)}`],[i18nMgr.Get("UIClub_CreateRoom31", [], "余额"),StringHelper.GetLongStringLocale(q.wallets.find(w=>w.club_id===s.clubID)?.gold??0)]]:[];
       if(q.funding==='score')rows.splice(1);
-      this.walletTitle.hidden=this.wallet.root.hidden=q.funding==='score';
+      if(q.funding==='diamond' && rows.length>1)rows[1]=[i18nMgr.Get('UIClub_CreateRoom31'),StringHelper.GetLongStringLocale(q.diamondBalance??0,1,0)];
+      this.walletTitle.hidden=this.wallet.root.hidden=q.funding==='score'||q.funding==='diamond';
       for(const [label,value] of rows) {
         const row=element('div','mx-buyin-detail');const labelNode=element('span','mx-buyin-detail-label',label);
-        if(label===i18nMgr.Get("UIClub_CreateRoom31", [], "余额")) {const icon=element('span','mx-buyin-coin');SpriteAtlas.paint(icon,'chip');labelNode.prepend(icon);}
+        if(label===i18nMgr.Get("UIClub_CreateRoom31", [], "余额")) {const icon=element('span','mx-buyin-coin');SpriteAtlas.paint(icon,q.funding==='diamond'?'recordDiamond':'chip');labelNode.prepend(icon);}
         row.append(labelNode,element('span','',value));this.details.append(row);
       }
       i18nLabel.bind(this.amountTitle, () => q.deposit?i18nMgr.Get("MX_BuyInDeposit", [], "带入筹码 + 押金"):i18nMgr.Get("UITexas_AddChips", [], "带入筹码"));
@@ -107,13 +121,32 @@ export class BuyInView {
     }
     this.error.textContent=s.error;
     this.confirm.hidden=s.step==='loading';i18nLabel.bind(this.confirm, () => s.step==='security'?i18nMgr.Get("UITableSetting_nextPage", [], "下一页"):i18nMgr.Get("UITexas_confirm", [], "确定"));
+    if(s.step==='closed'){this.diamondTab=false;this.purchase?.reset();}
+    if(s.step==='amount'&&q?.funding==='diamond'&&s.error===i18nMgr.Get('UISend_diamondsNo'))this.changeTab(true);
+    this.refreshTabs();
     this.confirm.disabled=s.busy;this.close.disabled=s.busy;this.slider.disabled=s.busy||q?.min===q?.max;this.auto.disabled=s.busy;
   }
+  private changeTab(diamond:boolean):void{
+    this.diamondTab=diamond&&!this.records?.config.global.isChannelDiamondFreeMode;
+    if(this.diamondTab)void this.purchase?.open();else this.purchase?.close();
+    this.refreshTabs();
+  }
+  private refreshTabs():void{
+    const enabled=!!this.purchase&&!this.records?.config.global.isChannelDiamondFreeMode&&this.controller.data.state.step==='amount';
+    this.tabs.hidden=!enabled;this.title.hidden=enabled;
+    const diamond=enabled&&this.diamondTab;
+    this.panel.classList.toggle('mx-buyin-diamond-tab',diamond);
+    this.details.hidden=this.amountBox.hidden=diamond||this.controller.data.state.step!=='amount';
+    this.footer.hidden=diamond;
+    for(const button of this.tabs.querySelectorAll('button'))button.setAttribute('aria-selected',String((button.dataset.diamond==='true')===diamond));
+    if(this.frame)this.onFrameResize(this.frame.width,this.frame.height);
+  }
   onFrameResize(width:number,height:number):void {
-    const unit=Math.min(width/1440,height/2290,600/1100);
+    this.frame={width,height};
+    const unit=Math.min(width/1440,height/(this.diamondTab?2900:2290),600/1100);
     this.root.dataset.short=String(height<2290*unit);
     this.root.style.setProperty('--mx-setup-unit',`${unit}px`);
     this.root.style.setProperty('--dialog-width',`${Math.min(width-16,1100*unit)}px`);
   }
-  destroy(): void { this.settings.destroy();this.bindings.destroy();this.root.remove(); }
+  destroy(): void { this.purchase?.destroy();this.settings.destroy();this.bindings.destroy();this.root.remove(); }
 }
