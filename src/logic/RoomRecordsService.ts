@@ -1,3 +1,4 @@
+import { JackpotService } from './JackpotService.js';
 import type { GlobalConfigStore } from '../data/GlobalConfigStore.js';
 import type { DiamondModel } from '../data/DiamondModel.js';
 import type { PrivateUcChargeStore } from '../data/PrivateUcChargeStore.js';
@@ -20,6 +21,7 @@ import { PublicReplayRequest } from '../net/requests/PublicReplayRequest.js';
 import { ReplayStorage } from '../host/ReplayStorage.js';
 import type { HostTransport } from '../host/HostTransport.js';
 export class RoomRecordsService implements RoomRecords {
+    readonly jackpotFeature: JackpotService;
     private roomersTask?: Promise<void>;
     private profiles = new Map<number, PlayerProfile>();
     private profileTasks = new Map<number, Promise<PlayerProfile | null>>();
@@ -31,7 +33,14 @@ export class RoomRecordsService implements RoomRecords {
         diamonds: DiamondModel;
         privateUc: PrivateUcChargeStore;
     }) {
+        this.jackpotFeature=new JackpotService(data,http,transport,signal);
         this.storage = new ReplayStorage(transport, userRID, target.roomID, target.matchID);
+    }
+    openJackpot():void {this.jackpotFeature.open();}
+    leaveTable():void {
+        const room=new this.pb.Room();room.setRoomId(this.target.roomID);room.setMatchId(this.target.matchID);
+        const body=new this.pb.ClientMessageLeave();body.setRoom(room);
+        this.client.send(this.pb.Code.MSG_D_LEAVE,this.target.roomID,this.target.matchID,body,this.signal);
     }
     refreshReport(): Promise<void> {
         if (this.roomersTask)

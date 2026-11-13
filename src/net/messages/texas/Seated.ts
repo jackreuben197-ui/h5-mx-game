@@ -34,5 +34,6 @@ export function Seated(body: ServerMessageSeated.AsObject, context: MessageConte
     p,
   ];
   context.data.report.applySitDown(p.userRid, body.totalBringin || body.chips, body.deposit, p.name, p.avatar, body.recvSeatId);
+  context.data.jackpot.start();
   return true;
 }

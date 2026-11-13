@@ -1,0 +1,6 @@
+.mx-jackpot{position:absolute;inset:0;pointer-events:none;z-index:4}
+.mx-jackpot-pool{position:absolute;width:295px;height:77px;border:0;padding:0;background-color:transparent;background-size:100% 100%;color:white;pointer-events:auto;font-size:47.28px!important;font-weight:bold!important;line-height:48px}
+.mx-jackpot-pool span{display:block;transform:scaleX(1.15)}
+.mx-calltime{position:absolute;display:flex;align-items:center;gap:10px;height:70px;white-space:nowrap;font-size:40px;line-height:40px}
+.mx-calltime img{width:45px;height:45px}
+.mx-jackpot-start{position:absolute;background-size:100.653% 100.653%;background-position:60% 60%;background-repeat:no-repeat;transform:translate(-50%,-50%);pointer-events:none}

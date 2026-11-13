@@ -205,6 +205,7 @@ export class MxRoomHost implements RoomHost {
   }
   private warmRoomPanels(context: RoomContext, refreshProps = false): void {
     if (this.current !== context || context.signal.aborted || !context.entered) return;
+    void this.getRecords()?.jackpotFeature.preload();
     const playerIDs = this.roomData.snapshot?.playersList.filter(player => player.seatId > 0).map(player => player.userRid) ?? [];
     void this.getRecords()?.prefetchPlayers(playerIDs).catch(error => {
       if (!(error instanceof Error && error.name === 'AbortError')) console.warn('[MX player profile] Prefetch failed', error);

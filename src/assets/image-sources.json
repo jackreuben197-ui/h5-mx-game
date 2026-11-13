@@ -425,7 +425,9 @@
     "raw/mushroom/table_icon_mushroom.png": "assets/textures/scene/table/mushroom/table_icon_mushroom.png",
     "raw/mushroom/criticalhit.png": "assets/textures/scene/table/criticalhit/criticalhit.png",
     "raw/mushroom/critical_start.png": "assets/textures/scene/table/other/critical_start.png",
-    "raw/mushroom/pool_bg.png": "assets/textures/scene/table/other/Rectangle 1128.png"
+    "raw/mushroom/pool_bg.png": "assets/textures/scene/table/other/Rectangle 1128.png",
+    "jackpot/jpt_award.png": "assets/textures/scene/table/jackpot/jpt_award.png",
+    "jackpot/icon_limit_hand.png": "assets/textures/scene/table/icon/icon_limit_hand.png"
   },
   "cards1": {
     "0": "cards1/0.png",

@@ -31,6 +31,10 @@ export function Winner(body: ServerMessageWinner.AsObject, context: MessageConte
   context.data.report.applyWinnerResult(body, context.pb.Def.EHCType.EHC_MUSHROOM);
   const room=context.data.record,seat=context.state.myInfo?.seatId??0;
   const mineResult=body.resultsList.find(result=>result.seatId===seat);
+  if(mineResult&&!mineResult.standUp&&context.state.myInfo){
+    Object.assign(context.state.myInfo,{totalChips:mineResult.totalChips,storeChips:mineResult.storeChips,callTimeCount:mineResult.callTimeCount,callTimeStay:mineResult.callTimeStay});
+    context.data.callTime.update(mineResult.callTimeCount,mineResult.callTimeStay);
+  }
   const eligible=!seat || (!!mineResult&&!mineResult.standUp);
   const watch=context.data.watch;
   watch.clear();watch.handNum=body.handNum;

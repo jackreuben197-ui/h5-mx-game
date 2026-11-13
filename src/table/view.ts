@@ -1,3 +1,6 @@
+import './jackpot.css';
+import { JackpotView } from './components/JackpotView.js';
+import { CPErrorCode } from '../i18n/CPErrorCode.js';
 import './mushroom-boom.css';
 import { MushroomBoomView } from './components/MushroomBoomView.js';
 import { SquidView } from './components/SquidView.js';
@@ -96,6 +99,7 @@ export class TableView {
   private secondPcs?: AgreeSecondPcsView;
   private insurance?: InsuranceView;
   private squid?:SquidView;
+  private jackpot?:JackpotView;
   private mushroomBoom?:MushroomBoomView;
   private sound = new TableSound();
   private soundControl: SoundControlView;
@@ -182,7 +186,13 @@ export class TableView {
     };
     this.navigation = components.navigation?.(onNavigate) ?? new NavigationView(onNavigate);
     this.root.style.backgroundImage = `url("${resources.desk}")`;
-    this.menu = new TableMenuView(leave, () => {
+    const exit=()=>{try{options.records?.leaveTable?.();leave();}catch(error){this.toast.show(error);}};
+    const requestLeave=()=>{
+      const d=(options.specialOperations??options.records)?.data,r=d?.record;
+      if(r?.calltime===1&&d?.callTime.state.stay)this.confirmDialog.open({owner:'calltime-leave',message:()=>StringHelper.Format(i18nMgr.Get('UICallTimeQuitRoom'),[r.calltimeWinLine,r.calltimeLimit,r.calltimeWinLine]),cancel:()=>CPErrorCode.LanguageDescription(10013),commit:()=>i18nMgr.Get('UITexas_LeaveTheTable'),onCancel:()=>{},onCommit:exit});
+      else exit();
+    };
+    this.menu = new TableMenuView(requestLeave, () => {
         settings.setShowBBToStorage(!settings.showBB);
         this.showBB = settings.showBB;
         const snapshot = this.data.info.snapshot;
@@ -234,6 +244,8 @@ export class TableView {
       this.insurance = new InsuranceView(specialOperations, options.seating, error => this.toast.show(error));
       this.squid=new SquidView(specialOperations,options.seating,this.confirmDialog,error=>this.toast.show(error));
       this.stage.append(this.squid.root);
+      this.jackpot=new JackpotView(specialOperations.data,()=>options.records?.openJackpot?.(),()=>queueMicrotask(()=>{if(this.root.isConnected)this.resizeTable();}));
+      this.stage.append(this.jackpot.root);
       this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
       this.root.append(this.mushroomBoom.guide.surface.root);
       this.root.append(this.secondPcs.root, this.insurance.root,this.squid.result.root,this.squid.intro.root);
@@ -277,7 +289,7 @@ export class TableView {
       }
     for (const [id, position] of this.layout.positions(state))
       this.seatViews.get(id)?.place(position, positionMode);
-    i18nLabel.bind(this.info, () => [state.name, i18nMgr.Get("MX_HoldEmRegularNoLimit", [], "德州-普通-无限注"), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].concat(this.squid?.infoLines()??[],this.mushroomBoom?.infoLines()??[]).join('\n'));
+    i18nLabel.bind(this.info, () => [state.name, i18nMgr.Get("MX_HoldEmRegularNoLimit", [], "德州-普通-无限注"), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].concat(this.squid?.infoLines()??[],this.mushroomBoom?.infoLines()??[],this.jackpot?.infoLines()??[]).join('\n'));
     const own = this.layout.positions(state).get(state.mySeat);
     if (own && !this.layout.landscape) {
       const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
@@ -313,6 +325,7 @@ export class TableView {
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
     this.squid?.resize(l.suggest);
+    this.jackpot?.resize(l.width,l.height,l.suggest);
     queueMicrotask(()=>this.mushroomBoom?.mushroom.resize());
     this.toast.setScale(l.unit);
     Object.assign(this.stage.style, {
@@ -336,9 +349,9 @@ export class TableView {
       this.board.root.style.transform = `scale(${l.suggest})`;
       place(this.secondBoard.root,l.width/2,l.height/2-(l.suggest===1?176:0)+120*l.suggest);
       this.secondBoard.root.style.transform=`scale(${l.suggest})`;
-      place(this.pot.total, l.width / 2, 697.8 * l.suggest);
-      place(this.pot.pool, l.width / 2, 775.6 * l.suggest);
-      place(this.info, l.width / 2, 1000 * l.suggest);
+      place(this.pot.total, l.width / 2, (697.8+(this.jackpot?.extraHeight??0)) * l.suggest);
+      place(this.pot.pool, l.width / 2, (775.6+(this.jackpot?.extraHeight??0)) * l.suggest);
+      place(this.info, l.width / 2, (1000+(this.jackpot?.extraHeight??0)) * l.suggest);
     }
   }
   private deltaToOrigin(group: HTMLElement): { x: number; y: number } {
@@ -356,6 +369,7 @@ export class TableView {
     this.insurance?.destroy();
     this.squid?.destroy();
     this.mushroomBoom?.destroy();
+    this.jackpot?.destroy();
     this.appearanceGeneration++;
     this.deskBackground.destroy();
     this.settingsOff.forEach(off=>off());

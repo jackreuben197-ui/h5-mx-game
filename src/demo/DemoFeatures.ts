@@ -22,6 +22,8 @@ export class DemoFeatures implements SpecialOperations {
     {label:'保险 · 多池',run:()=>this.insurance(2)},
     {label:'保险 · 强制最低投保',run:()=>this.insurance(1,true)},
     {label:'二道牌 · 投票与发牌',run:()=>this.secondBoard()},
+    {label:'Jackpot · 开场与奖池',run:()=>this.jackpot()},
+    {label:'CallTime · 盈利留桌',run:()=>this.callTime()},
     {label:'蘑菇 · 随庄位移动',run:()=>this.mushroomPool()},
     {label:'暴击 · 开场与翻牌',run:()=>this.criticalHit()},
     {label:'轮到自己 · 加时',run:()=>this.turn()},
@@ -63,6 +65,17 @@ export class DemoFeatures implements SpecialOperations {
   }
   private later(run:()=>void,ms:number):void{
     const timer=setTimeout(()=>{this.timers.delete(timer);run();},ms);this.timers.add(timer);
+  }
+  jackpot():void {
+    if(!this.start())return;
+    Object.assign(this.data.record!,{jackpot:1,jackpotId:1,jackpotGold:1000000,jackpotParentGold:1500000});
+    this.data.jackpot.restore(this.data.record);this.data.jackpot.start();
+    this.later(()=>this.data.jackpot.update(1,1100000,1600000),5500);
+  }
+  callTime():void {
+    if(!this.start())return;
+    Object.assign(this.data.record!,{calltime:1,calltimeWinLine:10,calltimeLimit:10});
+    this.data.callTime.update(3,true);this.update({});
   }
   mushroomPool():void {
     const s=this.start();if(!s||!this.pb)return;

@@ -1,3 +1,5 @@
+import { JackpotGoldChange } from './JackpotGoldChange.js';
+import { JackpotAward } from './JackpotAward.js';
 import { SquidIn } from './SquidIn.js';
 import { SquidInActive } from './SquidInActive.js';
 import { NextChange } from './NextChange.js';
@@ -43,6 +45,8 @@ export class TexasMessageHandler {
   accepts(code: number): boolean {
     const { Code } = this.pb;
     switch (code) {
+      case Code.MSG_S_JACKPOT_GOLD_CHANGE:
+      case Code.MSG_S_JACKPOT_AWARD:
       case Code.MSG_S_SQUID_IN:
       case Code.MSG_D_SQUID_IN_ACTIVE:
       case Code.MSG_S_NEXT_CHANGE:
@@ -89,6 +93,8 @@ export class TexasMessageHandler {
   dispatch(packet: Packet, context: MessageContext): boolean {
     const pb = this.pb, { Code } = pb;
     switch (packet.code) {
+      case Code.MSG_S_JACKPOT_GOLD_CHANGE: return JackpotGoldChange(pb.ServerMessageJackpotGoldChange.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_JACKPOT_AWARD: return JackpotAward(pb.ServerMessageJackpotAward.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_S_SQUID_IN: return SquidIn(pb.ServerMessageSquidIn.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_D_SQUID_IN_ACTIVE: return SquidInActive(pb.ServerMessageSquidInActive.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_S_NEXT_CHANGE: return NextChange(pb.ServerMessageNextChange.deserializeBinary(packet.body).toObject(),context);

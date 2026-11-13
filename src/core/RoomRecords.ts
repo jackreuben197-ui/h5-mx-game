@@ -34,6 +34,8 @@ export interface RoomRecords {
     giftDiamonds(userRID: number, amount: number): Promise<void>;
     refreshReport(): Promise<void>;
     jackpot(): Promise<void>;
+    openJackpot?():void;
+    leaveTable?():void;
     insurance(): Promise<void>;
     round(mode: TexasReportRoundMode, round: number): Promise<number>;
     replay(hand: number): Promise<ReplayHandData | null>;
