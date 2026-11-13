@@ -1,3 +1,11 @@
+import { RoomInsurance } from './RoomInsurance.js';
+import { InsuranceOutsCards } from './InsuranceOutsCards.js';
+import { BuyInsuranceActive } from './BuyInsuranceActive.js';
+import { BuyInsurance } from './BuyInsurance.js';
+import { InsuranceTrigged } from './InsuranceTrigged.js';
+import { AgreeSecondPcsActive } from './AgreeSecondPcsActive.js';
+import { AgreeSecondPcs } from './AgreeSecondPcs.js';
+import { AgreeSecondPcsTrigged } from './AgreeSecondPcsTrigged.js';
 import { BroadcastMsg } from './BroadcastMsg.js';
 import { GetMsg } from './GetMsg.js';
 import { PublicReplay } from './PublicReplay.js';
@@ -32,6 +40,14 @@ export class TexasMessageHandler {
   accepts(code: number): boolean {
     const { Code } = this.pb;
     switch (code) {
+      case Code.MSG_D_ROOM_INSURANCE:
+      case Code.MSG_S_INSURANCE_OUTS_CARDS:
+      case Code.MSG_D_BUY_INSURANCE_ACTIVE:
+      case Code.MSG_S_BUY_INSURANCE:
+      case Code.MSG_S_INSURANCE_TRIGGED:
+      case Code.MSG_D_AGREE_SECOND_PCS_ACTIVE:
+      case Code.MSG_S_AGREE_SECOND_PCS:
+      case Code.MSG_S_AGREE_SECOND_PCS_TRIGGED:
       case Code.MSG_D_BROADCAST_MSG:
       case Code.MSG_S_GET_MSG:
       case Code.MSG_D_ROOMERS:
@@ -66,6 +82,22 @@ export class TexasMessageHandler {
   dispatch(packet: Packet, context: MessageContext): boolean {
     const pb = this.pb, { Code } = pb;
     switch (packet.code) {
+      case Code.MSG_D_ROOM_INSURANCE:
+        return RoomInsurance(pb.ServerMessageRoomInsurance.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_INSURANCE_OUTS_CARDS:
+        return InsuranceOutsCards(pb.ServerMessageInsuranceOutsCards.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_D_BUY_INSURANCE_ACTIVE:
+        return BuyInsuranceActive(pb.ServerMessageBuyInsuranceActive.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_BUY_INSURANCE:
+        return BuyInsurance(pb.ServerMessageBuyInsurance.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_INSURANCE_TRIGGED:
+        return InsuranceTrigged(pb.ServerMessageInsuranceTrigged.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_D_AGREE_SECOND_PCS_ACTIVE:
+        return AgreeSecondPcsActive(pb.ServerMessageAgreeSecondPcsActive.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_AGREE_SECOND_PCS:
+        return AgreeSecondPcs(pb.ServerMessageAgreeSecondPcs.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_AGREE_SECOND_PCS_TRIGGED:
+        return AgreeSecondPcsTrigged(pb.ServerMessageAgreeSecondPcsTrigged.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_D_BROADCAST_MSG:
         return BroadcastMsg(pb.ServerMessageBroadcastMsg.deserializeBinary(packet.body).toObject(), context);
       case Code.MSG_S_GET_MSG:

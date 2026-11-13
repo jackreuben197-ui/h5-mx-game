@@ -6,6 +6,11 @@ import type { ProtocolRoomData } from '../data/ProtocolRoomData.js';
 import type { ReplayHandData } from '../data/ReplayHandData.js';
 import type { TexasReportRoundMode } from '../data/TexasGameRoomDataReport.js';
 import type { PlayerProfile } from './PlayerProfile.js';
+/** Shared room data needed by live special operations, independent of history APIs. */
+export interface SpecialOperations {
+    readonly data: ProtocolRoomData;
+    readonly config: Pick<RoomRecords['config'], 'global' | 'diamonds'>;
+}
 export interface RoomRecords {
     readonly config: {
         global: GlobalConfigStore;

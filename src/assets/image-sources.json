@@ -163,7 +163,9 @@
     "operationExtra": "ui/operationExtra.png",
     "addTimeClock": "ui/addTimeClock.png",
     "raiseBubble": "ui/raiseBubble.png",
-    "raiseThumb": "ui/raiseThumb.png"
+    "raiseThumb": "ui/raiseThumb.png",
+    "insuranceOption": "ui/insuranceOption.png",
+    "insuranceOptionSelected": "ui/insuranceOptionSelected.png"
   },
   "ccSources": {
     "desk.png": "assets/resources/dynamic/table/desk0.png",
@@ -398,7 +400,9 @@
     "ui/operationExtra.png": "assets/textures/scene/table/operation/ext_op_bg.png",
     "ui/addTimeClock.png": "assets/textures/scene/table/operation/add_time_clock.png",
     "ui/raiseBubble.png": "assets/textures/scene/table/operation/bubble.png",
-    "ui/raiseThumb.png": "assets/textures/scene/table/operation/table_sprite_slide_button.png"
+    "ui/raiseThumb.png": "assets/textures/scene/table/operation/table_sprite_slide_button.png",
+    "ui/insuranceOption.png": "assets/textures/dialog/bg/dialog_insurance_button.png",
+    "ui/insuranceOptionSelected.png": "assets/textures/dialog/bg/dialog_insurance_button_check.png"
   },
   "cards1": {
     "0": "cards1/0.png",

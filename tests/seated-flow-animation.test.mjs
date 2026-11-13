@@ -130,3 +130,25 @@ test('CC return_table with positive chips sends Seated immediately without openi
   assert.equal(buyIn.data.state.step,'closed');
   assert.equal(seated.bringIn,500);assert.equal(seated.returnOrNew,1);assert.equal(seated.clubId,1);
 });
+
+test('score tables allow wallet-free buy-in, positive-chip return and zero-chip repurchase',async t=>{
+ for(const returned of [undefined,500,0]){
+  const transport=new FakeTransport(),signal=new AbortController();let seated;
+  const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:200,http:{baseURL:'https://test.invalid/api',fetch:async url=>Response.json({code:0,data:String(url).endsWith('/user/info')?{user:{un_id:777,nickname:'测试玩家'}}:{return_table:returned!==undefined,last_bring_out:returned===undefined?null:{to_wallet:returned,fee:0,club_id:0},wallet:[]}})}});
+  try{
+   const initial=snapshot();initial.getMyInfo().setSeatId(0);initial.setPlayersList(initial.getPlayersList().filter(p=>p.getSeatId()!==4));initial.getRoomInfo().setCurrentMinRate(10);initial.getRoomInfo().setCurrentMaxRate(100);
+   transport.emit('enterTable',{token:'00000000000000000000000000000000'});
+   transport.onSend=(action,payload)=>{if(action!=='wsSend')return;const packet=outbound(payload.data);
+    if(packet.code===pb.Code.MSG_R_ROOMS){const reply=new pb.ServerMessageRooms(),room=record();room.setGoldType(3);room.setClubId(0);reply.setRpcId(pb.ClientMessageRooms.deserializeBinary(packet.body).getRpcId());reply.setRoomsList([room]);transport.frame(packet.code,0,0,reply);}
+    else if(packet.code===pb.Code.MSG_D_ENTER_ROOM)transport.frame(packet.code,1001,0,initial);
+    else if(packet.code===pb.Code.MSG_D_SEATED){seated=pb.ClientMessageSeated.deserializeBinary(packet.body).toObject();const reply=new pb.ServerMessageSeated();reply.setRecvSeatId(4);reply.setChips(seated.bringIn);transport.frame(packet.code,1001,0,reply);}
+   };
+   const target={roomID:1001,matchID:0,roomType:0};await host.enter(target,signal.signal,()=>{});
+   const controller=new BuyInController({prepare:seat=>host.prepareSeat(target,seat,signal.signal),submit:selection=>host.sitDown(target,selection,signal.signal),standup:async()=>false});
+   await controller.open(4);
+   if(returned===500){assert.equal(controller.data.state.step,'closed');assert.equal(seated.bringIn,500);}
+   else{assert.equal(controller.data.state.step,'amount');assert.equal(controller.data.state.quote.canAuto,false);assert.equal(controller.data.state.quote.funding,'score');await controller.submit();}
+   assert.equal(seated.clubId,0);assert.equal(seated.autoUseWallet,false);assert.equal(seated.returnOrNew,returned===undefined?0:1);controller.destroy();
+  }finally{signal.abort();host.destroy();}
+ }
+});

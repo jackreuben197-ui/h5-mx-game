@@ -1,9 +1,12 @@
+import './special-operations.css';
+import { AgreeSecondPcsView } from './components/AgreeSecondPcsView.js';
+import { InsuranceView } from './components/InsuranceView.js';
 import type { RoomEmojis } from '../core/RoomEmojis.js';
 import { EmojiController } from '../logic/EmojiController.js';
 import { EmojiView } from './components/EmojiView.js';
 import { SeatEmojiView } from './components/SeatEmojiView.js';
 import './emoji.css';
-import type { RoomRecords } from '../core/RoomRecords.js';
+import type { RoomRecords, SpecialOperations } from '../core/RoomRecords.js';
 import { ReportController } from '../logic/ReportController.js';
 import { HistoryController } from '../logic/HistoryController.js';
 import { ReportView } from './components/ReportView.js';
@@ -86,9 +89,12 @@ export class TableView {
   private menu: TableMenuView;
   private toast = new TableToastView();
   private confirmDialog = new TableConfirmDialog();
+  private secondPcs?: AgreeSecondPcsView;
+  private insurance?: InsuranceView;
   private sound = new TableSound();
   private soundControl: SoundControlView;
   private board: ReturnType<NonNullable<TableComponents['publicCards']>>;
+  private secondBoard = new PublicCardsView(this.data.secondPublicCards);
   private pot: ReturnType<NonNullable<TableComponents['pot']>>;
   private controls: ReturnType<NonNullable<TableComponents['actions']>>;
   private navigation: ReturnType<NonNullable<TableComponents['navigation']>>;
@@ -101,7 +107,7 @@ export class TableView {
     command: (action: Action, amount?: number) => Promise<void>,
     leave: () => void,
     navigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void,
-    private options: { emojis?: RoomEmojis; records?: RoomRecords; testControls?: HTMLElement; layout?: 'portrait' | 'auto'; components?: TableComponents; seating?: SeatingActions } = {},
+    private options: { specialOperations?: SpecialOperations; emojis?: RoomEmojis; records?: RoomRecords; testControls?: HTMLElement; layout?: 'portrait' | 'auto'; components?: TableComponents; seating?: SeatingActions } = {},
   ) {
     // Preview starts muted without overwriting the CC production preference.
     if (import.meta.env.DEV) settings.soundOn = false;
@@ -206,6 +212,7 @@ export class TableView {
       this.pot.pool,
       this.info,
       this.board.root,
+      this.secondBoard.root,
       this.above,
       this.menu.root,
     );
@@ -215,6 +222,12 @@ export class TableView {
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
     this.root.append(this.playerInfo.root);
     this.root.append(this.confirmDialog.root);
+    const specialOperations = options.specialOperations ?? options.records;
+    if (specialOperations && options.seating) {
+      this.secondPcs = new AgreeSecondPcsView(specialOperations, options.seating, error => this.toast.show(error));
+      this.insurance = new InsuranceView(specialOperations, options.seating, error => this.toast.show(error));
+      this.root.append(this.secondPcs.root, this.insurance.root);
+    }
     if (import.meta.env.DEV && options.testControls) {
       this.allInTest = new AllInTestView(this.effects, this.seatViews);
       options.testControls.append(this.allInTest.root);
@@ -301,12 +314,16 @@ export class TableView {
       const scale = Math.min(1, l.width / 1900);
       place(this.board.root, l.width / 2, l.height * 0.54);
       this.board.root.style.transform = `scale(${scale})`;
+      place(this.secondBoard.root,l.width/2,l.height*.54+120*scale);
+      this.secondBoard.root.style.transform=`scale(${scale})`;
       place(this.pot.total, l.width / 2, l.height * 0.385);
       place(this.pot.pool, l.width / 2, l.height * 0.44);
       place(this.info, l.width / 2 - 420 * scale, l.height * 0.44);
     } else {
       place(this.board.root, l.width / 2, l.height / 2 - (l.suggest === 1 ? 176 : 0));
       this.board.root.style.transform = `scale(${l.suggest})`;
+      place(this.secondBoard.root,l.width/2,l.height/2-(l.suggest===1?176:0)+120*l.suggest);
+      this.secondBoard.root.style.transform=`scale(${l.suggest})`;
       place(this.pot.total, l.width / 2, 697.8 * l.suggest);
       place(this.pot.pool, l.width / 2, 775.6 * l.suggest);
       place(this.info, l.width / 2, 1000 * l.suggest);
@@ -323,6 +340,8 @@ export class TableView {
     };
   }
   destroy(): void {
+    this.secondPcs?.destroy();
+    this.insurance?.destroy();
     this.appearanceGeneration++;
     this.deskBackground.destroy();
     this.settingsOff.forEach(off=>off());
@@ -339,6 +358,7 @@ export class TableView {
     this.seatViews.forEach((v) => v.destroy());
     this.effects.destroy();
     this.board.destroy();
+    this.secondBoard.destroy();
     this.pot.destroy();
     this.controls.destroy();
     this.settlementWatch.destroy();

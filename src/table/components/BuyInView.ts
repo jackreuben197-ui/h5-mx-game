@@ -22,6 +22,7 @@ export class BuyInView {
   private slider = element('input','mx-buyin-slider');
   private limits = element('div','mx-buyin-limits');
   private wallet: WalletSelectView;
+  private walletTitle = element('span','mx-buyin-wallet-title',() => i18nMgr.Get("UIHoldemAddChipsPaywallet", [], "支付钱包"));
   private amountTitle = element('span', 'mx-buyin-amount-title');
   private tipButton = element('button', 'mx-buyin-tip-button');
   private tip = element('p', 'mx-buyin-tip', () => i18nMgr.Get("UIBringInTips", [], "带入上桌金额和押金，其中押金的作用为代替余额不足时使用，在退出牌桌后剩余押金正常结算返还"));
@@ -66,7 +67,7 @@ export class BuyInView {
     const amountSection=element('div','mx-buyin-amount-section');
     
     amountSection.append(amountHeading,this.tip,this.amount,element('span','mx-buyin-amount-caption',() => i18nMgr.Get("UITexas_AddChips", [], "带入筹码")),sliderTrack,this.limits);
-    this.amountBox.append(amountSection,this.autoArea,element('span','mx-buyin-wallet-title',() => i18nMgr.Get("UIHoldemAddChipsPaywallet", [], "支付钱包")),this.wallet.root);
+    this.amountBox.append(amountSection,this.autoArea,this.walletTitle,this.wallet.root);
     this.body.append(this.settings.root,this.details,this.amountBox,this.error);
     this.footer.append(this.cancel,this.confirm);
     this.panel.append(this.title,this.body,this.close,this.footer); this.root.append(this.panel);
@@ -88,6 +89,8 @@ export class BuyInView {
     if(q) {
       const money=StringHelper.GetLongString;
       const rows=s.step==='amount'?[[i18nMgr.Get("UITexas_smallBigBlind", [], "小盲/大盲"),`${money(q.smallBlind)}/${money(q.smallBlind*2)}`],[i18nMgr.Get("UIClub_CreateRoom31", [], "余额"),StringHelper.GetLongStringLocale(q.wallets.find(w=>w.club_id===s.clubID)?.gold??0)]]:[];
+      if(q.funding==='score')rows.splice(1);
+      this.walletTitle.hidden=this.wallet.root.hidden=q.funding==='score';
       for(const [label,value] of rows) {
         const row=element('div','mx-buyin-detail');const labelNode=element('span','mx-buyin-detail-label',label);
         if(label===i18nMgr.Get("UIClub_CreateRoom31", [], "余额")) {const icon=element('span','mx-buyin-coin');SpriteAtlas.paint(icon,'chip');labelNode.prepend(icon);}

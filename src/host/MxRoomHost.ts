@@ -263,6 +263,7 @@ export class MxRoomHost implements RoomHost {
     const data = await new EnterRoomProcedure(this.client, pb).run(target, signal);
     signal.throwIfAborted();
     if (this.current !== context) throw new DOMException('房间会话已更换', 'AbortError');
+    data.restoreSpecialOperations(pb.Def.Round.FLOP, pb.Def.Round.TURN);
     const snapshot = this.project(data,target);
     this.roomData = data;
     this.updateTableSettings();
@@ -337,6 +338,8 @@ export class MxRoomHost implements RoomHost {
           this.pb!.Code.MSG_S_HAND_CLEAR,
           this.pb!.Code.MSG_S_WINNER,
           this.pb!.Code.MSG_S_PUBLIC_CARDS,
+          this.pb!.Code.MSG_S_AGREE_SECOND_PCS_TRIGGED,
+          this.pb!.Code.MSG_S_INSURANCE_TRIGGED,
         ].some((code) => code === packet.code)
       )
         context.pendingTurn = undefined;
@@ -393,6 +396,7 @@ export class MxRoomHost implements RoomHost {
       const mapped = this.project(candidate,context.target);
       // Keep room-scoped panel subscriptions/cache stable across authoritative resync.
       this.roomData.snapshot = snapshot;
+      this.roomData.restoreSpecialOperations(this.pb!.Def.Round.FLOP, this.pb!.Def.Round.TURN);
       this.updateTableSettings();
       this.roomData.report.roomersFetched = false;
       context.pendingTurn = undefined;
@@ -430,7 +434,7 @@ export class MxRoomHost implements RoomHost {
       throw new Error('房间正在同步，请稍后操作');
     const mapper = new BettingMapper(this.pb!);
     const turn = mapper.map(this.roomData).betting?.id;
-    if (!turn || context.pendingTurn) throw new Error('操作已经发送，等待服务端广播');
+    if (!turn || context.pendingTurn) return; // CC ignores a stale/double click while awaiting authority.
     const request = mapper.resolve(this.roomData, action, amount);
     // Do not confuse the lobby's selected club with the wallet actually bound to this table.
     if (this.roomData.record?.goldType === 1 && context.walletClubID === undefined) {
@@ -487,29 +491,30 @@ export class MxRoomHost implements RoomHost {
     this.updateTableSettings();
     this.roomData.tableSettings.roomPermissions=permissions;
     const info = this.roomData.snapshot!.roomInfo!;
-    if(this.roomData.record?.goldType !== 1) throw new Error('当前正在校对俱乐部钱包带入流程');
-    const wallets = result.wallet.filter(w => !target.clubID || w.club_id === target.clubID);
-    if(!wallets.length) throw new Error('未找到可用的支付钱包');
+    const score = this.roomData.record?.goldType === 3;
+    if(!score && this.roomData.record?.goldType !== 1) throw new Error('当前钱包类型的带入流程尚未接入');
+    const wallets = (result.wallet ?? []).filter(w => !target.clubID || w.club_id === target.clubID);
+    if(!score && !wallets.length) throw new Error('未找到可用的支付钱包');
     const last = result.last_bring_out;
-    const compatible = last && wallets.some(w => w.club_id === last.club_id) ? last : undefined;
+    const compatible = last && (score || wallets.some(w => w.club_id === last.club_id)) ? last : undefined;
     // CC Sitdown return-table branch: bring out plus fee, less deposit must be positive.
     const returnAmount = compatible && compatible.to_wallet + compatible.fee - info.deposit > 0
       ? compatible.to_wallet + compatible.fee : undefined;
     const bringToTable = returnAmount === undefined ? 0 : returnAmount - info.deposit;
     const autoReturn = returnAmount !== undefined && (
-      info.retainType === 0 || info.retainType === 2 ||
+      score || info.retainType === 0 || info.retainType === 2 ||
       (info.retainType === 1 && bringToTable >= info.limitRetainMinRate * info.smallBlind * 2)
     );
-    if(returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
+    if(!score && returnAmount !== undefined && compatible && compatible.to_wallet > (wallets.find(w=>w.club_id===compatible.club_id)?.gold ?? 0))
       throw new Error('钱包余额不足以返场');
     if(info.antiCheatType === 3 || info.antiCheatType === 4) throw new Error('视频/人脸验证桌的坐下流程尚未接入');
     const limits = new BringInRules(info).caculateCanBringMinMax();
     const min = returnAmount ?? limits.minAmount, max = returnAmount ?? limits.maxAmount;
     if(!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min < 0 || max < min || limits.step <= 0)
       throw new Error('当前带入范围无效');
-    const quote: BuyInQuote = { id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
+    const quote: BuyInQuote = { funding:score?'score':'wallet',scoreClubID:score?(compatible?.club_id ?? (wallets.length===1?wallets[0]!.club_id:target.clubID ?? this.roomData.record!.clubId)):undefined,id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
       min,max,step:limits.step,wallets,deposit:limits.needDeposit ? info.deposit : 0,returnOrNew:result.return_table && (!last || compatible) ? 1 : 0,returnAmount,returnClubID:returnAmount !== undefined ? compatible?.club_id : undefined,
-      canAuto:info.retainType === 0 && returnAmount === undefined,autoReturn,
+      canAuto:!score && info.retainType === 0 && returnAmount === undefined,autoReturn,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType >= 2} };
     c.quote = quote;
     return structuredClone(quote);
@@ -524,7 +529,7 @@ export class MxRoomHost implements RoomHost {
       if(selection.amount<limits.minAmount||selection.amount>limits.maxAmount)throw new Error('带入范围已改变，请重新打开');
     } else this.seatContext(target, q.seat);
     const wallet = q.wallets.find(w => w.club_id === selection.clubID);
-    if(!wallet || (q.returnClubID !== undefined && q.returnClubID !== selection.clubID)) throw new Error('支付钱包已变更');
+    if((q.funding==='score' ? selection.clubID!==(q.returnClubID??q.scoreClubID??0) : !wallet) || (q.returnClubID !== undefined && q.returnClubID !== selection.clubID)) throw new Error('支付钱包已变更');
     if(!Number.isSafeInteger(selection.amount) || selection.amount < q.min || selection.amount > q.max ||
        (selection.amount !== q.max && (selection.amount-q.min)%q.step !== 0)) throw new Error('带入金额超出范围');
     if(selection.autoAmount !== 0 && (!q.canAuto || !Number.isSafeInteger(selection.autoAmount) || selection.autoAmount < q.min || selection.autoAmount > q.max))
@@ -566,9 +571,10 @@ export class MxRoomHost implements RoomHost {
     const info=this.roomData.snapshot.roomInfo!,mine=this.roomData.snapshot.myInfo!,player=this.roomData.snapshot.playersList.find(p=>p.seatId===seat);
     const limits=new BringInRules(info,mine.totalChips,player?.deposit??0).caculateCanBringMinMax();
     if(limits.maxAmount<limits.minAmount||limits.step<=0)throw new Error('已达到当前最大带入额度');
-    const q:BuyInQuote={mode:'add',id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
-      min:limits.minAmount,max:limits.maxAmount,step:limits.step,wallets:[wallet],returnOrNew:0,
-      deposit:limits.needDeposit?info.deposit-(player?.deposit??0):0,canAuto:info.retainType===0,
+    const score=this.roomData.record?.goldType===3;
+    const q:BuyInQuote={funding:score?'score':'wallet',scoreClubID:score?(wallet?.club_id??c.walletClubID??target.clubID??this.roomData.record!.clubId):undefined,mode:'add',id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
+      min:limits.minAmount,max:limits.maxAmount,step:limits.step,wallets:score?[]:[wallet],returnOrNew:0,
+      deposit:limits.needDeposit?info.deposit-(player?.deposit??0):0,canAuto:!score&&info.retainType===0,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType>=2}};
     c.quote=q;return structuredClone(q);
   }
@@ -595,7 +601,7 @@ export class MxRoomHost implements RoomHost {
   }
   async addTime(target:RoomTarget,signal:AbortSignal):Promise<void> {
     const c=this.seatContext(target),s=this.roomData.snapshot!;
-    const op=s.operatorList.find(o=>o.seatId===s.myInfo?.seatId && !o.isInsurance && !o.isAgreeSecondPc);
+    const op=s.operatorList.find(o=>o.seatId===s.myInfo?.seatId && !o.isAgreeSecondPc);
     if(!op||op.delayTimes>=this.globalConfig.resolveGameDelayTimes(this.roomData.record?.limitDelayTimes))throw new Error('当前不能加时');
     await new AddTimeRequest(this.client,this.pb!).execute(target,op.delayTimes,signal);
     if(this.current!==c||signal.aborted)return;
@@ -623,6 +629,23 @@ export class MxRoomHost implements RoomHost {
         if(current){current.showCardsSelection=selection;c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});}
       }
     }finally{c.showdownPending=false;}
+  }
+  async agreeSecondPcs(target:RoomTarget,agree:boolean,signal:AbortSignal):Promise<void>{
+    this.seatContext(target);const vote=this.roomData.secondPcs;
+    if(!vote.state.active||vote.state.pending||vote.state.deadline<=Date.now()/1000)return;
+    vote.state={...vote.state,pending:true};
+    const pb=this.pb!,room=new pb.Room();room.setRoomId(target.roomID);room.setMatchId(target.matchID);
+    const body=new pb.ClientMessageAgreeSecondPcsActive();body.setRoom(room);body.setAgree(agree);
+    try {await this.client.request(pb.Code.MSG_D_AGREE_SECOND_PCS_ACTIVE,target.roomID,target.matchID,body,pb.ServerMessageAgreeSecondPcsActive,signal);}
+    catch(error){if(!signal.aborted)vote.state={...vote.state,pending:false};throw error;}
+  }
+  async buyInsurance(target:RoomTarget,buyList:import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[],confirm:boolean,signal:AbortSignal):Promise<void>{
+    this.seatContext(target);if(!this.roomData.insurance.state.operator)return;
+    const pb=this.pb!,room=new pb.Room();room.setRoomId(target.roomID);room.setMatchId(target.matchID);
+    const body=new pb.ClientMessageBuyInsuranceActive();body.setRoom(room);body.setConfirm(confirm);body.setStep(true);
+    body.setBuyList(buyList.map(item=>{const buy=new pb.PotInsuranceBuy();buy.setPotId(item.potId);buy.setRound(item.round);buy.setActiveAmount(item.activeAmount);buy.setActiveOutsList(item.activeOutsList);buy.setPassiveAmount(item.passiveAmount);buy.setPassiveOutsList(item.passiveOutsList);buy.setInsurEv(item.insurEv);return buy;}));
+    // Submit all pot drafts together; replies/broadcasts update the room-scoped state.
+    this.client.send(pb.Code.MSG_D_BUY_INSURANCE_ACTIVE,target.roomID,target.matchID,body,signal);
   }
   async watchSettlement(target:RoomTarget,kind:'peek'|'reveal',signal:AbortSignal):Promise<void>{
     const context=this.seatContext(target),watch=this.roomData.watch,handNum=watch.handNum;

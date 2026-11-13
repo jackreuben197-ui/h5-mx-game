@@ -8,11 +8,13 @@ export class TableData {
   readonly info = new TableInfoData();
   readonly seats = new SeatsData();
   readonly publicCards = new PublicCardsData();
+  readonly secondPublicCards = new PublicCardsData();
   readonly pot = new PotData();
   replace(snapshot: TableSnapshot): void {
     this.info.snapshot = snapshot; // Prepare composition/layout before component notifications.
     this.seats.replace(snapshot);
     this.publicCards.replace(snapshot);
+    this.secondPublicCards.replace({...snapshot,community:snapshot.secondCommunity??[],communityEmphasis:undefined});
     this.pot.format = { smallBlind: snapshot.smallBlind ?? 0, showBB: snapshot.showBB ?? false };
     this.pot.amount = snapshot.pot;
     this.pot.pools = snapshot.pots ?? [];
@@ -21,6 +23,7 @@ export class TableData {
     this.info.clear();
     this.seats.destroy();
     this.publicCards.clear();
+    this.secondPublicCards.clear();
     this.pot.clear();
   }
 }

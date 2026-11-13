@@ -21,6 +21,10 @@ export class MessageContext {
   }
   operators(operator?: Operator.AsObject): void {
     this.state.operatorList = operator ? [operator] : [];
+    if (operator?.isInsurance && operator.seatId === this.state.myInfo?.seatId) {
+      if (!operator.opDeadline) operator.opDeadline = Date.now() / 1000 + operator.leftOpTime;
+      this.data.insurance.start(operator, (this.state.handInfo?.publicCardsList.length ?? 0) >= 4 ? this.pb.Def.Round.TURN : this.pb.Def.Round.FLOP, operator.invalidInsurancePotsList);
+    } else if (this.data.insurance.state.operator) this.data.insurance.finish();
     if (operator?.cardsList.length && operator.seatId === this.state.myInfo?.seatId)
       this.player(operator.seatId).cardsList = [...operator.cardsList];
   }

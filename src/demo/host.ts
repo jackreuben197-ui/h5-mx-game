@@ -6,6 +6,8 @@ import type {
   TableSnapshot,
   TableUpdate,
 } from '../core/types.js';
+import { DemoFeatures } from './DemoFeatures.js';
+import { ProtocolRuntime } from '../net/ProtocolRuntime.js';
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     signal.throwIfAborted();
@@ -21,6 +23,13 @@ function wait(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 export class DemoHost implements RoomHost {
+  readonly features = new DemoFeatures(()=>this.snapshot, changes=>this.publishSnapshot(changes), ()=>this.deal(), message=>this.log(message));
+  getSpecialOperations() { return this.features; }
+  async addTime() { await this.features.addTime(); }
+  async agreeSecondPcs(_target:RoomTarget, agree:boolean) { await this.features.agreeSecondPcs(agree); }
+  async buyInsurance(_target:RoomTarget, list:import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[], confirm:boolean) { await this.features.buyInsurance(list,confirm); }
+  async watchSettlement(_target:RoomTarget, kind:'peek'|'reveal') { await this.features.watchSettlement(kind); }
+  async keepSeat(_target:RoomTarget, keep:boolean) { await this.features.keepSeat(keep); }
   failNext = false;
   private snapshot?: TableSnapshot;
   private response?: AbortController;
@@ -34,6 +43,8 @@ export class DemoHost implements RoomHost {
     receive: (event: TableUpdate) => void,
   ): Promise<TableSnapshot> {
     this.log(`请求房间信息 #${target.roomID}`);
+    await this.features.initialize(await new ProtocolRuntime().load());
+    signal.throwIfAborted();
     await wait(500, signal);
     if (this.failNext) {
       this.failNext = false;
@@ -51,6 +62,7 @@ export class DemoHost implements RoomHost {
       seatCount: 9,
       dealerSeat: 2,
       pot: 150,
+      smallBlind: 10,
       community: [],
       actions: ['fold', 'check', 'raise', 'allin'],
       betting: { id: String(++this.turn), call: 0, min: 50, max: 1999, step: 1, allIn: 2000 },
@@ -65,6 +77,8 @@ export class DemoHost implements RoomHost {
       ),
     };
     this.response?.abort();
+    this.features.clear();
+    this.features.sync(this.snapshot);
     this.roundPaid.clear();
     this.receive = receive;
     signal.addEventListener(
@@ -72,6 +86,7 @@ export class DemoHost implements RoomHost {
       () => {
         if (this.receive === receive) {
           this.response?.abort();
+          this.features.clear();
           this.receive = undefined;
           this.snapshot = undefined;
         }
@@ -88,6 +103,7 @@ export class DemoHost implements RoomHost {
     const s = this.snapshot;
     if (!s || !this.receive) return;
     this.snapshot = { ...s, ...changes, revision: s.revision + 1, presentation: 'live' };
+    this.features.sync(this.snapshot);
     this.receive({
       type: 'patch',
       roomID: s.roomID,
@@ -96,6 +112,12 @@ export class DemoHost implements RoomHost {
       revision: this.snapshot.revision,
       changes,
     });
+  }
+  private publishSnapshot(changes:Partial<TableSnapshot>):void {
+    if(!this.snapshot||!this.receive)return;
+    this.snapshot={...this.snapshot,...changes,revision:this.snapshot.revision+1,presentation:'live'};
+    this.features.sync(this.snapshot);
+    this.receive({type:'snapshot',snapshot:this.snapshot});
   }
   private turnOptions(): { actions: Action[]; betting: BettingTurn } {
     const s = this.snapshot!,
@@ -230,6 +252,7 @@ export class DemoHost implements RoomHost {
   deal(): void {
     if (!this.snapshot || !this.receive) return;
     this.response?.abort();
+    this.features.clear();
     this.roundPaid.clear();
     const state = this.snapshot;
     this.snapshot = {
@@ -239,6 +262,13 @@ export class DemoHost implements RoomHost {
       presentation: 'deal',
       dealOrder: Array.from({ length: state.seatCount }, (_, i) => ((i + 1) % state.seatCount) + 1),
       community: [],
+      secondCommunity: [],
+      handEnded: false,
+      watch: undefined,
+      actingSeat: undefined,
+      countdowns: [],
+      canAddTime: false,
+      delayTimes: 0,
       pot: 150,
       actions: [],
       players: state.players.map((p) => ({
@@ -246,10 +276,14 @@ export class DemoHost implements RoomHost {
         chips: 2000 + (p.seat - 1) * 150,
         folded: false,
         action: '',
+        insuranceDeadline: undefined,
+        keepSeatDeadline: undefined,
+        keepSeatReason: undefined,
         cards: p.seat === 1 ? [14, 29] : [0, 0],
       })),
     };
     this.snapshot = { ...this.snapshot, ...this.turnOptions() };
+    this.features.sync(this.snapshot);
     this.receive({ type: 'snapshot', snapshot: this.snapshot });
     this.log('StartInfo：按 dealOrder 发牌 → 自己翻牌');
   }

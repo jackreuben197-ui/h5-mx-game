@@ -3,6 +3,8 @@ import { SettlementMapper } from '../../../logic/SettlementMapper.js';
 import { MessageContext } from '../MessageContext.js';
 export function Winner(body: ServerMessageWinner.AsObject, context: MessageContext): boolean {
   if (body.handNum !== context.state.handInfo?.handNum) return false;
+  context.data.secondPcs.finish();
+  context.data.insurance.finish();
   context.state.gameStatus = context.pb.Def.GameStatus.HAND_END;
   context.state.operatorList = [];
   for (const result of body.resultsList) {

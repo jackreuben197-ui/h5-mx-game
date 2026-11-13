@@ -21,6 +21,7 @@ export interface Player {
   folded?: boolean;
   /** CC all-in odds in hundredths of a percent, supplied by the server. */
   winPercent100?: number;
+  insuranceDeadline?: number;
   canPlayStatus?: number;
   isAutoop?: boolean;
   keepSeatDeadline?: number;
@@ -59,6 +60,7 @@ export interface TableSnapshot {
   antiCheatType?: number;
   players: readonly Player[];
   community: readonly number[];
+  secondCommunity?: readonly number[];
   communityEmphasis?: CardEmphasis;
   interaction?: 'entry-only';
   betting?: BettingTurn;
@@ -96,6 +98,7 @@ export type TableUpdate =
       >;
     };
 export interface RoomHost {
+  getSpecialOperations?(): import('./RoomRecords.js').SpecialOperations;
   getEmojis?(): RoomEmojis | undefined;
   getRecords?(): RoomRecords | undefined;
   showRules?(target: RoomTarget, insurance: boolean): void;
@@ -104,6 +107,8 @@ export interface RoomHost {
   addTime?(target: RoomTarget, signal: AbortSignal): Promise<void>;
   agreePost?(target: RoomTarget, signal: AbortSignal): Promise<void>;
   showdown?(target: RoomTarget, cardIndex: number, signal: AbortSignal): Promise<void>;
+  agreeSecondPcs?(target: RoomTarget, agree: boolean, signal: AbortSignal): Promise<void>;
+  buyInsurance?(target: RoomTarget, buyList: import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[], confirm: boolean, signal: AbortSignal): Promise<void>;
   watchSettlement?(target: RoomTarget, kind: 'peek' | 'reveal', signal: AbortSignal): Promise<void>;
   getTableSettings?(): import('../data/GameplayTableSettingData.js').GameplayTableSettingData;
   prepareSeat?(target: RoomTarget, seat: number, signal: AbortSignal): Promise<BuyInQuote>;

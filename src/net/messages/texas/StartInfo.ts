@@ -3,6 +3,8 @@ import { MessageContext } from '../MessageContext.js';
 export function StartInfo(body: ServerMessageStartInfo.AsObject, context: MessageContext): boolean {
   if (!body.handInfo) throw new Error('开局消息缺少 handInfo');
   if (body.handInfo.handNum <= (context.state.handInfo?.handNum ?? -1)) return false;
+  context.data.secondPcs.finish();
+  context.data.insurance.clear();
   context.clearHand();
   context.data.watch.clear();
   context.state.gameStatus = context.pb.Def.GameStatus.HAND_PREFLOP;

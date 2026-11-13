@@ -1,6 +1,6 @@
 {
   "width": 2048,
-  "height": 3326,
+  "height": 3529,
   "frames": {
     "avatar": {
       "x": 2,
@@ -757,6 +757,20 @@
       "width": 150,
       "height": 50,
       "source": "src/assets/raw/ui/raiseThumb.png"
+    },
+    "insuranceOption": {
+      "x": 690,
+      "y": 3175,
+      "width": 643,
+      "height": 352,
+      "source": "src/assets/raw/ui/insuranceOption.png"
+    },
+    "insuranceOptionSelected": {
+      "x": 1337,
+      "y": 3175,
+      "width": 643,
+      "height": 352,
+      "source": "src/assets/raw/ui/insuranceOptionSelected.png"
     }
   }
 }

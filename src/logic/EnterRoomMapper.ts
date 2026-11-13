@@ -77,15 +77,16 @@ export class EnterRoomMapper {
         keepSeatReason: player.keepSeatReason,
         roundActioned: player.roundActioned,
         showCardsSelection: [...((player as typeof player & {showCardsSelection?: number[]}).showCardsSelection ?? [])],
+        insuranceDeadline: s.operatorList.find(op => op.seatId === player.seatId && op.isInsurance)?.opDeadline,
         action: names[player.action] ?? '',
       };
     });
     const pot = hand?.allBet ?? 0;
     if (!Number.isSafeInteger(pot) || pot < 0) throw new Error('底池超出安全整数范围');
-    const countdowns = s.operatorList.filter(op => !op.isInsurance && !op.isAgreeSecondPc).map(op => {
+    const countdowns = s.operatorList.map(op => {
       // Resolve the legacy remaining-seconds fallback ONCE; unrelated packets must not reset it.
       if (!op.opDeadline && op.leftOpTime > 0) op.opDeadline = Date.now() / 1000 + op.leftOpTime;
-      const totalTime = (op as typeof op & { totalOpDuration?: number }).totalOpDuration ?? s.roomInfo?.opDuration ?? 0;
+      const totalTime = (op as typeof op & { totalOpDuration?: number }).totalOpDuration ?? (op.isInsurance ? room.insuranceOpDuration : op.isAgreeSecondPc ? room.secondPcsOpDuration : s.roomInfo?.opDuration) ?? 0;
       return { seat: op.seatId, deadline: op.leftOpTime > 0 ? op.opDeadline : 0, totalTime };
     });
     return {
@@ -116,6 +117,7 @@ export class EnterRoomMapper {
       mySeat,
       players,
       community: [...(hand?.publicCardsList ?? [])],
+      secondCommunity: [...(hand?.secondPublicCardsList ?? [])],
       communityEmphasis: s.settlement?.handNum === hand?.handNum ? s.settlement?.community : undefined,
       pot,
       pots: hand?.potsList.map(p => p.amount) ?? [],

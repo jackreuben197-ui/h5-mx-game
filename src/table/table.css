@@ -204,6 +204,7 @@
 .mx-settlement-watch{position:absolute;right:0;bottom:var(--mx-watch-bottom,72px);z-index:5;display:flex;flex-direction:column;gap:0;width:var(--mx-watch-width,30px)}
 .mx-settlement-watch-button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:var(--mx-watch-width,30px);height:var(--mx-watch-height,24px);padding:1px 2px 3px;border:0;background-color:transparent;color:#fff}
 .mx-settlement-watch-bg{position:absolute;inset:0;transform:scaleX(-1);pointer-events:none}
+.mx-settlement-watch-title,.mx-settlement-watch-price{position:relative;z-index:1}
 .mx-settlement-watch-title{font-size:var(--mx-watch-title,7px);white-space:nowrap;line-height:1.1}
 .mx-settlement-watch-price{display:flex;align-items:center;justify-content:center;gap:1px;font-size:var(--mx-watch-cost,6px);line-height:1}
 .mx-settlement-watch-diamond{display:inline-block;width:8px;height:8px}
@@ -305,6 +306,7 @@
 
 /* CC ALLIN Spine replaces its text bubble; folded / buy-ins remain DOM. */
 .mx-spine-allin .mx-player-action{visibility:hidden}
+.mx-spine-allin .mx-insurance-buying .mx-player-action{visibility:visible}
 
 /* One floating DEV menu; its children stay in normal document flow. */
 .mx-test-menu{position:fixed;right:12px;top:70px;z-index:10000;pointer-events:auto;color:#fff;font:14px Arial,sans-serif}

@@ -1,5 +1,7 @@
 export interface BuyInWallet { club_id: number; gold: number; club_name: string; club_random_id?: number; club_logo?: string; }
 export interface BuyInQuote {
+  funding?: 'wallet' | 'score';
+  scoreClubID?: number;
   mode?: 'sit' | 'add';
   id: number; seat: number; roomName: string; smallBlind: number;
   min: number; max: number; step: number; wallets: BuyInWallet[];
@@ -21,5 +23,7 @@ export interface SeatingActions {
   addTime?(): Promise<void>;
   agreePost?(): Promise<void>;
   showdown?(cardIndex: number): Promise<void>;
+  agreeSecondPcs?(agree: boolean): Promise<void>;
+  buyInsurance?(buyList: import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[], confirm: boolean): Promise<void>;
   watchSettlement?(kind: 'peek' | 'reveal'): Promise<void>;
 }

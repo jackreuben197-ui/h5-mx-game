@@ -7,6 +7,8 @@ export interface MountOptions {
   /** First integration uses portrait. Set auto when enabling landscape later. */
   layout?: 'portrait' | 'auto';
   components?: TableComponents;
+  /** Offline demo entry only; no synthetic controls are installed by the H5 host. */
+  demoScenarios?: readonly { label: string; run: () => void }[];
   onState?: (state: ClientState) => void;
   onLeave?: () => void;
   onNavigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void;

@@ -8,11 +8,13 @@ export function AddTimeOthers(body: ServerMessageAddTimeOthers.AsObject, context
   const previous = new Operator();
   previous.deadlineTImestamp = operator.opDeadline;
   previous.leftOpDuration = operator.leftOpTime;
-  previous.totalOpDuration = timed.totalOpDuration ?? context.state.roomInfo?.opDuration ?? 0;
+  previous.totalOpDuration = timed.totalOpDuration ?? (operator.isInsurance ? context.data.record?.insuranceOpDuration : context.state.roomInfo?.opDuration) ?? 0;
   const next = updateOperatorAfterAddTime(previous, body);
   operator.delayTimes = next.alreadyDelayTImes;
   operator.opDeadline = next.deadlineTImestamp;
   operator.leftOpTime = next.leftOpDuration;
   timed.totalOpDuration = next.totalOpDuration;
+  if (operator.isInsurance && operator.seatId === context.state.myInfo?.seatId)
+    context.data.insurance.state = {...context.data.insurance.state, operator};
   return true;
 }

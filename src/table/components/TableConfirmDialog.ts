@@ -1,7 +1,7 @@
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { SpriteAtlas } from '../SpriteAtlas.js';
 import { element } from '../dom.js';
-const confirmPanel = new URL('../../assets/raw/ui/confirmPanel.png', import.meta.url).href;
+import { dialogFrame } from './DialogSurface.js';
 const confirmTextBg = new URL('../../assets/raw/ui/confirmTextBg.png', import.meta.url).href;
 const confirmCancel = new URL('../../assets/raw/ui/confirmCancel.png', import.meta.url).href;
 
@@ -26,9 +26,7 @@ export class TableConfirmDialog {
   private current?: TableConfirmOptions;
 
   constructor() {
-    const frame = element('div', 'mx-confirm-frame');
-    frame.style.borderImageSource = `url("${confirmPanel}")`;
-    frame.setAttribute('aria-hidden', 'true');
+    const frame = dialogFrame();
     const body = element('div', 'mx-confirm-body');
     const textBg = element('div', 'mx-confirm-text-bg');
     textBg.style.borderImageSource = `url("${confirmTextBg}")`;

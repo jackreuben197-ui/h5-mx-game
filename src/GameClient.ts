@@ -35,7 +35,18 @@ export class GameClient {
     notice.setAttribute('role', 'alert');
     root.append(this.loading.root, notice);
     container.append(root);
-    if (import.meta.env.DEV) this.testMenu = new TestMenuView(container);
+    if (import.meta.env.DEV || options.demoScenarios) this.testMenu = new TestMenuView(container);
+    const demoControls = document.createElement('div');
+    demoControls.className = 'mx-demo-scenarios';
+    if (options.demoScenarios) this.testMenu!.tableControls.append(demoControls);
+    const demoButtons = options.demoScenarios?.map(scenario => {
+      const button = document.createElement('button');
+      button.textContent = scenario.label;
+      button.disabled = true;
+      button.onclick = scenario.run;
+      demoControls.append(button);
+      return button;
+    });
     let module: typeof import('./table/view.js') | undefined;
     const preload = new Preloader(async (report) => {
       await Promise.all([i18nMgr.initLanguage(), LoadingAssets.prepareFont()]);
@@ -46,6 +57,7 @@ export class GameClient {
     });
     this.controller = new GameController(preload, options.host, options.minimumLoadingMs ?? PreviewConfig.minimumLoadingMs);
     this.unsubscribe = this.controller.subscribe((state) => {
+      demoButtons?.forEach(button => { button.disabled = state.phase !== 'table'; });
       root.hidden = state.phase === 'hidden' || state.phase === 'destroyed';
       this.loading.render(state);
       notice.textContent = state.phase === 'table' ? state.error : '';
@@ -55,7 +67,7 @@ export class GameClient {
             (action, amount) => this.controller.command(action, amount),
             () => this.leave(),
             options.onNavigate,
-            { emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'portrait', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep), addTime:()=>this.controller.addTime(), showdown:index=>this.controller.showdown(index), watchSettlement:kind=>this.controller.watchSettlement(kind) } },
+            { specialOperations: options.host.getSpecialOperations?.(), emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'portrait', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep), addTime:()=>this.controller.addTime(), showdown:index=>this.controller.showdown(index), agreeSecondPcs:agree=>this.controller.agreeSecondPcs(agree), buyInsurance:(list,confirm)=>this.controller.buyInsurance(list,confirm), watchSettlement:kind=>this.controller.watchSettlement(kind) } },
           );
           root.prepend(this.table.root);
         }

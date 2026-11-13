@@ -5,7 +5,7 @@ import './page.css';
 // Both dev and built preview start muted; do not overwrite the saved preference.
 settings.soundOn = false;
 const app = document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML = `<main class="demo"><section class="intro"><span class="eyebrow">MX / HTML TABLE</span><h1>CC 牌桌 · DOM 迁移</h1><p class="description">沿用 CC 默认桌布、座位计算与卡牌动画参数。用下方操作核对发牌、翻牌、弃牌和静态恢复。</p><div class="status"><i></i><span id="status">后台准备牌桌资源</span></div><div class="controls"><button id="enter">进入演示房间 <span>↗</span></button><button id="switch">切换房间</button><button id="fail">模拟进房失败</button><label>预览 <select id="preview-mode"><option value="portrait">竖屏</option><option value="landscape">横屏</option><option value="auto" selected>随窗口</option></select></label><button id="deal">重新发牌</button><button id="face-bet">对手下注 / 测试跟注</button><button id="advance">发下一轮公共牌</button><button id="fold-other">对手弃牌</button><button id="fold-self">自己弃牌</button><button id="sync">同步快照 / 中断动画</button><label>座位数 <select id="seats"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option selected>9</option></select></label></div><p class="disclaimer">本页使用模拟房间数据，不连接正式游戏服务。</p><details open><summary>生命周期记录</summary><ol id="log"></ol></details></section><section class="phone"><div class="lobby"><span class="lobby-mark">♠</span><h2>德州俱乐部</h2><p>房间尚未打开</p><small>牌桌资源在后台预加载</small></div><div id="game"></div></section></main>`;
+app.innerHTML = `<main class="demo"><section class="intro"><span class="eyebrow">MX / HTML TABLE</span><h1>CC 牌桌 · DOM 迁移</h1><p class="description">沿用 CC 默认桌布、座位计算与卡牌动画参数。用下方操作核对发牌、翻牌、弃牌和静态恢复；进入牌桌后，在“测试”菜单选择保险、二道牌、加时及结算看牌。</p><div class="status"><i></i><span id="status">后台准备牌桌资源</span></div><div class="controls"><button id="enter">进入演示房间 <span>↗</span></button><button id="switch">切换房间</button><button id="fail">模拟进房失败</button><label>预览 <select id="preview-mode"><option value="portrait">竖屏</option><option value="landscape">横屏</option><option value="auto" selected>随窗口</option></select></label><button id="deal">重新发牌</button><button id="face-bet">对手下注 / 测试跟注</button><button id="advance">发下一轮公共牌</button><button id="fold-other">对手弃牌</button><button id="fold-self">自己弃牌</button><button id="sync">同步快照 / 中断动画</button><label>座位数 <select id="seats"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option selected>9</option></select></label></div><p class="disclaimer">本页使用模拟房间数据，不连接游戏服务、不扣费。新增演示位于牌桌“测试”菜单。</p><details open><summary>生命周期记录</summary><ol id="log"></ol></details></section><section class="phone"><div class="lobby"><span class="lobby-mark">♠</span><h2>德州俱乐部</h2><p>房间尚未打开</p><small>牌桌资源在后台预加载</small></div><div id="game"></div></section></main>`;
 const logList = document.querySelector<HTMLOListElement>('#log')!;
 function log(message: string) {
   const item = document.createElement('li');
@@ -17,6 +17,7 @@ const host = new DemoHost(log);
 let previous = '';
 const game = mountGame(document.querySelector<HTMLDivElement>('#game')!, {
   host,
+  demoScenarios: host.features.scenarios,
   layout: 'auto',
   onNavigate(action) {
     const label = { report: '战绩', replay: '牌谱', emoji: '表情', effect: '窗花', voice: '语音', camera: '视频' }[action];

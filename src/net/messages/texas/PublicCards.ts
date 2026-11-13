@@ -26,6 +26,8 @@ export function PublicCards(body: ServerMessagePublicCards.AsObject, context: Me
     new Set(combined).size !== combined.length
   )
     throw new Error('公共牌增量不连续，需要同步');
+  context.data.secondPcs.finish();
+  context.data.insurance.finish();
   hand.publicCardsList = combined;
   if (body.publicCardsArray2List.length)
     hand.secondPublicCardsList = [...body.publicCardsArray2List];

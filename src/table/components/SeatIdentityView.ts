@@ -28,6 +28,9 @@ export class SeatIdentityView {
   private winPercent = element('div','mx-seat-win-percent');
   private winPercentTitle = element('span','mx-seat-win-percent-title');
   private winPercentValue = element('strong','mx-seat-win-percent-value');
+  private insuranceDeadline = 0;
+  private insuranceTimer?: ReturnType<typeof setInterval>;
+  private actionText = '';
   private action = element('span', 'mx-player-action');
   constructor(private seatID: number) {
     this.avatar.alt = i18nMgr.Get("MX_PlayerAvatar", [], "玩家头像");
@@ -53,7 +56,7 @@ export class SeatIdentityView {
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
     this.root.append(this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
-  destroy(): void { this.countdown.destroy(); }
+  destroy(): void { clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
     const p = state.player;
     const keepDeadline=p?.keepSeatDeadline??0;
@@ -91,8 +94,19 @@ export class SeatIdentityView {
     i18nLabel.bind(this.win, () => win ? `${handValueTypeToString(win.handValueType as HandValueType) ?? ''}\n+${ChipFormatter.format(win.collectedChips,state.smallBlind,state.showBB)}` : '');
     this.fold.hidden = !p?.folded;
     i18nLabel.bind(this.action, () => p?.folded ? '' : ccActionText(p?.action ?? ''));
-    this.action.hidden = !this.action.textContent;
-    this.action.style.backgroundColor = p?.action === '全下' ? '#FA2B4B' : ['加注','下注'].includes(p?.action ?? '') ? '#78E4E4' : '#F9CA9F';
+    this.actionText = this.action.textContent ?? '';
+    this.insuranceDeadline = p?.insuranceDeadline ?? 0;
+    clearInterval(this.insuranceTimer);
+    const refreshInsurance = () => {
+      const left = Math.max(0, Math.ceil(this.insuranceDeadline - Date.now() / 1000));
+      this.root.classList.toggle('mx-insurance-buying', left > 0);
+      this.action.style.backgroundColor = left ? '#00B88B' : p?.action === '全下' ? '#FA2B4B' : ['加注','下注'].includes(p?.action ?? '') ? '#78E4E4' : '#F9CA9F';
+      this.action.textContent = left ? i18nMgr.Get('adaptation20062').replace('##', String(left)) : this.actionText;
+      this.action.hidden = !this.action.textContent;
+      if (!left) clearInterval(this.insuranceTimer);
+    };
+    if (this.insuranceDeadline > Date.now() / 1000) this.insuranceTimer = setInterval(refreshInsurance, 200);
+    refreshInsurance();
     // The normal Texas prefab has no Image_Trust node; CC only shows it when present (MTT).
     this.autoStatus.hidden = true;
     this.playStatus.hidden=!p||keeping||![0,2,3].includes(p.canPlayStatus??1);
