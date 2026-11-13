@@ -1,3 +1,6 @@
+import { SquidIn } from './SquidIn.js';
+import { SquidInActive } from './SquidInActive.js';
+import { NextChange } from './NextChange.js';
 import { RoomInsurance } from './RoomInsurance.js';
 import { InsuranceOutsCards } from './InsuranceOutsCards.js';
 import { BuyInsuranceActive } from './BuyInsuranceActive.js';
@@ -40,6 +43,10 @@ export class TexasMessageHandler {
   accepts(code: number): boolean {
     const { Code } = this.pb;
     switch (code) {
+      case Code.MSG_S_SQUID_IN:
+      case Code.MSG_D_SQUID_IN_ACTIVE:
+      case Code.MSG_S_NEXT_CHANGE:
+
       case Code.MSG_D_ROOM_INSURANCE:
       case Code.MSG_S_INSURANCE_OUTS_CARDS:
       case Code.MSG_D_BUY_INSURANCE_ACTIVE:
@@ -82,6 +89,10 @@ export class TexasMessageHandler {
   dispatch(packet: Packet, context: MessageContext): boolean {
     const pb = this.pb, { Code } = pb;
     switch (packet.code) {
+      case Code.MSG_S_SQUID_IN: return SquidIn(pb.ServerMessageSquidIn.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_D_SQUID_IN_ACTIVE: return SquidInActive(pb.ServerMessageSquidInActive.deserializeBinary(packet.body).toObject(),context);
+      case Code.MSG_S_NEXT_CHANGE: return NextChange(pb.ServerMessageNextChange.deserializeBinary(packet.body).toObject(),context);
+
       case Code.MSG_D_ROOM_INSURANCE:
         return RoomInsurance(pb.ServerMessageRoomInsurance.deserializeBinary(packet.body).toObject(),context);
       case Code.MSG_S_INSURANCE_OUTS_CARDS:

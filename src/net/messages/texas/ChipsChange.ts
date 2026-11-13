@@ -6,6 +6,7 @@ export function ChipsChange(body: ServerMessageChipsChange.AsObject, context: Me
     if (item.reason === context.pb.Def.ChipChangeReason.CC_NONE && player.userRid > 0 && item.change > 0)
       context.data.report.applyChipChange(player.userRid, item.change, player.name, player.avatar);
     player.chip = item.chips;
+    if(item.seatId===context.state.myInfo?.seatId)context.state.myInfo.storeChips=item.storeChips;
   }
   return true;
 }

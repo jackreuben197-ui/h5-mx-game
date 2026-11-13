@@ -19,6 +19,9 @@ export function StartInfo(body: ServerMessageStartInfo.AsObject, context: Messag
     if (body.handInfo.dealOrderList.includes(item.seatId) && !player.cardsList.length)
       player.cardsList = [0, 0];
   }
+  const squid=context.data.squid,mine=context.state.playersList.find(p=>p.seatId===context.state.myInfo?.seatId);
+  squid.start(body.handInfo.inSquid);
+  if(mine)squid.showJoin=body.handInfo.inSquid&&!mine.keepSeatReason&&!mine.inSquid&&(!body.handInfo.dealOrderList.includes(mine.seatId)||squid.showJoin);
   context.operators(body.nextOperator);
   context.presentation = 'deal';
   context.data.report.applyStartInfo();

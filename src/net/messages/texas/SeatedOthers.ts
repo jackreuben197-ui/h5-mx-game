@@ -2,7 +2,7 @@ import type { ServerMessageSeatedOthers } from '@silenthill/agreement-web';
 import { MessageContext } from '../MessageContext.js';
 export function SeatedOthers(body: ServerMessageSeatedOthers.AsObject, context: MessageContext): boolean {
   const p = new context.pb.Player().toObject();
-  Object.assign(p, body, { chip: body.chips, cardsList: [], action: context.pb.Def.Action.NONE });
+  Object.assign(p, body, { chip: body.chips, inSquid:body.squidIn, cardsList: [], action: context.pb.Def.Action.NONE });
   context.state.playersList = [
     ...context.state.playersList.filter((p) => p.seatId !== body.seatId),
     p,

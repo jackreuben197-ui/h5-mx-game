@@ -23,6 +23,7 @@ export interface SeatingActions {
   addTime?(): Promise<void>;
   agreePost?(): Promise<void>;
   showdown?(cardIndex: number): Promise<void>;
+  joinSquid?(): Promise<void>;
   agreeSecondPcs?(agree: boolean): Promise<void>;
   buyInsurance?(buyList: import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[], confirm: boolean): Promise<void>;
   watchSettlement?(kind: 'peek' | 'reveal'): Promise<void>;

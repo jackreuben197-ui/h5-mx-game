@@ -26,7 +26,9 @@ export class DialogSurface {
     this.observer.observe(this.content);
   }
   fit(): void {
-    const scale = Math.min(1, this.root.clientWidth / 480, (this.root.clientWidth - 12) / this.panel.offsetWidth, (this.root.clientHeight - 12) / this.panel.offsetHeight);
+    const style=getComputedStyle(this.panel);
+    const verticalMargin=(parseFloat(style.marginTop)||0)+(parseFloat(style.marginBottom)||0);
+    const scale = Math.min(1, this.root.clientWidth / 480, (this.root.clientWidth - 12) / this.panel.offsetWidth, (this.root.clientHeight - 12 - verticalMargin) / this.panel.offsetHeight);
     if (scale > 0) this.panel.style.transform = `scale(${scale})`;
   }
   show(visible: boolean): void { this.root.hidden = !visible; if (visible) this.fit(); }

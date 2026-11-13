@@ -169,6 +169,10 @@ export class GameController<T> {
     if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.agreeSecondPcs)throw new Error('房间已离开');
     return this.host.agreeSecondPcs(this.state.target,agree,this.session.signal);
   }
+  async joinSquid():Promise<void>{
+    if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.joinSquid)throw new Error('房间已离开');
+    return this.host.joinSquid(this.state.target,this.session.signal);
+  }
   async buyInsurance(buyList:import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[],confirm:boolean):Promise<void>{
     if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.buyInsurance)throw new Error('房间已离开');
     return this.host.buyInsurance(this.state.target,buyList,confirm,this.session.signal);

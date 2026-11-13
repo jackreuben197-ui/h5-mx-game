@@ -11,6 +11,8 @@ export function Seated(body: ServerMessageSeated.AsObject, context: MessageConte
   mine.willStandup = false;
   mine.alreadySeated = body.alreadySeated;
   mine.squidRoundSeated = body.squidRoundSeated;
+  context.data.squid.showJoin=context.data.squid.state.enabled&&!body.squidIn;
+  if(body.squidTotalLimit>0)context.data.squid.totalLimit=body.squidTotalLimit;
   mine.storeChips = body.storeChips;
   context.state.myInfo = mine;
   const p = new context.pb.Player().toObject();

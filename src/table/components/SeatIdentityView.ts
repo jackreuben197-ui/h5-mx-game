@@ -10,6 +10,8 @@ import { SpriteAtlas } from '../SpriteAtlas.js';
 import type { SeatState } from '../../data/SeatData.js';
 export class SeatIdentityView {
   readonly root = element('div', 'mx-seat-identity');
+  private squid=element('span','mx-seat-squid');
+  private squidMask=element('span','mx-seat-squid-mask');
   private countdown = new SeatCountdownView();
   private avatar = element('img', 'mx-avatar');
   private fallback = element('div', 'mx-avatar-fallback');
@@ -33,6 +35,9 @@ export class SeatIdentityView {
   private actionText = '';
   private action = element('span', 'mx-player-action');
   constructor(private seatID: number) {
+    this.squid.style.setProperty('--squid_bg_red',`url("${new URL('../../assets/raw/squid/squid_bg_red.png',import.meta.url).href}")`);
+    this.squid.style.backgroundImage=`url("${new URL('../../assets/raw/squid/table_icon_squid_sm.png',import.meta.url).href}")`;
+    this.squidMask.style.backgroundImage=`url("${new URL('../../assets/raw/squid/squid_mask.png',import.meta.url).href}")`;
     this.avatar.alt = i18nMgr.Get("MX_PlayerAvatar", [], "玩家头像");
     this.avatar.hidden = true;
     this.avatar.onerror = () => {
@@ -54,11 +59,13 @@ export class SeatIdentityView {
     this.returnButton.hidden=true;
     SpriteAtlas.paint(this.returnButton,'returnGame');
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
-    this.root.append(this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
+    this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
   destroy(): void { clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
     const p = state.player;
+    this.squid.hidden=!(p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
+    this.squidMask.hidden=!p?.squidIn||!!p.squidCount;
     const keepDeadline=p?.keepSeatDeadline??0;
     const keeping=!!p?.keepSeatReason;
     this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);

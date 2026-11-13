@@ -2,6 +2,8 @@
 
 更新：2026-11-12。新机器继续开发时先读本文件、README.md、docs/entry-flow.md，再核对代码和当前 git status。这里是唯一的 AI 交接文档，不另建 agent.md / AI.md。用户后续指令优先。
 
+用户最新分支约定（2026-11-13）：统一在 `kong` 分支开发，不再新建任务分支。此前 player-info-dialog、second-board-insurance、squid-gameplay 的提交统一保留在该分支历史中。
+
 ## 1. 工作范围与外部引用
 
 真正修改的项目是 **h5-mx-game（MX）**。旧会话工作目录常在 h5-cc-game，不能因此把修改写回旧项目。
@@ -173,3 +175,9 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 
 - 2026-11-13 按用户新要求替换保险逐池提交：InsuranceChoices 按 potId 保存档位，切换不丢失，购买一次提交全部池且 confirm=true；放弃/超时保留强制最低投保规则。结算看牌按钮文字与价格提升至原背景上层，修复暗色遮盖。记分牌 goldType=3 迁入朋友/内部桌直接带入、跳过钱包余额/自动充值、正筹码直接返桌与零筹码重新带入，仍共用原带入组件与协议。
 - 本次真实 H5 在竞技场2的 0.1/0.2“主持词V型的牌桌”，两个授权测试账号均成功带入；第4手全下触发保险，实际切换数字/图形排序、加时及购买，收到 1115、1014、成功1015与非空1116。数字序列黑桃3/红桃3/梅花7/红桃7，图形序列黑桃3/红桃3/红桃7/梅花7，与 CC 算法一致。静音 Chrome iPhone12 截图 /tmp/mx-score-bringin-live.png、/tmp/mx-score-insurance-live.png。本次两人桌仅一个可保险池，多池联合购买只完成逻辑及演示交互验证，不能称实服多池验收。未执行完整构建，未提交/推送。
+
+- 2026-11-13 已按用户要求提交前阶段为 `8a7d6e2` 并推送 `origin/codex/second-board-insurance`（含 LFS）。从该提交新建 `codex/squid-gameplay`，鱿鱼阶段暂未提交/推送。
+- 鱿鱼迁移：新增房间 SquidData、原名 SquidIn(1125)/SquidInActive(1024)/NextChange(1126)，接入原 switch；StartInfo/Seated/SeatedOthers/Winner/SyncEnter 保留参与、数量、逃离、总数与加入资格。经典及血战剩余数沿 CC 规则，清手不清鱿鱼轮，重连静态恢复不重播。Winner 按 EHC_SQUID 和离桌罚金生成结算，沿原倍率表；ChipsChange 同步本人存筹码。新 SquidView 复用 DialogSurface/TableConfirmDialog，使用 CC 原图、开始动画2秒原时序、3页说明/不再提示、5秒结算自动关闭；菜单站起与玩法站起共用入口。修正配置鱿鱼价值来源和跨端口资源绝对地址，新增资源仅在 assets/raw/squid 并记录 ccSources。
+- 静音 Chrome iPhone12：新旧同入竞技场2 10/20“一直经典鱿鱼-1”，新版两次实际带入（含押金），第203手前点击加入收到成功1024和1125；观察本人数量0→1、遮罩消失及包含本人+1的轮次结算。真实结算截图 `/tmp/mx-squid-settlement-layout.png`，原版参考 `/tmp/cc-squid-before.png`，资源修复后的说明 `/tmp/mx-squid-intro-fixed.png`。375×500 同一CDP会话 mobile=true/touch=5，说明窗 bounds=(35.16,23.44,304.69,453.13)，截图 `/tmp/mx-squid-mobile-verified.png`。浏览器截图均为真实H5数据，临时文件不随Git；旧Canvas触摸未成功关闭说明，最后调用已定位的原按钮click事件关闭，没有伪造服务端消息。
+- 本轮 TypeScript check 与18项相关测试通过，涵盖加入消息、两模式剩余数、结算、旧手过滤、重连、开局资格、保险/带入/设置回归；未做完整构建。血战专属离桌/倍率、头尾鱿鱼等配置未在经典测试桌逐项实服触发，不能宣称这些分支实服验收完成。外壳LOG按钮可能挡住左侧站起入口，未修改外部H5源码。
+- 2026-11-13 鱿鱼 UI 复核：共用 dialogConfirm 按 CC sprite-frame 九宫格绘制，保留随按钮高度缩放的端部；加入游戏改回 table_bg_jkp_pool 原图，站起围观使用 table_bg_stand_up 并置于鱿鱼图标下层，390/450 高度与加入按钮位置沿用 MorePlayTypeInfo 的 suggestScale 分支。分页当前条完整绿色；座位 SquidMask 恢复 150×108 且低于亮牌；结算大图放在列表下方，负金额行恢复原尺寸的 squid_lose，姓名/ID 左对齐。TypeScript check 和相关 18 项测试通过。静音 Chrome 手机模式真实 H5 登录/坐下，捕获三人鱿鱼结算（负金额爪子可见），实际点击偷偷看后对手手牌可见；375×500 mobile+touch=5 弹窗 bounds=(35.16,23.44,304.69,453.13)。加入游戏的最终外观使用组件演示截图核对，本次未重新触发真实中途加入按钮。截图 /tmp/mx-squid-live-result-fixed.png、/tmp/mx-squid-live-cards-fixed.png、/tmp/mx-squid-intro-375-fixed.png、/tmp/mx-squid-join-layout-fixed.png 均为临时文件。当前修复未提交。

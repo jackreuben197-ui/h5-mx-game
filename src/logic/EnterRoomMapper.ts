@@ -17,6 +17,7 @@ export class EnterRoomMapper {
     const mineOp = s.operatorList.find(
       (op) => op.seatId === mySeat && !op.isInsurance && !op.isAgreeSecondPc,
     );
+    data.squid.refresh(room,s.roomInfo,s.playersList,mySeat,hand?.conRounds??0);
     const seen = new Set<number>();
     const players = s.playersList.map((player) => {
       if (
@@ -60,6 +61,7 @@ export class EnterRoomMapper {
         seat: player.seatId,
         userRid: player.userRid,
         sex: player.sex,
+        squidCount:player.squidCount,squidIn:player.inSquid,squidEscaped:player.squidEscaped,
         settlement: s.settlement?.handNum === hand?.handNum ? s.settlement?.seats[player.seatId] : undefined,
         name: player.name,
         chips: player.chip,

@@ -22,6 +22,7 @@ export interface Player {
   /** CC all-in odds in hundredths of a percent, supplied by the server. */
   winPercent100?: number;
   insuranceDeadline?: number;
+  squidCount?:number; squidIn?:boolean; squidEscaped?:boolean;
   canPlayStatus?: number;
   isAutoop?: boolean;
   keepSeatDeadline?: number;
@@ -108,6 +109,7 @@ export interface RoomHost {
   agreePost?(target: RoomTarget, signal: AbortSignal): Promise<void>;
   showdown?(target: RoomTarget, cardIndex: number, signal: AbortSignal): Promise<void>;
   agreeSecondPcs?(target: RoomTarget, agree: boolean, signal: AbortSignal): Promise<void>;
+  joinSquid?(target:RoomTarget,signal:AbortSignal):Promise<void>;
   buyInsurance?(target: RoomTarget, buyList: import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[], confirm: boolean, signal: AbortSignal): Promise<void>;
   watchSettlement?(target: RoomTarget, kind: 'peek' | 'reveal', signal: AbortSignal): Promise<void>;
   getTableSettings?(): import('../data/GameplayTableSettingData.js').GameplayTableSettingData;

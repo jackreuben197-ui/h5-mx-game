@@ -1,3 +1,4 @@
+import './button-sprites.css';
 import ui from '../assets/ui-atlas.json';
 import sources from '../assets/image-sources.json';
 import { resources } from './resources.js';
@@ -21,7 +22,17 @@ export class SpriteAtlas {
     node.style.backgroundImage = 'none';
     node.style.backgroundColor = color;
   }
+  static paintButton(node: HTMLElement, image: string, slice='85 80', width='47.486cqh 44.693cqh'): void {
+    node.classList.add('mx-sliced-button');
+    node.style.setProperty('--mx-button-image',`url("${image}")`);
+    node.style.setProperty('--mx-button-slice',slice);
+    node.style.setProperty('--mx-button-width',width);
+  }
   static paint(node: HTMLElement, key: Sprite): void {
+    if(key==='dialogConfirm'){
+      this.paintButton(node,new URL('../assets/raw/ui/dialogConfirm.png',import.meta.url).href);
+      return;
+    }
     if (resources.mode === 'raw') {
       node.style.backgroundImage = `url("${resources.rawUI[key]}")`;
       node.style.backgroundSize = '100% 100%'; node.style.backgroundPosition = 'center';

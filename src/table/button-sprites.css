@@ -1,0 +1,4 @@
+/* CC dialog_btn_bg1 sprite-frame: 85px vertical / 80px horizontal nine-slice.
+   Container height units preserve end caps at every button aspect ratio. */
+.mx-game .mx-sliced-button{position:relative;container-type:size;isolation:isolate;background-image:none!important;background-color:transparent!important;border:0;padding:0}
+.mx-sliced-button::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:0 solid transparent;border-image-source:var(--mx-button-image);border-image-slice:var(--mx-button-slice) fill;border-image-width:var(--mx-button-width);border-image-repeat:stretch}

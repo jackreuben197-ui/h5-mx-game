@@ -1,3 +1,4 @@
+import { SquidData } from './SquidData.js';
 import { SecondPcsData } from './SecondPcsData.js';
 import { InsuranceData } from './InsuranceData.js';
 import { GameplayTableSettingData } from './GameplayTableSettingData.js';
@@ -17,6 +18,7 @@ export class ProtocolRoomData {
   readonly emoji = new TexasGameRoomDataEmoji();
   readonly report = new TexasGameRoomDataReport(this);
   readonly replay = new TexasGameRoomDataReplay();
+  readonly squid = new SquidData();
   readonly secondPcs = new SecondPcsData();
   readonly insurance = new InsuranceData();
   readonly watch = new SettlementWatchData();
@@ -28,6 +30,8 @@ export class ProtocolRoomData {
     this.insurance.clear();
     const s = this.snapshot;
     if (!s) return;
+    this.squid.totalLimit=s.roomInfo?.squidTotalLimit??0;
+    this.squid.restore(!!s.handInfo?.inSquid,s.playersList.find(p=>p.seatId===s.myInfo?.seatId));
     for (const op of s.operatorList) {
       if (!op.opDeadline && op.leftOpTime > 0) op.opDeadline = Date.now() / 1000 + op.leftOpTime;
     }
@@ -43,6 +47,7 @@ export class ProtocolRoomData {
     this.report.clear();
     this.replay.clearData();
     this.watch.clear();
+    this.squid.clear();
     this.secondPcs.finish();
     this.insurance.clear();
     this.record = undefined;

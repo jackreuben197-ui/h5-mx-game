@@ -34,7 +34,7 @@ export class TableConfirmDialog {
     const buttons = element('div', 'mx-confirm-buttons');
     body.append(textBg, this.message);
     this.cancel.type = this.commit.type = 'button';
-    this.cancel.style.backgroundImage = `url("${confirmCancel}")`;
+    SpriteAtlas.paintButton(this.cancel,confirmCancel,'91 149 88 143','50.838cqh 83.240cqh 49.162cqh 79.888cqh');
     SpriteAtlas.paint(this.commit, 'dialogConfirm');
     buttons.append(this.cancel, this.commit);
     this.panel.setAttribute('role', 'alertdialog');

@@ -639,6 +639,12 @@ export class MxRoomHost implements RoomHost {
     try {await this.client.request(pb.Code.MSG_D_AGREE_SECOND_PCS_ACTIVE,target.roomID,target.matchID,body,pb.ServerMessageAgreeSecondPcsActive,signal);}
     catch(error){if(!signal.aborted)vote.state={...vote.state,pending:false};throw error;}
   }
+  async joinSquid(target:RoomTarget,signal:AbortSignal):Promise<void>{
+    this.seatContext(target);if(!this.roomData.squid.state.showJoin)return;
+    const pb=this.pb!,room=new pb.Room();room.setRoomId(target.roomID);room.setMatchId(target.matchID);
+    const body=new pb.ClientMessageSquidInActive();body.setRoom(room);body.setEnable(true);
+    await this.client.request(pb.Code.MSG_D_SQUID_IN_ACTIVE,target.roomID,target.matchID,body,pb.ServerMessageSquidInActive,signal);
+  }
   async buyInsurance(target:RoomTarget,buyList:import('@silenthill/agreement-web').PotInsuranceBuy.AsObject[],confirm:boolean,signal:AbortSignal):Promise<void>{
     this.seatContext(target);if(!this.roomData.insurance.state.operator)return;
     const pb=this.pb!,room=new pb.Room();room.setRoomId(target.roomID);room.setMatchId(target.matchID);
