@@ -22,6 +22,8 @@ export interface Player {
   /** CC all-in odds in hundredths of a percent, supplied by the server. */
   winPercent100?: number;
   insuranceDeadline?: number;
+  inMushroom?: boolean;
+  costMushroom?: number;
   squidCount?:number; squidIn?:boolean; squidEscaped?:boolean;
   canPlayStatus?: number;
   isAutoop?: boolean;

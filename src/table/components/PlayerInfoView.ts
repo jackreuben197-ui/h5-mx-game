@@ -41,6 +41,7 @@ export class PlayerInfoView {
 
   async open(player: Player): Promise<void> {
     const generation = ++this.generation;
+    this.busy = false;
     this.player = player;
     this.profile = this.records?.peekPlayerProfile?.(player.userRid ?? 0);
     this.tab = 'data';
@@ -72,12 +73,13 @@ export class PlayerInfoView {
   private canManage(): boolean { return this.isOther() && !!this.records?.data.record?.roomAdmin?.isAdmin; }
   private async run(action: () => Promise<void>, done?: () => void): Promise<void> {
     if (this.busy) return;
+    const generation = this.generation;
     this.busy = true; this.dialog.status.textContent = '';
     const giftButtons=this.dialog.panel.querySelectorAll<HTMLButtonElement>('.mx-player-profile-gift-grid button');
     giftButtons.forEach(button=>button.disabled=true);
-    try { await action(); done?.(); }
-    catch (error) { this.dialog.status.textContent = error instanceof Error ? error.message : String(error); }
-    finally { this.busy = false; giftButtons.forEach(button=>button.disabled=false); }
+    try { await action(); if(generation === this.generation) done?.(); }
+    catch (error) { if(generation === this.generation) this.dialog.status.textContent = error instanceof Error ? error.message : String(error); }
+    finally { if(generation === this.generation) this.busy = false; giftButtons.forEach(button=>button.disabled=false); }
   }
   private confirm(message: () => string, action: () => void): void {
     this.confirmDialog?.open({

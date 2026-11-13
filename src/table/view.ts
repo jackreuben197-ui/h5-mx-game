@@ -1,3 +1,5 @@
+import './mushroom-boom.css';
+import { MushroomBoomView } from './components/MushroomBoomView.js';
 import { SquidView } from './components/SquidView.js';
 import './squid.css';
 import './special-operations.css';
@@ -94,6 +96,7 @@ export class TableView {
   private secondPcs?: AgreeSecondPcsView;
   private insurance?: InsuranceView;
   private squid?:SquidView;
+  private mushroomBoom?:MushroomBoomView;
   private sound = new TableSound();
   private soundControl: SoundControlView;
   private board: ReturnType<NonNullable<TableComponents['publicCards']>>;
@@ -231,6 +234,8 @@ export class TableView {
       this.insurance = new InsuranceView(specialOperations, options.seating, error => this.toast.show(error));
       this.squid=new SquidView(specialOperations,options.seating,this.confirmDialog,error=>this.toast.show(error));
       this.stage.append(this.squid.root);
+      this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
+      this.root.append(this.mushroomBoom.guide.surface.root);
       this.root.append(this.secondPcs.root, this.insurance.root,this.squid.result.root,this.squid.intro.root);
     }
     if (import.meta.env.DEV && options.testControls) {
@@ -272,7 +277,7 @@ export class TableView {
       }
     for (const [id, position] of this.layout.positions(state))
       this.seatViews.get(id)?.place(position, positionMode);
-    i18nLabel.bind(this.info, () => [state.name, i18nMgr.Get("MX_HoldEmRegularNoLimit", [], "德州-普通-无限注"), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].concat(this.squid?.infoLines()??[]).join('\n'));
+    i18nLabel.bind(this.info, () => [state.name, i18nMgr.Get("MX_HoldEmRegularNoLimit", [], "德州-普通-无限注"), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].concat(this.squid?.infoLines()??[],this.mushroomBoom?.infoLines()??[]).join('\n'));
     const own = this.layout.positions(state).get(state.mySeat);
     if (own && !this.layout.landscape) {
       const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
@@ -308,6 +313,7 @@ export class TableView {
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
     this.squid?.resize(l.suggest);
+    queueMicrotask(()=>this.mushroomBoom?.mushroom.resize());
     this.toast.setScale(l.unit);
     Object.assign(this.stage.style, {
       left: '0px',
@@ -349,6 +355,7 @@ export class TableView {
     this.secondPcs?.destroy();
     this.insurance?.destroy();
     this.squid?.destroy();
+    this.mushroomBoom?.destroy();
     this.appearanceGeneration++;
     this.deskBackground.destroy();
     this.settingsOff.forEach(off=>off());

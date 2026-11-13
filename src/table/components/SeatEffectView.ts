@@ -10,7 +10,7 @@ export class SeatEffectView {
     const old = this.previous;
     this.previous = state;
     if (!this.effects) return;
-    if (!state.player || old?.handNum !== state.handNum || old?.mine !== state.mine) this.cancel();
+    if (!state.player || old?.handNum !== state.handNum || old?.mine !== state.mine || old?.player?.userRid !== state.player?.userRid) this.cancel();
     // Once ALLIN is shown, changing round/action fields cannot dismiss its final pose.
     const allin = !!state.player && !state.player.folded && !state.handEnded &&
       (this.allin || state.player.action === '全下');

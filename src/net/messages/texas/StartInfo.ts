@@ -9,6 +9,8 @@ export function StartInfo(body: ServerMessageStartInfo.AsObject, context: Messag
   context.data.watch.clear();
   context.state.gameStatus = context.pb.Def.GameStatus.HAND_PREFLOP;
   context.state.handInfo = body.handInfo;
+  context.data.mushroom.update(body.handInfo,context.data.record?.mushroomBase??0,true);
+  context.data.criticalHit.update(body.handInfo,true);
   for (const item of body.playersList) {
     const player = context.player(item.seatId);
     Object.assign(player, item);

@@ -1,3 +1,4 @@
+import { AsyncImage } from '../AsyncImage.js';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { ccActionText } from '../../i18n/CCActionText.js';
 import { i18nMgr } from '../../i18n/i18nMgr.js';
@@ -14,6 +15,7 @@ export class SeatIdentityView {
   private squidMask=element('span','mx-seat-squid-mask');
   private countdown = new SeatCountdownView();
   private avatar = element('img', 'mx-avatar');
+  private avatarImage = new AsyncImage(this.avatar);
   private fallback = element('div', 'mx-avatar-fallback');
   private border = element('div', 'mx-avatar-border');
   readonly avatarButton = element('button', 'mx-avatar-hit');
@@ -40,9 +42,6 @@ export class SeatIdentityView {
     this.squidMask.style.backgroundImage=`url("${new URL('../../assets/raw/squid/squid_mask.png',import.meta.url).href}")`;
     this.avatar.alt = i18nMgr.Get("MX_PlayerAvatar", [], "玩家头像");
     this.avatar.hidden = true;
-    this.avatar.onerror = () => {
-      this.avatar.hidden = true;
-    };
     SpriteAtlas.paint(this.border, 'border');
     SpriteAtlas.paint(this.info, 'info');
     SpriteAtlas.paint(this.line, 'line');
@@ -61,7 +60,7 @@ export class SeatIdentityView {
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
     this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
-  destroy(): void { clearInterval(this.insuranceTimer); this.countdown.destroy(); }
+  destroy(): void { this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
     const p = state.player;
     this.squid.hidden=!(p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
@@ -78,15 +77,7 @@ export class SeatIdentityView {
     this.line.hidden = state.mine;
     this.name.textContent = p?.name ?? '';
     this.chips.textContent = p ? new ChipFormatter(state.smallBlind, state.showBB).showPlayerBalanceWithShowBB(p.chips) : '';
-    if (p?.avatar) {
-      if (this.avatar.getAttribute('src') !== p.avatar) {
-        this.avatar.src = p.avatar;
-        this.avatar.hidden = false;
-      }
-    } else {
-      this.avatar.removeAttribute('src');
-      this.avatar.hidden = true;
-    }
+    this.avatarImage.set(p?.avatar ?? '', String(p?.userRid ?? ''));
     const win = p?.settlement?.win;
     const winPercent100=p?.winPercent100;
     this.winPercent.hidden=!state.mine||!p||p.folded||state.handEnded||winPercent100===undefined||winPercent100<0;

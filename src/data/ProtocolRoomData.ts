@@ -1,3 +1,5 @@
+import { MushroomData } from './MushroomData.js';
+import { CriticalHitData } from './CriticalHitData.js';
 import { SquidData } from './SquidData.js';
 import { SecondPcsData } from './SecondPcsData.js';
 import { InsuranceData } from './InsuranceData.js';
@@ -19,6 +21,8 @@ export class ProtocolRoomData {
   readonly report = new TexasGameRoomDataReport(this);
   readonly replay = new TexasGameRoomDataReplay();
   readonly squid = new SquidData();
+  readonly mushroom = new MushroomData();
+  readonly criticalHit = new CriticalHitData();
   readonly secondPcs = new SecondPcsData();
   readonly insurance = new InsuranceData();
   readonly watch = new SettlementWatchData();
@@ -30,6 +34,8 @@ export class ProtocolRoomData {
     this.insurance.clear();
     const s = this.snapshot;
     if (!s) return;
+    this.mushroom.update(s.handInfo,this.record?.mushroomBase??0,false);
+    this.criticalHit.update(s.handInfo,false);
     this.squid.totalLimit=s.roomInfo?.squidTotalLimit??0;
     this.squid.restore(!!s.handInfo?.inSquid,s.playersList.find(p=>p.seatId===s.myInfo?.seatId));
     for (const op of s.operatorList) {
@@ -48,6 +54,8 @@ export class ProtocolRoomData {
     this.replay.clearData();
     this.watch.clear();
     this.squid.clear();
+    this.mushroom.clear();
+    this.criticalHit.clear();
     this.secondPcs.finish();
     this.insurance.clear();
     this.record = undefined;

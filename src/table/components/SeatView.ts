@@ -65,6 +65,7 @@ export class SeatView implements SeatComponent {
       !old ||
       state.presentation === 'sync' ||
       state.handNum !== old.handNum ||
+      state.player?.userRid !== old.player?.userRid ||
       old.mine !== state.mine ||
       old.player?.folded !== state.player?.folded ||
       old.player?.cards.join() !== state.player?.cards.join()

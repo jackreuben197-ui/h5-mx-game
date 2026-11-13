@@ -420,7 +420,12 @@
     "squid/squid_dialog_page_3.png": "assets/textures/dialog/squid/squid_dialog_page_3.png",
     "squid/icon_right_arrow.png": "assets/textures/dialog/squid/icon_right_arrow.png",
     "squid/table_bg_jkp_pool.png": "assets/textures/scene/table/other/table_bg_jkp_pool.png",
-    "squid/table_bg_stand_up.png": "assets/textures/scene/table/other/table_bg_stand_up.png"
+    "squid/table_bg_stand_up.png": "assets/textures/scene/table/other/table_bg_stand_up.png",
+    "raw/mushroom/mushroom.png": "assets/textures/scene/table/mushroom/mushroom.png",
+    "raw/mushroom/table_icon_mushroom.png": "assets/textures/scene/table/mushroom/table_icon_mushroom.png",
+    "raw/mushroom/criticalhit.png": "assets/textures/scene/table/criticalhit/criticalhit.png",
+    "raw/mushroom/critical_start.png": "assets/textures/scene/table/other/critical_start.png",
+    "raw/mushroom/pool_bg.png": "assets/textures/scene/table/other/Rectangle 1128.png"
   },
   "cards1": {
     "0": "cards1/0.png",

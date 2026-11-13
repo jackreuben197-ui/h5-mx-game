@@ -22,6 +22,8 @@ export class DemoFeatures implements SpecialOperations {
     {label:'保险 · 多池',run:()=>this.insurance(2)},
     {label:'保险 · 强制最低投保',run:()=>this.insurance(1,true)},
     {label:'二道牌 · 投票与发牌',run:()=>this.secondBoard()},
+    {label:'蘑菇 · 随庄位移动',run:()=>this.mushroomPool()},
+    {label:'暴击 · 开场与翻牌',run:()=>this.criticalHit()},
     {label:'轮到自己 · 加时',run:()=>this.turn()},
     {label:'结算 · 偷偷看 / 发发看',run:()=>this.settlement()},
     {label:'留座 · 返回游戏',run:()=>this.reserve()},
@@ -61,6 +63,23 @@ export class DemoFeatures implements SpecialOperations {
   }
   private later(run:()=>void,ms:number):void{
     const timer=setTimeout(()=>{this.timers.delete(timer);run();},ms);this.timers.add(timer);
+  }
+  mushroomPool():void {
+    const s=this.start();if(!s||!this.pb)return;
+    this.data.record!.mushroomBase=10;this.data.record!.mushroomMode=2;
+    const hand=new this.pb.HandInfo().toObject();hand.buSeatId=2;
+    hand.pools={...this.data.snapshot!.handInfo!.pools,mushroomPool:260} as NonNullable<typeof hand.pools>;
+    this.data.mushroom.update(hand,10,false);
+    this.update({dealerSeat:2});
+    this.later(()=>{hand.buSeatId=7;hand.pools!.mushroomPool=270;this.data.mushroom.update(hand,10,true);this.update({dealerSeat:7});},1200);
+  }
+  criticalHit():void {
+    const s=this.start();if(!s||!this.pb)return;
+    this.data.record!.criticalHit=1;this.data.record!.ante=40;this.data.record!.rounds=1;
+    const hand=new this.pb.HandInfo().toObject();hand.criticalHitOpen=true;
+    this.data.criticalHit.update(hand,true);
+    this.update({actions:[],betting:undefined,pot:s.players.length*40,players:s.players.map(p=>({...p,chips:p.chips-40,roundBet:0}))});
+    this.later(()=>this.update({community:[18,20,36],actions:['fold','check','raise'],actingSeat:1,betting:{id:'demo-boom',call:0,min:40,max:1960,step:1,allIn:1960}}),2000);
   }
   insurance(count:number,force=false):void{
     const s=this.start();if(!s||!this.pb)return;

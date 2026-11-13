@@ -35,3 +35,14 @@ test('offline vote callback cannot publish into a reset hand or departed room',a
  assert.equal(f.host.getSpecialOperations().data.secondPcs.state.active,false);
  }finally{f.session.abort();}
 });
+test('mushroom and critical-hit demos isolate delayed updates when reset',async()=>{
+ const f=await setup();try{
+ const data=f.host.getSpecialOperations().data;
+ f.host.features.mushroomPool();assert.equal(data.mushroom.state.count,26);
+ await new Promise(r=>setTimeout(r,1250));assert.equal(data.mushroom.state.seat,7);assert.equal(data.mushroom.state.count,27);
+ f.host.features.criticalHit();assert.equal(data.criticalHit.state.enabled,true);assert.equal(data.criticalHit.state.start,1);
+ await new Promise(r=>setTimeout(r,2050));assert.equal(f.state.community.length,3);
+ f.host.features.criticalHit();f.host.deal();
+ await new Promise(r=>setTimeout(r,2050));assert.equal(f.state.community.length,0);assert.equal(data.criticalHit.state.enabled,false);
+ }finally{f.session.abort();}
+});

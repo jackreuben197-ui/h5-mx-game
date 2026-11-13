@@ -1,3 +1,4 @@
+import { AsyncImage } from '../AsyncImage.js';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../i18n/i18nMgr.js';
 import { element } from '../dom.js';
@@ -8,7 +9,7 @@ export class NavigationView {
   private buttons = new Map<'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera', HTMLButtonElement>();
   private logo = element('img', 'mx-nav-logo');
   private layout = 0;
-  private failedLogo = '';
+  private logoImage = new AsyncImage(this.logo);
   constructor(navigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void) {
     i18nLabel.bind(this.root, () => i18nMgr.Get("MX_TableNavigation", [], "牌桌导航"), 'aria-label');
     SpriteAtlas.paint(this.root, 'navigation');
@@ -31,7 +32,6 @@ export class NavigationView {
       this.root.append(button);
     }
     this.logo.alt = i18nMgr.Get('MX_TableLogo', [], '牌桌标识');
-    this.logo.onerror = () => { this.failedLogo = this.logo.src; this.logo.hidden = true; };
     this.logo.hidden = true;
     this.root.append(this.logo);
     this.renderLayout(3);
@@ -39,8 +39,7 @@ export class NavigationView {
   render(state: TableSnapshot): void {
     this.renderLayout((state.antiCheatType ?? 1) <= 1 ? 3 : state.antiCheatType === 2 ? 4 : 6);
     const url = state.roomLogo?.trim() ?? '';
-    if (url && this.logo.getAttribute('src') !== url) { this.failedLogo = ''; this.logo.src = url; }
-    this.logo.hidden = !url || this.failedLogo === this.logo.src;
+    this.logoImage.set(url);
   }
   private renderLayout(count: 3 | 4 | 6): void {
     if (this.layout === count) return;

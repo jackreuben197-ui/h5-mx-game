@@ -493,7 +493,10 @@ export class MxRoomHost implements RoomHost {
     const info = this.roomData.snapshot!.roomInfo!;
     const score = this.roomData.record?.goldType === 3;
     if(!score && this.roomData.record?.goldType !== 1) throw new Error('当前钱包类型的带入流程尚未接入');
-    const wallets = (result.wallet ?? []).filter(w => !target.clubID || w.club_id === target.clubID);
+    // CC restricts wallets to the entry club only in channel packages.
+    // A normal alliance table may be funded by a different member club.
+    const channelClubID = this.globalConfig.isChannelDiamondFreeMode ? (target.clubID || this.roomData.record!.clubId) : 0;
+    const wallets = (result.wallet ?? []).filter(w => !this.globalConfig.isChannelDiamondFreeMode || (channelClubID > 0 && w.club_id === channelClubID));
     if(!score && !wallets.length) throw new Error('未找到可用的支付钱包');
     const last = result.last_bring_out;
     const compatible = last && (score || wallets.some(w => w.club_id === last.club_id)) ? last : undefined;

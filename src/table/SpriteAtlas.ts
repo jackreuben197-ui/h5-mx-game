@@ -30,6 +30,7 @@ export class SpriteAtlas {
   }
   static paint(node: HTMLElement, key: Sprite): void {
     if(key==='dialogConfirm'){
+      node.classList.add('mx-confirm-texture');
       this.paintButton(node,new URL('../assets/raw/ui/dialogConfirm.png',import.meta.url).href);
       return;
     }

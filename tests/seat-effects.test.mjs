@@ -54,3 +54,9 @@ test('ALLIN holds through action/BB/language refreshes and stops specifically at
   view.render({...allin(base), handEnded:true, presentation:'sync'});
   assert.equal(calls.filter(c=>c[0]==='play').length, plays);
 });
+test('replacement occupant cannot inherit ALLIN even without an intermediate empty-seat render',async()=>{
+ const {view,classes}=create();
+ view.render(allin({...base,player:{...base.player,userRid:1}}));await Promise.resolve();assert.ok(classes.has('mx-spine-allin'));
+ view.render({...base,player:{...base.player,userRid:2}});assert.ok(!classes.has('mx-spine-allin'));
+ view.destroy();
+});

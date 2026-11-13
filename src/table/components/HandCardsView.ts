@@ -12,7 +12,7 @@ export class HandCardsView {
     this.motion.cancel();
     const p = state.player,
       previous = old?.player;
-    const staticFrame = !old || state.presentation === 'sync' || state.handNum !== old.handNum;
+    const staticFrame = !old || state.presentation === 'sync' || state.handNum !== old.handNum || p?.userRid !== previous?.userRid;
     const folding = !!p?.folded && !previous?.folded && !staticFrame && !state.mine;
     const shown = folding ? (previous?.cards ?? []) : (p?.cards ?? []),
       face = state.mine || shown.some((v) => v > 0);

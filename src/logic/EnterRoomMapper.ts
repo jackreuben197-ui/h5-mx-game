@@ -61,6 +61,7 @@ export class EnterRoomMapper {
         seat: player.seatId,
         userRid: player.userRid,
         sex: player.sex,
+        inMushroom:player.inMushroom,costMushroom:player.costMushroom,
         squidCount:player.squidCount,squidIn:player.inSquid,squidEscaped:player.squidEscaped,
         settlement: s.settlement?.handNum === hand?.handNum ? s.settlement?.seats[player.seatId] : undefined,
         name: player.name,

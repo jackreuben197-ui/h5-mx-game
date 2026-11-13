@@ -152,3 +152,18 @@ test('score tables allow wallet-free buy-in, positive-chip return and zero-chip 
   }finally{signal.abort();host.destroy();}
  }
 });
+test('normal alliance entry keeps server wallets; channel entry remains restricted',async t=>{
+ const transport=new FakeTransport(),signal=new AbortController();
+ const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:200,http:{baseURL:'https://test.invalid/api',fetch:async url=>Response.json({code:0,data:String(url).endsWith('/user/info')?{user:{un_id:777}}:{return_table:true,last_bring_out:{to_wallet:500,fee:0,club_id:2},wallet:[{club_id:2,club_name:'成员俱乐部',gold:100000}]}})}});
+ t.after(()=>{signal.abort();host.destroy();});
+ const initial=snapshot();initial.getMyInfo().setSeatId(0);initial.setPlayersList(initial.getPlayersList().filter(p=>p.getSeatId()!==4));initial.getRoomInfo().setCurrentMinRate(10);initial.getRoomInfo().setCurrentMaxRate(100);
+ transport.emit('enterTable',{token:'00000000000000000000000000000000'});
+ transport.onSend=(action,payload)=>{if(action!=='wsSend')return;const packet=outbound(payload.data);
+ if(packet.code===pb.Code.MSG_R_ROOMS){const reply=new pb.ServerMessageRooms(),room=record();room.setGoldType(1);reply.setRpcId(pb.ClientMessageRooms.deserializeBinary(packet.body).getRpcId());reply.setRoomsList([room]);transport.frame(packet.code,0,0,reply);}
+ else if(packet.code===pb.Code.MSG_D_ENTER_ROOM)transport.frame(packet.code,1001,0,initial);
+ };
+ const target={roomID:1001,matchID:0,roomType:0,clubID:1};await host.enter(target,signal.signal,()=>{});
+ const quote=await host.prepareSeat(target,4,signal.signal);assert.deepEqual(quote.wallets.map(w=>w.club_id),[2]);assert.equal(quote.returnClubID,2);
+ host.globalConfig.setConfig({channel_package_diamond_free_mode:true});
+ await assert.rejects(host.prepareSeat(target,4,signal.signal),/未找到可用的支付钱包/);
+});
