@@ -193,3 +193,7 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 - Jackpot/CallTime：新增房间定向数据、1129/1130 原名消息与奖池原动画，沿 CC 预取模板/记录并调用外壳 jackpotRecord/jackpotAward 面板；重连不重播开场。CallTime 使用本人 Winner 的 count/stay，站起清理，菜单离桌复用统一确认窗并发送原 1010。演示菜单补充两种场景。
 - 静音 Chrome iPhone12 真实验收：新旧进入 0.1/0.2“纯自动2-50+jpot+鱿鱼-1”，奖池均显示2115；新版点击打开真实 H5 奖励记录/说明，实际坐下捕获原 Jackpot 开场动画。随后两个账号在“calltime测试”实际对局，第4手新版赢3.40，触发 Profit 10BB 1/10 hands，后续观察计数递增；实际点击离桌提示，取消留在房间，再确认留座离桌，捕获发送1010并关闭桌面。未触发真实 Jackpot 中奖广播及 CallTime 十手到期，不将协议测试当作这两项实服验收。
 - 本轮 TypeScript check 与16项相关测试通过，未做完整构建。截图 /tmp/mx-jackpot-live.png、/tmp/cc-jackpot-live.png、/tmp/mx-jackpot-start-live.png、/tmp/mx-jackpot-rules-live.png、/tmp/mx-calltime-progress-live.png、/tmp/mx-calltime-leave-live.png 为真实主流程临时文件，不随 Git 迁移。
+
+- 2026-11-13 Jackpot/CallTime 已提交 `4699760`，未推送。保险复核：当前 CC 的低水、EV、新经典共用 UIInsuranceNewPanel、1115/1015/1116；没有另一个 EV 专用窗口，购买 insurEv 沿 CC 发0，由服务端计算。保留多池联合提交、强制最低保费/自动背保、排序及重连，保险窗口手牌数量改为旧版游戏类型对应的2/4/5/6张。
+- EV 实服：6424账号开桌返回无权限，使用另一个已授权账号成功开桌。外部H5专业参数的保险选项值与 payload 减1映射不一致：选择“EV保险”实际创建mode1；改用可发出mode2的现有选项建立“MX-EV协议验收”（92575058），确认服务端insuranceMode=2。未改外壳源码。两个账号实际带入/对局，旧版与新版都触发共用保险窗口；旧版购买收到非空1116（含insurEv1237）；新版第14手实际点击购买，1116成交activeAmount932、passiveAmount233、insurEv3068，窗口关闭。截图 /tmp/mx-ev-hand14-purchase.png 是真实窗口，临时文件不随Git。
+- 本轮新增EV限额/成交字段保留与手牌数量回归。EV单池实际购买、无法购买提示已验证；多池联合投保仍是此前逻辑/组件验证，未声称本次触发真实多池。CC预留的1030/1131继续为空实现，不臆造协议或额外UI。外壳开桌保险标签映射问题留在外部项目范围，后续开桌务必读取服务器mode确认。

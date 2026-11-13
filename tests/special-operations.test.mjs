@@ -68,3 +68,30 @@ test('insurance number and suit sorting preserve the same outs with distinct ord
  rules._sortCards(cards);assert.deepEqual(cards,[31,18,13,28,44]);
  rules._sortByGraphics=true;rules._sortCards(cards);assert.deepEqual(cards,[13,18,28,31,44]);
 });
+
+test('EV server limits flow through the shared insurance purchase and settlement unchanged',async()=>{
+ const {InsuranceChoices}=await import('../.test-build/logic/InsuranceChoices.js');
+ const {InsuranceData}=await import('../.test-build/data/InsuranceData.js');
+ const {data,context}=setup();
+ data.snapshot.roomInfo.insuranceMode=pb.Def.IsuranceMode.IM_EV;
+ const op=operator(4),pot=new pb.InsurancePotLimit().toObject();
+ Object.assign(pot,{potId:0,potAmount:2000,bet:1000,max:405,min:405,outs:5,potUserCount:2,potLeaderCount:1,odds:3.944,outsDetailList:[{seatId:1,outsCardsList:[8,9,38,53,54].map(card=>({card,isEqual:false}))}]});
+ op.insuranceLimitList=[pot];
+ InsuranceTrigged({round:pb.Def.Round.TURN,operatorList:[op],invalidPotsList:[]},context);
+ const rules=new InsuranceRules(pb.Def.Round.TURN,pb.Def.Round.FLOP,0,[{potUserCount:2,oddsList:[{outs:5,odds:6}]}]);
+ const choices=new InsuranceChoices(rules,[pot]);
+ const buys=choices.purchases(true);
+ assert.equal(buys[0].activeAmount,405);
+ assert.equal(buys[0].insurEv,0); // CC leaves EV settlement to the server.
+ BuyInsurance({seatId:4,round:pb.Def.Round.TURN,buyList:[{...buys[0],insurEv:1200}]},context);
+ assert.equal(data.insurance.purchases.get(4).buyList[0].insurEv,1200);
+ assert.equal(data.insurance.state.operator,undefined);
+ const notices=[];data.insurance.on(InsuranceData.NOTICE,message=>notices.push(message));
+ InsuranceTrigged({round:pb.Def.Round.TURN,operatorList:[],invalidPotsList:[{potId:0,reason:pb.Def.IIReason.IIR_EV_LIMIT}]},context);
+ assert.equal(notices.length,1);
+});
+
+test('insurance uses the same CC hand-card counts for Holdem and all Omaha variants',async()=>{
+ const {handCardCount}=await import('../.test-build/logic/HandCardCount.js');
+ assert.deepEqual([0,1,2,3].map(handCardCount),[2,4,5,6]);
+});

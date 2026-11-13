@@ -5,6 +5,7 @@ import type { SpecialOperations } from '../../core/RoomRecords.js';
 import type { SeatingActions } from '../../core/Seating.js';
 import { InsuranceData } from '../../data/InsuranceData.js';
 import { InsuranceChoices } from '../../logic/InsuranceChoices.js';
+import { handCardCount } from '../../logic/HandCardCount.js';
 import { InsuranceRules, PoolType } from '../../logic/InsuranceRules.js';
 import { StringHelper } from '../../logic/StringHelper.js';
 import { CPErrorCode } from '../../i18n/CPErrorCode.js';
@@ -118,7 +119,7 @@ export class InsuranceView {
       const block = element('div', 'mx-insurance-player'), name = element('div', ''); name.textContent = player?.name ?? '';
       const cards = operator.playerCardsList.find(player => player.seatId === id)?.cardsList ?? player?.cardsList ?? [];
       const count = pot.outsDetailList.find(detail => detail.seatId === id)?.outsCardsList.length ?? 0;
-      block.append(name, this.cards(cards.slice(0, 2)), this.playerStatus(id === operator.seatId,count));
+      block.append(name, this.cards(cards.slice(0, handCardCount(this.records.data.record?.gameType ?? 0))), this.playerStatus(id === operator.seatId,count));
       players.append(block);
     }
     this.header.replaceChildren(title, tabs, players, this.label('UIInsurance_publicCard'), this.cards(Array.from({ length: 5 }, (_, i) => snapshot.handInfo?.publicCardsList[i] ?? 0)));
