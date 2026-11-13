@@ -207,3 +207,8 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 - MTT LR_NOCHIP区分存储筹码返桌与结算；淘汰后同桌重新订阅观战，真实回包确认无本人座位才允许继续观看。H5 mttSettlement/mttRecord复用原面板；panelRequestId隔离旧窗口回调。参赛玩家菜单离开不发现金桌Leave；淘汰后观战退出取消订阅。观众点空座转H5赛事详情报名。菜单复用托管项，隐藏现金桌买入/带出/站起。
 - MTT UI沿UIRoomTexas原waitStart、Group4871、Rectangle841图片，开赛和休息共用浮层；泡沫和拆桌沿原轮播词条。图片来源已登记image-sources。静音真实H5新旧浏览器核对了赛事列表和详情：竞技场2暂无赛事；公共三场93531274/95231466/96531402分别显示11月19/26/27日开赛，牌桌总数0。没有创建MTT、没有伪造在线消息，也没有完成MTT真实入桌、换桌、增购、休息、结算UI验收。需用户提供进行中的赛事。截图 `/tmp/mx-mtt-live-empty.png`、`/tmp/cc-mtt-live-empty.png`（390×844、DPR3、CDP mobile/touch5），临时文件不随Git；离线组件截图仅确认素材加载，不是实服或像素对齐验收。
 - MTT本轮TypeScript检查和42项针对性回归通过（含分桌关联、迟到消息、增购限制、休息时序、泡沫、换桌及淘汰观战）；未重复全量构建。此前各阶段真实验收限制仍保留：Jackpot中奖、CallTime到期、多池/强制保险和多玩法组合未全部在线触发，不能将代码覆盖等同全场景验收。
+
+- 2026-11-13 MTT 实服补验：98981498 收到真实 1112、1114 reason=1、观战 1002 seat=0、1114 reason=3；94981498 两端入桌并截图，新版淘汰后观战快照正常。95981370 初始筹码 200，新旧实际入桌，新版观察到 room 2→1，升盲后正确显示下一盲注、Ante 和递减秒数。截图 `/tmp/mx-mtt-95981370-fixed.png`、`/tmp/cc-mtt-95981370-live.png`（临时文件）。
+- 对照 CC PotsInfo/UIRoomTexas：主池独立居中，边池使用 168.08×41、940 宽网格、20 间距换行，最多 8 个边池；第二排出现时房间说明下移。独立离线九池测试在 mobile=true、touch=5 的 390×844 和 375×500 截图检查；该边界测试不是实服九池验收，真实赛事尚未捕获九池。截图 `/tmp/mx-pools-nine-mobile.png`、`/tmp/mx-pools-nine-375x500.png`。
+- MTT 入桌补接 H5 syncCurrentClub，沿 CC 当前俱乐部优先、赛事俱乐部兜底；不修改外部 H5。MTT 数据补下一盲注/Ante/截止时间，局部 UI 每秒刷新，不重建牌桌。TypeScript check 和 MTT/H5 入口 11 项相关测试通过；未重复完整构建。
+- 未完成：94981498 旧版结算 isRebuy=true、clubId=48，新版当时 false、0；俱乐部同步已补，但重购余额差异尚未证明解决。当前 deps/h5-game 的 BridgeMttSettlementPanel.vue 没有消费 inTable/canContinueWatching/watchingPending，与旧版运行页面存在版本差异；不能把拿到观战快照说成“继续观战按钮已验收”。增购、休息仍未实际触发。不要为展示重购按钮强制放开 canRebuy 的服务端余额/次数/盲级限制。

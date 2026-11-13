@@ -252,7 +252,7 @@ export class TableView {
       this.stage.append(this.squid.root);
       this.jackpot=new JackpotView(specialOperations.data,()=>options.records?.openJackpot?.(),()=>queueMicrotask(()=>{if(this.root.isConnected)this.resizeTable();}));
       this.stage.append(this.jackpot.root);
-      if(options.records?.data.mtt){this.mtt=new MttTableStateView(options.records,e=>this.toast.show(e));this.stage.append(this.mtt.root);}
+      if(options.records?.data.mtt){this.mtt=new MttTableStateView(options.records,e=>this.toast.show(e),()=>this.refreshRoomInfo());this.stage.append(this.mtt.root);}
       this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
       this.root.append(this.mushroomBoom.guide.surface.root);
       this.root.append(this.secondPcs.root, this.insurance.root,this.squid.result.root,this.squid.intro.root);
@@ -296,7 +296,7 @@ export class TableView {
       }
     for (const [id, position] of this.layout.positions(state))
       this.seatViews.get(id)?.place(position, positionMode);
-    i18nLabel.bind(this.info, () => [state.name, [i18nMgr.Get(`GameType_${state.gameType ?? 0}`), i18nMgr.Get(`PokerType_${state.pokerType ?? 0}`), i18nMgr.Get(`BetType_${state.limitBetType ?? 0}`)].join('-'), `${state.roomID}-${state.handNum}`, `${i18nMgr.Get("adaptation20006")} ${StringHelper.GetLongString(state.smallBlind ?? 0)}/${StringHelper.GetLongString((state.smallBlind ?? 0) * 2)}`].concat(this.squid?.infoLines()??[],this.mushroomBoom?.infoLines()??[],this.jackpot?.infoLines()??[]).join('\n'));
+    this.refreshRoomInfo();
     const own = this.layout.positions(state).get(state.mySeat);
     if (own && !this.layout.landscape) {
       const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
@@ -361,6 +361,22 @@ export class TableView {
       place(this.pot.pool, l.width / 2, (775.6+(this.jackpot?.extraHeight??0)) * l.suggest);
       place(this.info, l.width / 2, (1000+(this.jackpot?.extraHeight??0)) * l.suggest);
     }
+  }
+  private refreshRoomInfo(): void {
+    const state = this.data.info.snapshot;
+    if (!state) return;
+    i18nLabel.bind(this.info, () => {
+      const m = this.options.records?.data.mtt;
+      const blind = (sb: number, ante = 0) => `${StringHelper.GetLongString(sb)}/${StringHelper.GetLongString(sb * 2)}${ante > 0 ? `(${StringHelper.GetLongString(ante)})` : ''}`;
+      const lines = [state.name, [i18nMgr.Get(`GameType_${state.gameType ?? 0}`), i18nMgr.Get(`PokerType_${state.pokerType ?? 0}`), i18nMgr.Get(`BetType_${state.limitBetType ?? 0}`)].join('-'), `${state.roomID}-${state.handNum}`,
+        `${i18nMgr.Get(m ? 'UITexasReport_Text_MatchCurrBlindTip' : 'adaptation20006')} ${blind(state.smallBlind ?? 0, this.options.records?.data.snapshot?.roomInfo?.ante ?? 0)}`];
+      if (m?.nextSmallBlind) {
+        lines.push(`${i18nMgr.Get('UITexasReport_Text_MatchNextBlindTip')} ${blind(m.nextSmallBlind, m.nextAnte)}`);
+        const seconds = m.getUpBlindRemainingSeconds();
+        if (seconds > 0) lines.push(`${i18nMgr.Get('UITexasReport_Text_MatchZmsysjTip')} ${seconds}s`);
+      }
+      return lines.concat(this.squid?.infoLines() ?? [], this.mushroomBoom?.infoLines() ?? [], this.jackpot?.infoLines() ?? []).join('\n');
+    });
   }
   private deltaToOrigin(group: HTMLElement): { x: number; y: number } {
     const rect = group.getBoundingClientRect(),

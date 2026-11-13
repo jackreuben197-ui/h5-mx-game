@@ -39,6 +39,12 @@ class TexasGameRoomDataMtt extends EventSource {
     public blindLevel: number = 0;
     public blindType: number = 0;
     public upBlindInterval: number = 0;
+    public nextSmallBlind = 0;
+    public nextAnte = 0;
+    public upBlindDeadline = 0;
+    public getUpBlindRemainingSeconds(nowSeconds = this._nowSeconds()): number {
+        return Math.max(0, this.upBlindDeadline - nowSeconds);
+    }
     public rebuyTimes: number = 0;
     public usedRebuyTimes: number = 0;
     public maxRebuyBlindLevel: number = 0;
@@ -379,6 +385,10 @@ class TexasGameRoomDataMtt extends EventSource {
     public breakReminder(minutesToStart: number, durationMinutes: number): void { this.emit(TexasGameRoomDataMtt.BREAK_REMINDER, minutesToStart, durationMinutes); }
 
     private _applyProgress(progress: MTTProgress.AsObject): void {
+        const hasNext = progress.blindLevel > 0 && progress.upBlindLeftTime > 0;
+        this.nextSmallBlind = hasNext ? progress.nextSmallBlind : 0;
+        this.nextAnte = hasNext ? progress.nextAnte : 0;
+        this.upBlindDeadline = hasNext ? this._nowSeconds() + progress.upBlindLeftTime : 0;
         this.startCountDown = progress.startCountDown;
         this._startCountDownDeadline = progress.startCountDown > 0 ? this._nowSeconds() + progress.startCountDown : 0;
         this.gameStarted = progress.startCountDown <= 0;

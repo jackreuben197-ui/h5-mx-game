@@ -73,3 +73,14 @@ test('MTT entrance requests detail rather than cash Rooms and retains assigned r
  const target={roomID:0,matchID:55,roomType:512},d=await new EnterRoomProcedure(c,pb).run(target,new AbortController().signal);
  assert.deepEqual(codes,[pb.Code.MSG_R_MTT_DETAIL,1002]);assert.equal(target.roomID,99);assert.equal(d.record.rid,99);assert.equal(d.record.roomType,512);assert.ok(d.mtt);assert.equal(d.mtt.delayTimeType,1);c.destroy();
 });
+
+test('MTT next blind deadline counts down without resetting on presentation refresh',()=>{
+ const m=setup().mtt, progress=new pb.MTTProgress();
+ progress.setBlindLevel(2);progress.setNextSmallBlind(5000);progress.setNextAnte(100);progress.setUpBlindLeftTime(120);
+ m.applyProgress(progress.toObject());const deadline=m.upBlindDeadline;
+ assert.equal(m.nextSmallBlind,5000);assert.equal(m.nextAnte,100);
+ assert.equal(m.getUpBlindRemainingSeconds(deadline-75),75);
+ m.updateBreakPresentation();assert.equal(m.upBlindDeadline,deadline);
+ assert.equal(m.getUpBlindRemainingSeconds(deadline+1),0);
+ progress.setUpBlindLeftTime(0);m.applyProgress(progress.toObject());assert.equal(m.nextSmallBlind,0);assert.equal(m.upBlindDeadline,0);
+});

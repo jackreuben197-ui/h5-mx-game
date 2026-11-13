@@ -43,7 +43,11 @@
 .mx-raise-editor{background:#565d83ee;border-radius:14px;padding:10px}
 .mx-raise-editor{position:absolute;bottom:45px;width:100%;min-width:260px}
 .mx-room-info{white-space:pre-line;line-height:1.02;font-size:38px}
-.mx-pot{font-weight:bold}.mx-pools{display:flex;gap:12px;width:auto;background:none;align-items:center;justify-content:center}
+.mx-pot{font-weight:bold}.mx-pools{display:flex;flex-direction:column;gap:20px;width:940px;height:auto;background:none;align-items:center;justify-content:flex-start;transform:translate(-50%,-30px)}
+.mx-side-pools{display:flex;flex-wrap:wrap;gap:20px;width:940px;align-items:center;justify-content:flex-start}
+.mx-pool-side{flex:0 0 168.08px!important;width:168.08px!important;height:41px!important;font-size:33.6px;line-height:41px}
+.mx-pool-side .mx-pot-chip{left:0;top:0;width:41px;height:41px}
+.mx-pool-side{padding-left:32px}
 .mx-pool-item{position:relative;display:block;width:333px;height:60px;font-weight:bold}
 .mx-pot-chip{position:absolute;left:-8px;top:3px;width:50px;height:50px}
 
@@ -332,3 +336,6 @@
 .mx-desk-animation{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .mx-desk-animation canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .mx-viewport{z-index:1}
+
+/* CC middleLayout grows below the Sidepots grid when a second row is needed. */
+.mx-stage:has(.mx-side-pools > :nth-child(6)) .mx-room-info{margin-top:61px}

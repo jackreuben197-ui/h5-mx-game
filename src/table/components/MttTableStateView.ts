@@ -13,7 +13,7 @@ export class MttTableStateView {
   private addOn=element('button','mx-mtt-addon','ADD-ON');
   private cancel=element('button','mx-mtt-cancel');
   private bindings=new BindingScope(this);private timer:ReturnType<typeof setInterval>;private tick=0;
-  constructor(private records:RoomRecords,private error:(e:unknown)=>void){
+  constructor(private records:RoomRecords,private error:(e:unknown)=>void,private refreshInfo:()=>void=()=>{}){
     this.countdown.style.backgroundImage=`url("${new URL('../../assets/raw/mtt/waitStart.png',import.meta.url).href}")`;
     for(const node of [this.bubble,this.transfer])node.style.backgroundImage=`url("${new URL('../../assets/raw/mtt/wait.png',import.meta.url).href}")`;
     this.cancel.style.backgroundImage=`url("${new URL('../../assets/raw/mtt/return.png',import.meta.url).href}")`;
@@ -27,6 +27,7 @@ export class MttTableStateView {
   @bindEvent(Mtt.STATE_CHANGED,'mtt')
   render():void{
     const m=this.records.data.mtt;if(!m)return;
+    this.refreshInfo();
     const s=this.records.data.snapshot,p=s?.playersList.find(p=>p.seatId===s.myInfo?.seatId);
     this.addOn.hidden=m.displayAddOnMode===0;this.addOn.disabled=m.currentAddOnMode===0||m.addOnPending;
     this.cancel.hidden=!p?.isAutoop;this.cancel.textContent=i18nMgr.Get('adaptation10011');

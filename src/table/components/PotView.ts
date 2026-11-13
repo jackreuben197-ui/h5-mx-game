@@ -23,14 +23,18 @@ export class PotView {
   @bindEvent(PotData.POOLS, 'pot')
   private onPools(pools: readonly number[]): void {
     this.pool.hidden = !pools.length;
-    this.pool.replaceChildren(...pools.map(amount => {
-      const item = element('span', 'mx-pool-item', ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
+    const items = pools.slice(0, 9).map((amount, index) => {
+      const item = element('span', index === 0 ? 'mx-pool-item mx-pool-main' : 'mx-pool-item mx-pool-side', ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
       SpriteAtlas.paint(item, 'pool');
       const chip = element('i', 'mx-pot-chip');
       SpriteAtlas.paint(chip, 'chip');
       item.prepend(chip);
       return item;
-    }));
+    });
+    const sides = element('div', 'mx-side-pools');
+    sides.append(...items.slice(1));
+    sides.hidden = items.length < 2;
+    this.pool.replaceChildren(...items.slice(0, 1), sides);
   }
   destroy(): void {
     this.bindings.destroy();

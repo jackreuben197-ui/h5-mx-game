@@ -5,6 +5,7 @@ import type { GameClient } from '../GameClient.js';
 export class H5EntryController {
   private off: () => void;
   private token = '';
+  private currentClubID = 0;
   constructor(
     private transport: HostTransport,
     private game: GameClient,
@@ -14,6 +15,10 @@ export class H5EntryController {
   private receive(message: HostMessage): void {
     const raw = message.payload,
       p = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    if (message.action === 'syncCurrentClub') {
+      const id = Number(p.clubId);
+      this.currentClubID = Number.isSafeInteger(id) && id > 0 ? id : 0;
+    }
     if (
       ['h5Ready', 'syncToken', 'enterTable', 'enterMtt'].includes(message.action) &&
       typeof p.token === 'string'
@@ -41,7 +46,7 @@ export class H5EntryController {
       }
       const current=this.game.getState();
       if(current.target?.matchID===matchID&&['loading','entering','table'].includes(current.phase)&&(roomID===0||current.target.roomID===roomID))return;
-      void this.game.enter({roomID, matchID, roomType:Number(info?.type ?? 512), observer:!!p.isLookOn, clubID:Number(info?.club_id ?? 0)});
+      void this.game.enter({roomID, matchID, roomType:Number(info?.type ?? 512), observer:!!p.isLookOn, clubID:this.currentClubID || Number(info?.club_id ?? 0)});
       return;
     }
     if (message.action !== 'enterTable') return;
@@ -80,5 +85,6 @@ export class H5EntryController {
   destroy(): void {
     this.off();
     this.token = '';
+    this.currentClubID = 0;
   }
 }
