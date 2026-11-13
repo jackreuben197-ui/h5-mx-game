@@ -28,5 +28,6 @@ export function StartInfo(body: ServerMessageStartInfo.AsObject, context: Messag
   context.operators(body.nextOperator);
   context.presentation = 'deal';
   context.data.report.applyStartInfo();
+  context.data.mtt?.handleHandStart();
   return true;
 }

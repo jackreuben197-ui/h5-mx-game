@@ -9,6 +9,7 @@ interface Pending {
   roomID: number;
   matchID: number;
   rpcID?: number;
+  assignedRoom: boolean;
   accept: (packet: Packet) => boolean;
   fail: (error: Error) => void;
   retire: () => void;
@@ -92,8 +93,10 @@ export class ProtocolClient {
     decoder: Decoder<T>,
     signal: AbortSignal,
     rpcID?: number,
+    onAssignedRoom?: (roomID: number) => void,
   ): Promise<T> {
     signal.throwIfAborted();
+    if (onAssignedRoom && !(code === 1002 && roomID === 0 && matchID > 0)) throw new Error('无效的赛事分桌请求');
     const key = `${code}:${roomID}:${matchID}:${rpcID ?? ''}`;
     if (this.pending.has(key) || this.retired.has(key))
       return Promise.reject(new Error('上一条同桌请求尚未结束，请等待回包或网络重连后重试'));
@@ -117,6 +120,7 @@ export class ProtocolClient {
         roomID,
         matchID,
         rpcID,
+        assignedRoom: !!onAssignedRoom,
         fail,
         retire: () => {
           if (sent && rpcID === undefined) this.retired.add(key);
@@ -124,6 +128,7 @@ export class ProtocolClient {
         accept: (packet) => {
           const value = decoder.deserializeBinary(packet.body).toObject();
           if (rpcID !== undefined && (value as { rpcId?: number }).rpcId !== rpcID) return false;
+          onAssignedRoom?.(packet.roomID);
           cleanup();
           resolve(value);
           return true;
@@ -161,10 +166,11 @@ export class ProtocolClient {
     }
     const retiredKey = `${packet.code}:${packet.roomID}:${packet.matchID}:`;
     if (this.retired.delete(retiredKey)) return;
+    if (packet.code === 1002 && packet.matchID > 0 && this.retired.delete(`1002:0:${packet.matchID}:`)) return;
     for (const request of [...this.pending.values()]) {
       if (
         request.code !== packet.code ||
-        request.roomID !== packet.roomID ||
+        (request.roomID !== packet.roomID && !request.assignedRoom) ||
         request.matchID !== packet.matchID
       )
         continue;

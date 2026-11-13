@@ -15,7 +15,7 @@ export class H5EntryController {
     const raw = message.payload,
       p = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
     if (
-      ['h5Ready', 'syncToken', 'enterTable'].includes(message.action) &&
+      ['h5Ready', 'syncToken', 'enterTable', 'enterMtt'].includes(message.action) &&
       typeof p.token === 'string'
     ) {
       if (this.token && this.token !== p.token) this.game.leave();
@@ -34,7 +34,14 @@ export class H5EntryController {
       return;
     }
     if (message.action === 'enterMtt') {
-      this.toast('当前先接入普通德州桌');
+      const info = p.matchInfo as Record<string, unknown> | undefined;
+      const matchID = Number(p.matchId), roomID = Number(p.roomId ?? 0);
+      if (!Number.isSafeInteger(matchID) || matchID <= 0 || !Number.isSafeInteger(roomID) || roomID < 0 || !this.token) {
+        this.toast('赛事入桌参数不完整'); return;
+      }
+      const current=this.game.getState();
+      if(current.target?.matchID===matchID&&['loading','entering','table'].includes(current.phase)&&(roomID===0||current.target.roomID===roomID))return;
+      void this.game.enter({roomID, matchID, roomType:Number(info?.type ?? 512), observer:!!p.isLookOn, clubID:Number(info?.club_id ?? 0)});
       return;
     }
     if (message.action !== 'enterTable') return;

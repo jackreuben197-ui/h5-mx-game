@@ -65,6 +65,9 @@ export class GameController<T> {
           if (event.roomID === target.roomID && event.matchID === target.matchID) this.leave();
           return;
         }
+        if (event.type === 'transfer' && event.snapshot.matchID === target.matchID) {
+          target.roomID = event.snapshot.roomID; this.set({target:{...target}});
+        }
         if (!this.state.table) {
           if (queue.length >= 1000) {
             session.abort();
@@ -82,7 +85,7 @@ export class GameController<T> {
         throw new Error('房间快照与进房请求不匹配');
       const table = queue.reduce(applyUpdate, snapshot);
       queue = [];
-      this.set({ phase: 'table', table });
+      this.set({ phase: 'table', table, target: { ...target } });
     } catch (error) {
       if (!active()) return;
       session.abort();

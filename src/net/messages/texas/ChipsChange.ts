@@ -8,5 +8,6 @@ export function ChipsChange(body: ServerMessageChipsChange.AsObject, context: Me
     player.chip = item.chips;
     if(item.seatId===context.state.myInfo?.seatId)context.state.myInfo.storeChips=item.storeChips;
   }
+  context.data.mtt?.refresh();
   return true;
 }

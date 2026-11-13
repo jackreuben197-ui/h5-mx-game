@@ -28,7 +28,7 @@ export class RoomRecordsService implements RoomRecords {
     private replayTask?: Promise<ReplayHandData | null>;
     private replayHand = -1;
     private storage: ReplayStorage;
-    constructor(readonly data: ProtocolRoomData, readonly target: RoomTarget, readonly userRID: number, private client: ProtocolClient, private pb: HoldemRuntime, private http: HttpClient, private signal: AbortSignal, transport: HostTransport, readonly config: {
+    constructor(readonly data: ProtocolRoomData, readonly target: RoomTarget, readonly userRID: number, private client: ProtocolClient, private pb: HoldemRuntime, private http: HttpClient, private signal: AbortSignal, private transport: HostTransport, readonly config: {
         global: GlobalConfigStore;
         diamonds: DiamondModel;
         privateUc: PrivateUcChargeStore;
@@ -36,8 +36,25 @@ export class RoomRecordsService implements RoomRecords {
         this.jackpotFeature=new JackpotService(data,http,transport,signal);
         this.storage = new ReplayStorage(transport, userRID, target.roomID, target.matchID);
     }
+    mttRegistration():void{this.data.mtt?.emit('registration');}
+    openMttRecord():void {this.transport.send('showPanel',{panelType:'mttRecord',props:{matchId:this.target.matchID,tournamentName:this.data.mtt?.matchName}});}
+    async mttAddOn():Promise<void>{
+        const m=this.data.mtt;if(!m||!m.beginAddOn(m.currentAddOnMode))return;
+        const room=new this.pb.Room();room.setRoomId(this.target.roomID);room.setMatchId(this.target.matchID);
+        const body=new this.pb.ClientMessageAddOn();body.setRoom(room);body.setUseProp(false);body.setRatio(1);body.setMode(m.pendingAddOnMode);body.setUsedPropId(0);body.setPropType(0);body.setUseFree(false);
+        try{await this.client.request(this.pb.Code.MSG_D_ADD_ON,this.target.roomID,this.target.matchID,body,this.pb.ServerMessageAddOn,this.signal);}
+        catch(e){m.addOnPending=false;m.pendingAddOnMode=0;m.refresh();throw e;}
+    }
+    async mttAutoOp(enable:boolean):Promise<void>{
+        const m=this.data.mtt,s=this.data.snapshot,p=s?.playersList.find(p=>p.seatId===s.myInfo?.seatId);
+        if(!m||!p||(enable&&(!m.gameStarted||p.isAutoop)))return;
+        const room=new this.pb.Room();room.setRoomId(this.target.roomID);room.setMatchId(this.target.matchID);
+        const body=new this.pb.ClientMessageAutoOpActive();body.setRoom(room);body.setEnable(enable);
+        await this.client.request(this.pb.Code.MSG_D_AUTO_OP_ACTIVE,this.target.roomID,this.target.matchID,body,this.pb.ServerMessageAutoOpActive,this.signal);
+    }
     openJackpot():void {this.jackpotFeature.open();}
     leaveTable():void {
+        if(this.data.mtt&&!this.data.mtt.eliminatedObserver)return;
         const room=new this.pb.Room();room.setRoomId(this.target.roomID);room.setMatchId(this.target.matchID);
         const body=new this.pb.ClientMessageLeave();body.setRoom(room);
         this.client.send(this.pb.Code.MSG_D_LEAVE,this.target.roomID,this.target.matchID,body,this.signal);

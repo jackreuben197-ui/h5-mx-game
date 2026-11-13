@@ -19,7 +19,7 @@ export class H5BridgeTransport implements HostTransport {
   private installed = false;
   private acknowledged = false;
   private previousReady?: boolean;
-  private queued: { action: string; payload?: unknown; msgtype: number }[] = [];
+  private queued: { action: string; payload?: unknown; msgtype: number; requestId?: string }[] = [];
   get handshakeDone(): boolean { return this.acknowledged; }
   private timer?: ReturnType<typeof setInterval>;
   private bridge = {
@@ -34,7 +34,7 @@ export class H5BridgeTransport implements HostTransport {
         listener({ action, payload, msgtype, source, requestId, timestamp });
       if (acknowledgement) {
         for (const message of this.queued.splice(0))
-          this.send(message.action, message.payload, message.msgtype);
+          this.send(message.action, message.payload, message.msgtype, message.requestId);
       }
     }) as Direct,
     postMessage: (raw: unknown) => {
@@ -71,15 +71,15 @@ export class H5BridgeTransport implements HostTransport {
     this.timer = setInterval(announce, 250);
     announce();
   }
-  send(action: string, payload?: unknown, msgtype = 1): void {
+  send(action: string, payload?: unknown, msgtype = 1, requestId?: string): void {
     if (action !== 'ccReady' && action !== 'ccAck' && !this.acknowledged) {
       if (this.queued.length >= 1000) throw new Error('H5 握手未完成，消息积压');
-      this.queued.push({ action, payload, msgtype });
+      this.queued.push({ action, payload, msgtype, requestId });
       return;
     }
     const receive = this.win.H5Bridge?.onMessgeRecv ?? this.win.H5Bridge?.onMessageRecv;
     if (!receive) throw new Error('H5 桥接尚未就绪');
-    receive(action, payload, msgtype, undefined, Date.now(), 'cc');
+    receive(action, payload, msgtype, requestId, Date.now(), 'cc');
   }
   subscribe(listener: (message: HostMessage) => void): () => void {
     this.listeners.add(listener);

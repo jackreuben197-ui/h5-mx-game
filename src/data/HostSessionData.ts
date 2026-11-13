@@ -11,7 +11,7 @@ export class HostSessionData {
   update(action: string, payload: unknown): void {
     if (!payload || typeof payload !== 'object') return;
     const p = payload as Record<string, unknown>;
-    if (['enterTable', 'h5Ready', 'syncToken'].includes(action) && typeof p.token === 'string')
+    if (['enterTable', 'enterMtt', 'h5Ready', 'syncToken'].includes(action) && typeof p.token === 'string')
       this.token = p.token;
     if (action === 'syncUser') {
       this.userID = Number(p.uid) || 0;

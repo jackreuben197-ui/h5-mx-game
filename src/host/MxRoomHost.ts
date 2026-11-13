@@ -1,3 +1,5 @@
+import { MttRoomLifecycle } from '../logic/MttRoomLifecycle.js';
+import { EnterRoomRequest } from '../net/requests/EnterRoomRequest.js';
 import { GameplayTableSettingDataProvider } from '../logic/GameplayTableSettingDataProvider.js';
 import { EmojiService } from '../logic/EmojiService.js';
 import { GlobalConfigStore } from '../data/GlobalConfigStore.js';
@@ -77,16 +79,17 @@ export class MxRoomHost implements RoomHost {
   getTableSettings() { return this.roomData.tableSettings; }
   private updateTableSettings(): void { this.roomData.tableSettings.update(this.roomData.record,this.roomData.snapshot?.roomInfo,this.roomData.snapshot?.handInfo); }
   private current?: RoomContext;
+  private mttLifecycle?: MttRoomLifecycle;
   private project(data: ProtocolRoomData, target: RoomTarget): TableSnapshot {
     const snapshot = new EnterRoomMapper(this.pb!).map(data,target,++this.revision);
     snapshot.roomLogo = this.session.roomLogo(data.record?.clubId || target.clubID || 0);
     snapshot.privateUc=this.globalConfig.isChannelDiamondFreeMode;
     if(snapshot.watch)snapshot.watch.privateUc=this.globalConfig.isChannelDiamondFreeMode;
     const own = data.snapshot?.operatorList.find(op=>op.seatId===data.snapshot?.myInfo?.seatId && !op.isInsurance && !op.isAgreeSecondPc);
-    snapshot.canAddTime = !!own && own.delayTimes < this.globalConfig.resolveGameDelayTimes(data.record?.limitDelayTimes);
+    snapshot.canAddTime = (!data.mtt || data.mtt.delayTimeType !== 0) && !!own && own.delayTimes < this.globalConfig.resolveGameDelayTimes(data.record?.limitDelayTimes);
     if(snapshot.canAddTime&&data.record){
       const times=Math.min(5,own!.delayTimes+1),room=data.record,privateUc=this.globalConfig.isChannelDiamondFreeMode;
-      const ext=this.diamonds.getDiamondConfigTypeExt(room.originType,room.shareTable,false,times);
+      const ext=this.diamonds.getDiamondConfigTypeExt(room.originType,room.shareTable,!!data.mtt,times);
       snapshot.addTimeCost=this.diamonds.getPrice(2,ext,data.snapshot?.roomInfo?.smallBlind??0,privateUc);
     }
     return snapshot;
@@ -237,6 +240,7 @@ export class MxRoomHost implements RoomHost {
     receive: (update: TableUpdate) => void,
   ): Promise<TableSnapshot> {
     if (!this.session.token) throw new Error('未收到 H5 登录上下文，请从 H5 房间入口进入');
+    this.mttLifecycle?.destroy(); this.mttLifecycle=undefined;
     const context: RoomContext = (this.current = {
       target,
       signal,
@@ -267,6 +271,27 @@ export class MxRoomHost implements RoomHost {
     data.restoreSpecialOperations(pb.Def.Round.FLOP, pb.Def.Round.TURN);
     const snapshot = this.project(data,target);
     this.roomData = data;
+    if(data.mtt){
+      const active=()=>this.current===context&&!signal.aborted;
+      this.mttLifecycle=new MttRoomLifecycle(data,target,this.client,pb,this.transport,signal,active,
+        async(roomID,observer)=>{
+          if(!active())return;
+          context.ready=false;context.boundary=1002;context.authoritySeen=false;context.packets=[];
+          target.roomID=roomID;target.observer=observer;
+          const response=await new EnterRoomRequest(this.client,pb).execute(target,signal);
+          if(!active())return;
+          if(observer&&response.myInfo?.seatId)throw new Error('赛事观战响应座位无效');
+          data.snapshot=response;data.record!.rid=target.roomID;
+          data.mtt!.observer=observer;data.mtt!.applySnapshot(response.mttInfo,response.mttProgress,response.myInfo);
+          data.mtt!.syncHandState(response.gameStatus);data.mtt!.setTableTransferWaiting(false);
+          data.restoreSpecialOperations(pb.Def.Round.FLOP,pb.Def.Round.TURN);
+          context.ready=true;
+          context.receive({type:'transfer',snapshot:this.project(data,target)});
+          for(const packet of context.packets.splice(0))this.apply(packet,context);
+        },()=>{if(active())context.receive({type:'snapshot',snapshot:this.project(data,target)});},
+        ()=>{if(active())context.receive({type:'closed',roomID:target.roomID,matchID:target.matchID,reason:''});});
+      signal.addEventListener('abort',()=>this.mttLifecycle?.destroy(),{once:true});
+    }
     this.updateTableSettings();
     context.entered = true;
     context.ready = true;
@@ -281,6 +306,7 @@ export class MxRoomHost implements RoomHost {
   }
   private receive(packet: Packet): void {
     const context = this.current;
+    if(context&&!context.signal.aborted&&this.mttLifecycle?.global(packet))return;
     if (
       !context ||
       context.signal.aborted ||
@@ -290,6 +316,7 @@ export class MxRoomHost implements RoomHost {
       return;
     if (packet.code === this.pb?.Code.MSG_S_LEAVE_NOTIFICATION) {
       const body = this.pb.ServerMessageLeaveNotification.deserializeBinary(packet.body).toObject();
+      if(this.mttLifecycle?.leave(body))return;
       this.current = undefined;
       this.roomData.clear();
       context.receive({
@@ -390,6 +417,7 @@ export class MxRoomHost implements RoomHost {
       if (this.current !== context || context.signal.aborted) return;
       const candidate = new ProtocolRoomData();
       candidate.record = this.roomData.record;
+      candidate.mtt = this.roomData.mtt;
       candidate.snapshot = snapshot;
       if(this.roomData.watch.handNum===snapshot.handInfo?.handNum&&snapshot.gameStatus===this.pb!.Def.GameStatus.HAND_END)
         Object.assign(candidate.watch,this.roomData.watch);
@@ -397,6 +425,8 @@ export class MxRoomHost implements RoomHost {
       const mapped = this.project(candidate,context.target);
       // Keep room-scoped panel subscriptions/cache stable across authoritative resync.
       this.roomData.snapshot = snapshot;
+      this.roomData.mtt?.applySnapshot(this.roomData.snapshot?.mttInfo,this.roomData.snapshot?.mttProgress,this.roomData.snapshot?.myInfo);
+      if(this.roomData.snapshot)this.roomData.mtt?.syncHandState(this.roomData.snapshot.gameStatus);
       this.roomData.restoreSpecialOperations(this.pb!.Def.Round.FLOP, this.pb!.Def.Round.TURN);
       this.updateTableSettings();
       this.roomData.report.roomersFetched = false;
@@ -606,7 +636,7 @@ export class MxRoomHost implements RoomHost {
   async addTime(target:RoomTarget,signal:AbortSignal):Promise<void> {
     const c=this.seatContext(target),s=this.roomData.snapshot!;
     const op=s.operatorList.find(o=>o.seatId===s.myInfo?.seatId && !o.isAgreeSecondPc);
-    if(!op||op.delayTimes>=this.globalConfig.resolveGameDelayTimes(this.roomData.record?.limitDelayTimes))throw new Error('当前不能加时');
+    if(this.roomData.mtt?.delayTimeType===0||!op||op.delayTimes>=this.globalConfig.resolveGameDelayTimes(this.roomData.record?.limitDelayTimes))throw new Error('当前不能加时');
     await new AddTimeRequest(this.client,this.pb!).execute(target,op.delayTimes,signal);
     if(this.current!==c||signal.aborted)return;
     // The 1014 reply is also projected by TexasMessageHandler.AddTime.
@@ -704,6 +734,7 @@ export class MxRoomHost implements RoomHost {
     finally { c.seatingBusy = false; }
   }
   destroy(): void {
+    this.mttLifecycle?.destroy();
     this.off.forEach((off) => off());
     this.client.destroy();
     this.current = undefined;

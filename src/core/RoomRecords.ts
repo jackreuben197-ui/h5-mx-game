@@ -35,6 +35,10 @@ export interface RoomRecords {
     refreshReport(): Promise<void>;
     jackpot(): Promise<void>;
     openJackpot?():void;
+    mttRegistration?():void;
+    openMttRecord?():void;
+    mttAddOn?():Promise<void>;
+    mttAutoOp?(enable:boolean):Promise<void>;
     leaveTable?():void;
     insurance(): Promise<void>;
     round(mode: TexasReportRoundMode, round: number): Promise<number>;

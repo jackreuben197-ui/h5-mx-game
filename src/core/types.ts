@@ -74,7 +74,7 @@ export interface TableSnapshot {
   pots?: readonly number[];
   smallBlind?: number;
   showBB?: boolean;
-  menu?: { insurance: boolean; retainType: number; retainMinRate: number; storeChips: number; keepingSeat: boolean; keepSeatDuration: number };
+  menu?: { mttCanTrust?:boolean; insurance: boolean; retainType: number; retainMinRate: number; storeChips: number; keepingSeat: boolean; keepSeatDuration: number };
   ante?: number;
   uniqueID?: string;
   actingSeat?: number;
@@ -90,6 +90,7 @@ export interface TableSnapshot {
   actions: readonly Action[];
 }
 export type TableUpdate =
+  | { type: 'transfer'; snapshot: TableSnapshot }
   | { type: 'closed'; roomID: number; matchID: number; reason: string }
   | { type: 'snapshot'; snapshot: TableSnapshot }
   | {

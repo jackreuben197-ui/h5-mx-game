@@ -94,6 +94,7 @@ export class EnterRoomMapper {
     });
     return {
       menu: {
+        mttCanTrust: !!data.mtt?.gameStarted && mySeat>0 && !s.playersList.find(p=>p.seatId===mySeat)?.isAutoop,
         insurance: !!s.roomInfo?.insurance, retainType: s.roomInfo?.retainType ?? 0,
         retainMinRate: room.retainMinRate, storeChips: s.myInfo?.storeChips ?? 0,
         keepingSeat: !!s.playersList.find(p=>p.seatId===mySeat && (p.keepSeatDeadline || p.keepSeatLeftTime || p.keepSeatReason)),

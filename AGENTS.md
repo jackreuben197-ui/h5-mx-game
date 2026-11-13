@@ -40,7 +40,7 @@ MX 旧机器路径是 `/Users/magicd/repos/github/h5-mx-game`。上表提交仅�
 4. 后续增量消息更新数据；重连发 SyncEnter(1025)，按完整快照恢复，不重播历史发牌动画。
 5. `PreviewConfig.minimumLoadingMs=0`，用户已要求取消用于看加载页的 10 秒等待。
 
-`RoomEntryPolicy` 当前允许 **2–9 人普通德州现金桌**；不要再加“只允许 9 人桌”的限制。默认竖屏，也提供 auto 横竖屏布局；横屏导航在右侧占满高度，竖屏导航在底部。MTT、奥马哈、6+、加密牌仍不是当前完整入桌支持范围。
+`RoomEntryPolicy` 当前允许 **2–9 人德州、四/五/六张奥马哈和 6+ 现金桌**；不要再加“只允许 9 人桌”的限制。默认竖屏，也提供 auto 横竖屏布局；横屏导航在右侧占满高度，竖屏导航在底部。MTT 已接独立赛事入口及桌内状态，但尚无正在进行的赛事完成在线验收；加密牌仍未接入。
 
 普通俱乐部钱包的坐下、买入、返场、补充、站起、带出、留座已接入。视频/人脸验证桌坐下仍有明确未支持分支；其他钱包等不能因为配置/战绩里有展示就声称业务已完整。普通德州经典保险的本轮迁移与验收边界见第 8 节。
 
@@ -201,3 +201,9 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 - 2026-11-13 保险阶段已提交 `c5a9b10`，未推送。奥马哈/6+迁移：现金桌入口放开协议gameType0–3、pokerType0/2；保留MTT与加密牌限制。EnterRoomMapper保留玩法字段，起手缺省卡背按2/4/5/6张恢复；下注完全使用服务器ActionLimit，PLO不放大为任意全下。牌型沿原PokerUtil，奥马哈恰用两张手牌加三张公共牌，6+采用短牌修正规则；本人最佳组合恢复旧版实时高亮。手牌按CC Cards/l2r固定270设计宽度分槽重叠，桌面名称用GameType/PokerType/BetType词库。
 - 静音Chrome手机模拟两个真实账号分别进入新旧自建0.1/0.2桌：MX-PLO验收99074994（四张）、MX-PLO5验收94075122（五张）、MX-PLO6验收96075122（六张）、MX-6+验收98075122（pokerType2）。四种均实际带入、跟注/让牌到河牌并收到结算，三种奥马哈各自实际收到对应数量手牌，PLO服务端limitBetType=1。截图已逐张查看对照手牌布局；公共牌动画中截取的早期图不用于宣称静态像素对齐，最终五张第5手截图已显示公共牌和手牌最佳组合高亮。
 - 本轮22项相关测试通过，最后高亮修改后6项定向回归和TypeScript check再次通过，未做完整构建。截图 /tmp/mx-plo4-flop.png、/tmp/cc-plo4-flop.png、/tmp/mx-plo5-flop.png、/tmp/cc-plo5-flop.png、/tmp/mx-plo6-flop.png、/tmp/cc-plo6-flop.png、/tmp/mx-sixplus-flop.png、/tmp/cc-sixplus-flop.png、/tmp/mx-plo5-highlight-flop.png 为临时实服证据。复杂侧池/特殊保险与这些玩法组合仍需相应真实场景补充，不把整手验收扩大为所有组合验收。
+
+- 2026-11-13 奥马哈/6+阶段提交 `9125d99`，未推送。MTT 本轮迁入 CC TexasGameRoomDataMtt 状态字段及增购/休息规则；H5 enterMtt → MSG_R_MTT_DETAIL（当前锁定协议值204）→ EnterRoom1002（WST_NO），按同赛事的真实响应分配 roomID。现金桌请求仍精确匹配房间；被取消的分桌请求隔离迟到回包。
+- MTT 新增原名 AddOn1004、AutoOpActive1007、UpBlind1120、SyncHand1124；接101按消息体分桌、107绝对开赛时间、154休息。保留普通/Plus1/Plus2增购资格、每手/总次数、4秒空闲后清牌休息、泡沫/拆桌等待；换桌和重连继续沿H5 bridge，没有额外WebSocket。MTT加时按赛事消费档位和delayTimeType控制，筹码余额沿ChipFormatter的MTT取整分支。
+- MTT LR_NOCHIP区分存储筹码返桌与结算；淘汰后同桌重新订阅观战，真实回包确认无本人座位才允许继续观看。H5 mttSettlement/mttRecord复用原面板；panelRequestId隔离旧窗口回调。参赛玩家菜单离开不发现金桌Leave；淘汰后观战退出取消订阅。观众点空座转H5赛事详情报名。菜单复用托管项，隐藏现金桌买入/带出/站起。
+- MTT UI沿UIRoomTexas原waitStart、Group4871、Rectangle841图片，开赛和休息共用浮层；泡沫和拆桌沿原轮播词条。图片来源已登记image-sources。静音真实H5新旧浏览器核对了赛事列表和详情：竞技场2暂无赛事；公共三场93531274/95231466/96531402分别显示11月19/26/27日开赛，牌桌总数0。没有创建MTT、没有伪造在线消息，也没有完成MTT真实入桌、换桌、增购、休息、结算UI验收。需用户提供进行中的赛事。截图 `/tmp/mx-mtt-live-empty.png`、`/tmp/cc-mtt-live-empty.png`（390×844、DPR3、CDP mobile/touch5），临时文件不随Git；离线组件截图仅确认素材加载，不是实服或像素对齐验收。
+- MTT本轮TypeScript检查和42项针对性回归通过（含分桌关联、迟到消息、增购限制、休息时序、泡沫、换桌及淘汰观战）；未重复全量构建。此前各阶段真实验收限制仍保留：Jackpot中奖、CallTime到期、多池/强制保险和多玩法组合未全部在线触发，不能将代码覆盖等同全场景验收。

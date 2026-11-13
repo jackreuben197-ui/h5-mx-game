@@ -76,7 +76,7 @@ export class SeatIdentityView {
     this.name.hidden = state.mine;
     this.line.hidden = state.mine;
     this.name.textContent = p?.name ?? '';
-    this.chips.textContent = p ? new ChipFormatter(state.smallBlind, state.showBB).showPlayerBalanceWithShowBB(p.chips) : '';
+    this.chips.textContent = p ? new ChipFormatter(state.smallBlind, state.showBB,state.isMtt).showPlayerBalanceWithShowBB(p.chips) : '';
     this.avatarImage.set(p?.avatar ?? '', String(p?.userRid ?? ''));
     const win = p?.settlement?.win;
     const winPercent100=p?.winPercent100;
@@ -109,7 +109,7 @@ export class SeatIdentityView {
     this.autoStatus.hidden = true;
     this.playStatus.hidden=!p||keeping||![0,2,3].includes(p.canPlayStatus??1);
     if(!this.playStatus.hidden)i18nLabel.bind(this.playStatus,()=>i18nMgr.Get('adaptation10177',[],'等待中'));
-    this.returnButton.hidden=!state.mine||!(p?.keepSeatReason||p?.keepSeatDeadline);
+    this.returnButton.hidden=!!state.isMtt||!state.mine||!(p?.keepSeatReason||p?.keepSeatDeadline);
     if(!this.returnButton.hidden)i18nLabel.bind(this.returnButton,()=>i18nMgr.Get('adaptation10011',[],'返回游戏'));
   }
 }

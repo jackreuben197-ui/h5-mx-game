@@ -7,6 +7,6 @@ export interface HostMessage {
   timestamp?: number;
 }
 export interface HostTransport {
-  send(action: string, payload?: unknown, msgtype?: number): void;
+  send(action: string, payload?: unknown, msgtype?: number, requestId?: string): void;
   subscribe(listener: (message: HostMessage) => void): () => void;
 }

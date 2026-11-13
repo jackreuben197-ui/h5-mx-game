@@ -1,0 +1,7 @@
+.mx-mtt{position:absolute;inset:0;pointer-events:none;z-index:8}
+.mx-mtt-countdown,.mx-mtt-tip,.mx-mtt-addon,.mx-mtt-cancel{position:absolute;transform:translate(-50%,-50%) scale(var(--mtt-scale,1));background-size:100% 100%;background-repeat:no-repeat;background-color:transparent;color:white;border:0;white-space:pre-line;text-align:center}
+.mx-mtt-countdown,.mx-mtt-tip{display:flex;align-items:center;justify-content:center;height:209px;font-size:46px;line-height:1.3;padding:0 90px;box-sizing:border-box}
+.mx-mtt-tip{height:166px;font-size:45px}
+.mx-mtt-addon{width:150px;height:150px;font-size:30px;pointer-events:auto}
+.mx-mtt-cancel{width:581px;height:136px;font-size:52px;pointer-events:auto}
+.mx-mtt [hidden]{display:none!important}.mx-mtt button:disabled{opacity:.5}

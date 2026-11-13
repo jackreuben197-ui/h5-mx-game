@@ -16,6 +16,7 @@ export class TableMenuView {
   private bringIn!: HTMLButtonElement;
   private bringOut!: HTMLButtonElement;
   private keep!: HTMLButtonElement;
+  private rules!: HTMLButtonElement;
   private insurance!: HTMLButtonElement;
   private state?: TableSnapshot;
   private opened = false;
@@ -79,7 +80,7 @@ export class TableMenuView {
       b.append(element('span','mx-menu-row-label',()=>i18nMgr.Get(key)));b.onclick=()=>{this.setOpen(false);click();};return b;
     };
     const personal=row('UITexas_Setting','menuSetting',actions.settings,50);
-    const rules=row('UITexas_RuleTips','menuRules',()=>actions.rules(false),50);
+    const rules=this.rules=row('UITexas_RuleTips','menuRules',()=>actions.rules(false),50);
     this.insurance=row('UITexas_InsureRules','menuInsurance',()=>actions.rules(true));
     this.bringIn=row('UITexas_AddChipsMenu','menuBringIn',actions.bringIn);
     this.bringOut=row('UITexas_BringOutChipsMenu','menuBringIn',()=>actions.bringOut?.());
@@ -116,16 +117,18 @@ export class TableMenuView {
   render(state: TableSnapshot): void {
     this.state=state;
     const seated=state.mySeat>0,m=state.menu;
-    this.insurance.hidden=!m?.insurance;
-    this.bringIn.hidden=!seated;this.keep.hidden=!seated;
-    this.bringOut.hidden=!seated||m?.retainType!==2;
+    this.rules.hidden=state.matchID>0;this.insurance.hidden=state.matchID>0||!m?.insurance;
+    this.bringIn.hidden=!seated||state.matchID>0;this.keep.hidden=!seated;
+    this.bringOut.hidden=state.matchID>0||!seated||m?.retainType!==2;
     this.bringOut.disabled=(state.players.find(p=>p.seat===state.mySeat)?.chips??0)<=(m?.retainMinRate??0)*(state.smallBlind??0)*2;
     this.store.hidden=!seated||!m?.retainType;
     i18nLabel.bind(this.store,()=>`${i18nMgr.Get('UITexas_storage')}\n${StringHelper.GetLongString(m?.storeChips??0)}`);
+    if(state.matchID>0){this.stand.hidden=true;this.store.hidden=true;this.keep.disabled=!m?.mttCanTrust;}
     const label=this.keep.querySelector<HTMLElement>('.mx-menu-row-label')!;
-    i18nLabel.bind(label,()=>m?.keepingSeat?i18nMgr.Get('MX_ReturnToTable'):i18nMgr.Get('UITexas_LeaveTheTable'));
+    i18nLabel.bind(label,()=>state.matchID>0?i18nMgr.Get('UITexas_TrustGame'):m?.keepingSeat?i18nMgr.Get('MX_ReturnToTable'):i18nMgr.Get('UITexas_LeaveTheTable'));
+    if(state.matchID>0)this.keep.hidden=!seated||!!state.players.find(p=>p.seat===state.mySeat)?.isAutoop;
     this.bb.setAttribute('aria-checked', String(!!state.showBB));
-    this.stand.hidden = !state.mySeat || this.stand.dataset.available !== 'true';
+    this.stand.hidden = state.matchID>0 || !state.mySeat || this.stand.dataset.available !== 'true';
   }
   resize(unit: number, height: number, suggest: number): void {
     // UITexasMenu.onFrameResize uses 2290 design units as its maximum menu height.

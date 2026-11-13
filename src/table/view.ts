@@ -1,3 +1,5 @@
+import './mtt.css';
+import { MttTableStateView } from './components/MttTableStateView.js';
 import './jackpot.css';
 import { JackpotView } from './components/JackpotView.js';
 import { CPErrorCode } from '../i18n/CPErrorCode.js';
@@ -100,6 +102,7 @@ export class TableView {
   private insurance?: InsuranceView;
   private squid?:SquidView;
   private jackpot?:JackpotView;
+  private mtt?:MttTableStateView;
   private mushroomBoom?:MushroomBoomView;
   private sound = new TableSound();
   private soundControl: SoundControlView;
@@ -138,6 +141,7 @@ export class TableView {
     this.seats.onclick = event => {
       const returnButton=(event.target as HTMLElement).closest<HTMLElement>('.mx-return-game');
       if(returnButton){
+        if(options.records?.data.mtt){void options.records.mttAutoOp?.(false).catch(e=>this.toast.show(e));return;}
         const state=this.data.info.snapshot,p=state?.players.find(v=>v.seat===state.mySeat);
         if(p){
           if(p.chips>0&&p.keepSeatReason!==3)void options.seating?.keepSeat?.(false).catch(error=>this.toast.show(error));
@@ -159,7 +163,8 @@ export class TableView {
         return;
       }
       const seat = (event.target as HTMLElement).closest<HTMLElement>('.mx-empty-seat');
-      if(seat && !this.data.info.snapshot?.mySeat) void this.buyIn.open(Number(seat.dataset.seat));
+      if(seat&&options.records?.data.mtt){if(options.records.data.mtt.observer)options.records.mttRegistration?.();return;}
+      if(seat && !this.data.info.snapshot?.matchID && !this.data.info.snapshot?.mySeat) void this.buyIn.open(Number(seat.dataset.seat));
     };
     this.seats.onkeydown = event => { if(event.key==='Enter'||event.key===' ') { const seat=(event.target as HTMLElement).closest<HTMLElement>('.mx-empty-seat'); if(seat){event.preventDefault();seat.click();} } };
     this.board =
@@ -177,6 +182,7 @@ export class TableView {
       this.seatEmoji = new SeatEmojiView(options.emojis, this.root, this.sound);
     }
     const onNavigate = (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => {
+      if(action==='report'&&options.records?.data.mtt){options.records.openMttRecord?.();return;}
       if (action === 'report' && this.report) { this.emoji?.controller.close(); this.history?.controller.close(); this.report.open(); }
       else if (action === 'replay' && this.history) { this.emoji?.controller.close(); this.report?.controller.close(); this.history.open(); }
       else if (action === 'emoji' && this.emoji) {
@@ -203,7 +209,7 @@ export class TableView {
         rules:(insurance)=>options.seating?.rules?.(insurance),
         bringIn:()=>this.buyIn.open(0),
         bringOut:()=>{const state=this.data.info.snapshot;if(state)this.bringOut.open(state);},
-        keepSeat:async keep=>{if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
+        keepSeat:async keep=>{if(options.records?.data.mtt){await options.records.mttAutoOp?.(true);return;}if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
       }, error=>this.toast.show(error));
     this.settingsOff.push(settings.on(Settings.SHOW_BB,()=>{
       this.showBB=settings.showBB;const snapshot=this.data.info.snapshot;
@@ -246,6 +252,7 @@ export class TableView {
       this.stage.append(this.squid.root);
       this.jackpot=new JackpotView(specialOperations.data,()=>options.records?.openJackpot?.(),()=>queueMicrotask(()=>{if(this.root.isConnected)this.resizeTable();}));
       this.stage.append(this.jackpot.root);
+      if(options.records?.data.mtt){this.mtt=new MttTableStateView(options.records,e=>this.toast.show(e));this.stage.append(this.mtt.root);}
       this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
       this.root.append(this.mushroomBoom.guide.surface.root);
       this.root.append(this.secondPcs.root, this.insurance.root,this.squid.result.root,this.squid.intro.root);
@@ -326,6 +333,7 @@ export class TableView {
     this.menu.resize(l.unit, l.height, l.suggest);
     this.squid?.resize(l.suggest);
     this.jackpot?.resize(l.width,l.height,l.suggest);
+    this.mtt?.resize(l.width,l.height,l.suggest);
     queueMicrotask(()=>this.mushroomBoom?.mushroom.resize());
     this.toast.setScale(l.unit);
     Object.assign(this.stage.style, {
@@ -370,6 +378,7 @@ export class TableView {
     this.squid?.destroy();
     this.mushroomBoom?.destroy();
     this.jackpot?.destroy();
+    this.mtt?.destroy();
     this.appearanceGeneration++;
     this.deskBackground.destroy();
     this.settingsOff.forEach(off=>off());

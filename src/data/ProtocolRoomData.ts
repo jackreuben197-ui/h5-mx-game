@@ -1,3 +1,4 @@
+import type TexasGameRoomDataMtt from './TexasGameRoomDataMtt.js';
 import { JackpotData } from './JackpotData.js';
 import { CallTimeData } from './CallTimeData.js';
 import { MushroomData } from './MushroomData.js';
@@ -30,6 +31,7 @@ export class ProtocolRoomData {
   readonly secondPcs = new SecondPcsData();
   readonly insurance = new InsuranceData();
   readonly watch = new SettlementWatchData();
+  mtt?: TexasGameRoomDataMtt;
   record?: RoomRecord.AsObject;
   snapshot?: (ServerMessageEnterRoom.AsObject | ServerMessageSyncEnter.AsObject) & { settlement?: Settlement };
   /** Restore only authoritative special operators after EnterRoom/SyncEnter. */
@@ -54,6 +56,7 @@ export class ProtocolRoomData {
       this.insurance.start(mine, (s.handInfo?.publicCardsList.length ?? 0) >= 4 ? turnRound : flopRound, mine.invalidInsurancePotsList);
   }
   clear(): void {
+    this.mtt?.clear(); this.mtt = undefined;
     this.tableSettings.clearData();
     this.emoji.clearData();
     this.report.clear();

@@ -39,8 +39,9 @@ export function Winner(body: ServerMessageWinner.AsObject, context: MessageConte
   const watch=context.data.watch;
   watch.clear();watch.handNum=body.handNum;
   // Permission is completed by the host after settlement, once the current H5 config is available.
-  watch.peek=eligible && (room?.viewPlayerCards??0)!==0;
-  watch.reveal=eligible && (context.state.handInfo?.publicCardsList.length??0)<5;
+  watch.peek=!context.data.mtt && eligible && (room?.viewPlayerCards??0)!==0;
+  watch.reveal=!context.data.mtt && eligible && (context.state.handInfo?.publicCardsList.length??0)<5;
   watch.revealRound=Number(body.round)||0;
+  context.data.mtt?.handleHandEnd();
   return true;
 }
