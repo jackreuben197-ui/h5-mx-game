@@ -27,7 +27,8 @@ export class HandCardsView {
         wrapper.append(new CardView(value, !face).root);
         place(
           wrapper,
-          face ? (i - (shown.length - 1) / 2) * 135 : ((i + 0.5) * 80 / shown.length - 45),
+          // CC Cards/l2r Layout resizes slots inside a fixed 270-wide strip.
+          face ? ((i + 0.5) * 270 / shown.length - 135) : ((i + 0.5) * 80 / shown.length - 45),
           0,
         );
         return wrapper;
@@ -82,7 +83,7 @@ export class HandCardsView {
   emphasize(state: SeatState): void {
     Array.from(this.root.children).forEach((slot, i) => {
       const card = slot.querySelector<HTMLElement>('.mx-card');
-      if (card) CardView.emphasize(card, state.player?.cards[i] ?? 0, state.player?.settlement?.cards, 10);
+      if (card) CardView.emphasize(card, state.player?.cards[i] ?? 0, state.player?.settlement?.cards ?? state.cardsEmphasis, 10);
     });
   }
   cancel(): void {

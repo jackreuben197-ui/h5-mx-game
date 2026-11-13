@@ -18,3 +18,14 @@ test('no hand-type badge for covered cards, preflop, folds or finished hands', (
   assert.equal(mineHandValueType(table([14, 29], [2, 22, 39], {players:[{seat:1,cards:[14,29],folded:true}]})), undefined);
   assert.equal(mineHandValueType(table([14, 29], [2, 22, 39], {handEnded:true})), undefined);
 });
+
+test('Omaha must use exactly two hole cards even when the board is a royal flush',()=>{
+ const board=[10,11,12,13,14];
+ assert.equal(mineHandValueType(table([17,33],board)),10);
+ for(const [gameType,cards] of [[1,[17,33,49,20]],[2,[17,33,49,20,36]],[3,[17,33,49,20,36,52]]])
+  assert.notEqual(mineHandValueType(table(cards,board,{gameType})),10);
+});
+test('6+ recognizes A6789 while ordinary Holdem does not',()=>{
+ assert.equal(mineHandValueType(table([14,21],[37,53,9],{pokerType:2})),5);
+ assert.equal(mineHandValueType(table([14,21],[37,53,9])),1);
+});

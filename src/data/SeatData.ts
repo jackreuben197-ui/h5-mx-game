@@ -1,7 +1,8 @@
 import { EventSource } from '../binding/EventSource.js';
 import { observable } from '../binding/observable.js';
 import type { Player, TableSnapshot, SeatCountdown } from '../core/types.js';
-import { mineHandValueType } from '../logic/MineHandValue.js';
+import { mineHandValue } from '../logic/MineHandValue.js';
+import type { CardEmphasis } from '../core/Settlement.js';
 export interface SeatState {
   player?: Player;
   mine: boolean;
@@ -14,6 +15,7 @@ export interface SeatState {
   handNum: number;
   handEnded?: boolean;
   handValueType?: number;
+  cardsEmphasis?: CardEmphasis;
   presentation: TableSnapshot['presentation'];
   dealIndex: number;
 }
@@ -30,6 +32,7 @@ export class SeatData extends EventSource {
     super();
   }
   replace(table: TableSnapshot): void {
+    const hand = this.id === table.mySeat ? mineHandValue(table) : undefined;
     this.state = {
       player: table.players.find((p) => p.seat === this.id),
       mine: this.id === table.mySeat,
@@ -41,7 +44,8 @@ export class SeatData extends EventSource {
       showBB: table.showBB,
       handNum: table.handNum,
       handEnded: table.handEnded,
-      handValueType: this.id === table.mySeat ? mineHandValueType(table) : undefined,
+      handValueType: hand?.handValueType,
+      cardsEmphasis: hand ? { highlight: hand.rawCards() } : undefined,
       presentation: table.presentation,
       dealIndex: table.dealOrder?.indexOf(this.id) ?? -1,
     };

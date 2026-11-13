@@ -47,6 +47,9 @@ export interface BettingTurn {
 }
 export interface SeatCountdown { seat: number; deadline: number; totalTime: number; }
 export interface TableSnapshot {
+  gameType?: number;
+  pokerType?: number;
+  limitBetType?: number;
   /** Protocol HAND_END, used to clear persistent per-hand presentation. */
   handEnded?: boolean;
   watch?: { peek: boolean; reveal: boolean; peekCost?: number; revealCost?: number; revealFree?: boolean; privateUc?: boolean };

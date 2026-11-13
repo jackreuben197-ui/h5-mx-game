@@ -1,5 +1,6 @@
 import type { ServerMessageStartInfo } from '@silenthill/agreement-web';
 import { MessageContext } from '../MessageContext.js';
+import { handCardCount } from '../../../logic/HandCardCount.js';
 export function StartInfo(body: ServerMessageStartInfo.AsObject, context: MessageContext): boolean {
   if (!body.handInfo) throw new Error('开局消息缺少 handInfo');
   if (body.handInfo.handNum <= (context.state.handInfo?.handNum ?? -1)) return false;
@@ -19,7 +20,7 @@ export function StartInfo(body: ServerMessageStartInfo.AsObject, context: Messag
       player.status = context.pb.Def.CanPlayStatus.NORMAL;
     player.roundActioned = false;
     if (body.handInfo.dealOrderList.includes(item.seatId) && !player.cardsList.length)
-      player.cardsList = [0, 0];
+      player.cardsList = Array(handCardCount(context.data.record?.gameType ?? 0)).fill(0);
   }
   const squid=context.data.squid,mine=context.state.playersList.find(p=>p.seatId===context.state.myInfo?.seatId);
   squid.start(body.handInfo.inSquid);
