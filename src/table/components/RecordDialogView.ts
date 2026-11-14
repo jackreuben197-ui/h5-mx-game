@@ -14,7 +14,7 @@ export class RecordDialogView {
     private closeButton = element('button', 'mx-record-close');
     private previousFocus?: HTMLElement;
     private openingAnimation?: Animation;
-    constructor(title: () => string, close: () => void, private dock?: 'left' | 'right') {
+    constructor(title: () => string, close: () => void, private dock?: 'left' | 'right', private designTop = 0) {
         this.root.hidden = true;
         if (dock) this.root.dataset.dock = dock;
         SpriteAtlas.paint(this.closeButton, 'recordClose');
@@ -85,6 +85,9 @@ export class RecordDialogView {
         }
     }
     onFrameResize(width: number, height: number): void {
+        // CC UIViewUtil.alignTableDialog: visibleHeight * designTop / 2703.
+        // CSS max() combines it with the live H5/device top safe area.
+        this.root.style.setProperty('--record-design-top', `${height * this.designTop / 2703}px`);
         const panelWidth = Math.min(width * .82, 640);
         const unit = this.dock ? panelWidth / 1242 : Math.min(width / 1440, height / 2200, 640 / 1242);
         this.root.style.setProperty('--record-unit', `${unit}px`);

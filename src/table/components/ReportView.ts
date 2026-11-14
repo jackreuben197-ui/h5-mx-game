@@ -26,7 +26,7 @@ export class ReportView {
     private playerInfo: ReportPlayerInfoView;
     private tick?: ReturnType<typeof setInterval>;
     constructor(readonly controller: ReportController) {
-        this.dialog = new RecordDialogView(() => t('UIMine_RecordList', '战绩'), () => controller.close(), 'left');
+        this.dialog = new RecordDialogView(() => t('UIMine_RecordList', '战绩'), () => controller.close(), 'left', 185);
         this.root = this.dialog.root;
         this.root.classList.add('mx-report-overlay');
         this.playerInfo = new ReportPlayerInfoView(controller.records);

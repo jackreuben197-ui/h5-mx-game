@@ -4,7 +4,8 @@
 .mx-record-panel{position:relative;display:flex;flex-direction:column;width:var(--record-width,90%);height:var(--record-height,90%);max-width:100%;max-height:100%;min-height:0;overflow:hidden;font-size:calc(44 * var(--record-unit));line-height:1.35}
 .mx-record-overlay[data-short=true]{padding-block:0}
 .mx-record-overlay[data-short=true]>.mx-record-panel{height:100%;max-height:100%}
-.mx-record-overlay[data-dock]{padding:0;align-items:stretch;overflow:hidden}
+.mx-record-overlay[data-dock]{--record-top:max(var(--record-design-top,0px),var(--mx-safe-top,env(safe-area-inset-top,0px)));padding:0;align-items:stretch;overflow:hidden}
+.mx-record-overlay[data-dock]>.mx-record-panel{top:var(--record-top);height:calc(100% - var(--record-top));max-height:calc(100% - var(--record-top))}
 .mx-record-overlay[data-dock=left]{justify-content:flex-start}
 .mx-record-overlay[data-dock=right]{justify-content:flex-end}
 .mx-record-overlay[data-dock=left]>.mx-record-panel{border-left:0;border-top-left-radius:0;border-bottom-left-radius:0}

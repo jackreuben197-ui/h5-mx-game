@@ -29,7 +29,7 @@ export class TableChatView {
   constructor(private records:RoomRecords,private error:(e:unknown)=>void){
     const data=records.data;
     const assets = {send:new URL('../../assets/raw/chat/send.png',import.meta.url).href,quick:new URL('../../assets/raw/chat/quick.png',import.meta.url).href,input:new URL('../../assets/raw/chat/input.png',import.meta.url).href,panel:new URL('../../assets/raw/chat/panel.png',import.meta.url).href,support:new URL('../../assets/raw/chat/support.png',import.meta.url).href,supportBg:new URL('../../assets/raw/chat/support-bg.png',import.meta.url).href};
-    this.dialog=new RecordDialogView(()=>`${data.record?.name??''}\n#${records.target.roomID}`,()=>this.close(),'left');
+    this.dialog=new RecordDialogView(()=>`${data.record?.name??''}\n#${records.target.roomID}`,()=>this.close(),'left',200);
     this.dialog.root.classList.add('mx-chat-dialog');
     this.emoji=new ChatEmojiView(this.dialog.body);this.dialog.panel.append(this.emoji.root);
     for(const [key,url] of Object.entries(assets)){this.dialog.root.style.setProperty(`--chat-${key}`,`url("${url}")`);this.support.style.setProperty(`--chat-${key}`,`url("${url}")`);}
@@ -91,6 +91,6 @@ export class TableChatView {
     const parse=(raw:unknown):string[]=>{if(typeof raw==='string'){try{return parse(JSON.parse(raw));}catch{return raw.trim()?[raw]:[];}}if(Array.isArray(raw))return raw.flatMap(v=>typeof v==='string'?[v]:parse(v));if(raw&&typeof raw==='object'){const v=raw as Record<string,any>;if(v.data||v.list)return parse(v.data??v.list);const item=v.multi_language??v;const locale=i18nMgr.language;return [String(item[locale==='en'?'us_name':locale==='pt'?'br_name':'cn_name']??item.us_name??'')].filter(Boolean);}return [];};
     this.quick.replaceChildren(...parse(this.quickData).map(text=>{const b=element('button','',text);b.onclick=()=>{this.input.value=text;this.quick.hidden=true;this.input.focus();};return b;}));
   }
-  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=width/1440;this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${1050*unit}px`);this.dialog.root.style.setProperty('--chat-height',`${height-210*unit}px`);}
+  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=width/1440;this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${1050*unit}px`);}
   destroy():void{this.dead=true;this.close();this.bindings.destroy();this.dialog.destroy();this.danmu.destroy();this.emoji.destroy();this.button.remove();this.support.remove();}
 }

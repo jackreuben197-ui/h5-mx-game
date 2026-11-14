@@ -35,7 +35,7 @@ export class HistoryView {
     private balance = element('span', 'mx-history-balance');
     private retry = element('button', '');
     constructor(readonly controller: HistoryController) {
-        this.dialog = new RecordDialogView(() => t('UITexas_History_paipu', '牌谱'), () => controller.close(), 'right');
+        this.dialog = new RecordDialogView(() => t('UITexas_History_paipu', '牌谱'), () => controller.close(), 'right', 220);
         this.root = this.dialog.root;
         this.root.classList.add('mx-history-overlay');
         this.dialog.header.append(this.room);
