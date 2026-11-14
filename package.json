@@ -15,7 +15,8 @@
     "assets:import": "python3 scripts/import-cc-assets.py",
     "build:types": "tsc -p tsconfig.types.json && node scripts/write-type-entry.mjs",
     "assets:pack": "node scripts/pack-assets.mjs",
-    "prebuild": "npm run assets:pack"
+    "prebuild": "npm run assets:pack",
+    "release:web-mobile": "node scripts/release-web-mobile.mjs"
   },
   "devDependencies": {
     "sharp": "0.34.5",

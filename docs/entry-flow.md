@@ -86,7 +86,7 @@ mountMxGame(hostDiv, {
 
 ## 外壳与配置边界
 
-`deps/h5-game` 是外部系统，原样使用，不修改源码或 `.env`。MX 不提供 integration 包装或外壳专用构建入口；外部在合适的 DIV 上调用已导出的 `mountMxGame`，双工消息全走 bridge。
+`deps/h5-game` 是外部系统，原样使用，不修改源码或 `.env`。`release:web-mobile` 可在临时副本中组合外壳与 MX 为静态发布目录，不改外壳源码；生成的入口在独立 DIV 上调用 `mountMxGame`，双工消息全走 bridge。
 
 只有 HTTP 在 MX 内直连。地址和超时放在 `src/config/HttpConfig.ts`，`HttpClient` 默认读取该配置，凭据仍来自外壳同步的登录上下文。WS 不配置地址、不创建连接，发包使用 `wsSend`，回包监听 `wsMessage`，重连恢复监听 `wsReconnected`。
 
