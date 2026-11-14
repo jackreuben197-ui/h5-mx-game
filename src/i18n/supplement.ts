@@ -1,5 +1,6 @@
 // MX-only UI strings missing from the shared CC language package.
 export const supplement: Record<string, Record<string, string>> = {
+  MX_PlayerStatsPeriod:{cn:'仅展示近60天数据',zh:'僅展示近60天資料',en:'Only data from the last 60 days is shown.',pt:'Somente dados dos últimos 60 dias.'},
   MX_MediaPermission:{cn:'必须同意浏览器的音视频权限才能成功坐在视频桌',zh:'必須同意瀏覽器的音視訊權限才能成功坐在視訊桌',en:'Allow camera and microphone access before taking a seat.',pt:'Permita acesso à câmera e ao microfone antes de sentar.'},
   MX_OpenAudio:{cn:'打开音频',zh:'開啟音訊',en:'Enable audio',pt:'Ativar áudio'},
   MX_CloseAudio:{cn:'关闭音频',zh:'關閉音訊',en:'Disable audio',pt:'Desativar áudio'},

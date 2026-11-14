@@ -52,7 +52,7 @@ export class BuyInView {
     this.root.hidden = true;
     this.panel.setAttribute('role','dialog'); this.panel.setAttribute('aria-modal','true'); i18nLabel.bind(this.panel, () => i18nMgr.Get("MX_SeatAndBuyIn", [], "坐下与带入"), 'aria-label');
     this.slider.type='range'; i18nLabel.bind(this.slider, () => i18nMgr.Get("UITexas_AddChips", [], "带入筹码"), 'aria-label');
-    this.slider.oninput=()=>controller.data.update({amount:Number(this.slider.value)});
+    this.slider.oninput=()=>{const q=controller.data.state.quote;if(q)controller.data.update({amount:Math.min(q.max,q.min+Number(this.slider.value)*q.step)});};
     this.wallet = new WalletSelectView(clubID => controller.data.update({clubID}));
     this.tipButton.type='button';i18nLabel.bind(this.tipButton, () => i18nMgr.Get("MX_BuyInDepositDetails", [], "带入押金说明"), 'aria-label');
     SpriteAtlas.paintWarning(this.tipButton);this.tip.hidden=true;
@@ -112,10 +112,10 @@ export class BuyInView {
       }
       i18nLabel.bind(this.amountTitle, () => q.deposit?i18nMgr.Get("MX_BuyInDeposit", [], "带入筹码 + 押金"):i18nMgr.Get("UITexas_AddChips", [], "带入筹码"));
       this.tipButton.hidden=!q.deposit;if(!q.deposit)this.tip.hidden=true;
-      this.amount.textContent=money(s.amount); this.slider.min=String(q.min);this.slider.max=String(q.max);this.slider.step=String(q.step);this.slider.value=String(s.amount);
+      this.amount.textContent=money(s.amount); this.slider.min='0';this.slider.max=String(Math.ceil((q.max-q.min)/q.step));this.slider.step='1';this.slider.value=String(Math.ceil((s.amount-q.min)/q.step));
       this.limits.replaceChildren(element('span','',() => i18nMgr.Get("The_smallest", [], "最小")),element('span','',() => i18nMgr.Get("Maximum", [], "最大")));
       this.slider.setAttribute('aria-valuetext',`${money(s.amount)}，最小 ${money(q.min)}，最大 ${money(q.max)}`);
-      this.sliderHandle.style.left=`${q.max>q.min?(s.amount-q.min)/(q.max-q.min)*100:0}%`;
+      this.sliderHandle.style.left=`${Number(this.slider.max)>0?Number(this.slider.value)/Number(this.slider.max)*100:0}%`;
       this.wallet.render(q.wallets.filter(w=>q.returnClubID===undefined||w.club_id===q.returnClubID),s.clubID,s.busy);
       this.autoArea.hidden=!q.canAuto;this.auto.checked=s.auto;
     }

@@ -91,7 +91,12 @@
 .mx-record-panel .mx-history-details{display:flex;align-items:center;justify-content:center;gap:calc(12 * var(--record-unit));margin:calc(25 * var(--record-unit)) auto;padding:calc(15 * var(--record-unit)) calc(22 * var(--record-unit));background:#0003}
 .mx-history-details .mx-record-icon{width:calc(40 * var(--record-unit));height:calc(24 * var(--record-unit))}
 .mx-history-score,.mx-history-street{margin-top:calc(25 * var(--record-unit));padding-bottom:calc(30 * var(--record-unit))}
-.mx-history-street-heading{display:flex;align-items:center;justify-content:space-between;gap:calc(12 * var(--record-unit));min-height:calc(145 * var(--record-unit));margin-bottom:calc(18 * var(--record-unit))}
+/* Fixed right columns keep all streets aligned, including the five-card river. */
+.mx-history-street-heading{display:grid;grid-template-columns:calc(210 * var(--record-unit)) minmax(0,1fr) calc(110 * var(--record-unit)) calc(210 * var(--record-unit));align-items:center;gap:calc(12 * var(--record-unit));min-height:calc(145 * var(--record-unit));margin-bottom:calc(18 * var(--record-unit))}
+.mx-history-street-heading>.mx-history-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;max-width:calc(451 * var(--record-unit))}
+.mx-history-street-heading .mx-card{width:100%;height:auto;aspect-ratio:87/127.6}
+.mx-history-street-heading>.mx-history-pot{justify-content:flex-end;min-width:0}
+.mx-history-street-heading>.mx-history-count{font-variant-numeric:tabular-nums}
 .mx-history-street-heading h3{font:inherit;margin:0;flex:none}
 .mx-history-count,.mx-history-pot{display:flex;align-items:center;gap:calc(5 * var(--record-unit));white-space:nowrap}
 .mx-history-empty-cards span{width:calc(70 * var(--record-unit));height:calc(115 * var(--record-unit));border:1px dashed #fff5}
@@ -137,3 +142,9 @@
 .mx-report-player-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover}
 .mx-report-player-overlay h3{font-size:18px;font-weight:400;margin:8px}
 @media(max-height:420px){.mx-record-overlay[data-dock] .mx-record-header{padding-top:8px;padding-bottom:8px}.mx-record-overlay[data-dock] .mx-record-header h2{font-size:20px;margin-bottom:4px}.mx-history-overlay .mx-record-header{height:calc(190 * var(--record-unit))}.mx-history-overlay .mx-record-header .mx-record-room{padding-left:calc(100 * var(--record-unit));gap:4px}.mx-history-overlay .mx-record-footer{min-height:0;padding-block:4px}.mx-history-overlay .mx-history-balance{flex-direction:row;gap:12px}.mx-history-overlay .mx-record-pages{max-width:500px;align-self:center;width:100%}.mx-history-page-track{padding-top:0;gap:4px}.mx-record-panel .mx-history-page-button{margin-top:0}.mx-report-overlay>.mx-record-panel>.mx-record-footer{min-height:0;padding-block:4px}}
+
+.mx-history-overview-actions{display:grid;grid-template-columns:3fr 1fr 1fr;gap:calc(4 * var(--record-unit));font-size:calc(28 * var(--record-unit));text-align:center;white-space:normal;overflow-wrap:anywhere}
+
+.mx-history-last-action{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+
+.mx-game:has(.mx-record-overlay:not([hidden])) ~ .mx-test-menu{visibility:hidden}

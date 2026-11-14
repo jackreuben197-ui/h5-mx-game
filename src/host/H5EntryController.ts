@@ -1,11 +1,52 @@
 import { i18nMgr } from '../i18n/i18nMgr.js';
 import type { HostMessage, HostTransport } from './HostTransport.js';
+import type { ClientState, RoomTarget } from '../core/types.js';
 import type { GameClient } from '../GameClient.js';
 /** H5 menu events -> application entry. No DOM creation or protocol decoding here. */
 export class H5EntryController {
   private off: () => void;
   private token = '';
   private currentClubID = 0;
+  private userRID = 0;
+  private port = 0;
+  private ready = false;
+  private restoreAttempted = false;
+  private restoring?: RoomTarget;
+  private hadTableSession = false;
+  private disposed = false;
+  private readonly resumeKey = 'mx.seated-table.v1';
+  stateChanged(state: ClientState): void {
+    if(this.disposed||state.phase==='destroyed')return;
+    const leaving=state.phase==='hidden'&&this.hadTableSession;
+    if(state.phase!=='hidden')this.hadTableSession=true;
+    else this.hadTableSession=false;
+    try {
+      if(state.phase==='table'&&state.table?.mySeat&&state.target&&this.userRID&&this.port)
+        sessionStorage.setItem(this.resumeKey,JSON.stringify({userRID:this.userRID,port:this.port,target:state.target}));
+      else if(leaving||state.phase==='error'||(state.phase==='table'&&!state.table?.mySeat))
+        sessionStorage.removeItem(this.resumeKey);
+    } catch { /* Storage restrictions do not prevent normal table entry. */ }
+  }
+  private matchesRestoreSocket(url: unknown): boolean {
+    if(typeof url!=='string')return false;
+    try {
+      const socket = new URL(url);
+      if (typeof location !== 'undefined' && socket.host === location.host && socket.pathname === `/mx-ws:${this.port}`) return true;
+      return Number(socket.port) === this.port;
+    } catch { return false; }
+  }
+  private restore(): void {
+    if(this.restoreAttempted||!this.ready||!this.token||!this.userRID||this.game.getState().phase!=='hidden')return;
+    this.restoreAttempted=true;
+    try {
+      const saved=JSON.parse(sessionStorage.getItem(this.resumeKey)??'null');
+      const t=saved?.target;
+      if(saved?.userRID!==this.userRID){sessionStorage.removeItem(this.resumeKey);return;}
+      if(!t||!Number.isSafeInteger(t.roomID)||t.roomID<=0||!Number.isSafeInteger(t.matchID)||t.matchID<0||!Number.isSafeInteger(t.roomType)||!Number.isInteger(saved.port)||saved.port<=0)return;
+      this.restoring=t;this.port=saved.port;
+      this.transport.send('wsConnect',{port:this.port,roomId:t.roomID,matchId:t.matchID});
+    } catch { /* No valid saved room. */ }
+  }
   constructor(
     private transport: HostTransport,
     private game: GameClient,
@@ -15,6 +56,16 @@ export class H5EntryController {
   private receive(message: HostMessage): void {
     const raw = message.payload,
       p = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    if(message.action==='syncUser'){this.userRID=Number(p.randomId)||0;this.restore();}
+    if(message.action==='wsOpen'&&this.restoring&&this.matchesRestoreSocket(p.url)){
+      const target=this.restoring;this.restoring=undefined;
+      // H5 emits wsOpen immediately before REGISTER; defer entry until that send completes.
+      queueMicrotask(()=>{if(this.token&&this.game.getState().phase==='hidden')void this.game.enter(target);});
+    }
+    if(message.action==='enterTable'||message.action==='enterMtt'){
+      this.restoring=undefined;this.restoreAttempted=true;
+      this.port=Number(p.websocketPort)||this.port;
+    }
     if (message.action === 'syncCurrentClub') {
       const id = Number(p.clubId);
       this.currentClubID = Number.isSafeInteger(id) && id > 0 ? id : 0;
@@ -25,9 +76,11 @@ export class H5EntryController {
     ) {
       if (this.token && this.token !== p.token) this.game.leave();
       this.token = p.token;
+      this.restore();
     }
     if (message.action === 'syncLanguage' && typeof p.locale === 'string') i18nMgr.setLanguage(p.locale);
     if (message.action === 'h5Ready') {
+      this.ready=true;this.restore();
       this.transport.send('ccAck', { ok: true, message: 'MX ready' });
       const safe = p.safeArea as Record<string, unknown> | undefined;
       for (const side of ['top', 'right', 'bottom', 'left'])
@@ -35,6 +88,8 @@ export class H5EntryController {
           this.game.element.style.setProperty(`--mx-safe-${side}`, `${safe[side]}px`);
     }
     if (message.action === 'exitTable' || (message.action === 'syncToken' && p.token === '')) {
+      this.restoring=undefined;
+      try{sessionStorage.removeItem(this.resumeKey);}catch{}
       this.game.leave();
       return;
     }
@@ -83,6 +138,7 @@ export class H5EntryController {
     this.transport.send('showToast', { type: 'fail', message });
   }
   destroy(): void {
+    this.disposed=true;
     this.off();
     this.token = '';
     this.currentClubID = 0;

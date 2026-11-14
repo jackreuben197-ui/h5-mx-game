@@ -1,3 +1,4 @@
+import { uniqueId } from '../../core/uniqueId.js';
 import MagicEmojiConfig from '../../logic/MagicEmojiConfig.js';
 import type { EmojiSpineRenderer } from '../../effects/spine/EmojiSpineRenderer.js';
 import { element } from '../dom.js';
@@ -24,7 +25,7 @@ export class ChatEmojiView {
       for(const node of slots){
         const config=MagicEmojiConfig.getByType(Number(node.dataset.chatEmoji));
         if(!config||this.active.has(node))continue;
-        this.active.add(node);const key=node.dataset.emojiKey??=crypto.randomUUID();
+        this.active.add(node);const key=node.dataset.emojiKey??=uniqueId();
         void engine.play(key,config,()=>{
           if(!node.isConnected||!node.getClientRects().length)return null;
           const r=node.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,scale:1,maxSize:r.width,clip:this.list.getBoundingClientRect()};

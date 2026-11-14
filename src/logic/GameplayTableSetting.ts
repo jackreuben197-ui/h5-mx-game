@@ -252,7 +252,7 @@ export class GameplayTableSetting {
         const chatType = Number(this._roomData.basicInfo.chatType ?? 1);
         this.FillData('chat_type', this.L('UITableSetting_chat'), chatType === 0 ? this.L('UIClub_CreateRoom7') : this.L('UIOpen'), '#7ED27E');
         const straddle = Number(this._roomData.basicInfo.straddle || 0);
-        const straddleMax = Number(this._roomData.basicInfo.straddleMax || 2);
+        const straddleMax = Number(this._roomData.basicInfo.straddleMax || 1);
         this.FillData('straddle', 'Straddle', straddle === 1 ? String(straddleMax) : this.L('UIClub_CreateRoom7'), '#7ED27E');
         for(const row of this.rows) {
             if(row.enabled===undefined && (row.value===this.L('6digit_password_opened') || row.value===this.L('UIMine_AccountNotOpen')))

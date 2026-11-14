@@ -193,7 +193,8 @@ test('action request uses server limits, no optimistic chips, and one send per t
   const chips = c.data.seats.get(4).state.player.chips;
   await c.host.command(target, 'raise', c.abort.signal, 200);
   assert.equal(c.data.seats.get(4).state.player.chips, chips);
-  await assert.rejects(c.host.command(target, 'raise', c.abort.signal, 200), /已经发送/);
+  // CC silently ignores duplicate clicks until the authoritative action arrives.
+  await c.host.command(target, 'raise', c.abort.signal, 200);
   assert.equal(sends, 1);
   await frame(c, pb.Code.MSG_S_ACTION_ALL, action(4, pb.Def.Action.RAISE, 804, 200));
   assert.equal(c.data.seats.get(4).state.player.chips, 804);

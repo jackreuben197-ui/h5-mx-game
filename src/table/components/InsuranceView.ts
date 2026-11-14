@@ -150,6 +150,7 @@ export class InsuranceView {
       button.dataset.pool = String(type);
       const price = element('span', 'mx-insurance-premium'), title = element('span', 'mx-insurance-option-title');
       price.textContent = this.rules._floorTrim(this.rules._realPayAmount(pot, type));
+      price.style.fontSize = `${Math.min(12, 78 / Math.max(1, price.textContent.length * 0.62))}px`;
       title.style.backgroundImage = `url("${type === this.pool ? selected : normal}")`;
       i18nLabel.bind(title, () => type === PoolType.ALL ? i18nMgr.Get('UIInsurance_all') : type === PoolType.MIN_MONEY ? i18nMgr.Get('UIInsurance_baoben') : (({[PoolType.THIRD]:'1/3',[PoolType.HALF]:'1/2',[PoolType.FIFTH]:'1/5',[PoolType.EIGHTH]:'1/8'} as Partial<Record<PoolType,string>>)[type] ?? ''));
       button.append(price, title); button.onclick = () => { this.choices.select(pot,type); this.pool = type; this.renderPot(); }; return button;

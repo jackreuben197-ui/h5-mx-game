@@ -52,3 +52,22 @@ test('MTT uses the H5 current club as CC does, falling back to the match club',(
  transport.emit('enterMtt',{token:'test',matchId:56,matchInfo:{type:512,club_id:12}});
  assert.equal(targets[1].clubID,12);entry.destroy();
 });
+
+test('refresh restores only the same seated account after H5 opens its socket',async()=>{
+ const map=new Map(),previous=globalThis.sessionStorage;
+ globalThis.sessionStorage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+ try{
+  const transport=new FakeTransport(),targets=[];let state={phase:'hidden'};
+  const game={getState:()=>state,enter:t=>{targets.push(t);state={phase:'entering',target:t};return Promise.resolve();},leave(){state={phase:'hidden'};},element:{style:{setProperty(){}}}};
+  let entry=new H5EntryController(transport,game);
+  transport.emit('syncUser',{randomId:8});transport.emit('enterTable',{token:'test',websocketPort:1234,roomId:1001,roomInfo:{rid:1001,room_type:0}});
+  entry.stateChanged({phase:'table',target:{roomID:1001,matchID:0,roomType:0},table:{mySeat:1}});
+  entry.destroy();entry.stateChanged({phase:'hidden'});assert.equal(map.size,1);state={phase:'hidden'};targets.length=0;
+  entry=new H5EntryController(transport,game);
+  entry.stateChanged({phase:'hidden'});assert.equal(map.size,1);
+  transport.emit('syncUser',{randomId:8});transport.emit('h5Ready',{token:'test'});
+  assert.equal(targets.length,0);transport.emit('wsOpen',{url:'wss://example.test:1233'});await Promise.resolve();assert.equal(targets.length,0);transport.emit('wsOpen',{url:'wss://example.test:1234'});await Promise.resolve();
+  assert.equal(targets[0].roomID,1001);
+  entry.stateChanged({phase:'table',table:{mySeat:1}});entry.stateChanged({phase:'hidden'});assert.equal(map.size,0);entry.destroy();
+ }finally{globalThis.sessionStorage=previous;}
+});

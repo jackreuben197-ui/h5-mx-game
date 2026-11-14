@@ -23,6 +23,11 @@ export class TableMedia extends EventSource {
   private video?: ILocalVideoTrack;
   private audio?: ILocalAudioTrack;
   private disposed = false;
+  private audioInterrupted = false;
+  get microphoneActive(): boolean {
+    const track=this.audio?.getMediaStreamTrack();
+    return this.microphone && !this.audioInterrupted && !!track && track.readyState==='live' && !track.muted;
+  }
   private generation = 0;
   private identity = '';
   private queue: Promise<unknown> = Promise.resolve();
@@ -106,11 +111,17 @@ export class TableMedia extends EventSource {
       client.on('user-unpublished',(user,kind)=>{if(kind==='video')user.videoTrack?.stop();else user.audioTrack?.stop();this.changed();});
       client.on('user-left',user=>{user.videoTrack?.stop();user.audioTrack?.stop();this.speaking.delete(Number(user.uid));this.changed();});
       client.on('connection-state-change',()=>this.changed());
+      client.on('user-info-updated',()=>this.changed());
 
       await client.join(AgoraConfig.appId,channel,await this.token(channel),this.uid);
       if(!valid()){await this.leave();return;}
       // Sequential creation ensures a failed camera cannot leak a concurrently acquired microphone.
       this.audio=await AgoraRTC.createMicrophoneAudioTrack();
+      this.audioInterrupted=false;
+      const audio=this.audio, native=audio.getMediaStreamTrack();
+      const refresh=()=>{if(valid()&&this.audio===audio){this.audioInterrupted=native.muted||native.readyState!=='live';this.changed();}};
+      native.addEventListener('mute',refresh);native.addEventListener('unmute',refresh);
+      audio.on('track-ended',refresh);
       if(!valid()){await this.leave();return;}
       if(this.setting.enableCamera)this.video=await AgoraRTC.createCameraVideoTrack({encoderConfig:{...AgoraConfig.encoder}});
       if(!valid()){await this.leave();return;}
@@ -129,6 +140,8 @@ export class TableMedia extends EventSource {
         for(const user of client.remoteUsers){const level=user.audioTrack?.getVolumeLevel()??0;if(level>volume){volume=level;uid=Number(user.uid);}}
         if(this.audio?.enabled&&!this.audio.muted){const level=this.audio.getVolumeLevel();if(level>volume){volume=level;uid=this.uid;}}
         if(volume<0.6)uid=0;
+        const interrupted=!!this.audio&&(this.audio.getMediaStreamTrack().muted||this.audio.getMediaStreamTrack().readyState!=='live');
+        if(interrupted!==this.audioInterrupted){this.audioInterrupted=interrupted;this.changed();}
         const previous=this.speaking.values().next().value??0;
         if(previous!==uid){this.speaking=new Set(uid?[uid]:[]);this.changed();}
       },300);
@@ -163,7 +176,7 @@ export class TableMedia extends EventSource {
     return this.config.shouldShowVideoMask?this.config.getVisibleVideoMaskId(this.data.snapshot?.playersList.find(p=>p.userRid===uid)?.videoMaskId??0):0;
   }
   audioEnabled(uid:number):boolean {
-    return uid===this.uid?this.microphone:!!(this.remoteMicrophone&&!this.blockedAudio.has(uid)&&this.client?.remoteUsers.find(u=>Number(u.uid)===uid)?.hasAudio);
+    return uid===this.uid?this.microphoneActive:!!(this.remoteMicrophone&&!this.blockedAudio.has(uid)&&this.client?.remoteUsers.find(u=>Number(u.uid)===uid)?.hasAudio);
   }
   private async setLocal(camera:boolean,microphone:boolean):Promise<void> {
     const generation=this.generation;

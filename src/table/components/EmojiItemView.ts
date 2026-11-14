@@ -1,3 +1,4 @@
+import { uniqueId } from '../../core/uniqueId.js';
 import type { EmojiItemData } from '../../logic/EmojiPropRules.js';
 import { EmojiPropRules } from '../../logic/EmojiPropRules.js';
 import { StringHelper } from '../../logic/StringHelper.js';
@@ -13,7 +14,7 @@ export class EmojiItemView {
     private ready = false;
     private busy = false;
     private renderer?: EmojiSpineRenderer;
-    private key = `emoji-preview-${crypto.randomUUID()}`;
+    private key = `emoji-preview-${uniqueId()}`;
     constructor(item: EmojiItemData, privateUc: boolean, renderer: Promise<EmojiSpineRenderer>, clip: HTMLElement, send: () => void) {
         this.root.type = 'button'; this.root.disabled = true;
         this.root.setAttribute('aria-label', i18nMgr.Get(`MX_Emoji_${item.config.propCode}`, [], item.config.propCode));

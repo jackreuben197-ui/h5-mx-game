@@ -22,7 +22,7 @@ export class TableMediaView {
   @bindEvent(TableMedia.CHANGE,'media')
   render():void {
     const media=this.media;
-    this.root.hidden=!media.joined;this.video.hidden=!media.setting.enableCamera;
+    this.root.hidden=true;this.video.hidden=!media.setting.enableCamera;
     for(const [button,kind,on] of [[this.audio,'sound',media.remoteMicrophone],[this.video,'video',media.remoteCamera]] as const){
       const icon=element('img','');icon.src=mediaImage(kind);icon.alt='';
       const label=element('span','',()=>i18nMgr.Get(on?'UITexas_Open':'UITexas_Close',[],on?'开启':'关闭'));
@@ -56,7 +56,7 @@ export class TableMediaView {
     for(const id of this.seats.keys())if(!ids.has(id))this.remove(id);
     for(const [action,icon,on,allowed] of [
       ['camera','camera',media.camera,media.canOpCamera],
-      ['voice','audio',media.microphone,media.canOpMicrophone],
+      ['voice','audio',media.microphoneActive,media.canOpMicrophone],
       ['effect','effect',media.maskId>0,media.canSwitchMask],
     ] as const){
       const button=this.table.querySelector<HTMLButtonElement>(`.mx-nav-button[data-action="${action}"]`);if(!button)continue;

@@ -198,7 +198,7 @@ export class PlayerInfoView {
         item.append(element('span', '', label), element('strong', '', value));
         grid.append(item);
       }
-      body.append(grid);
+      body.append(grid,element('p','mx-player-profile-period',()=>t('MX_PlayerStatsPeriod','仅展示近60天数据')));
       return;
     }
     const allin = stats?.allin_data;

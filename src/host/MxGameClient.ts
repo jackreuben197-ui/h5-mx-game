@@ -35,6 +35,7 @@ export class MxGameClient {
           this.transport.send(visible ? 'h5Hide' : 'h5Show');
           if (!visible) this.transport.send('setHeartbeatMode', { mode: 'normal' });
         }
+        this.entry?.stateChanged(state);
         options.onState?.(state);
       },
     });

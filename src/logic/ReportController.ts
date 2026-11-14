@@ -1,6 +1,7 @@
 import { EventSource } from '../binding/EventSource.js';
 import { observable } from '../binding/observable.js';
 import type { RoomRecords } from '../core/RoomRecords.js';
+import { GameplayTableSettingBasic } from './GameplayTableSettingBasic.js';
 import TexasReportPresentation from './TexasReportPresentation.js';
 export type ReportTab = 'battle' | 'insurance' | 'jackpot' | 'mode';
 export class ReportController extends EventSource {
@@ -9,15 +10,29 @@ export class ReportController extends EventSource {
     state = { open: false, tab: 'battle' as ReportTab, onlyTable: false, round: 0, loading: false, error: '' };
     private generation = 0;
     constructor(readonly records: RoomRecords) { super(); }
-    get mode() { return TexasReportPresentation.resolveMode({ ...this.records.data.record, ...this.records.data.snapshot?.roomInfo }); }
+    private get basic() {
+        const { record, snapshot } = this.records.data;
+        return record && snapshot?.roomInfo ? GameplayTableSettingBasic.from(record, snapshot.roomInfo, snapshot.handInfo) : undefined;
+    }
+    get mode() { return TexasReportPresentation.resolveMode(this.basic ?? this.records.data.record ?? {}); }
+    get tabs(): ReportTab[] {
+        const tabs: ReportTab[] = ['battle'];
+        const basic = this.basic;
+        if ((basic?.hasInsurance ?? ((this.records.data.record?.insuranceOn ?? 0) > 0)) && this.mode !== 'squid') tabs.push('insurance');
+        // RoomRecord uses 1 = enabled, 2 = disabled; raw truthiness also enabled closed tables.
+        if (basic?.jackpot ?? (this.records.data.record?.jackpot === 1)) tabs.push('jackpot');
+        if (this.mode !== 'none') tabs.push('mode');
+        return tabs;
+    }
     open(): void { this.state = { ...this.state, open: true }; void this.select('battle'); }
     close(): void { ++this.generation; this.state = { ...this.state, open: false, loading: false }; }
     filter(onlyTable: boolean): void { this.state = { ...this.state, onlyTable }; }
     async select(tab: ReportTab, round = this.state.round): Promise<void> {
+        if (!this.tabs.includes(tab)) tab = 'battle';
         const generation = ++this.generation;
         this.state = { ...this.state, tab, loading: true, error: '' };
         try {
-            if (tab === 'battle' && !this.records.data.report.roomersFetched)
+            if (tab === 'battle')
                 await this.records.refreshReport();
             if (tab === 'insurance')
                 await this.records.insurance();

@@ -31,6 +31,12 @@ export class EnterRoomMapper {
       if (!Number.isSafeInteger(player.chip) || player.chip < 0)
         throw new Error('玩家筹码超出安全整数范围');
       if(!player.keepSeatDeadline&&player.keepSeatLeftTime>0)player.keepSeatDeadline=Date.now()/1000+player.keepSeatLeftTime;
+      // A normal operation is authoritative evidence that this player is back in the hand.
+      if(s.operatorList.some(op=>op.seatId===player.seatId&&!op.isInsurance&&!op.isAgreeSecondPc&&op.actionsList.length)){
+        player.status=this.pb.Def.CanPlayStatus.NORMAL;
+        player.keepSeatReason=this.pb.Def.KeepSeatReason.KSR_NONE;
+        player.keepSeatDeadline=0;player.keepSeatLeftTime=0;
+      }
       let cards = [...player.cardsList];
       if (player.seatId === mySeat) {
         if (

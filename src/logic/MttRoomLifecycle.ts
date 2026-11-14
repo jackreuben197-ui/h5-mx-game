@@ -1,3 +1,4 @@
+import { uniqueId } from '../core/uniqueId.js';
 import { CPErrorCode } from '../i18n/CPErrorCode.js';
 import type { ServerMessageLeaveNotification } from '@silenthill/agreement-web';
 import type { ProtocolRoomData } from '../data/ProtocolRoomData.js';
@@ -95,7 +96,7 @@ export class MttRoomLifecycle {
   }
   private showPanel():void{
     if(!this.props||this.disposed)return;
-    this.panel=`mx-mtt-${crypto.randomUUID()}`;
+    this.panel=`mx-mtt-${uniqueId()}`;
     this.transport.send('showPanel',{panelType:'mttSettlement',props:{...this.props,canContinueWatching:this.watching,watchingPending:this.pending},closeOnClickOverlay:false,ensureVisible:false,showH5Bg:false},1,this.panel);
   }
   private dissolved():void{

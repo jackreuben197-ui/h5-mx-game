@@ -93,3 +93,7 @@
 .mx-player-profile-gift-choice:disabled{opacity:.55}
 .mx-player-profile-balance{display:flex;justify-content:center;align-items:center;gap:calc(5 * var(--player-profile-unit));min-height:calc(24 * var(--player-profile-unit));margin-top:calc(3 * var(--player-profile-unit));font-size:calc(12 * var(--player-profile-unit))}
 .mx-player-profile-balance-icon{display:inline-block;width:calc(15 * var(--player-profile-unit));height:calc(13 * var(--player-profile-unit))}
+
+.mx-player-profile-period{margin:0;text-align:center;flex:none;font-size:calc(11 * var(--player-profile-unit));line-height:1.4;color:#ffffffb3}
+
+.mx-player-profile-grid:has(+.mx-player-profile-period){height:calc(204 * var(--player-profile-unit))}

@@ -16,8 +16,13 @@ export function StartInfo(body: ServerMessageStartInfo.AsObject, context: Messag
     const player = context.player(item.seatId);
     Object.assign(player, item);
     // CC StartInfo promotes dealt players even when the server omits a status update.
-    if (body.handInfo.dealOrderList.includes(item.seatId))
+    if (body.handInfo.dealOrderList.includes(item.seatId)) {
       player.status = context.pb.Def.CanPlayStatus.NORMAL;
+      // A newly dealt participant has returned; PlayerStartInfo has no keep-seat fields.
+      player.keepSeatReason = context.pb.Def.KeepSeatReason.KSR_NONE;
+      player.keepSeatDeadline = 0;
+      player.keepSeatLeftTime = 0;
+    }
     player.roundActioned = false;
     if (body.handInfo.dealOrderList.includes(item.seatId) && !player.cardsList.length)
       player.cardsList = Array(handCardCount(context.data.record?.gameType ?? 0)).fill(0);

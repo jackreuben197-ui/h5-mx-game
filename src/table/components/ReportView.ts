@@ -72,17 +72,15 @@ export class ReportView {
         this.filterLabel.textContent = t('MX_OnlyAtTable', '只显示桌面玩家');
         this.dialog.status.textContent = state.error || (state.loading ? t('MX_Loading', '加载中…') : '');
         this.filter.closest('label')!.hidden = state.tab !== 'battle';
-        const mode = this.controller.mode, record = records.data.record, info = records.data.snapshot?.roomInfo;
-        const tabs: [
-            ReportTab,
-            string
-        ][] = [['battle', t('UITexasReport_title', '实时战况')]];
-        if (info?.insurance || record?.insuranceOn)
-            tabs.push(['insurance', t('UICareerRecord_Insurance', '保险')]);
-        if (info?.jackpot || record?.jackpot)
-            tabs.push(['jackpot', t('UITexasReport_JackpotRecord', 'Jackpot')]);
-        if (mode !== 'none')
-            tabs.push(['mode', t(mode === 'mush' ? 'UITexasReport_MushRoomRecord' : 'UITexasReport_SquidRecord', mode === 'mush' ? '蘑菇记录' : '鱿鱼记录')]);
+        const mode = this.controller.mode;
+        if (!this.controller.tabs.includes(state.tab)) { void this.controller.select('battle'); return; }
+        const labels: Record<ReportTab, string> = {
+            battle: t('UITexasReport_title', '实时战况'),
+            insurance: t('UICareerRecord_Insurance', '保险'),
+            jackpot: t('UITexasReport_JackpotRecord', 'Jackpot'),
+            mode: t(mode === 'mush' ? 'UITexasReport_MushRoomRecord' : 'UITexasReport_SquidRecord', mode === 'mush' ? '蘑菇记录' : '鱿鱼记录'),
+        };
+        const tabs = this.controller.tabs.map(key => [key, labels[key]] as const);
         this.tabs.replaceChildren(...tabs.map(([key, label]) => { const b = element('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.tab === key)); b.onclick = () => void this.controller.select(key); return b; }));
         const report = records.data.report;
         const tableUsers = new Set(records.data.snapshot?.playersList.map(p => p.userRid) ?? []);

@@ -51,3 +51,14 @@ test('sequence follows only ordinary own operator and closes on action completio
  d.snapshot.operatorList=[{seatId:2}];media.sync();await media.queue;assert.equal(media.camera,false);assert.equal(media.microphone,false);
  abort.abort();await media.queue;
 });
+
+test('microphone icon follows native interruption and remote publication state',()=>{
+ const d=new ProtocolRoomData(),abort=new AbortController();d.record={...new pb.RoomRecord().toObject(),antiCheatType:2};
+ const media=new TableMedia(d,8,{},new GlobalConfigStore(),abort.signal,()=>{},0);
+ const track={readyState:'live',muted:false};media.audio={getMediaStreamTrack:()=>track};media.microphone=true;
+ assert.equal(media.microphoneActive,true);track.muted=true;assert.equal(media.audioEnabled(8),false);
+ track.muted=false;assert.equal(media.audioEnabled(8),true);track.readyState='ended';assert.equal(media.audioEnabled(8),false);
+ const user={uid:9,hasAudio:false};media.client={remoteUsers:[user]};assert.equal(media.audioEnabled(9),false);
+ user.hasAudio=true;assert.equal(media.audioEnabled(9),true);media.blockedAudio.add(9);assert.equal(media.audioEnabled(9),false);
+ media.audio=undefined;media.client=undefined;media.destroy();
+});

@@ -1,3 +1,4 @@
+import { uniqueId } from '../../core/uniqueId.js';
 import { SpriteAtlas } from '../SpriteAtlas.js';
 import { element } from '../dom.js';
 import { i18nMgr } from '../../i18n/i18nMgr.js';
@@ -17,7 +18,7 @@ export class RecordDialogView {
         this.root.hidden = true;
         if (dock) this.root.dataset.dock = dock;
         SpriteAtlas.paint(this.closeButton, 'recordClose');
-        const id = `mx-record-${crypto.randomUUID()}`;
+        const id = `mx-record-${uniqueId()}`;
         this.title.id = id;
         this.panel.setAttribute('role', 'dialog');
         this.panel.setAttribute('aria-modal', 'true');

@@ -411,6 +411,8 @@ export class MxRoomHost implements RoomHost {
       context.receive({ type: 'snapshot', snapshot });
       if(packet.code===this.pb!.Code.MSG_S_WINNER)
         void this.prepareSettlementWatch(context);
+      if(packet.code===this.pb!.Code.MSG_S_BUY_INSURANCE)
+        void this.getRecords()?.refreshReport().catch(error=>this.report(error));
       this.maybeAgreePost(context);
       if (packet.code === this.pb!.Code.MSG_D_SEATED || packet.code === this.pb!.Code.MSG_S_SEATED_OTHERS)
         this.warmRoomPanels(context, packet.code === this.pb!.Code.MSG_D_SEATED);
@@ -674,7 +676,7 @@ export class MxRoomHost implements RoomHost {
     signal.throwIfAborted();
     if(this.seatContext(target)!==c)throw new Error('房间会话已更换');
     const q:BuyInQuote={funding:diamond?'diamond':score?'score':'wallet',diamondBalance,scoreClubID:direct?(wallet?.club_id??c.walletClubID??target.clubID??this.roomData.record!.clubId):undefined,mode:'add',id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
-      min:limits.minAmount,max:limits.maxAmount,step:limits.step,wallets:direct?[]:[wallet],returnOrNew:0,
+      min:limits.minAmount,max:limits.maxAmount,step:limits.step*50,wallets:direct?[]:[wallet],returnOrNew:0,
       deposit:limits.needDeposit?info.deposit-(player?.deposit??0):0,canAuto:!direct&&info.retainType===0,
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType>=2}};
     c.quote=q;return structuredClone(q);
@@ -697,7 +699,14 @@ export class MxRoomHost implements RoomHost {
     if(c.seatingBusy||!this.roomData.snapshot?.myInfo?.seatId)throw new Error('当前不能留座离桌');
     if(keep&&duration<=0)throw new Error('当前牌桌未配置留座时间');
     c.seatingBusy=true;
-    try{await new KeepSeatRequest(this.client,this.pb!).execute(target,keep,duration,signal);}
+    try{
+      await new KeepSeatRequest(this.client,this.pb!).execute(target,keep,duration,signal);
+      if(!keep&&this.current===c&&!signal.aborted){
+        const player=this.roomData.snapshot?.playersList.find(p=>p.seatId===this.roomData.snapshot?.myInfo?.seatId);
+        if(player){player.keepSeatReason=this.pb!.Def.KeepSeatReason.KSR_NONE;player.keepSeatDeadline=0;player.keepSeatLeftTime=0;
+          c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});}
+      }
+    }
     finally{c.seatingBusy=false;}
   }
   async addTime(target:RoomTarget,signal:AbortSignal):Promise<void> {

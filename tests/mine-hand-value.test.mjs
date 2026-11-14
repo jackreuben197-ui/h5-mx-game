@@ -29,3 +29,11 @@ test('6+ recognizes A6789 while ordinary Holdem does not',()=>{
  assert.equal(mineHandValueType(table([14,21],[37,53,9],{pokerType:2})),5);
  assert.equal(mineHandValueType(table([14,21],[37,53,9])),1);
 });
+
+test('seat data recomputes a pair into a straight when the river completes broadway',async()=>{
+ const {SeatData}=await import('../.test-build/data/SeatData.js');
+ const seat=new SeatData(1),changes=[];seat.on(SeatData.CHANGE,s=>changes.push(s.handValueType));
+ for(const community of [[5,41,55],[5,41,55,42],[5,41,55,42,59]])
+  seat.replace({...table([13,28],community),seatCount:2,handNum:1,presentation:'live'});
+ assert.deepEqual(changes,[2,2,5]);
+});

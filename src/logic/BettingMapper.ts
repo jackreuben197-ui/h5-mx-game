@@ -22,7 +22,10 @@ export class BettingMapper {
       [A.ALLIN, 'allin'],
       [A.STRADDLE, 'straddle'],
     ]);
-    const limits = operator.actionsList;
+    const maxStraddle = data.record?.straddleMax || 1;
+    const straddleCount = state!.playersList.filter(player => player.action === A.STRADDLE).length;
+    const limits = operator.actionsList.filter(limit => limit.action !== A.STRADDLE ||
+      (straddleCount < maxStraddle && limit.straddleLevel <= maxStraddle));
     if (
       limits.some(
         (l) =>

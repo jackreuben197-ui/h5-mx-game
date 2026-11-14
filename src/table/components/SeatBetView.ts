@@ -13,8 +13,9 @@ export class SeatBetView {
   }
   render(state: SeatState): void {
     const player = state.player;
-    this.root.hidden = !player?.roundBet || !!player.folded;
+    // Set the new amount before revealing a reused bet node.
     this.label.textContent = player?.roundBet ? ChipFormatter.format(player.roundBet, state.smallBlind, state.showBB) : '';
+    this.root.hidden = !player?.roundBet || !!player.folded;
   }
   place(x: number, y: number, iconX: number): void {
     place(this.root, x, y);

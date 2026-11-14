@@ -1,3 +1,4 @@
+import { uniqueId } from '../core/uniqueId.js';
 import type { HostTransport } from './HostTransport.js';
 import type { ReplayHandData } from '../data/ReplayHandData.js';
 /** CC BridgeStorage protocol and game_replays keys; H5 owns IndexedDB. */
@@ -7,7 +8,7 @@ export class ReplayStorage {
         if (!this.user || signal.aborted)
             return Promise.resolve(null);
         return new Promise(resolve => {
-            const requestId = `mx-replay-${crypto.randomUUID()}`;
+            const requestId = `mx-replay-${uniqueId()}`;
             let timer: ReturnType<typeof setTimeout>;
             const finish = (result: ReplayHandData | null) => { clearTimeout(timer); off(); signal.removeEventListener('abort', abort); resolve(result); };
             const abort = () => finish(null);
