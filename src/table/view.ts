@@ -1,3 +1,7 @@
+import { bindTableAppearance } from './appearance/TableAppearanceContext.js';
+import { classicFelt, cardBacks } from './appearance/TableSkin.js';
+import { imageReady } from './resources.js';
+import { getBrand } from './appearance/BrandManifest.js';
 import { TableMediaView } from './components/TableMediaView.js';
 import './media.css';
 import { TableToolsView } from './components/TableToolsView.js';
@@ -31,7 +35,7 @@ import { DeskBackgroundView } from './components/DeskBackgroundView.js';
 import { AllInTestView } from './components/AllInTestView.js';
 import { SpineEffects } from '../effects/SpineEffects.js';
 import { SeatPositionMotion } from './SeatPositionMotion.js';
-import settings, { TexasGamePersonalSettings as Settings } from '../data/TexasGamePersonalSettings.js';
+import defaultSettings, { TexasGamePersonalSettings as Settings } from '../data/TexasGamePersonalSettings.js';
 import { AppearanceResources } from './AppearanceResources.js';
 import { BringOutView } from './components/BringOutView.js';
 import { PersonalSettingsView } from './components/PersonalSettingsView.js';
@@ -68,6 +72,7 @@ import type { TableComponents } from './TableComponents.js';
 import './table.css';
 import './settings.css';
 import './dialog-glass.css';
+import './appearance/appearance.css';
 export { prepare } from './resources.js';
 export class TableView {
   readonly root = element('section', 'mx-table');
@@ -95,8 +100,10 @@ export class TableView {
   private bringOut: BringOutView;
   private buyIn: BuyInController;
   private buyInView: BuyInView;
-  private showBB = settings.showBB;
-  private personalSettings = new PersonalSettingsView();
+  private showBB = false;
+  private settings: Settings;
+  private appearanceObserver?: MutationObserver;
+  private personalSettings: PersonalSettingsView;
   private settingsOff: (() => void)[] = [];
   private appearanceGeneration = 0;
   private menu: TableMenuView;
@@ -127,11 +134,23 @@ export class TableView {
     command: (action: Action, amount?: number) => Promise<void>,
     leave: () => void,
     navigate?: (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => void,
-    private options: { specialOperations?: SpecialOperations; emojis?: RoomEmojis; records?: RoomRecords; testControls?: HTMLElement; layout?: 'portrait' | 'auto'; components?: TableComponents; seating?: SeatingActions } = {},
+    private options: { preferences?: Settings; specialOperations?: SpecialOperations; emojis?: RoomEmojis; records?: RoomRecords; testControls?: HTMLElement; layout?: 'portrait' | 'auto'; components?: TableComponents; seating?: SeatingActions } = {},
   ) {
+    this.settings=options.preferences??defaultSettings;
+    this.showBB=this.settings.showBB;
+    bindTableAppearance(this.root,this.settings);
+    this.root.style.setProperty('--mx-accent',getBrand(this.settings.brandID).accent);
+    this.personalSettings=new PersonalSettingsView(this.settings);
+    const repaint=(root:HTMLElement)=>{
+      const paint=(card:HTMLElement)=>CardView.paint(card,Number(card.dataset.cardValue),card.dataset.smallBack==='true');
+      if(root.matches('.mx-card[data-card-value]'))paint(root);
+      root.querySelectorAll<HTMLElement>('.mx-card[data-card-value]').forEach(paint);
+    };
+    this.appearanceObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node instanceof HTMLElement)repaint(node);})));
+    this.appearanceObserver.observe(this.root,{subtree:true,childList:true});
     // Preview starts muted without overwriting the CC production preference.
-    if (import.meta.env.DEV) settings.soundOn = false;
-    this.soundControl = new SoundControlView(this.sound);
+    if (import.meta.env.DEV) this.settings.soundOn = false;
+    this.soundControl = new SoundControlView(this.sound,this.settings);
     // CC keeps the sound switch in personal settings, not as a table overlay.
     this.soundControl.root.hidden = true;
     const components = options.components ?? {};
@@ -177,7 +196,7 @@ export class TableView {
     this.board =
       components.publicCards?.(this.data.publicCards) ?? new PublicCardsView(this.data.publicCards);
     this.pot = components.pot?.(this.data.pot) ?? new PotView(this.data.pot);
-    this.controls = components.actions?.(command) ?? new ActionControls(command, SpriteAtlas.paint, this.confirmDialog, options.seating?.addTime);
+    this.controls = components.actions?.(command) ?? new ActionControls(command, SpriteAtlas.paint, this.confirmDialog, options.seating?.addTime,this.settings);
     this.settlementWatch=new SettlementWatchView(kind=>options.seating?.watchSettlement?.(kind)??Promise.reject(new Error('当前入口不支持看牌')),
       error=>this.toast.show(error));
     if (options.records) {
@@ -208,8 +227,8 @@ export class TableView {
       else exit();
     };
     this.menu = new TableMenuView(requestLeave, () => {
-        settings.setShowBBToStorage(!settings.showBB);
-        this.showBB = settings.showBB;
+        this.settings.setShowBBToStorage(!this.settings.showBB);
+        this.showBB = this.settings.showBB;
         const snapshot = this.data.info.snapshot;
         if (snapshot) this.presenter.present({ ...snapshot, showBB: this.showBB, presentation: 'sync' });
         return this.showBB;
@@ -220,21 +239,38 @@ export class TableView {
         bringOut:()=>{const state=this.data.info.snapshot;if(state)this.bringOut.open(state);},
         keepSeat:async keep=>{if(options.records?.data.mtt){await options.records.mttAutoOp?.(true);return;}if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
       }, error=>this.toast.show(error));
-    this.settingsOff.push(settings.on(Settings.SHOW_BB,()=>{
-      this.showBB=settings.showBB;const snapshot=this.data.info.snapshot;
+    this.settingsOff.push(this.settings.on(Settings.SHOW_BB,()=>{
+      this.showBB=this.settings.showBB;const snapshot=this.data.info.snapshot;
       if(snapshot)this.presenter.present({...snapshot,showBB:this.showBB,presentation:'sync'});
     }));
     const appearance=async()=>{
       const generation=++this.appearanceGeneration;
       try {
-        const [url]=await Promise.all([AppearanceResources.desk(settings.deskType),AppearanceResources.cards(settings.pokerCardType)]);
+        const appearance=this.settings.appearance;
+        const solid=appearance.style==='solid';
+        const [url]=await Promise.all([solid?imageReady(classicFelt).then(()=>classicFelt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.pokerCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
         if(generation!==this.appearanceGeneration)return;
-        this.root.style.backgroundImage=`url("${url}")`;
-        void this.deskBackground.show(settings.deskType, url);
-        this.stage.querySelectorAll<HTMLElement>('.mx-card[data-card-value]').forEach(card=>CardView.paint(card,Number(card.dataset.cardValue),card.dataset.smallBack==='true'));
-      }catch(error){this.toast.show(error);}
+        this.root.dataset.felt=solid?'solid':'legacy';
+        this.root.style.backgroundColor=solid?appearance.feltColor:'';
+        this.root.style.backgroundImage=solid?'none':`url("${url}")`;
+        this.root.style.setProperty('--mx-felt-image',`url("${url}")`);
+        void this.deskBackground.show(solid?0:this.settings.deskType, url);
+        this.root.querySelectorAll<HTMLElement>('.mx-card[data-card-value]').forEach(card=>CardView.paint(card,Number(card.dataset.cardValue),card.dataset.smallBack==='true'));
+      }catch(error){if(generation===this.appearanceGeneration)this.toast.show(error);}
     };
-    this.settingsOff.push(settings.on(Settings.DESK_TYPE_CHANGE,()=>void appearance()),settings.on(Settings.POKER_CARD_TYPE_CHANGE,()=>void appearance()));
+    this.settingsOff.push(this.settings.on(Settings.DESK_TYPE_CHANGE,()=>void appearance()),this.settings.on(Settings.POKER_CARD_TYPE_CHANGE,()=>void appearance()));
+    const applyLayout=()=>{
+      const a=this.settings.appearance;
+      this.layout.profile=a.layout;
+      this.root.dataset.tableLayout=a.layout;
+      this.root.style.setProperty('--mx-table-text-scale',String(a.tableTextSize/100));
+      this.resizeTable();
+      const state=this.data.info.snapshot;if(state)this.onTable(state);
+    };
+    this.settingsOff.push(this.settings.on(Settings.APPEARANCE_CHANGE,()=>{applyLayout();void appearance();}),this.settings.on(Settings.ACCOUNT_CHANGE,()=>{this.personalSettings.close();applyLayout();void appearance();}));
+    this.layout.profile=this.settings.appearance.layout;
+    this.root.dataset.tableLayout=this.layout.profile;
+    this.root.style.setProperty('--mx-table-text-scale',String(this.settings.appearance.tableTextSize/100));
     void appearance();
     this.stage.append(
       this.below,
@@ -290,6 +326,7 @@ export class TableView {
   private onTable(state: TableSnapshot | null): void {
     if (!state) return;
     if (this.playerInfo.currentSeat && !state.players.some(player => player.seat === this.playerInfo.currentSeat && player.userRid === this.playerInfo.currentUserRID)) this.playerInfo.close();
+    if (!!state.secondCommunity?.length !== !!this.previousTable?.secondCommunity?.length) this.resizeTable();
     const positionMode = SeatPositionMotion.mode(this.previousTable, state);
     this.previousTable = state;
     for (const [id, view] of this.seatViews)
@@ -309,13 +346,27 @@ export class TableView {
       this.seatViews.get(id)?.place(position, positionMode);
     this.refreshRoomInfo();
     const own = this.layout.positions(state).get(state.mySeat);
+    for(const name of ['--mx-op-upper-y','--mx-op-fold-x','--mx-op-main-x'])this.controls.root.style.removeProperty(name);
+    if(this.layout.landscape)this.controls.setScale?.(.24*this.settings.appearance.betButtonSize/100);
     if (own && !this.layout.landscape) {
       const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
       this.controls.root.style.top = `${operationTop}px`;
       this.controls.root.style.setProperty('--mx-operation-row-y', `${operationTop}px`);
       // CC Operation.adjustPostion places freeCallNode 910 scaled units above my seat.
       this.controls.root.style.setProperty('--mx-raise-center-y', `${(own.y - 910 * own.scale) * this.layout.unit}px`);
-      this.controls.setScale?.(own.scale * this.layout.unit);
+      this.controls.setScale?.(own.scale * this.layout.unit * this.settings.appearance.betButtonSize/100);
+      const profile=this.layout.modern;
+      if(profile){
+        const u=Math.min(this.layout.width/440,this.layout.height/782)*this.layout.unit;
+        const rowY=(profile.id==='classic'?610:655)/782*this.layout.height*this.layout.unit;
+        this.controls.root.style.top=`${rowY-28}px`;
+        this.controls.root.style.setProperty('--mx-operation-row-y',`${rowY-28}px`);
+        this.controls.root.style.setProperty('--mx-raise-center-y',`${Math.max(160*u,rowY-180*u)}px`);
+        this.controls.setScale?.(41.25/137*u*this.settings.appearance.betButtonSize/100);
+        this.controls.root.style.setProperty('--mx-op-upper-y',`${(profile.id==='classic'?65*u:59/782*this.layout.height*this.layout.unit)}px`);
+        this.controls.root.style.setProperty('--mx-op-fold-x',`${-103*u}px`);
+        this.controls.root.style.setProperty('--mx-op-main-x',`${103*u}px`);
+      }
     }
     this.sound.present(state);
     this.settlementWatch.setScale(this.layout.unit);
@@ -358,23 +409,58 @@ export class TableView {
       height: `${l.height}px`,
       transform: `scale(${l.unit})`,
     });
+    const dual=!!this.data.info.snapshot?.secondCommunity?.length;
+    const boardSize=this.settings.appearance.publicCardSize/100;
     if (landscape) {
-      const scale = Math.min(1, l.width / 1900);
-      place(this.board.root, l.width / 2, l.height * 0.54);
+      const scale = Math.min(1, l.width / 1900) * (dual ? .85 : 1);
+      const gap=176*scale*boardSize+24;
+      const center=l.height*(dual ? .48 : .54);
+      place(this.board.root, l.width / 2, center-(dual ? gap/2 : 0));
       this.board.root.style.transform = `scale(${scale})`;
-      place(this.secondBoard.root,l.width/2,l.height*.54+120*scale);
+      place(this.secondBoard.root,l.width/2,center+gap/2);
       this.secondBoard.root.style.transform=`scale(${scale})`;
-      place(this.pot.total, l.width / 2, l.height * 0.385);
-      place(this.pot.pool, l.width / 2, l.height * 0.44);
-      place(this.info, l.width / 2 - 420 * scale, l.height * 0.44);
+      place(this.pot.total, l.width / 2, l.height * (dual ? .23 : .385));
+      place(this.pot.pool, l.width / 2, l.height * (dual ? .29 : .44));
+      place(this.info, l.width / 2 - 650 * scale, l.height * 0.44);
     } else {
-      place(this.board.root, l.width / 2, l.height / 2 - (l.suggest === 1 ? 176 : 0));
-      this.board.root.style.transform = `scale(${l.suggest})`;
-      place(this.secondBoard.root,l.width/2,l.height/2-(l.suggest===1?176:0)+120*l.suggest);
-      this.secondBoard.root.style.transform=`scale(${l.suggest})`;
+      const scale=l.suggest*(dual ? .85 : 1);
+      const gap=176*scale*boardSize+24;
+      const center=dual ? l.height*.45 : l.height/2-(l.suggest===1?176:0);
+      place(this.board.root, l.width / 2, center-(dual ? gap/2 : 0));
+      this.board.root.style.transform = `scale(${scale})`;
+      place(this.secondBoard.root,l.width/2,center+gap/2);
+      this.secondBoard.root.style.transform=`scale(${scale})`;
       place(this.pot.total, l.width / 2, (697.8+(this.jackpot?.extraHeight??0)) * l.suggest);
       place(this.pot.pool, l.width / 2, (775.6+(this.jackpot?.extraHeight??0)) * l.suggest);
-      place(this.info, l.width / 2, (1000+(this.jackpot?.extraHeight??0)) * l.suggest);
+      place(this.info, l.width / 2, ((dual ? 517.8 : 1000)+(this.jackpot?.extraHeight??0)) * l.suggest);
+    }
+    const profile=l.modern;
+    if(profile){
+      const u=Math.min(l.width/440,l.height/782);
+      this.root.style.setProperty('--mx-layout-unit',`${u}px`);
+      this.root.style.setProperty('--mx-felt-bottom',`${208*u*l.unit}px`);
+      const scale=(profile.id==='classic'?59.5:50.59)/120*u*boardSize*(dual?.85:1);
+      const y=profile.boardY/782*l.height;
+      const boardGap=176*scale+10*u;
+      place(this.board.root,l.width/2,y-(dual?boardGap/2:0));
+      place(this.secondBoard.root,l.width/2,y+boardGap/2);
+      this.board.root.style.transform=this.secondBoard.root.style.transform=`scale(${scale})`;
+      place(this.pot.total,l.width/2,profile.potY/782*l.height);
+      place(this.pot.pool,l.width/2,profile.potY/782*l.height+22*u);
+      const infoY=Math.max(profile.infoY/782*l.height,dual?y+boardGap/2+88*scale+75:0);
+      place(this.info,l.width/2,infoY);
+      if(dual&&profile.id==='classic'){
+        place(this.pot.total,l.width/2,Math.max(profile.potY/782*l.height,infoY+100));
+        place(this.pot.pool,l.width/2,Math.max(profile.potY/782*l.height,infoY+100)+22*u);
+      }
+      this.root.style.setProperty('--mx-avatar-radius',profile.avatarRadius);
+      const heroScale=profile.avatar*u/199;
+      // Keep the chip capsule above the fixed bottom navigation on short screens.
+      const heroInfoTop=Math.min(717/782*l.height,l.height-46/l.unit-40*heroScale);
+      this.root.style.setProperty('--mx-hero-info-y',`${profile.id==='classic'?102:(heroInfoTop-596/782*l.height)/heroScale}px`);
+    } else {
+      this.board.root.style.transform+=` scale(${boardSize})`;
+      this.secondBoard.root.style.transform+=` scale(${boardSize})`;
     }
   }
   private refreshRoomInfo(): void {
@@ -385,6 +471,7 @@ export class TableView {
       const blind = (sb: number, ante = 0) => `${StringHelper.GetLongString(sb)}/${StringHelper.GetLongString(sb * 2)}${ante > 0 ? `(${StringHelper.GetLongString(ante)})` : ''}`;
       const lines = [state.name, [i18nMgr.Get(`GameType_${state.gameType ?? 0}`), i18nMgr.Get(`PokerType_${state.pokerType ?? 0}`), i18nMgr.Get(`BetType_${state.limitBetType ?? 0}`)].join('-'), `${state.roomID}-${state.handNum}`,
         `${i18nMgr.Get(m ? 'UITexasReport_Text_MatchCurrBlindTip' : 'adaptation20006')} ${blind(state.smallBlind ?? 0, this.options.records?.data.snapshot?.roomInfo?.ante ?? 0)}`];
+      if(this.layout.modern){lines[0]+=` · ${lines[2]}`;lines.splice(2,1);}
       if (m?.nextSmallBlind) {
         lines.push(`${i18nMgr.Get('UITexasReport_Text_MatchNextBlindTip')} ${blind(m.nextSmallBlind, m.nextAnte)}`);
         const seconds = m.getUpBlindRemainingSeconds();
@@ -415,6 +502,7 @@ export class TableView {
     this.mtt?.destroy();
     this.appearanceGeneration++;
     this.deskBackground.destroy();
+    this.appearanceObserver?.disconnect();
     this.settingsOff.forEach(off=>off());
     this.personalSettings.destroy();
     this.report?.destroy();

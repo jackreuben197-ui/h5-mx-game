@@ -1,3 +1,5 @@
+import { tableAppearanceFor } from '../appearance/TableAppearanceContext.js';
+import { cardBacks } from '../appearance/TableSkin.js';
 import settings from '../../data/TexasGamePersonalSettings.js';
 import { i18nLabel } from '../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../i18n/i18nMgr.js';
@@ -18,11 +20,16 @@ export class CardView {
     if (!glow) { glow=element('span','mx-card-highlight');SpriteAtlas.paint(glow,'cardHighlight');root.append(glow); }
     glow.hidden = !emphasis?.highlight?.includes(value);
   }
-  static paint(root: HTMLElement, value: number, smallBack = false, type = settings.pokerCardType): void {
+  static paint(root: HTMLElement, value: number, smallBack = false, type?: number): void {
+    if(type!==undefined)root.dataset.cardPreview=String(type);
+    const preferences=tableAppearanceFor(root)??settings;
+    type=Number(root.dataset.cardPreview)||preferences.pokerCardType;
     root.dataset.smallBack = String(smallBack);
     root.dataset.cardValue = String(value);
     if (value === 0) {
-      SpriteAtlas.paint(root, smallBack ? 'tableBack' : 'cardBack');
+      const back=preferences.appearance.cardBack;
+      if(back==='original')SpriteAtlas.paint(root, smallBack ? 'tableBack' : 'cardBack');
+      else {root.style.backgroundImage=`url("${cardBacks[back]}")`;root.style.backgroundSize='100% 100%';root.style.backgroundPosition='center';}
       i18nLabel.bind(root, () => i18nMgr.Get("MX_CardBack", [], "牌背"), 'aria-label');
       return;
     }

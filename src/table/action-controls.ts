@@ -1,4 +1,5 @@
-import settings, { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
+import { SliderBetGesture } from './SliderBetGesture.js';
+import defaultSettings, { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
 import { ShortcutBet } from '../logic/ShortcutBet.js';
 import { i18nLabel } from '../i18n/i18nLabel.js';
 import { i18nMgr } from '../i18n/i18nMgr.js';
@@ -26,17 +27,26 @@ export class ActionControls {
   private state?: TableSnapshot;
   private mode: 'actions' | 'raise' = 'actions';
   private key = '';
+  private gesture = new SliderBetGesture();
+  private offAccount: () => void;
+  private submittedKey = '';
+  private offSubmit: () => void;
   private busy = false;
   private disposed = false;
+  private accountGeneration = 0;
   private opScale = 0.2;
   constructor(
     private command: (action: Action, amount?: number) => Promise<void>,
     paint: (node: HTMLElement, key: 'fold' | 'call' | 'raise') => void,
     private confirmDialog: TableConfirmDialog,
     private addTimeCommand?:()=>Promise<void>,
+    private settings: TexasGamePersonalSettings = defaultSettings,
   ) {
     this.auto=new AutoOperationView(command);
-    this.offSettings=settings.on(TexasGamePersonalSettings.SHORTCUTS_CHANGGE,()=>this.refresh());
+    this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submittedKey='';this.refresh();});
+    this.offSubmit = this.settings.on(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE, () => { this.gesture.cancel(); this.confirm.hidden = this.settings.sliderSubmit === 'release'; });
+    this.confirm.hidden = this.settings.sliderSubmit === 'release';
+    this.offSettings=this.settings.on(TexasGamePersonalSettings.SHORTCUTS_CHANGGE,()=>this.refresh());
     i18nLabel.bind(this.root, () => i18nMgr.Get("MX_TableActions", [], "牌桌操作"), 'aria-label');
     for (const [action, label] of [
       ['fold', "UITexas_fold"],
@@ -89,6 +99,20 @@ export class ActionControls {
     this.range.min = '0';
     this.range.step = '1';
     i18nLabel.bind(this.range, () => i18nMgr.Get("MX_RaiseAmount", [], "加注金额"), 'aria-label');
+    this.range.onpointerdown = e => {
+      if (this.mode !== 'raise' || this.busy || !this.gesture.begin(e.pointerId,this.key,this.range.value)) return;
+      this.range.setPointerCapture(e.pointerId);
+    };
+    this.range.onpointermove = e => this.gesture.move(e.pointerId);
+    this.range.onpointercancel = this.range.onlostpointercapture = () => { this.gesture.cancel(); };
+    this.range.onpointerup = e => {
+      const completed=this.gesture.finish(e.pointerId,this.key,this.range.value);
+      if (!completed || this.mode !== 'raise' || this.settings.sliderSubmit !== 'release') return;
+      const selection = this.selection();
+      if (selection) void this.submit(selection.action, selection.amount);
+    };
+    this.range.onblur=()=>this.gesture.cancel();
+    this.range.onkeydown=e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'].includes(e.key))this.confirm.hidden=false;};
     this.range.oninput = () => { this.amount.hidden = false; this.updateAmount(); };
     const thumb=node('span','mx-raise-thumb');SpriteAtlas.paint(thumb,'raiseThumb');track.append(thumb);
     this.confirm.type = 'button';
@@ -120,6 +144,7 @@ export class ActionControls {
     this.refresh();
   }
   private close() {
+    this.gesture.cancel();
     const previousMode = this.mode;
     this.mode = 'actions';
     this.refresh();
@@ -145,22 +170,30 @@ export class ActionControls {
     i18nLabel.bind(this.confirm, () => i18nMgr.Get('UITexas_confirm', [], '确定'));
   }
   private async submit(action: Action, amount?: number) {
-    if (this.busy || !this.state?.actions.includes(action)) return;
+    const deadline=this.state?.countdowns?.find(c=>c.seat===this.state?.mySeat)?.deadline;
+    if (this.disposed || this.busy || this.submittedKey===this.key || !this.state?.actions.includes(action) || (deadline && deadline<=Date.now()/1000)) return;
+    this.gesture.cancel();
+    const generation=this.accountGeneration;
+    this.submittedKey=this.key;
     this.busy = true;
     this.mode = 'actions';
     this.refresh();
     try {
       await this.command(action, amount);
+    } catch(error) {
+      if(generation===this.accountGeneration)this.submittedKey='';
+      throw error;
     } finally {
-      if (!this.disposed) {
+      if (!this.disposed && generation===this.accountGeneration) {
         this.busy = false;
         this.refresh();
       }
     }
   }
   render(state: TableSnapshot) {
-    const key = `${state.roomID}:${state.handNum}:${state.betting?.id ?? state.actions.join(',')}`;
+    const key = `${state.roomID}:${state.matchID}:${state.handNum}:${state.betting?.id ?? state.actions.join(',')}`;
     if (key !== this.key) {
+      this.gesture.cancel();
       this.mode = 'actions';
       this.range.value = '0';
       this.key = key;
@@ -176,6 +209,7 @@ export class ActionControls {
     this.auto.render(state);
   }
   setScale(scale: number): void {
+    if(scale!==this.opScale)this.gesture.cancel();
     this.opScale = scale;
     const css = this.root.style;
     css.setProperty('--mx-op-button-size', `${137 * scale}px`);
@@ -211,7 +245,7 @@ export class ActionControls {
   private refresh() {
     this.root.dataset.mode = this.mode;
     this.quick.replaceChildren();
-    const items = this.state ? ShortcutBet.calculate(settings.shortCuts,this.state) : [];
+    const items = this.state ? ShortcutBet.calculate(this.settings.shortCuts,this.state) : [];
     const layout: Record<number, readonly [number, number][]> = {
       1:[[-190,370]],2:[[-190,370],[190,370]],3:[[-250,300],[0,395],[250,300]],
       4:[[-300,240],[-120,370],[120,370],[300,240]],
@@ -268,6 +302,9 @@ export class ActionControls {
   }
   destroy() {
     this.offSettings();
+    this.offSubmit();
+    this.offAccount();
+    this.gesture.cancel();
     this.auto.destroy();
     this.disposed = true;
     this.root.remove();

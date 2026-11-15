@@ -76,7 +76,7 @@ try {
             })));
             const url = new URL(${JSON.stringify(clientDir + '/' + entry.file)}, document.baseURI).href;
             const { mountMxGame } = await import(/* @vite-ignore */ url);
-            const game = mountMxGame(document.getElementById('mx-table-host'), {layout:'portrait'});
+            const game = mountMxGame(document.getElementById('mx-table-host'), {layout:'auto'});
             window.addEventListener('pagehide', event => { if (!event.persisted) game.destroy(); });
             await router.isReady();
             if (new URLSearchParams(location.search).get('login') === '1') useLoginModalStore(pinia).open();

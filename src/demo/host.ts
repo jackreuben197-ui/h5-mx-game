@@ -263,6 +263,7 @@ export class DemoHost implements RoomHost {
       dealOrder: Array.from({ length: state.seatCount }, (_, i) => ((i + 1) % state.seatCount) + 1),
       community: [],
       secondCommunity: [],
+      pots: [],
       handEnded: false,
       watch: undefined,
       actingSeat: undefined,

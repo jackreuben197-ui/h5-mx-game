@@ -1,3 +1,5 @@
+import { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
+import { getBrand } from '../table/appearance/BrandManifest.js';
 import type { HttpOptions } from '../net/http/HttpClient.js';
 import { GameClient } from '../GameClient.js';
 import type { MountOptions } from '../MountOptions.js';
@@ -18,16 +20,21 @@ export class MxGameClient {
   readonly host: RoomHost;
   private entry: H5EntryController;
   private visible = false;
+  private offPreferences: () => void;
   private disposed = false;
   constructor(
     container: HTMLElement,
     options: MxMountOptions = {},
     createHost?: (transport: HostTransport) => RoomHost,
   ) {
+    const brand=getBrand(options.brand??import.meta.env.VITE_MX_BRAND??'mx');
+    const preferences=new TexasGamePersonalSettings(brand.id,brand.defaultFelt,brand.layouts);
+    this.offPreferences=this.transport.subscribe(message=>{if(message.action==='syncUser'){const p=message.payload as {uid?:number}|undefined;preferences.setAccount(Number(p?.uid)||0);}});
     this.host = createHost?.(this.transport) ?? new MxRoomHost(this.transport, options);
     this.game = new GameClient(container, {
       ...options,
       host: this.host,
+      preferences,
       onState: (state) => {
         const visible = !['hidden', 'destroyed'].includes(state.phase);
         if (visible !== this.visible) {
@@ -43,6 +50,7 @@ export class MxGameClient {
     try {
       this.transport.start();
     } catch (error) {
+      this.offPreferences();
       this.entry.destroy();
       this.game.destroy();
       if (this.host instanceof MxRoomHost) this.host.destroy();
@@ -74,6 +82,7 @@ export class MxGameClient {
     if (this.disposed) return;
     this.disposed = true;
     this.entry.destroy();
+    this.offPreferences();
     this.game.destroy();
     if (this.host instanceof MxRoomHost) this.host.destroy();
     this.transport.destroy();

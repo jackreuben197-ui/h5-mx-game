@@ -31,7 +31,8 @@ export class TableMenuView {
     this.trigger.setAttribute('aria-haspopup', 'dialog');
     SpriteAtlas.paint(this.trigger, 'setting');
     this.trigger.onclick = () => this.setOpen(!this.opened);
-    this.root.append(this.trigger, element('span', 'mx-menu-label', () => i18nMgr.Get('UIMine_btn_setting')));
+    const back=element('button','mx-menu-back');back.type='button';i18nLabel.bind(back,()=>i18nMgr.Get('UITexas_Leave'),'aria-label');back.onclick=leave;
+    this.root.append(back,this.trigger, element('span', 'mx-menu-label', () => i18nMgr.Get('UIMine_btn_setting')));
     this.panel.setAttribute('role', 'dialog');
     this.panel.setAttribute('aria-modal', 'true');
     i18nLabel.bind(this.panel, () => i18nMgr.Get('UIMine_btn_setting'), 'aria-label');

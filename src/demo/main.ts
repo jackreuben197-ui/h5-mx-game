@@ -1,4 +1,8 @@
-import settings from '../data/TexasGamePersonalSettings.js';
+import { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
+import { getBrand } from '../table/appearance/BrandManifest.js';
+const brand=getBrand(new URLSearchParams(location.search).get('brand')??'mx');
+const settings=new TexasGamePersonalSettings(brand.id,brand.defaultFelt,brand.layouts);
+settings.setAccount(1);
 import { mountGame } from '../index.js';
 import { DemoHost } from './host.js';
 import './page.css';
@@ -17,7 +21,8 @@ const host = new DemoHost(log);
 let previous = '';
 const game = mountGame(document.querySelector<HTMLDivElement>('#game')!, {
   host,
-  demoScenarios: host.features.scenarios,
+  preferences: settings,
+  demoScenarios: [...host.features.scenarios,...Array.from({length:8},(_,i)=>({label:`布局验收 · ${i+2} 人桌`,run:()=>host.setSeats(i+2)}))],
   layout: 'auto',
   onNavigate(action) {
     const label = { report: '战绩', replay: '牌谱', emoji: '表情', effect: '窗花', voice: '语音', camera: '视频' }[action];

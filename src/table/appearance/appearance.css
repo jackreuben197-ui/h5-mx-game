@@ -1,0 +1,85 @@
+.mx-table{--mx-table-text-scale:1;--mx-accent:#00b98b}
+.mx-table[data-felt=solid]{background-size:100% 100%;background-repeat:no-repeat}
+.mx-table .mx-player-name{font-size:calc(35px * var(--mx-table-text-scale));line-height:calc(44.1px * var(--mx-table-text-scale))}
+.mx-table .mx-stack{font-size:calc(36px * var(--mx-table-text-scale));line-height:calc(45px * var(--mx-table-text-scale))}
+.mx-table .mx-player-action{font-size:calc(28px * var(--mx-table-text-scale))}
+.mx-table .mx-pot{font-size:calc(60px * var(--mx-table-text-scale))}
+.mx-table .mx-room-info{font-size:calc(38px * var(--mx-table-text-scale))}
+.mx-table .mx-pool-item{font-size:calc(43px * var(--mx-table-text-scale))}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-fallback,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-hit,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-fold-cover{border-radius:var(--mx-avatar-radius,50%)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35;border-radius:var(--mx-avatar-radius,50%)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:102px;min-height:40px;padding:0 8px;background-image:none!important;background-color:#ffffff18;border:1px solid #ffffff60;border-radius:22px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{position:absolute;bottom:235px;overflow:hidden}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-line{display:none}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:2px solid #ffffff50}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#ffffff90}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-pool-item{background-image:none!important;background-color:#a7d6c2;border-radius:30px;min-width:140px;width:auto;max-width:900px;padding:0 24px 0 60px;white-space:nowrap}
+.mx-settings-backs,.mx-settings-sizes,.mx-settings-layouts,.mx-settings-colors{display:flex;gap:calc(16 * var(--settings-unit));margin-block:calc(20 * var(--settings-unit))}
+.mx-settings-backs .mx-settings-back{padding:calc(16 * var(--settings-unit));border-radius:calc(24 * var(--settings-unit));flex:1;min-width:0;border:1px solid #ffffff50}
+.mx-settings-back img{display:block;width:100%;max-height:calc(110 * var(--settings-unit));object-fit:contain}
+.mx-settings-size{display:grid;grid-template-columns:1fr auto;gap:calc(18 * var(--settings-unit));flex:1;min-width:0;padding:calc(22 * var(--settings-unit));background:#ffffff18;border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));font-size:calc(32 * var(--settings-unit))}
+.mx-settings-size input{grid-column:1/-1;width:100%;min-width:0;accent-color:var(--mx-accent);margin:0}
+.mx-settings-layouts button{flex:1;min-width:0;border:1px solid #ffffff50;border-radius:calc(24 * var(--settings-unit));font-size:calc(30 * var(--settings-unit));padding:calc(20 * var(--settings-unit)) calc(8 * var(--settings-unit))}
+.mx-settings-colors button{width:calc(100 * var(--settings-unit));height:calc(100 * var(--settings-unit));padding:0;border:2px solid transparent}
+.mx-settings-colors button[aria-pressed=true]{border-color:white;box-shadow:0 0 0 2px var(--mx-accent)}
+.mx-settings-back[aria-pressed=true],.mx-settings-layouts [aria-pressed=true]{border-color:white;background-color:#ffffff40;box-shadow:inset 0 0 14px #ffffff40}
+.mx-table:not([data-orientation=landscape]) .mx-operation-button{font-size:calc(40 / 137 * var(--mx-op-button-size,32px))!important}
+.mx-table .mx-seat-bet-value{font-size:calc(40px * var(--mx-table-text-scale))}
+/* Figma 11955:50043: 349.61 × 547.85 panel; fixed header and scrollable body. */
+.mx-personal-settings>h2{font-size:calc(58 * var(--settings-unit));font-weight:600;margin-bottom:calc(20 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-tabs button{font-size:calc(44 * var(--settings-unit));color:#b9c3c3}
+.mx-personal-settings .mx-settings-tabs [aria-selected=true]{color:#fff;font-weight:600}
+.mx-personal-settings .mx-settings-appearance>h3{width:100%;font-size:calc(38 * var(--settings-unit));height:auto;margin:calc(28 * var(--settings-unit)) 0 calc(16 * var(--settings-unit))}
+.mx-settings-appearance{padding:calc(28 * var(--settings-unit)) calc(47 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-professional{display:block;width:100%;min-height:calc(97.5 * var(--settings-unit));border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));text-align:left;font-size:calc(36 * var(--settings-unit));padding:calc(20 * var(--settings-unit));background:#3c3c3c66;color:#b9c3c3;cursor:default}
+.mx-personal-settings .mx-settings-amount-modes{width:100%;gap:calc(16 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-amount-modes button{flex:1;width:auto;height:calc(82 * var(--settings-unit));border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));font-size:calc(36 * var(--settings-unit));font-weight:600}
+.mx-personal-settings .mx-settings-amount-modes [aria-pressed=true]{background:#00dab0;color:#063c33}
+.mx-settings-backs{gap:calc(16 * var(--settings-unit));margin:0}
+.mx-settings-backs .mx-settings-back{height:calc(160 * var(--settings-unit));padding:calc(20 * var(--settings-unit));border-radius:calc(26 * var(--settings-unit));background:#ffffff12}
+.mx-settings-back img{height:calc(74 * var(--settings-unit));margin:auto}
+.mx-settings-back::after{content:'';display:block;width:calc(14 * var(--settings-unit));height:calc(14 * var(--settings-unit));border:1px solid #adb8b8;border-radius:50%;margin:calc(22 * var(--settings-unit)) auto 0}
+.mx-settings-back[aria-pressed=true]::after{background:#00dab0;border-color:white}
+.mx-settings-backs .mx-settings-back[aria-pressed=true]{border-color:white;background:#ffffff55}
+.mx-settings-decks{padding:0;gap:calc(12 * var(--settings-unit));margin:0}
+.mx-personal-settings .mx-settings-deck{width:calc(310 * var(--settings-unit))}
+.mx-settings-sizes{gap:calc(16 * var(--settings-unit));margin:0}
+.mx-settings-size{font-size:calc(32 * var(--settings-unit));padding:calc(18 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-layouts{gap:calc(20 * var(--settings-unit));margin:0}
+.mx-personal-settings .mx-settings-layouts button{display:flex;flex-direction:column;align-items:center;gap:calc(20 * var(--settings-unit));border-radius:calc(24 * var(--settings-unit));font-size:calc(28 * var(--settings-unit));line-height:1.2;padding:calc(18 * var(--settings-unit)) calc(6 * var(--settings-unit))}
+.mx-layout-preview{display:block;position:relative;width:calc(90 * var(--settings-unit));height:calc(126 * var(--settings-unit));background:#079d80;border-radius:calc(16 * var(--settings-unit))}
+.mx-layout-preview[data-layout=original]{background:#8799c7}
+.mx-layout-preview i{position:absolute;width:calc(9 * var(--settings-unit));height:calc(9 * var(--settings-unit));border-radius:50%;background:#d9c987;transform:translate(-50%,-50%)}
+.mx-layout-preview[data-layout=balanced] i{border-radius:28%}
+.mx-layout-preview-board{position:absolute;left:30%;width:40%;height:calc(6 * var(--settings-unit));background:#e2e6d7}
+.mx-personal-settings .mx-settings-submit-modes{flex-direction:column;gap:calc(12 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-submit-modes button{position:relative;width:100%;height:calc(138 * var(--settings-unit));border-radius:calc(24 * var(--settings-unit));border:1px solid #ffffff40;padding:calc(26 * var(--settings-unit));text-align:left;font-size:calc(38 * var(--settings-unit));background:#ffffff12;color:white}
+.mx-settings-submit-modes button::after{content:'';position:absolute;right:calc(30 * var(--settings-unit));top:50%;translate:0 -50%;width:calc(22 * var(--settings-unit));height:calc(22 * var(--settings-unit));border:1px solid #a7b4b0;border-radius:50%}
+.mx-personal-settings .mx-settings-submit-modes [aria-pressed=true]{background:#ffffff12;color:#fff}
+.mx-settings-submit-modes [aria-pressed=true]::after{background:radial-gradient(circle,#00dab0 0 40%,transparent 45%);border-color:#00dab0}
+.mx-personal-settings .mx-settings-reset{display:block;margin:calc(30 * var(--settings-unit)) calc(70 * var(--settings-unit)) 0 auto;padding:0;border:0;background:none;font-size:calc(30 * var(--settings-unit))}
+.mx-settings-system{grid-template-columns:calc(470 * var(--settings-unit));justify-content:start;padding-left:calc(47 * var(--settings-unit))}
+
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]){grid-template-rows:minmax(0,1fr) 0 44px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{top:var(--mx-hero-info-y,102px)}
+.mx-table[data-orientation=landscape] .mx-quick-bet{position:relative;left:auto!important;top:auto!important;flex:none;width:var(--mx-op-quick-width);height:var(--mx-op-quick-height);max-width:none;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
+.mx-table[data-orientation=landscape]{grid-template-rows:minmax(0,1fr) 110px}
+.mx-table[data-orientation=landscape] .mx-operation{align-items:flex-end}
+.mx-table[data-orientation=landscape] .mx-operation-quick{top:4px;bottom:auto}
+.mx-table[data-orientation=landscape] .mx-operation-row{justify-content:center;gap:24px}
+.mx-table[data-orientation=landscape] .mx-operation-row .mx-operation-button{position:static;transform:none;width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
+.mx-menu-back{display:none}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu{position:absolute;display:block;top:calc(6 * var(--mx-layout-unit));left:calc(62 * var(--mx-layout-unit));width:calc(34 * var(--mx-layout-unit));height:calc(34 * var(--mx-layout-unit));border:1px solid #ffffff40;border-radius:calc(12 * var(--mx-layout-unit));background:linear-gradient(135deg,#ffffff12,#0003)!important;box-shadow:inset 0 0 calc(5 * var(--mx-layout-unit)) #ffffff25;color:white;z-index:5;cursor:pointer}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back{left:calc(6 * var(--mx-layout-unit))}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back::before{content:'';position:absolute;left:40%;top:25%;width:35%;height:50%;border-left:calc(3 * var(--mx-layout-unit)) solid #eee;border-bottom:calc(3 * var(--mx-layout-unit)) solid #eee;transform:rotate(45deg)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:23% 20%;background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:1px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-label{display:none}
+.mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
+/* Exported foreground: preserve its 416px bottom slice from the 880×1564 source. */
+.mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
+.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:8px solid var(--mx-countdown-color,#14fd00);border-radius:28%;box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
+.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=keep]::before{border-radius:28%}

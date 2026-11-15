@@ -1,9 +1,13 @@
+import { tableLayouts } from './appearance/TableLayoutProfile.js';
+import type { TableLayoutId } from '../data/TexasGamePersonalSettings.js';
 import { SeatPosition, SeatPositionCaculator } from '../core/seat-layout.js';
 import { landscapeLayout } from '../core/landscape-layout.js';
 import type { TableSnapshot } from '../core/types.js';
 import type { SeatPlacement } from './components/SeatView.js';
 /** Display coordinates only. Changing this class never changes seat IDs or protocol data. */
 export class TableLayout {
+  profile: TableLayoutId = 'original';
+  get modern() { return !this.landscape && this.profile !== 'original' ? tableLayouts[this.profile] : undefined; }
   unit = 1;
   width = 1440;
   height = 2688;
@@ -13,6 +17,9 @@ export class TableLayout {
   private seats = new SeatPositionCaculator();
   resize(width: number, height: number, landscape: boolean): void {
     this.landscape = landscape;
+    // Classic's lowest chip label reaches about y=740 in its 782-unit design.
+    // Fit the whole layout above the fixed footer on short viewports, keeping cards/buttons together.
+    if(!landscape&&this.profile==='classic')height=Math.min(height,(height-50)*782/740);
     this.unit = landscape ? height / 1440 : width / height > 0.75 ? height / 2688 : width / 1440;
     this.width = width / this.unit;
     this.height = height / this.unit;
@@ -86,6 +93,35 @@ export class TableLayout {
         dealerX: dealer[0]!,
         dealerY: dealer[1]!,
       });
+    }
+    const profile=this.modern;
+    if(!this.landscape&&!profile&&state.mySeat){
+      const own=result.get(state.mySeat);
+      // Reserve the navigation and the full chip label, including its 110% font setting.
+      if(own)own.y=Math.min(own.y,this.height-54/this.unit-160*own.scale);
+    }
+    if(profile){
+      const unit=Math.min(this.width/profile.width,this.height/profile.height);
+      const height=this.height;
+      for(const [id,p] of result){
+        const slot=(id-(state.mySeat||1)+state.seatCount)%state.seatCount;
+        const [x,y]=profile.anchors[state.seatCount]![slot]!;
+        const mine=id===state.mySeat;
+        const player=state.players.find(player=>player.seat===id);
+        const face=mine||player?.cards.some(card=>card>0);
+        const local=199/profile.avatar;
+        p.x=Math.max(34*unit,Math.min(this.width-34*unit,x/profile.width*this.width));
+        p.y=y/profile.height*height;
+        p.scale=profile.avatar*unit/199;
+        p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
+        p.cardsX=face?0:(x<220?14:-14)*local;
+        p.cardsY=(mine?profile.heroCardsY:face?0:14)*local;
+        p.cardScale=mine?50*local/120:face?58*local/(390-270/Math.max(2,player?.cards.length??2)):18*local/65;
+        p.betX=(mine?68:x<220?65:x>220?-65:0)*local;
+        p.betY=(mine?6:x===220?49:36)*local;
+        p.dealerX=(mine?-50:x<220?-10:10)*local;p.dealerY=48*local;
+      }
+      this.origin={x:this.width/2,y:profile.boardY/profile.height*height};
     }
     return result;
   }

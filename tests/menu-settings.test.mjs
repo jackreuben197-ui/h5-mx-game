@@ -72,3 +72,66 @@ test('personal preferences preserve CC storage keys and notify synchronously',()
     const b=new TexasGamePersonalSettings();assert.equal(b.deskType,14);assert.equal(b.pokerCardType,2);assert.equal(b.soundOn,false);assert.equal(b.shortCutMode,2);assert.deepEqual(b.shortCuts.map(x=>x.name),['1/5','1/4','1/2','1.0','2']);
   }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
 });
+
+test('quick bet reset preserves table appearance and original ratio presets',()=>{
+  const preferences=new TexasGamePersonalSettings();
+  preferences.setDeskTypeToStorage(4);
+  preferences.setPokerCardTypeToStorage(2);
+  preferences.setSliderSubmit('release');
+  preferences.shortCutMode=2;
+  preferences.shortCut3ActionsIndex=[0,1,2];
+  preferences.resetQuickSettings();
+  assert.equal(preferences.sliderSubmit,'confirm');
+  assert.equal(preferences.shortCutMode,1);
+  assert.deepEqual(preferences.shortCut3ActionsIndex,[3,6,7]);
+  assert.deepEqual(preferences.shortCut5ActionsIndex,[2,3,4,6,7]);
+  assert.equal(preferences.deskType,4);
+  assert.equal(preferences.pokerCardType,2);
+  assert.equal(preferences.getAllShortCuts().at(-1).percent,2);
+});
+
+test('account and brand preferences are isolated, migrated once and restored after reload',()=>{
+  const values=new Map([['moyu_SHOW_BB','true'],['moyu_TEXAS_DESKTYPE','7']]);
+  const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)}});
+  try {
+    const a=new TexasGamePersonalSettings('mx');
+    a.setAccount(101);assert.equal(a.showBB,true);assert.equal(a.deskType,7);
+    a.updateAppearance({layout:'classic',cardBack:'blue',publicCardSize:110});a.setSliderSubmit('release');
+    a.setAccount(102);assert.equal(a.showBB,false);assert.equal(a.appearance.layout,'original');assert.equal(a.sliderSubmit,'confirm');
+    a.updateAppearance({layout:'oval',tableTextSize:90});
+    a.setAccount(101);assert.equal(a.appearance.layout,'classic');assert.equal(a.appearance.publicCardSize,110);assert.equal(a.sliderSubmit,'release');
+    const reloaded=new TexasGamePersonalSettings('mx');reloaded.setAccount(102);assert.equal(reloaded.appearance.layout,'oval');
+    const brand=new TexasGamePersonalSettings('midnight','#34383f');brand.setAccount(101);
+    assert.equal(brand.appearance.layout,'original');assert.equal(brand.appearance.feltColor,'#34383f');assert.equal(brand.showBB,false);
+    a.setAccount(0);assert.equal(a.appearance.layout,'original');assert.equal(a.sliderSubmit,'confirm');
+  }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
+});
+
+test('appearance rejects corrupt choices and duplicate changes do not notify',()=>{
+  const settings=new TexasGamePersonalSettings('mx');let changes=0;
+  settings.on(TexasGamePersonalSettings.APPEARANCE_CHANGE,()=>changes++);
+  settings.updateAppearance({layout:'classic',publicCardSize:110,tableTextSize:90,betButtonSize:105});
+  settings.updateAppearance({layout:'classic',publicCardSize:110});assert.equal(changes,1);
+  settings.updateAppearance({layout:'broken',publicCardSize:NaN,tableTextSize:200,betButtonSize:0,feltColor:'url(secret)',cardBack:'missing'});
+  assert.deepEqual(settings.appearance,{layout:'original',style:'legacy',feltColor:'#079d80',cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
+});
+
+
+test('custom percentage pots retain CC amount rules and isolate modes/accounts across reload',()=>{
+  const values=new Map();const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)}});
+  try {
+    const a=new TexasGamePersonalSettings('mx');a.setAccount(101);
+    a.setCustomPotRatio(0,79);assert.deepEqual(a.shortCuts[0],{name:'79%',percent:0.79});
+    const state={mySeat:4,players:[{seat:4,chips:1000}],pot:450,actions:['call','raise','allin'],betting:{call:50,min:100,max:1000,allIn:1000,step:1}};
+    assert.equal(ShortcutBet.calculate(a.shortCuts,state)[0].amount,445);
+    a.setCustomPotRatio(0,9);a.setCustomPotRatio(0,101);a.setCustomPotRatio(0,NaN);assert.equal(a.shortCuts[0].percent,0.79);
+    a.shortCutMode=2;assert.equal(a.shortCuts[0].percent,0.333);a.setCustomPotRatio(0,10);
+    a.shortCutMode=1;assert.equal(a.shortCuts[0].percent,0.79);
+    a.setAccount(102);assert.equal(a.shortCuts[0].percent,0.5);
+    const b=new TexasGamePersonalSettings('mx');b.setAccount(101);assert.equal(b.shortCuts[0].percent,0.79);
+    b.shortCutMode=2;assert.equal(b.shortCuts[0].percent,0.1);
+    b.resetQuickSettings();assert.equal(b.shortCuts[0].percent,0.5);b.shortCutMode=2;assert.equal(b.shortCuts[0].percent,0.333);
+  }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
+});

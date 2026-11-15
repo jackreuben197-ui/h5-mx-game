@@ -25,7 +25,7 @@ export class GameClient {
   ) {
     const root = this.element;
     root.className = 'mx-game';
-    root.dataset.layout = options.layout ?? 'portrait';
+    root.dataset.layout = options.layout ?? 'auto';
     root.hidden = true;
     this.loading = new PreloadingView(() => {
       if (this.controller.current.target) void this.enter(this.controller.current.target);
@@ -67,7 +67,7 @@ export class GameClient {
             (action, amount) => this.controller.command(action, amount),
             () => this.leave(),
             options.onNavigate,
-            { specialOperations: options.host.getSpecialOperations?.(), emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'portrait', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep), addTime:()=>this.controller.addTime(), showdown:index=>this.controller.showdown(index), joinSquid:()=>this.controller.joinSquid(), agreeSecondPcs:agree=>this.controller.agreeSecondPcs(agree), buyInsurance:(list,confirm)=>this.controller.buyInsurance(list,confirm), watchSettlement:kind=>this.controller.watchSettlement(kind) } },
+            { preferences: options.preferences, specialOperations: options.host.getSpecialOperations?.(), emojis: options.host.getEmojis?.(), records: options.host.getRecords?.(), testControls: this.testMenu?.tableControls, layout: options.layout ?? 'auto', components: options.components, seating: { settings: options.host.getTableSettings?.(), prepare:seat=>this.controller.prepareSeat(seat), submit:value=>this.controller.sitDown(value), standup:()=>this.controller.standup(), rules:insurance=>this.controller.showRules(insurance), storeChips:amount=>this.controller.storeChips(amount), keepSeat:keep=>this.controller.keepSeat(keep), addTime:()=>this.controller.addTime(), showdown:index=>this.controller.showdown(index), joinSquid:()=>this.controller.joinSquid(), agreeSecondPcs:agree=>this.controller.agreeSecondPcs(agree), buyInsurance:(list,confirm)=>this.controller.buyInsurance(list,confirm), watchSettlement:kind=>this.controller.watchSettlement(kind) } },
           );
           root.prepend(this.table.root);
         }

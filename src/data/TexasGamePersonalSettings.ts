@@ -5,6 +5,20 @@ import LocalStorage from './LocalStorage.js';
 const StorageKey = { SHOW_BB:'SHOW_BB', TEXAS_DESKTYPE:'TEXAS_DESKTYPE', TEXAS_POKERCARDTYPE:'TEXAS_POKERCARDTYPE', SOUND_IS_OPEN:'SOUND_IS_OPEN', TEXAS_SHORTCUTS_3:'TEXAS_SHORTCUTS_3', TEXAS_SHORTCUTS_5:'TEXAS_SHORTCUTS_5', TEXAS_SHORTCUTS_MODE:'TEXAS_SHORTCUTS_MODE' };
 const AssetCollectionType = { SpriteFrameCard0:1, SpriteFrameCard1:2 } as const;
 type PokerCardType = 1 | 2;
+export const TABLE_SIZE_STEPS = [90,95,100,105,110] as const;
+export const TABLE_FELT_COLORS = ['#079d80','#8b72b5','#3296d2','#269fa8','#78858e','#34383f','#843f50'] as const;
+export const TABLE_CARD_BACKS = ['red','green','blue','indigo','black','gold'] as const;
+export type TableLayoutId = 'original' | 'classic' | 'balanced' | 'oval';
+export interface TableAppearance {
+    layout: TableLayoutId;
+    style: 'legacy' | 'solid';
+    feltColor: string;
+    cardBack: typeof TABLE_CARD_BACKS[number] | 'original';
+    publicCardSize: number;
+    tableTextSize: number;
+    betButtonSize: number;
+}
+const defaultAppearance = (): TableAppearance => ({layout:'original',style:'legacy',feltColor:TABLE_FELT_COLORS[0],cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
 export interface ShortCut {
     name: string;
     percent: number;
@@ -59,6 +73,66 @@ const TexasGameDfaultShortCutsList: ShortCut[] = [
 ] as const;
 
 export class TexasGamePersonalSettings extends EventSource {
+    static readonly APPEARANCE_CHANGE = 'APPEARANCE_CHANGE';
+    static readonly ACCOUNT_CHANGE = 'ACCOUNT_CHANGE';
+    @observable(TexasGamePersonalSettings.APPEARANCE_CHANGE)
+    appearance: Readonly<TableAppearance> = defaultAppearance();
+    private accountID = 0;
+    private saved: Record<string, unknown> = {};
+    get revision(): number { return this.accountRevision; }
+    private accountRevision = 0;
+    private get scopeKey(): string { return `TABLE_PREFERENCES:v1:${this.brandID}:${this.accountID}`; }
+    private read<T>(key: string, fallback: T): T {
+        return this.brandID ? (this.saved[key] as T ?? fallback) : LocalStorage.getItem(key, fallback);
+    }
+    private write(key: string, value: unknown): void {
+        if (!this.brandID) { LocalStorage.setItem(key,value); return; }
+        this.saved[key]=value;
+        if(this.accountID) LocalStorage.setItem(this.scopeKey,this.saved);
+    }
+    setAccount(userID: number): void {
+        const id=Number.isSafeInteger(userID)&&userID>0?userID:0;
+        if(id===this.accountID)return;
+        this.accountID=id;this.accountRevision++;
+        const stored=id?LocalStorage.getItem<unknown>(this.scopeKey,{}):{};
+        this.saved=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored as Record<string,unknown>:{};
+        if(id && this.brandID==='mx' && !LocalStorage.getItem('TABLE_PREFERENCES_MIGRATED',false)) {
+            for(const key of [...Object.values(StorageKey),'TEXAS_SLIDER_SUBMIT']) {
+                const value=LocalStorage.getItem<unknown>(key,undefined);
+                if(value!==undefined && !(key in this.saved))this.saved[key]=value;
+            }
+            LocalStorage.setItem(this.scopeKey,this.saved);
+            LocalStorage.setItem('TABLE_PREFERENCES_MIGRATED',true);
+        }
+        this.init();this.emit(TexasGamePersonalSettings.ACCOUNT_CHANGE);
+    }
+    updateAppearance(patch: Partial<TableAppearance>): void {
+        const next=this.validateAppearance({...this.appearance,...patch});
+        if(JSON.stringify(next)===JSON.stringify(this.appearance))return;
+        this.write('TABLE_APPEARANCE',next);this.appearance=next;
+    }
+    private validateAppearance(value: unknown): TableAppearance {
+        const p=(value&&typeof value==='object'?value:{}) as Partial<TableAppearance>;
+        const layout=this.availableLayouts.includes(p.layout as TableLayoutId)?p.layout!:this.availableLayouts[0]??'original';
+        const size=(v:unknown)=>TABLE_SIZE_STEPS.includes(v as 100)?v as number:100;
+        return {layout,style:layout==='original'?'legacy':'solid',feltColor:TABLE_FELT_COLORS.includes(p.feltColor as typeof TABLE_FELT_COLORS[number])?p.feltColor!:this.defaultFelt,cardBack:p.cardBack==='original'||TABLE_CARD_BACKS.includes(p.cardBack as 'red')?p.cardBack!:'original',publicCardSize:size(p.publicCardSize),tableTextSize:size(p.tableTextSize),betButtonSize:size(p.betButtonSize)};
+    }
+    public static readonly SLIDER_SUBMIT_CHANGE = 'SLIDER_SUBMIT_CHANGE';
+    @observable(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE)
+    public sliderSubmit: 'release' | 'confirm' = 'confirm';
+    public setSliderSubmit(value: 'release' | 'confirm'): void {
+        if (value === this.sliderSubmit) return;
+        this.write('TEXAS_SLIDER_SUBMIT', value);
+        this.sliderSubmit = value;
+    }
+    public resetQuickSettings(): void {
+        this.customRatios = {};
+        this.write('TEXAS_CUSTOM_POT_RATIOS', this.customRatios);
+        this.setSliderSubmit('confirm');
+        this.shortCut3ActionsIndex = [3, 6, 7];
+        this.shortCut5ActionsIndex = [2, 3, 4, 6, 7];
+        this.shortCutMode = shortCutMode.Button3;
+    }
     public static readonly SHOW_BB = 'SHOW_BB';
     public static readonly DESK_TYPE_CHANGE = 'DESK_TYPE_CHANGE';
     public static readonly POKER_CARD_TYPE_CHANGE = 'POKER_CARD_TYPE_CHANGE';
@@ -68,7 +142,7 @@ export class TexasGamePersonalSettings extends EventSource {
 
     public setShowBBToStorage(b: boolean) {
         if (this.showBB == b) return;
-        LocalStorage.setItem(StorageKey.SHOW_BB, b);
+        this.write(StorageKey.SHOW_BB, b);
         this.showBB = b;
     }
 
@@ -77,7 +151,7 @@ export class TexasGamePersonalSettings extends EventSource {
 
     public setDeskTypeToStorage(b: number) {
         if (this.deskType == b) return;
-        LocalStorage.setItem(StorageKey.TEXAS_DESKTYPE, b);
+        this.write(StorageKey.TEXAS_DESKTYPE, b);
         this.deskType = b;
     }
 
@@ -86,7 +160,7 @@ export class TexasGamePersonalSettings extends EventSource {
 
     public setPokerCardTypeToStorage(b: PokerCardType) {
         if (this.pokerCardType == b) return;
-        LocalStorage.setItem(StorageKey.TEXAS_POKERCARDTYPE, b);
+        this.write(StorageKey.TEXAS_POKERCARDTYPE, b);
         this.pokerCardType = b;
     }
 
@@ -95,7 +169,7 @@ export class TexasGamePersonalSettings extends EventSource {
 
     public setSoundOnToStorage(b: boolean) {
         if (b == this.soundOn) return;
-        LocalStorage.setItem(StorageKey.SOUND_IS_OPEN, b);
+        this.write(StorageKey.SOUND_IS_OPEN, b);
         this.soundOn = b;
     }
 
@@ -103,6 +177,26 @@ export class TexasGamePersonalSettings extends EventSource {
     public soundOn: boolean = true;
     @observable(TexasGamePersonalSettings.SHORTCUTS_CHANGGE)
     public shortCuts: ShortCut[] = [];
+    private customRatios: Record<string, (number | null)[]> = {};
+    public setCustomPotRatio(slot: number, percentage: number): void {
+        if (!Number.isInteger(slot) || slot < 0 || slot >= this.shortCuts.length || !Number.isInteger(percentage) || percentage < 10 || percentage > 100) return;
+        const stored = this.customRatios[this.shortCutMode];
+        const ratios = Array.isArray(stored) ? [...stored] : [];
+        if (ratios[slot] === percentage) return;
+        ratios[slot] = percentage;
+        this.customRatios = {...this.customRatios, [this.shortCutMode]: ratios};
+        this.write('TEXAS_CUSTOM_POT_RATIOS', this.customRatios);
+        this.shortCuts = this.applyCustomRatios(this.shortCuts, this.shortCutMode);
+    }
+    private applyCustomRatios(cuts: ShortCut[], mode: shortCutMode): ShortCut[] {
+        const stored = this.customRatios[mode];
+        const ratios = Array.isArray(stored) ? stored : [];
+        return cuts.map((cut, i) => {
+            const value = ratios?.[i];
+            return typeof value === 'number' && Number.isInteger(value) && value >= 10 && value <= 100
+                ? {name: `${value}%`, percent: value / 100} : cut;
+        });
+    }
     private _shortCutMode: shortCutMode = shortCutMode.Button3;
     public get shortCutMode() {
         return this._shortCutMode;
@@ -114,35 +208,35 @@ export class TexasGamePersonalSettings extends EventSource {
         } else {
             this.shortCut5ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
         }
-        LocalStorage.setItem(StorageKey.TEXAS_SHORTCUTS_MODE, s);
+        this.write(StorageKey.TEXAS_SHORTCUTS_MODE, s);
         this._shortCutMode = s;
         this.emit(TexasGamePersonalSettings.SHORTCUT_MODE_CHANGE, s);
-        this.shortCuts = shortCuts;
+        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
     }
     private _shortCut3ActionsIndex: number[] = [];
     public get shortCut3ActionsIndex() {
         return this._shortCut3ActionsIndex;
     }
     public set shortCut3ActionsIndex(nu: number[]) {
-        LocalStorage.setItem(StorageKey.TEXAS_SHORTCUTS_3, nu);
+        this.write(StorageKey.TEXAS_SHORTCUTS_3, nu);
         let shortCuts: ShortCut[] = [];
         this._shortCut3ActionsIndex = nu;
         this._shortCut3ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        this.shortCuts = shortCuts;
+        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
     }
     private _shortCut5ActionsIndex: number[] = [];
     public get shortCut5ActionsIndex() {
         return this._shortCut5ActionsIndex;
     }
     public set shortCut5ActionsIndex(nu: number[]) {
-        LocalStorage.setItem(StorageKey.TEXAS_SHORTCUTS_5, nu);
+        this.write(StorageKey.TEXAS_SHORTCUTS_5, nu);
         let shortCuts: ShortCut[] = [];
         this._shortCut5ActionsIndex = nu;
         this._shortCut5ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        this.shortCuts = shortCuts;
+        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
     }
 
-    constructor() {
+    constructor(readonly brandID?: string, private readonly defaultFelt: string = TABLE_FELT_COLORS[0], readonly availableLayouts: readonly TableLayoutId[] = ['original','classic','balanced','oval']) {
         super();
         this.init();
     }
@@ -159,17 +253,21 @@ export class TexasGamePersonalSettings extends EventSource {
         return Array.isArray(value) && value.length === fallback.length && value.every(v => Number.isInteger(v) && v >= 0 && v < TexasGameDfaultShortCutsList.length) ? value : fallback;
     }
     private init() {
-        this._shortCut3ActionsIndex = this.validIndices(LocalStorage.getItem(StorageKey.TEXAS_SHORTCUTS_3, [3, 6, 7]), [3, 6, 7]);
-        this._shortCut5ActionsIndex = this.validIndices(LocalStorage.getItem(StorageKey.TEXAS_SHORTCUTS_5, [2, 3, 4, 6, 7]), [2, 3, 4, 6, 7]);
-        this.shortCutMode = LocalStorage.getItem<number>(StorageKey.TEXAS_SHORTCUTS_MODE, shortCutMode.Button3) === 2 ? shortCutMode.Button5 : shortCutMode.Button3;
-        this.showBB = LocalStorage.getItem(StorageKey.SHOW_BB, false);
+        this.appearance=this.validateAppearance(this.read('TABLE_APPEARANCE',{...defaultAppearance(),feltColor:this.defaultFelt}));
+        this.sliderSubmit = this.read<string>('TEXAS_SLIDER_SUBMIT', 'confirm') === 'release' ? 'release' : 'confirm';
+        const custom = this.read<unknown>('TEXAS_CUSTOM_POT_RATIOS', {});
+        this.customRatios = custom && typeof custom === 'object' && !Array.isArray(custom) ? custom as Record<string, (number | null)[]> : {};
+        this._shortCut3ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_3, [3, 6, 7]), [3, 6, 7]);
+        this._shortCut5ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_5, [2, 3, 4, 6, 7]), [2, 3, 4, 6, 7]);
+        this.shortCutMode = this.read<number>(StorageKey.TEXAS_SHORTCUTS_MODE, shortCutMode.Button3) === 2 ? shortCutMode.Button5 : shortCutMode.Button3;
+        this.showBB = this.read<unknown>(StorageKey.SHOW_BB, false) === true;
         //初始化DeskType
-        const desk = +LocalStorage.getItem(StorageKey.TEXAS_DESKTYPE, 1);
+        const desk = +this.read(StorageKey.TEXAS_DESKTYPE, 1);
         this.deskType = Number.isInteger(desk) && desk >= 1 && desk <= 14 ? desk : 1;
         //初始化pokerCardType
-        this.pokerCardType = LocalStorage.getItem<number>(StorageKey.TEXAS_POKERCARDTYPE, 1) === 2 ? 2 : 1;
+        this.pokerCardType = this.read<number>(StorageKey.TEXAS_POKERCARDTYPE, 1) === 2 ? 2 : 1;
         //初始化声音
-        this.soundOn = LocalStorage.getItem(StorageKey.SOUND_IS_OPEN, true);
+        this.soundOn = this.read<unknown>(StorageKey.SOUND_IS_OPEN, true) !== false;
     }
 }
 

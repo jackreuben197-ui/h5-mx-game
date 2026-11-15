@@ -18,6 +18,7 @@ export class DemoFeatures implements SpecialOperations {
   private pb?: HoldemRuntime;
   private timers = new Set<ReturnType<typeof setTimeout>>();
   readonly scenarios = [
+    {label:'布局验收 · 六张手牌 / 双公共牌 / 长金额',run:()=>this.appearanceStress()},
     {label:'保险 · 单池',run:()=>this.insurance(1)},
     {label:'保险 · 多池',run:()=>this.insurance(2)},
     {label:'保险 · 强制最低投保',run:()=>this.insurance(1,true)},
@@ -65,6 +66,10 @@ export class DemoFeatures implements SpecialOperations {
   }
   private later(run:()=>void,ms:number):void{
     const timer=setTimeout(()=>{this.timers.delete(timer);run();},ms);this.timers.add(timer);
+  }
+  appearanceStress():void {
+    const s=this.start();if(!s)return;
+    this.update({community:[18,20,36,42,54],secondCommunity:[17,19,35,41,53],pot:123456789,pots:[123456789,98765432],players:s.players.map(p=>({...p,name:'Long player nickname 测试',chips:123456789,cards:[14,29,44,59,13,28]}))});
   }
   jackpot():void {
     if(!this.start())return;

@@ -52,6 +52,7 @@ export class SeatCountdownView {
     }
     this.ring.hidden = false; this.handle.hidden = false;
     const color = keep ? '#0ee3fe' : '#14fd00';
+    this.root.style.setProperty('--mx-countdown-color',color);
     this.texture.style.backgroundColor = color;
     this.handle.style.backgroundColor = color;
     this.timer = timer; this.root.hidden = false; this.update();
@@ -75,6 +76,18 @@ export class SeatCountdownView {
         break;
       }
       target -= length;
+    }
+    const table=this.root.closest<HTMLElement>('.mx-table');
+    if(table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape'){
+      // Match the conic mask ray to the rounded avatar perimeter (199px, 28% radius).
+      const angle=ballProgress*Math.PI*2,dx=Math.sin(angle),dy=-Math.cos(angle);
+      const half=95.5,radius=51.72,corner=half-radius;
+      let distance=half/Math.max(Math.abs(dx),Math.abs(dy));
+      if(Math.abs(dx*distance)>corner&&Math.abs(dy*distance)>corner){
+        const projection=(Math.abs(dx)+Math.abs(dy))*corner;
+        distance=projection+Math.sqrt(Math.max(0,projection*projection-2*corner*corner+radius*radius));
+      }
+      this.handle.style.transform=`translate(${dx*distance}px, ${dy*distance}px)`;
     }
     this.root.dataset.remaining = String(Math.ceil(remaining));
     if (this.keep) this.keepSeconds.textContent = `${Math.ceil(remaining)}s`;
