@@ -3,6 +3,7 @@ import { element, place } from '../dom.js';
 import { CardView } from './CardView.js';
 import { CardMotion } from '../CardMotion.js';
 import { MotionScope, motion, easing } from '../motion.js';
+const showCardEye = new URL('../../assets/raw/show_card_eye.png', import.meta.url).href;
 export class HandCardsView {
   readonly root = element('div', 'mx-hole-cards');
   private motion = new MotionScope();
@@ -24,6 +25,7 @@ export class HandCardsView {
       ...shown.map((value, i) => {
         const wrapper = element('span', 'mx-card-slot');
         wrapper.dataset.cardIndex=String(i);
+        wrapper.style.setProperty('--mx-show-card-eye', `url("${showCardEye}")`);
         wrapper.append(new CardView(value, !face).root);
         place(
           wrapper,

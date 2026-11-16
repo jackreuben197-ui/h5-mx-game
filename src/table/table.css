@@ -85,7 +85,7 @@
 .mx-return-game{position:absolute;left:0;top:-359.744px;transform:translate(-50%,-50%);z-index:6;pointer-events:auto;width:600px;height:120px;border:0;border-radius:0;background-color:transparent;color:white;padding:0;white-space:nowrap;font-size:52px!important;background-repeat:no-repeat}
 .mx-return-game:active{filter:brightness(.83);scale:1.2}
 .mx-seat-mine .mx-card-slot{pointer-events:auto;cursor:pointer}
-.mx-card-selected::after{content:"";position:absolute;left:25%;top:calc(100% + 2px);width:48px;height:48px;transform:translate(-50%,-50%);background:url("../assets/raw/show_card_eye.png") center/contain no-repeat;pointer-events:none;z-index:3}
+.mx-card-selected::after{content:"";position:absolute;left:25%;top:calc(100% + 2px);width:48px;height:48px;transform:translate(-50%,-50%);background:var(--mx-show-card-eye) center/contain no-repeat;pointer-events:none;z-index:3}
 .mx-auto-operation{position:absolute;bottom:100%;left:0;right:0;display:flex;justify-content:center;gap:12px;padding-bottom:10px;pointer-events:auto}
 .mx-auto-operation button{border:1px solid #fff8;border-radius:18px;background:#353d63dd;color:#fff;padding:6px 12px;font-size:12px!important;white-space:nowrap}
 .mx-auto-operation button[aria-pressed=true]{background:#b88d53;box-shadow:0 0 9px #ffebad}
@@ -348,3 +348,6 @@
 .mx-confirm-long .mx-confirm-message{text-align:left;white-space:pre-line;line-height:1.65}
 .mx-confirm-highlight{color:#05e7ae}
 .mx-confirm-single .mx-confirm-buttons .mx-confirm-commit{width:70%}
+/* Empty operation/auto-operation space must not intercept the hero's hand. */
+.mx-operation[data-mode=actions],.mx-operation[data-mode=actions] .mx-operation-row,.mx-operation[data-mode=actions] .mx-operation-quick,.mx-operation[data-mode=actions] .mx-auto-operation{pointer-events:none}
+.mx-operation[data-mode=actions] button:not(:disabled){pointer-events:auto}
