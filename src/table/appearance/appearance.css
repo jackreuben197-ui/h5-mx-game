@@ -83,3 +83,6 @@
 .mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
 .mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:8px solid var(--mx-countdown-color,#14fd00);border-radius:28%;box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
 .mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=keep]::before{border-radius:28%}
+/* Keep confirmation on the raise entry; the track ends above that button. */
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-button-size)/2 - var(--mx-raise-height)/2 - var(--mx-op-button-size) * .35)}
