@@ -12,6 +12,7 @@
 .mx-settings-panel [aria-pressed=true]{border-color:#05e7ae;background-color:#05e7ae24}
 .mx-settings-panel button:focus-visible,.mx-settings-panel input:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .mx-personal-settings{display:flex;flex-direction:column;overflow:clip;padding:calc(30 * var(--settings-unit)) 0 calc(80 * var(--settings-unit));font-size:calc(40 * var(--settings-unit))}
+.mx-personal-settings[data-compact=true]{padding-bottom:calc(42 * var(--settings-unit))}
 .mx-settings-overlay[data-short=true]>.mx-personal-settings{height:100%}
 .mx-personal-settings>h2{height:calc(131.5 * var(--settings-unit));margin:0 0 calc(25 * var(--settings-unit));display:flex;align-items:center;justify-content:center;font-size:calc(70 * var(--settings-unit));line-height:1.1;color:#eef5ff}
 .mx-personal-settings>h2,.mx-personal-settings>.mx-settings-tabs,.mx-personal-settings>.mx-settings-status{flex-shrink:0}
@@ -33,8 +34,9 @@
 .mx-settings-deck[aria-pressed=true] .mx-settings-card-selected{visibility:visible}
 .mx-personal-settings .mx-settings-deck .mx-card{position:relative;flex:none;align-self:center;width:20%;max-width:none;height:auto;min-height:0;aspect-ratio:120/176;transform:none;left:auto;top:auto;border-radius:calc(5 * var(--settings-unit));z-index:1}
 /* DeskTypeItem: 214×353 card with an 88×171 thumbnail, not a stretched full tile. */
-.mx-settings-desks{display:grid;grid-template-columns:repeat(4,calc(214 * var(--settings-unit)));gap:calc(43.9 * var(--settings-unit)) calc(42 * var(--settings-unit));width:calc(1050 * var(--settings-unit));margin:0 auto calc(20 * var(--settings-unit));padding:0 calc(30 * var(--settings-unit)) calc(30 * var(--settings-unit))}
-.mx-personal-settings .mx-settings-desk{position:relative;width:100%;height:calc(353 * var(--settings-unit));min-width:0;padding:0;border:0;border-radius:0;background-color:transparent;background-repeat:no-repeat;overflow:visible}
+.mx-settings-pictures{padding-top:calc(36 * var(--settings-unit))}
+.mx-settings-desks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(43.9 * var(--settings-unit)) calc(42 * var(--settings-unit));margin-bottom:calc(26 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-desk{position:relative;width:100%;aspect-ratio:214/353;min-width:0;padding:0;border:0;border-radius:0;background-color:transparent;background-repeat:no-repeat;overflow:visible}
 .mx-personal-settings .mx-settings-desk[aria-pressed=true]{background-color:transparent;border-color:transparent}
 .mx-settings-desk-selected{position:absolute;left:-21.73%;top:-13.03%;width:143.46%;height:126.06%;visibility:hidden;background-repeat:no-repeat;pointer-events:none}
 .mx-settings-desk[aria-pressed=true] .mx-settings-desk-selected{visibility:visible}

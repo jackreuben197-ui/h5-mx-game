@@ -23,11 +23,11 @@ export class CardView {
   static paint(root: HTMLElement, value: number, smallBack = false, type?: number): void {
     if(type!==undefined)root.dataset.cardPreview=String(type);
     const preferences=tableAppearanceFor(root)??settings;
-    type=Number(root.dataset.cardPreview)||preferences.pokerCardType;
+    type=Number(root.dataset.cardPreview)||preferences.tableCardType;
     root.dataset.smallBack = String(smallBack);
     root.dataset.cardValue = String(value);
     if (value === 0) {
-      const back=preferences.appearance.cardBack;
+      const back=preferences.tableAppearance.cardBack;
       if(back==='original')SpriteAtlas.paint(root, smallBack ? 'tableBack' : 'cardBack');
       else {root.style.backgroundImage=`url("${cardBacks[back]}")`;root.style.backgroundSize='100% 100%';root.style.backgroundPosition='center';}
       i18nLabel.bind(root, () => i18nMgr.Get("MX_CardBack", [], "牌背"), 'aria-label');

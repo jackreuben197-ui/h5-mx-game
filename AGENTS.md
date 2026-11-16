@@ -179,6 +179,12 @@ pnpm exec vite --config /tmp/mx-h5-login-preview.config.mts --mode production --
 
 这份临时配置依赖外部 H5 的入口结构，不保证其他版本直接兼容。若用户已有可用 H5 挂载入口，优先用该入口。不要将“直接 pnpm dev:h5”误写成已包含 MX 挂载，当前 H5 源码里没有这项注入。
 
+### 单命令联调（补充）
+
+从 MX 仓库运行 `npm run dev:h5`。默认使用已安装依赖的同级 `../h5-game`，也可通过 `MX_H5_ROOT` 指定其他 H5 工作区。打开 `http://127.0.0.1:5175/#/home`，点「扑克专区」进入真实牌桌。
+
+`scripts/dev-h5.mjs` 复用 H5 的 Vite 配置，在 HTML 中注入 MX 容器并加载 `src/host-entry.ts`。H5 持有 WebSocket，联调服务将 `/mx-ws:端口` 转发到 H5 测试服；MX 通过已有 bridge 收发。单命令流程默认监听本机 5175 和 4180，使用独立的 Vite 缓存，可与双终端流程的 5174 和 4179 同时运行。若通过 `MX_H5_PORT` 覆盖大厅端口，并行使用时请选择空闲端口。
+
 ## 8. 验证记录、未完成项与下一步
 
 - 最近全量回归：**154 项通过**；TypeScript check 和完整 build 通过。新增一手牌消息回放测试覆盖起手、操作、翻牌、赢家和清桌，并验证开局参与者从等待状态恢复正常。

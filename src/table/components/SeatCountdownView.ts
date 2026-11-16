@@ -78,7 +78,7 @@ export class SeatCountdownView {
       target -= length;
     }
     const table=this.root.closest<HTMLElement>('.mx-table');
-    if(table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape'){
+    if(this.keep&&table?.dataset.tableLayout==='balanced'){
       // Match the conic mask ray to the rounded avatar perimeter (199px, 28% radius).
       const angle=ballProgress*Math.PI*2,dx=Math.sin(angle),dy=-Math.cos(angle);
       const half=95.5,radius=51.72,corner=half-radius;

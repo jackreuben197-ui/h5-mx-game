@@ -9,7 +9,7 @@
 .mx-squid .mx-squid-join{font-size:40px!important}.mx-squid .mx-squid-stand{font-size:30px!important}.mx-squid-intro .mx-special-content{padding-top:20px;padding-bottom:32px}.mx-squid-intro h2{font-weight:400}.mx-squid-page{height:240px}.mx-squid-intro .mx-squid-pages{width:78%;margin:10px 0}.mx-squid-intro .mx-squid-commit{font-size:23px!important}.mx-squid-intro input{border-radius:50%;width:12px;height:12px}
 .mx-squid-count::after{font-size:23.45px}.mx-squid-result .mx-special-panel{width:390px!important;margin-top:clamp(100px,25.5vh,215px)}.mx-squid-result .mx-special-content{padding:0 53px}.mx-squid-result .mx-squid-over{top:-80px}
 
-.mx-seat-squid{left:37.5px;top:-140.5px;width:75px;height:95px;padding:0}.mx-seat-squid span{position:absolute;left:40.5px;top:-1.5px;width:34px;height:34px;line-height:34px;font-size:23px;background:var(--squid_bg_red) center/100% 100%;text-align:center}.mx-seat[data-edge=right] .mx-seat-squid{left:-112.5px}
+.mx-seat-squid{left:37.5px;top:-122.5px;width:75px;height:95px;padding:0}.mx-seat-squid span{position:absolute;left:40.5px;top:-1.5px;width:34px;height:34px;line-height:34px;font-size:23px;background:var(--squid_bg_red) center/100% 100%;text-align:center}.mx-seat[data-edge=right] .mx-seat-squid{left:-112.5px}
 /* UITexasTableSeat/SquidMask: 150x108, below the revealed-card node. */
 .mx-seat-squid-mask{inset:auto;left:-75px;top:-54px;width:150px;height:108px;border-radius:0;z-index:1}
 /* UIRoomTexas: stand-up is behind the lower-left squid icon. */

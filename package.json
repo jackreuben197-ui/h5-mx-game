@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "dev:h5": "node scripts/dev-h5.mjs",
     "check": "tsc --noEmit",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "build": "npm run check && vite build && vite build --config vite.host.config.ts && npm run build:types",

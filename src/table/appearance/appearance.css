@@ -1,4 +1,5 @@
-.mx-table{--mx-table-text-scale:1;--mx-accent:#00b98b}
+.mx-table{--mx-table-text-scale:1;--mx-accent:#00b98b;--mx-avatar-radius:50%}
+.mx-table[data-table-layout=balanced]{--mx-avatar-radius:28%}
 .mx-table[data-felt=solid]{background-size:100% 100%;background-repeat:no-repeat}
 .mx-table .mx-player-name{font-size:calc(35px * var(--mx-table-text-scale));line-height:calc(44.1px * var(--mx-table-text-scale))}
 .mx-table .mx-stack{font-size:calc(36px * var(--mx-table-text-scale));line-height:calc(45px * var(--mx-table-text-scale))}
@@ -6,13 +7,14 @@
 .mx-table .mx-pot{font-size:calc(60px * var(--mx-table-text-scale))}
 .mx-table .mx-room-info{font-size:calc(38px * var(--mx-table-text-scale))}
 .mx-table .mx-pool-item{font-size:calc(43px * var(--mx-table-text-scale))}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar,
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-fallback,
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-hit,
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-fold-cover{border-radius:var(--mx-avatar-radius,50%)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35;border-radius:var(--mx-avatar-radius,50%)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:102px;min-height:40px;padding:0 8px;background-image:none!important;background-color:#ffffff18;border:1px solid #ffffff60;border-radius:22px}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{position:absolute;bottom:235px;overflow:hidden}
+.mx-table :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status){border-radius:var(--mx-avatar-radius)}
+.mx-table[data-table-layout=balanced] .mx-seat:not(.mx-empty-seat) .mx-avatar-fallback{background-color:#345c59}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:var(--mx-seat-chip-top,102px);min-height:40px;padding:0 8px;background-image:none!important;background-color:#ffffff18;border:1px solid #ffffff60;border-radius:22px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{
+  position:absolute;top:calc(-1 * (var(--mx-seat-chip-top,102px) + var(--mx-seat-name-clearance,126px)));transform:translateY(-100%);overflow:hidden;
+}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:-82px}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-line{display:none}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:2px solid #ffffff50}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#ffffff90}
@@ -23,6 +25,7 @@
 .mx-settings-size{display:grid;grid-template-columns:1fr auto;gap:calc(18 * var(--settings-unit));flex:1;min-width:0;padding:calc(22 * var(--settings-unit));background:#ffffff18;border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));font-size:calc(32 * var(--settings-unit))}
 .mx-settings-size input{grid-column:1/-1;width:100%;min-width:0;accent-color:var(--mx-accent);margin:0}
 .mx-settings-layouts button{flex:1;min-width:0;border:1px solid #ffffff50;border-radius:calc(24 * var(--settings-unit));font-size:calc(30 * var(--settings-unit));padding:calc(20 * var(--settings-unit)) calc(8 * var(--settings-unit))}
+.mx-settings-colors{justify-content:space-between;margin:0}
 .mx-settings-colors button{width:calc(100 * var(--settings-unit));height:calc(100 * var(--settings-unit));padding:0;border:2px solid transparent}
 .mx-settings-colors button[aria-pressed=true]{border-color:white;box-shadow:0 0 0 2px var(--mx-accent)}
 .mx-settings-back[aria-pressed=true],.mx-settings-layouts [aria-pressed=true]{border-color:white;background-color:#ffffff40;box-shadow:inset 0 0 14px #ffffff40}
@@ -35,9 +38,9 @@
 .mx-personal-settings .mx-settings-appearance>h3{width:100%;font-size:calc(38 * var(--settings-unit));height:auto;margin:calc(28 * var(--settings-unit)) 0 calc(16 * var(--settings-unit))}
 .mx-settings-appearance{padding:calc(28 * var(--settings-unit)) calc(47 * var(--settings-unit))}
 .mx-personal-settings .mx-settings-professional{display:block;width:100%;min-height:calc(97.5 * var(--settings-unit));border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));text-align:left;font-size:calc(36 * var(--settings-unit));padding:calc(20 * var(--settings-unit));background:#3c3c3c66;color:#b9c3c3;cursor:default}
-.mx-personal-settings .mx-settings-amount-modes{width:100%;gap:calc(16 * var(--settings-unit))}
-.mx-personal-settings .mx-settings-amount-modes button{flex:1;width:auto;height:calc(82 * var(--settings-unit));border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));font-size:calc(36 * var(--settings-unit));font-weight:600}
-.mx-personal-settings .mx-settings-amount-modes [aria-pressed=true]{background:#00dab0;color:#063c33}
+.mx-personal-settings .mx-settings-option-pair{width:100%;gap:calc(16 * var(--settings-unit))}
+.mx-personal-settings .mx-settings-option-pair button{flex:1;min-width:0;width:auto;height:calc(82 * var(--settings-unit));border:1px solid #ffffff40;border-radius:calc(24 * var(--settings-unit));font-size:calc(36 * var(--settings-unit));font-weight:600}
+.mx-personal-settings .mx-settings-option-pair [aria-pressed=true]{background:#00dab0;color:#063c33}
 .mx-settings-backs{gap:calc(16 * var(--settings-unit));margin:0}
 .mx-settings-backs .mx-settings-back{height:calc(160 * var(--settings-unit));padding:calc(20 * var(--settings-unit));border-radius:calc(26 * var(--settings-unit));background:#ffffff12}
 .mx-settings-back img{height:calc(74 * var(--settings-unit));margin:auto}
@@ -64,7 +67,7 @@
 .mx-settings-system{grid-template-columns:calc(470 * var(--settings-unit));justify-content:start;padding-left:calc(47 * var(--settings-unit))}
 
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]){grid-template-rows:minmax(0,1fr) 0 44px}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{top:var(--mx-hero-info-y,102px)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine{--mx-seat-chip-top:var(--mx-hero-info-y,102px)}
 .mx-table[data-orientation=landscape] .mx-quick-bet{position:relative;left:auto!important;top:auto!important;flex:none;width:var(--mx-op-quick-width);height:var(--mx-op-quick-height);max-width:none;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
 .mx-table[data-orientation=landscape]{grid-template-rows:minmax(0,1fr) 110px}
 .mx-table[data-orientation=landscape] .mx-operation{align-items:flex-end}
@@ -75,14 +78,92 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back,
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu{position:absolute;display:block;top:calc(6 * var(--mx-layout-unit));left:calc(62 * var(--mx-layout-unit));width:calc(34 * var(--mx-layout-unit));height:calc(34 * var(--mx-layout-unit));border:1px solid #ffffff40;border-radius:calc(12 * var(--mx-layout-unit));background:linear-gradient(135deg,#ffffff12,#0003)!important;box-shadow:inset 0 0 calc(5 * var(--mx-layout-unit)) #ffffff25;color:white;z-index:5;cursor:pointer}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back{left:calc(6 * var(--mx-layout-unit))}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back::before{content:'';position:absolute;left:40%;top:25%;width:35%;height:50%;border-left:calc(3 * var(--mx-layout-unit)) solid #eee;border-bottom:calc(3 * var(--mx-layout-unit)) solid #eee;transform:rotate(45deg)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:23% 20%;background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:1px}
+.mx-menu-back::before{
+  content:'';position:absolute;left:50%;top:50%;width:calc(11 * var(--mx-layout-unit));height:calc(11 * var(--mx-layout-unit));
+  box-sizing:border-box;border:solid #fff;border-width:0 0 calc(2.4 * var(--mx-layout-unit)) calc(2.4 * var(--mx-layout-unit));
+  transform:translate(-35%,-50%) rotate(45deg);pointer-events:none;
+}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) :is(.mx-menu-back,.mx-menu):focus-visible{outline:2px solid #fff;outline-offset:2px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:30% 28%;background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:1px}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-label{display:none}
 .mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
 /* Exported foreground: preserve its 416px bottom slice from the 880×1564 source. */
 .mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
-.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:8px solid var(--mx-countdown-color,#14fd00);border-radius:28%;box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
-.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=keep]::before{border-radius:28%}
+.mx-table[data-table-layout=balanced] .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:8px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
+.mx-table[data-table-layout=balanced] .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-radius:50%}
+.mx-table .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius)}
 /* Keep confirmation on the raise entry; the track ends above that button. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-button-size)/2 - var(--mx-raise-height)/2 - var(--mx-op-button-size) * .35)}
+
+/* 12008:52598. The portrait navigation samples the live felt below the glass. */
+.mx-table:not([data-orientation=landscape]) .mx-navigation{
+  background:linear-gradient(175deg,rgb(96 96 96 / .4) 12%,rgb(5 5 5 / .4) 78%)!important;
+  backdrop-filter:blur(6.324px);-webkit-backdrop-filter:blur(6.324px);
+  border:.5px solid #f2f2f266;
+  box-shadow:1px 1px 2px #0004,inset 0 0 2px #000,inset 1px .6px 4px #f2f2f233;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]){grid-template-rows:minmax(0,1fr) 0 57px}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-navigation{
+  width:calc(100% - 16px);height:54px;margin-bottom:3px;border-radius:999px;padding-inline:5px;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-navigation .mx-nav-button{
+  flex:1 1 52px;width:auto;min-width:0;max-width:72px;height:46px;gap:3px;font-size:clamp(8px,2.55vw,11.25px)!important;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-navigation .mx-nav-icon{width:22.5px;height:22.5px}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-navigation .mx-nav-logo{width:clamp(40px,14vw,64px);margin-inline:3px}
+
+/* Classic values below are in the 58 px avatar's design units. The seat shares
+   its transform with the avatar, click target, cards, chips and timer. */
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat{
+  --mx-classic-seat-unit:calc(199px / 58);
+  --mx-seat-chip-top:calc(30 * var(--mx-classic-seat-unit));
+  --mx-seat-name-clearance:calc(36 * var(--mx-classic-seat-unit));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-avatar-border{
+  width:calc(60.5 * var(--mx-classic-seat-unit));height:calc(60.5 * var(--mx-classic-seat-unit));
+  left:calc(-30.25 * var(--mx-classic-seat-unit));top:calc(-30.25 * var(--mx-classic-seat-unit));
+  background:url('../../assets/raw/ui/classicAvatarBorder.svg') center / contain no-repeat!important;border:0;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-video,.mx-avatar-video-mask){z-index:1}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{
+  left:calc(-29 * var(--mx-classic-seat-unit));
+  width:calc(58 * var(--mx-classic-seat-unit));min-height:calc(20.4 * var(--mx-classic-seat-unit));
+  justify-content:center;padding:0 calc(2 * var(--mx-classic-seat-unit));border-radius:calc(7.8 * var(--mx-classic-seat-unit));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-stack{
+  width:100%;font-size:calc(12 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
+  line-height:calc(17 * var(--mx-classic-seat-unit));overflow:hidden;text-overflow:ellipsis;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-player-name{
+  width:calc(68 * var(--mx-classic-seat-unit));font-weight:600;
+  font-size:calc(11 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
+  line-height:calc(13 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-player-action{
+  top:calc(-27 * var(--mx-classic-seat-unit));transform:translateX(-50%);
+  font-size:calc(11 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));line-height:calc(13 * var(--mx-classic-seat-unit));
+  padding:calc(1.5 * var(--mx-classic-seat-unit)) calc(5 * var(--mx-classic-seat-unit));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:170.4px;margin-top:-85.2px}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-quick-bet{translate:0 calc(-1 * var(--mx-classic-quick-lift,0px))}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-avatar-mic{
+  left:calc(15.7 * var(--mx-classic-seat-unit));top:calc(-5.3 * var(--mx-classic-seat-unit));
+  width:calc(18.6 * var(--mx-classic-seat-unit));height:calc(18.6 * var(--mx-classic-seat-unit));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat[data-edge=right] .mx-avatar-mic{left:calc(-34.3 * var(--mx-classic-seat-unit))}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=action]::before{
+  inset:calc(-4.5 * var(--mx-classic-seat-unit));border:calc(2.8 * var(--mx-classic-seat-unit)) solid #e6ca91;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=action] .mx-seat-timer-ring{
+  inset:calc(-1.1 * var(--mx-classic-seat-unit));
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{
+  mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;
+  border:calc(2.8 * var(--mx-classic-seat-unit)) solid #f9da92;border-radius:50%;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=action] .mx-seat-timer-dot{display:none}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-timer[data-kind=action]::after{
+  content:attr(data-remaining);position:absolute;inset:0;display:grid;place-items:center;
+  color:#fff3d6;font-size:calc(24 * var(--mx-classic-seat-unit));font-weight:700;text-shadow:0 1px 4px #0009;
+}

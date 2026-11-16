@@ -42,7 +42,7 @@ export async function decodedImage(url: string): Promise<HTMLImageElement> {
   return images.get(url)!;
 }
 export async function prepare(report: (progress: number) => void): Promise<void> {
-  const urls = [...new Set([LoadingAssets.background, LoadingAssets.track, ...resources.preload, resources.desks[String(settings.deskType)] ?? resources.desk, ...(settings.pokerCardType === 2 ? (resources.mode === 'raw' ? Object.values(resources.rawCards1) : [resources.cards1]) : [])])];
+  const urls = [...new Set([LoadingAssets.background, LoadingAssets.track, ...resources.preload, resources.desks[String(settings.deskType)] ?? resources.desk, ...(settings.tableCardType === 2 ? (resources.mode === 'raw' ? Object.values(resources.rawCards1) : [resources.cards1]) : [])])];
   let done = 0;
   const effects = SpineEffects.preload().catch(error => console.warn('[MX Spine] Preload failed; retry when playing.', error));
   const desk = DeskBackgroundView.preload(settings.deskType).catch(error => console.warn('[MX Spine] Desk preload failed; retry on entry.', error));

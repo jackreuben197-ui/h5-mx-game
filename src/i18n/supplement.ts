@@ -9,6 +9,7 @@ export const supplement: Record<string, Record<string, string>> = {
   MX_BetButtonSize:{"cn": "按钮", "zh": "按鈕", "en": "Buttons", "pt": "Botões"},
   MX_TableLayout:{"cn": "房间布局", "zh": "房間佈局", "en": "Table layout", "pt": "Disposição"},
   MX_TableStyle:{"cn": "牌桌风格", "zh": "牌桌風格", "en": "Table style", "pt": "Estilo"},
+  MX_ImageFelt:{"cn": "图片桌布", "zh": "圖片桌布", "en": "Image felt", "pt": "Feltro com imagem"},
   MX_SolidFelt:{"cn": "纯色桌布", "zh": "純色桌布", "en": "Solid felt", "pt": "Cor sólida"},
   MX_Layout_original:{"cn": "初代牌桌", "zh": "初代牌桌", "en": "Original", "pt": "Original"},
   MX_Layout_balanced:{"cn": "均衡环形", "zh": "均衡環形", "en": "Balanced", "pt": "Equilibrada"},
