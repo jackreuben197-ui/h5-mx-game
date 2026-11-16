@@ -1,5 +1,5 @@
 import { bindTableAppearance } from './appearance/TableAppearanceContext.js';
-import { classicFelt, cardBacks } from './appearance/TableSkin.js';
+import { classicFelt, purpleFelt, cardBacks } from './appearance/TableSkin.js';
 import { imageReady } from './resources.js';
 import { getBrand } from './appearance/BrandManifest.js';
 import { TableMediaView } from './components/TableMediaView.js';
@@ -248,9 +248,11 @@ export class TableView {
       try {
         const appearance=this.settings.appearance;
         const solid=appearance.style==='solid';
-        const [url]=await Promise.all([solid?imageReady(classicFelt).then(()=>classicFelt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.pokerCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
+        const felt=appearance.feltColor==='#57427f'?purpleFelt:classicFelt;
+        const [url]=await Promise.all([solid?imageReady(felt).then(()=>felt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.pokerCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
         if(generation!==this.appearanceGeneration)return;
         this.root.dataset.felt=solid?'solid':'legacy';
+        this.root.dataset.feltTone=solid&&appearance.feltColor==='#57427f'?'flat-purple':'shaded';
         this.root.style.backgroundColor=solid?appearance.feltColor:'';
         this.root.style.backgroundImage=solid?'none':`url("${url}")`;
         this.root.style.setProperty('--mx-felt-image',`url("${url}")`);
@@ -346,6 +348,7 @@ export class TableView {
       this.seatViews.get(id)?.place(position, positionMode);
     this.refreshRoomInfo();
     const own = this.layout.positions(state).get(state.mySeat);
+    for(const property of ['left','right','width'])this.controls.root.style.removeProperty(property);
     for(const name of ['--mx-op-upper-y','--mx-op-fold-x','--mx-op-main-x'])this.controls.root.style.removeProperty(name);
     if(this.layout.landscape)this.controls.setScale?.(.24*this.settings.appearance.betButtonSize/100);
     if (own && !this.layout.landscape) {
@@ -357,13 +360,15 @@ export class TableView {
       this.controls.setScale?.(own.scale * this.layout.unit * this.settings.appearance.betButtonSize/100);
       const profile=this.layout.modern;
       if(profile){
+        this.controls.root.style.left=`calc(${own.x*this.layout.unit}px - 35%)`;
+        this.controls.root.style.right=`calc(65% - ${own.x*this.layout.unit}px)`;
         const u=Math.min(this.layout.width/440,this.layout.height/782)*this.layout.unit;
-        const rowY=(profile.id==='classic'?610:655)/782*this.layout.height*this.layout.unit;
+        const rowY=own.y*this.layout.unit+profile.heroOperationY*u;
         this.controls.root.style.top=`${rowY-28}px`;
         this.controls.root.style.setProperty('--mx-operation-row-y',`${rowY-28}px`);
         this.controls.root.style.setProperty('--mx-raise-center-y',`${Math.max(160*u,rowY-180*u)}px`);
         this.controls.setScale?.(41.25/137*u*this.settings.appearance.betButtonSize/100);
-        this.controls.root.style.setProperty('--mx-op-upper-y',`${(profile.id==='classic'?65*u:59/782*this.layout.height*this.layout.unit)}px`);
+        this.controls.root.style.setProperty('--mx-op-upper-y',`${profile.heroRaiseLift*u}px`);
         this.controls.root.style.setProperty('--mx-op-fold-x',`${-103*u}px`);
         this.controls.root.style.setProperty('--mx-op-main-x',`${103*u}px`);
       }
@@ -411,6 +416,7 @@ export class TableView {
     });
     const dual=!!this.data.info.snapshot?.secondCommunity?.length;
     const boardSize=this.settings.appearance.publicCardSize/100;
+    l.publicCardScale=boardSize;
     if (landscape) {
       const scale = Math.min(1, l.width / 1900) * (dual ? .85 : 1);
       const gap=176*scale*boardSize+24;
@@ -441,7 +447,7 @@ export class TableView {
       this.root.style.setProperty('--mx-felt-bottom',`${208*u*l.unit}px`);
       const scale=(profile.id==='classic'?59.5:50.59)/120*u*boardSize*(dual?.85:1);
       const y=profile.boardY/782*l.height;
-      const boardGap=176*scale+10*u;
+      const boardGap=(71.02/50.59*120)*scale+10*u;
       place(this.board.root,l.width/2,y-(dual?boardGap/2:0));
       place(this.secondBoard.root,l.width/2,y+boardGap/2);
       this.board.root.style.transform=this.secondBoard.root.style.transform=`scale(${scale})`;
@@ -454,10 +460,11 @@ export class TableView {
         place(this.pot.pool,l.width/2,Math.max(profile.potY/782*l.height,infoY+100)+22*u);
       }
       this.root.style.setProperty('--mx-avatar-radius',profile.avatarRadius);
-      const heroScale=profile.avatar*u/199;
-      // Keep the chip capsule above the fixed bottom navigation on short screens.
-      const heroInfoTop=Math.min(717/782*l.height,l.height-46/l.unit-40*heroScale);
-      this.root.style.setProperty('--mx-hero-info-y',`${profile.id==='classic'?102:(heroInfoTop-596/782*l.height)/heroScale}px`);
+      this.root.style.setProperty('--mx-hero-card-height',`${120*profile.heroCardHeight/profile.heroCardWidth}px`);
+      this.root.style.setProperty('--mx-ring-hand-type-y',`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`);
+      this.root.style.setProperty('--mx-ring-win-x',`${-120*199/profile.avatar}px`);
+      this.root.style.setProperty('--mx-ring-win-y',`${profile.heroCardsY*199/profile.avatar-56.5}px`);
+      this.root.style.setProperty('--mx-hero-info-y',`${profile.heroInfoY*199/profile.avatar}px`);
     } else {
       this.board.root.style.transform+=` scale(${boardSize})`;
       this.secondBoard.root.style.transform+=` scale(${boardSize})`;

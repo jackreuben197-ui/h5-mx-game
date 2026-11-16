@@ -6,6 +6,7 @@ import type { CardEmphasis } from '../core/Settlement.js';
 export interface SeatState {
   player?: Player;
   mine: boolean;
+  foldCountdown?: boolean;
   isMtt?:boolean;
   dealer: boolean;
   acting?: boolean;
@@ -37,6 +38,7 @@ export class SeatData extends EventSource {
     this.state = {
       player: table.players.find((p) => p.seat === this.id),
       mine: this.id === table.mySeat,
+      foldCountdown: this.id===table.mySeat&&!!table.actions?.includes('fold')&&!table.handEnded,
       isMtt: table.matchID>0,
       dealer: this.id === table.dealerSeat,
       acting: this.id === table.actingSeat,

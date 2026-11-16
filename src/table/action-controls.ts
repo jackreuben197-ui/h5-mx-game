@@ -1,3 +1,4 @@
+import { SeatCountdownView } from './components/SeatCountdownView.js';
 import { SliderBetGesture } from './SliderBetGesture.js';
 import defaultSettings, { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
 import { ShortcutBet } from '../logic/ShortcutBet.js';
@@ -12,6 +13,7 @@ import type { TableConfirmDialog } from './components/TableConfirmDialog.js';
 /** Fixed-size operation track. Editing never overlays cards or resizes the table. */
 export class ActionControls {
   readonly root = node('section', 'mx-operation');
+  private foldCountdown=new SeatCountdownView(true);
   private quick = node('div','mx-operation-quick');
   private offSettings: () => void;
   private row = node('div', 'mx-operation-row');
@@ -56,7 +58,8 @@ export class ActionControls {
       ['allin', "adaptation30074"],
       ['straddle', "UITexas_straddle"],
     ] as const) {
-      const b = node('button', `mx-operation-button mx-operation-${action}`, () => i18nMgr.Get(label));
+      const b = node('button', `mx-operation-button mx-operation-${action}`, action==='fold'?undefined:() => i18nMgr.Get(label));
+      if(action==='fold')b.append(node('span','mx-fold-label',()=>i18nMgr.Get(label)),this.foldCountdown.root);
       b.type = 'button';
       paint(
         b,
@@ -212,6 +215,7 @@ export class ActionControls {
     if(scale!==this.opScale)this.gesture.cancel();
     this.opScale = scale;
     const css = this.root.style;
+    css.setProperty('--mx-fold-timer-scale',String(147*scale/199));
     css.setProperty('--mx-op-button-size', `${137 * scale}px`);
     css.setProperty('--mx-op-scale', String(scale));
     css.setProperty('--mx-raise-width', `${146*scale}px`);
@@ -298,6 +302,7 @@ export class ActionControls {
     this.root
       .querySelectorAll<HTMLButtonElement | HTMLInputElement>('button,input')
       .forEach((e) => (e.disabled = this.busy));
+    this.foldCountdown.render(s&&actions.includes('fold')&&!s.handEnded&&!this.busy&&this.submittedKey!==this.key?s.countdowns?.find(c=>c.seat===s.mySeat):undefined);
     this.root.dataset.pending = String(this.busy);
   }
   destroy() {
@@ -306,6 +311,7 @@ export class ActionControls {
     this.offAccount();
     this.gesture.cancel();
     this.auto.destroy();
+    this.foldCountdown.destroy();
     this.disposed = true;
     this.root.remove();
   }

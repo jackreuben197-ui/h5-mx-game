@@ -6,7 +6,7 @@ const StorageKey = { SHOW_BB:'SHOW_BB', TEXAS_DESKTYPE:'TEXAS_DESKTYPE', TEXAS_P
 const AssetCollectionType = { SpriteFrameCard0:1, SpriteFrameCard1:2 } as const;
 type PokerCardType = 1 | 2;
 export const TABLE_SIZE_STEPS = [90,95,100,105,110] as const;
-export const TABLE_FELT_COLORS = ['#079d80','#8b72b5','#3296d2','#269fa8','#78858e','#34383f','#843f50'] as const;
+export const TABLE_FELT_COLORS = ['#079d80','#57427f','#3296d2','#269fa8','#78858e','#34383f','#843f50'] as const;
 export const TABLE_CARD_BACKS = ['red','green','blue','indigo','black','gold'] as const;
 export type TableLayoutId = 'original' | 'classic' | 'balanced' | 'oval';
 export interface TableAppearance {
@@ -112,9 +112,10 @@ export class TexasGamePersonalSettings extends EventSource {
         this.write('TABLE_APPEARANCE',next);this.appearance=next;
     }
     private validateAppearance(value: unknown): TableAppearance {
-        const p=(value&&typeof value==='object'?value:{}) as Partial<TableAppearance>;
+        let p=(value&&typeof value==='object'?value:{}) as Partial<TableAppearance>;
         const layout=this.availableLayouts.includes(p.layout as TableLayoutId)?p.layout!:this.availableLayouts[0]??'original';
         const size=(v:unknown)=>TABLE_SIZE_STEPS.includes(v as 100)?v as number:100;
+        if(p.feltColor==='#8b72b5')p={...p,feltColor:'#57427f'};
         return {layout,style:layout==='original'?'legacy':'solid',feltColor:TABLE_FELT_COLORS.includes(p.feltColor as typeof TABLE_FELT_COLORS[number])?p.feltColor!:this.defaultFelt,cardBack:p.cardBack==='original'||TABLE_CARD_BACKS.includes(p.cardBack as 'red')?p.cardBack!:'original',publicCardSize:size(p.publicCardSize),tableTextSize:size(p.tableTextSize),betButtonSize:size(p.betButtonSize)};
     }
     public static readonly SLIDER_SUBMIT_CHANGE = 'SLIDER_SUBMIT_CHANGE';

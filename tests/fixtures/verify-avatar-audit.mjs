@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';import{writeFile}from'node:fs/promises';import{fileURLToPath}from'node:url';
+const{chromium}=await import(process.env.MX_PLAYWRIGHT_MODULE||'playwright-core');const out=fileURLToPath(new URL('../../docs/qa/layout-audit-2026-11-16',import.meta.url));
+const b=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--mute-audio']});const results=[];
+try{const p=await b.newPage({viewport:{width:1100,height:1400},isMobile:true,hasTouch:true,deviceScaleFactor:1});const load=async q=>{await p.goto('http://127.0.0.1:4179/tests/fixtures/layout-audit.html?'+new URLSearchParams(q));await p.locator('#audit-stage[data-ready=true]').waitFor();};
+for(const layout of ['original','balanced','oval','classic'])for(const[width,height]of[[320,400],[375,500],[390,844],[440,782],[768,1024]]){
+ await load({layout,width,height,scene:'dealer-self',seats:9,hero:5,dealer:5});
+ const metrics=await p.locator('#audit-stage').evaluate(root=>{const offset=root.getBoundingClientRect();const rect=e=>{const r=e.getBoundingClientRect();return{x:r.x-offset.x,y:r.y-offset.y,w:r.width,h:r.height};};const own=root.querySelector('.mx-seat-mine');return{cards:[...own.querySelectorAll('.mx-card-slot')].map(rect),dealer:rect(own.querySelector('.mx-dealer')),stack:rect(own.querySelector('.mx-stack')),outside:[...root.querySelectorAll('.mx-card-slot,.mx-player-name,.mx-stack')].filter(e=>e.checkVisibility()).map(rect).filter(r=>r.x< -1||r.y< -1||r.x+r.w>offset.width+1||r.y+r.h>offset.height+1)};});
+ const hit=(a,b)=>Math.min(a.x+a.w,b.x+b.w)>Math.max(a.x,b.x)+.5&&Math.min(a.y+a.h,b.y+b.h)>Math.max(a.y,b.y)+.5;
+ assert.equal(metrics.outside.length,0,`${layout} ${width}: overflow`);assert.ok(!metrics.cards.some(c=>hit(c,metrics.dealer)),`${layout}: dealer overlaps card`);assert.ok(!hit(metrics.stack,metrics.dealer),`${layout}: dealer overlaps stack`);
+ if(layout!=='original'){const before=await p.locator('.mx-operation-raise').boundingBox();await p.locator('.mx-operation-raise').click();const after=await p.locator('.mx-raise-confirm').boundingBox();assert.ok(['x','y','width','height'].every(k=>Math.abs(before[k]-after[k])<.2),`${layout}: confirmation moved`);}
+ await p.locator('#audit-stage').screenshot({path:`${out}/scenarios/${layout}-${width}x${height}-anchors.jpg`,type:'jpeg',quality:82});results.push({layout,width,height,metrics,result:'pass'});
+}
+for(const layout of['original','balanced','oval','classic']){
+ await load({layout,scene:'folded'});const first=p.locator('.mx-seat-mine .mx-card-slot').first();await first.click();await p.waitForFunction(()=>!!document.querySelector('.mx-seat-mine .mx-card-selected'));await first.click();assert.equal(await p.locator('.mx-seat-mine .mx-card-selected').count(),0);await first.click();await p.getByRole('button',{name:'下一步',exact:true}).click();assert.equal(await p.locator('.mx-seat-mine .mx-card-selected').count(),1);await p.getByRole('button',{name:'下一步',exact:true}).click();assert.equal(await p.locator('.mx-seat-mine .mx-card-selected').count(),0);results.push({layout,interaction:'fold/select/cancel/settle/reset',result:'pass'});
+ await load({layout,scene:'flow'});for(let step=0;step<8;step++)await p.getByRole('button',{name:'下一步',exact:true}).click();results.push({layout,interaction:'eight hand steps',result:'pass'});
+}
+}finally{await b.close();await writeFile(out+'/avatar-verification.json',JSON.stringify(results,null,2));}console.log(`${results.length} verified cases`);

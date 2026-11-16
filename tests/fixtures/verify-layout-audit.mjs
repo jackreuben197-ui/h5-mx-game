@@ -1,0 +1,6 @@
+import assert from'node:assert/strict';import{readFile,stat,writeFile}from'node:fs/promises';import{fileURLToPath}from'node:url';const dir=fileURLToPath(new URL('../../docs/qa/layout-audit-2026-11-16',import.meta.url));
+const scenes=JSON.parse(await readFile(dir+'/scenario-results-all.json')),avatar=JSON.parse(await readFile(dir+'/avatar-verification.json')),workbench=JSON.parse(await readFile(dir+'/workbench-verification.json'));
+assert.equal(avatar.length,28);assert.equal(workbench.length,20);for(const r of [...avatar,...workbench])assert.equal(r.result,'pass');
+for(const r of scenes){assert.equal(r.errors.length,0,`${r.layout}/${r.id}: ${r.errors}`);assert.equal(r.phase,r.id==='entry-fail'?'error':r.id==='exit'?'hidden':'table',`${r.layout}/${r.id}`);}
+const html=await readFile(dir+'/index.html','utf8');const links=new Set([...html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)].map(m=>m[1]).filter(p=>!p.startsWith('http')));for(const path of links)await stat(dir+'/'+path);
+const result={scenes:scenes.length,avatarChecks:avatar.length,workbenchInteractions:workbench.length,links:links.size,scope:'offline scenarios and specific assertions; not full pixel or real-server acceptance'};await writeFile(dir+'/verification.json',JSON.stringify(result,null,2));console.log(result);

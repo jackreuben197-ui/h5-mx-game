@@ -1,0 +1,12 @@
+import { fileURLToPath } from 'node:url';
+const { chromium } = await import(process.env.MX_PLAYWRIGHT_MODULE || 'playwright-core');
+import {mkdir,writeFile} from 'node:fs/promises';
+const out=fileURLToPath(new URL('../../docs/qa/layout-audit-2026-11-16', import.meta.url));
+const phase=process.argv[2]||'before';await mkdir(`${out}/${phase}`,{recursive:true});
+const browser=await chromium.launch({executablePath:process.env.MX_CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--mute-audio']});
+const data=[];
+try {const context=await browser.newContext({viewport:{width:440,height:824},isMobile:true,hasTouch:true,deviceScaleFactor:1});const page=await context.newPage();
+for(const layout of ['original','balanced','oval','classic'])for(const [scene,width,height,scale,cards,long] of [['actions',440,782,100,2,0],['actions',375,500,110,2,1],['six',320,568,110,6,1],['revealed',390,844,100,2,0],['folded',390,844,100,2,0],['status',375,500,110,2,0],['reserved',375,500,110,2,0],['settlement',375,500,110,2,1],['empty',440,782,100,2,0]]){
+const id=`${layout}-${scene}-${width}x${height}`;await page.setViewportSize({width,height:height+42});await page.goto('http://127.0.0.1:4179/tests/fixtures/layout-audit.html?'+new URLSearchParams({layout,scene,width,height,scale,cards,long}));await page.locator('#audit-stage[data-ready=true]').waitFor({timeout:30000});await page.evaluate(()=>document.fonts.ready);await page.locator('#audit-stage').screenshot({path:`${out}/${phase}/${id}.jpg`,type:'jpeg',quality:82});
+const metrics=await page.evaluate(()=>{const stage=document.querySelector('#audit-stage').getBoundingClientRect();const sels=['.mx-card-slot','.mx-player-name','.mx-stack','.mx-player-action','.mx-seat-hand-type','.mx-seat-play-status','.mx-seat-win','.mx-return-game','.mx-seat-bet','.mx-operation button'];return sels.flatMap(selector=>[...document.querySelectorAll(selector)].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&e.getBoundingClientRect().width>0).map(e=>{const r=e.getBoundingClientRect();return {selector,seat:e.closest('.mx-seat')?.dataset.seat,mine:!!e.closest('.mx-seat-mine'),text:e.textContent,rect:{x:r.x-stage.x,y:r.y-stage.y,w:r.width,h:r.height},font:getComputedStyle(e).fontSize};}));});data.push({id,layout,scene,width,height,scale,metrics});console.log(id);
+}await writeFile(`${out}/${phase}-metrics.json`,JSON.stringify(data,null,2));}finally{await browser.close();}

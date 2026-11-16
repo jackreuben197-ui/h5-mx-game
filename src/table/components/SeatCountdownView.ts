@@ -19,7 +19,8 @@ export class SeatCountdownView {
   private timer?: SeatCountdown;
   private keep = false;
   private frame = 0;
-  constructor() {
+  constructor(private readonly rounded=false) {
+    this.root.classList.toggle('mx-seat-timer-rounded',rounded);
     this.root.hidden = true; i18nLabel.bind(this.root, () => i18nMgr.Get("MX_ActionCountdown", [], "操作倒计时"), 'aria-label');
     SpriteAtlas.mask(this.texture, 'timerRing', '#14fd00'); SpriteAtlas.mask(this.handle, 'timerDot', '#14fd00');
     this.ring.append(this.texture);
@@ -78,7 +79,7 @@ export class SeatCountdownView {
       target -= length;
     }
     const table=this.root.closest<HTMLElement>('.mx-table');
-    if(table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape'){
+    if(this.rounded||(table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape')){
       // Match the conic mask ray to the rounded avatar perimeter (199px, 28% radius).
       const angle=ballProgress*Math.PI*2,dx=Math.sin(angle),dy=-Math.cos(angle);
       const half=95.5,radius=51.72,corner=half-radius;

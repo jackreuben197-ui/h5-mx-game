@@ -46,3 +46,19 @@ test('mushroom and critical-hit demos isolate delayed updates when reset',async(
  await new Promise(r=>setTimeout(r,2050));assert.equal(f.state.community.length,0);assert.equal(data.criticalHit.state.enabled,false);
  }finally{f.session.abort();}
 });
+
+test('offline special operations follow a non-first local seat',async()=>{
+ const {DemoFeatures}=await import('../.test-build/demo/DemoFeatures.js');
+ const {ProtocolRuntime}=await import('../.test-build/net/ProtocolRuntime.js');
+ const baseline={roomID:1,matchID:0,handNum:1,revision:1,name:'local',mySeat:3,seatCount:3,players:[1,2,3].map(seat=>({seat,name:String(seat),chips:10000,cards:[14,29],action:''})),community:[],pot:0,actions:[]};
+ let state=structuredClone(baseline);let feature;
+ feature=new DemoFeatures(()=>state,change=>{state={...state,...change};feature.sync(state);},()=>{feature.clear();state=structuredClone(baseline);feature.sync(state);},()=>{});
+ await feature.initialize(await new ProtocolRuntime().load());
+ try{
+  feature.insurance(2);assert.equal(feature.data.insurance.state.operator.seatId,3);assert.equal(state.actingSeat,3);assert.equal(state.players[2].insuranceDeadline>0,true);assert.equal(state.players[1].folded,true);
+  await feature.addTime();assert.equal(state.countdowns[0].seat,3);
+  feature.secondBoard();assert.equal(state.players[2].action,'全下');assert.equal(state.players[1].folded,true);
+  feature.settlement();await feature.watchSettlement('peek');assert.deepEqual(state.players[2].cards,[14,29]);
+  feature.reserve();assert.ok(state.players[2].keepSeatDeadline);assert.equal(state.players[0].keepSeatDeadline,undefined);
+ }finally{feature.clear();}
+});

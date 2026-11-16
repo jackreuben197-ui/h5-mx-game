@@ -67,7 +67,7 @@ export class SeatIdentityView {
     this.squidMask.hidden=!p?.squidIn||!!p.squidCount;
     const keepDeadline=p?.keepSeatDeadline??0;
     const keeping=!!p?.keepSeatReason;
-    this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);
+    this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping || state.foldCountdown ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);
     SpriteAtlas.paint(this.fallback, p ? (this.seatID % 2 ? 'avatar' : 'avatarAlt') : 'empty');
     this.info.hidden = !p;
     this.border.hidden = !p;
@@ -98,7 +98,7 @@ export class SeatIdentityView {
     const refreshInsurance = () => {
       const left = Math.max(0, Math.ceil(this.insuranceDeadline - Date.now() / 1000));
       this.root.classList.toggle('mx-insurance-buying', left > 0);
-      this.action.style.backgroundColor = left ? '#00B88B' : p?.action === '全下' ? '#FA2B4B' : ['加注','下注'].includes(p?.action ?? '') ? '#78E4E4' : '#F9CA9F';
+      this.action.style.backgroundColor = left ? '#00B88B' : p?.action === '全下' ? '#FA2B4B' : ['加注','下注'].includes(p?.action ?? '') ? '#78E4E4' : 'var(--mx-passive-action-color, #F9CA9F)';
       this.action.textContent = left ? i18nMgr.Get('adaptation20062').replace('##', String(left)) : this.actionText;
       this.action.hidden = !this.action.textContent;
       if (!left) clearInterval(this.insuranceTimer);

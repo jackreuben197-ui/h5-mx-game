@@ -17,6 +17,7 @@ export interface SeatPlacement {
   cardsX: number;
   cardsY: number;
   cardScale: number;
+  handSpread?: number;
   betX: number;
   betY: number;
   betIconX: number;
@@ -81,6 +82,7 @@ export class SeatView implements SeatComponent {
     this.root.dataset.scale = String(p.scale);
     this.root.dataset.edge = p.edge;
     place(this.cards.root, p.cardsX, p.cardsY);
+    this.cards.setSpread(p.handSpread ?? 270);
     this.cards.root.style.setProperty('--card-scale', String(p.cardScale));
     place(this.dealer, p.dealerX, p.dealerY);
     this.bet.place(p.betX, p.betY, p.betIconX);

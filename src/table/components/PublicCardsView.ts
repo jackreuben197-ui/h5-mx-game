@@ -29,17 +29,23 @@ export class PublicCardsView implements PublicCardsComponent {
     this.root.replaceChildren();
     state.cards.forEach((value, i) => {
       const slot = element('span', 'mx-public-slot');
-      place(slot, [-281, -140, 0, 140, 281][i] ?? 0, 0);
+      // Original keeps its five fixed slots; modern layouts center touching cards via CSS.
+      const x=[-281,-140,0,140,281][i]??0;
+      const centeredX=(i-(state.cards.length-1)/2)*120;
+      slot.style.setProperty('--mx-card-centered-x',`${centeredX}px`);
+      slot.style.setProperty('--mx-public-original-spread',`${-281-x}px`);
+      slot.style.setProperty('--mx-public-centered-spread',`${-(state.cards.length-1)*60-centeredX}px`);
+      place(slot, x, 0);
       const node = new CardView(value).root;
       slot.append(node);
       this.root.append(slot);
       if (!staticFrame && i >= (old?.cards.length ?? 0)) {
         if (!old?.cards.length) {
-          const offset = -281 - ([-281, -140, 0, 140, 281][i] ?? 0);
+          const offset = 'var(--mx-public-spread-x, var(--mx-public-original-spread))';
           CardView.paint(node, 0);
           const clean = this.motion.cleanup(() => CardView.paint(node, value));
           void this.motion
-            .play(slot, [{ transform: `translateX(${offset}px)` }, { transform: 'none' }], {
+            .play(slot, [{ transform: `translateX(${offset})` }, { transform: 'none' }], {
               duration: motion.spread,
               easing: easing.out,
             })

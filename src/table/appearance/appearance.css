@@ -12,7 +12,12 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-fold-cover{border-radius:var(--mx-avatar-radius,50%)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35;border-radius:var(--mx-avatar-radius,50%)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:102px;min-height:40px;padding:0 8px;background-image:none!important;background-color:#ffffff18;border:1px solid #ffffff60;border-radius:22px}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{position:absolute;bottom:235px;overflow:hidden}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{position:absolute;top:-218.5px;bottom:auto;left:50%;transform:translate(-50%,-100%);overflow:hidden}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:-80px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:var(--mx-hero-card-height);margin-top:calc(var(--mx-hero-card-height) / -2)}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-seat-hand-type{left:0;top:var(--mx-ring-hand-type-y)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-win{top:102px}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-seat-win{left:var(--mx-ring-win-x);top:var(--mx-ring-win-y)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-line{display:none}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:2px solid #ffffff50}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#ffffff90}
@@ -86,3 +91,19 @@
 /* Keep confirmation on the raise entry; the track ends above that button. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-button-size)/2 - var(--mx-raise-height)/2 - var(--mx-op-button-size) * .35)}
+
+/* Same silhouette for avatar state layers, including waiting and leave timers. */
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-play-status,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius,50%)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot,
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot>.mx-card{height:168.46px}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{margin-top:-84.23px}
+/* Original Figma purple art is 1x (classic shading is 2x). */
+.mx-table[data-felt=solid][data-felt-tone=flat-purple]::before{border-image-slice:0 0 208 0 fill}
+.mx-operation-fold>.mx-seat-timer{left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--mx-fold-timer-scale,.2));z-index:2}
+.mx-seat-timer-rounded .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:8px solid var(--mx-countdown-color,#14fd00);border-radius:28%;box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
+.mx-table[data-orientation=landscape] .mx-operation-fold>.mx-seat-timer{transform:translate(-50%,-50%) scale(calc(var(--mx-op-scale) * 137 / 199))}
+
+/* Layout-specific card rhythm; initial table keeps CC/Figma fixed five-slot spacing. */
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{left:var(--mx-card-centered-x)!important;--mx-public-spread-x:var(--mx-public-centered-spread)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]){--mx-passive-action-color:#78e4e4}

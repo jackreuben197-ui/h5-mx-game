@@ -8,6 +8,12 @@ export class HandCardsView {
   readonly root = element('div', 'mx-hole-cards');
   private motion = new MotionScope();
   private flip = new CardMotion();
+  private spread = 270;
+  setSpread(spread:number):void {
+    this.spread=spread;
+    if(this.root.classList.contains('mx-small-cards'))return;
+    Array.from(this.root.children).forEach((slot,i)=>place(slot as HTMLElement,(i+.5)*spread/this.root.children.length-spread/2,0));
+  }
   constructor(private originDelta: (group: HTMLElement) => { x: number; y: number }) {}
   render(state: SeatState, old?: SeatState): void {
     this.motion.cancel();
@@ -30,7 +36,7 @@ export class HandCardsView {
         place(
           wrapper,
           // CC Cards/l2r Layout resizes slots inside a fixed 270-wide strip.
-          face ? ((i + 0.5) * 270 / shown.length - 135) : ((i + 0.5) * 80 / shown.length - 45),
+          face ? ((i + 0.5) * this.spread / shown.length - this.spread/2) : ((i + 0.5) * 80 / shown.length - 45),
           0,
         );
         return wrapper;

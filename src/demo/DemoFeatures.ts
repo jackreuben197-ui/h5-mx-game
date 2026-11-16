@@ -89,7 +89,7 @@ export class DemoFeatures implements SpecialOperations {
     hand.pools={...this.data.snapshot!.handInfo!.pools,mushroomPool:260} as NonNullable<typeof hand.pools>;
     this.data.mushroom.update(hand,10,false);
     this.update({dealerSeat:2});
-    this.later(()=>{hand.buSeatId=7;hand.pools!.mushroomPool=270;this.data.mushroom.update(hand,10,true);this.update({dealerSeat:7});},1200);
+    this.later(()=>{hand.buSeatId=Math.min(7,s.seatCount);hand.pools!.mushroomPool=270;this.data.mushroom.update(hand,10,true);this.update({dealerSeat:hand.buSeatId});},1200);
   }
   criticalHit():void {
     const s=this.start();if(!s||!this.pb)return;
@@ -97,20 +97,20 @@ export class DemoFeatures implements SpecialOperations {
     const hand=new this.pb.HandInfo().toObject();hand.criticalHitOpen=true;
     this.data.criticalHit.update(hand,true);
     this.update({actions:[],betting:undefined,pot:s.players.length*40,players:s.players.map(p=>({...p,chips:p.chips-40,roundBet:0}))});
-    this.later(()=>this.update({community:[18,20,36],actions:['fold','check','raise'],actingSeat:1,betting:{id:'demo-boom',call:0,min:40,max:1960,step:1,allIn:1960}}),2000);
+    this.later(()=>this.update({community:[18,20,36],actions:['fold','check','raise'],actingSeat:s.mySeat,betting:{id:'demo-boom',call:0,min:40,max:1960,step:1,allIn:1960}}),2000);
   }
   insurance(count:number,force=false):void{
     const s=this.start();if(!s||!this.pb)return;
     const pb=this.pb,deadline=Date.now()/1000+30;
     this.update({community:[18,20,36],actions:[],betting:undefined,canAddTime:false,pot:100000,
-      players:s.players.map(p=>({...p,chips:p.seat<=2?0:p.chips,folded:p.seat>2,action:p.seat<=2?'全下':'弃牌',cards:p.seat===1?[14,29]:p.seat===2?[13,28]:[0,0],insuranceDeadline:p.seat===1?deadline:undefined})),
-      countdowns:[{seat:1,deadline,totalTime:30}],actingSeat:1});
+      players:s.players.map(p=>({...p,chips:(p.seat===s.mySeat||p.seat===s.mySeat%s.seatCount+1)?0:p.chips,folded:(p.seat!==s.mySeat&&p.seat!==s.mySeat%s.seatCount+1),action:(p.seat===s.mySeat||p.seat===s.mySeat%s.seatCount+1)?'全下':'弃牌',cards:p.seat===s.mySeat?[14,29]:p.seat===s.mySeat%s.seatCount+1?[13,28]:[0,0],insuranceDeadline:p.seat===s.mySeat?deadline:undefined})),
+      countdowns:[{seat:s.mySeat,deadline,totalTime:30}],actingSeat:s.mySeat});
     this.data.record!.insuranceForceBuyRatio=force?333:0;
-    const op=new pb.Operator();op.setSeatId(1);op.setIsInsurance(true);op.setLeftOpTime(30);op.setOpDeadline(deadline);
+    const op=new pb.Operator();op.setSeatId(s.mySeat);op.setIsInsurance(true);op.setLeftOpTime(30);op.setOpDeadline(deadline);
     op.setInsuranceLimitList(Array.from({length:count},(_,i)=>{
       const pot=new pb.InsurancePotLimit();pot.setPotId(i+1);pot.setPotAmount(i===0?100000:60000);pot.setPotLeaderCount(1);pot.setPotUserCount(2);
       pot.setBet(10000);pot.setMin(force?6660:0);pot.setMax(100000);pot.setOdds(5);
-      const detail=new pb.UserOuts();detail.setSeatId(2);
+      const detail=new pb.UserOuts();detail.setSeatId(s.mySeat%s.seatCount+1);
       const card=new pb.OutsCard();card.setCard(i===0?13:28);card.setIsEqual(false);detail.setOutsCardsList([card]);pot.setOutsDetailList([detail]);return pot;
     }));
     this.data.insurance.start(op.toObject(),pb.Def.Round.FLOP);
@@ -118,25 +118,25 @@ export class DemoFeatures implements SpecialOperations {
   }
   async buyInsurance(list:PotInsuranceBuy.AsObject[],confirm:boolean):Promise<void>{
     if(!this.data.insurance.state.operator)return;
-    this.data.insurance.purchases.set(1,{round:this.data.insurance.state.round,buyList:list});
+    this.data.insurance.purchases.set(this.current()!.mySeat,{round:this.data.insurance.state.round,buyList:list});
     this.log(`演示投保：累计 ${list.length} 池，${confirm?'最终确认':'继续下一池'}（不扣费）`);
     if(confirm){this.data.insurance.finish();this.update({countdowns:[],actingSeat:undefined,players:this.current()!.players.map(p=>({...p,insuranceDeadline:undefined})),community:[18,20,36,42,55]});}
   }
   secondBoard():void{
     const s=this.start();if(!s)return;
-    this.update({actions:[],betting:undefined,community:[18,20,36],players:s.players.map(p=>({...p,chips:p.seat<=2?0:p.chips,folded:p.seat>2,action:p.seat<=2?'全下':'弃牌'}))});
-    this.data.secondPcs.start([1,2],Date.now()/1000+20);this.data.secondPcs.vote(2,true);
+    this.update({actions:[],betting:undefined,community:[18,20,36],players:s.players.map(p=>({...p,chips:(p.seat===s.mySeat||p.seat===s.mySeat%s.seatCount+1)?0:p.chips,folded:(p.seat!==s.mySeat&&p.seat!==s.mySeat%s.seatCount+1),action:(p.seat===s.mySeat||p.seat===s.mySeat%s.seatCount+1)?'全下':'弃牌'}))});
+    this.data.secondPcs.start([s.mySeat,s.mySeat%s.seatCount+1],Date.now()/1000+20);this.data.secondPcs.vote(s.mySeat%s.seatCount+1,true);
     this.log('演示：对手已同意二道牌；点击同意后发出两排公共牌，拒绝则仅发一排');
     this.later(()=>{if(this.data.secondPcs.state.active){this.data.secondPcs.finish();this.update({community:[18,20,36,42,55]});this.log('二道牌演示投票超时');}},20000);
   }
   async agreeSecondPcs(agree:boolean):Promise<void>{
     if(!this.data.secondPcs.state.active)return;
-    this.data.secondPcs.vote(1,agree);this.data.secondPcs.requestResult(0);
+    this.data.secondPcs.vote(this.current()!.mySeat,agree);this.data.secondPcs.requestResult(0);
     this.later(()=>{this.data.secondPcs.finish();this.update({community:[18,20,36,42,55],secondCommunity:agree?[18,20,36,43,56]:[]});},700);
   }
   turn():void{
     const s=this.start();if(!s)return;
-    this.update({actingSeat:1,countdowns:[{seat:1,deadline:Date.now()/1000+20,totalTime:20}],canAddTime:true,addTimeCost:10,delayTimes:0});
+    this.update({actingSeat:s.mySeat,countdowns:[{seat:s.mySeat,deadline:Date.now()/1000+20,totalTime:20}],canAddTime:true,addTimeCost:10,delayTimes:0});
     this.log('演示：点击左侧 +30s 加时；第二次 +20s，两次后隐藏加时入口');
   }
   async addTime():Promise<void>{
@@ -144,27 +144,27 @@ export class DemoFeatures implements SpecialOperations {
     const op=this.data.insurance.state.operator,used=op?.delayTimes??s.delayTimes??0;
     if(used>=2||(!op&&!s.canAddTime))return;
     const seconds=used===0?30:20;
-    const deadline=Math.max(Date.now()/1000,op?.opDeadline??s.countdowns?.find(c=>c.seat===1)?.deadline??0)+seconds;
-    this.update({delayTimes:used+1,canAddTime:!op&&used+1<2,addTimeCost:20,countdowns:[{seat:1,deadline,totalTime:20+30+(used?20:0)}],
-      players:s.players.map(p=>p.seat===1&&op?{...p,insuranceDeadline:deadline}:p)});
+    const deadline=Math.max(Date.now()/1000,op?.opDeadline??s.countdowns?.find(c=>c.seat===s.mySeat)?.deadline??0)+seconds;
+    this.update({delayTimes:used+1,canAddTime:!op&&used+1<2,addTimeCost:20,countdowns:[{seat:s.mySeat,deadline,totalTime:20+30+(used?20:0)}],
+      players:s.players.map(p=>p.seat===s.mySeat&&op?{...p,insuranceDeadline:deadline}:p)});
     if(op)this.data.insurance.start({...op,opDeadline:deadline,delayTimes:used+1},this.data.insurance.state.round);
     this.log(`演示加时 +${seconds}s（不扣费）`);
   }
   settlement():void{
     const s=this.start();if(!s)return;
     this.update({handEnded:true,actions:[],betting:undefined,community:[18,20,36],watch:{peek:true,reveal:true,peekCost:100,revealCost:10},
-      players:s.players.map(p=>({...p,action:'',cards:p.seat===1?[14,29]:[0,0]}))});
+      players:s.players.map(p=>({...p,action:'',cards:p.seat===s.mySeat?[14,29]:[0,0]}))});
     this.log('演示：点击右侧偷偷看翻开对手手牌；发发看依次补发转牌、河牌');
   }
   async watchSettlement(kind:'peek'|'reveal'):Promise<void>{
     const s=this.current();if(!s?.handEnded||!s.watch?.[kind])return;
-    if(kind==='peek')this.update({watch:{...s.watch,peek:false},players:s.players.map(p=>p.seat===1?p:{...p,cards:[13+(p.seat%4)*15,12+(p.seat%4)*15]})});
+    if(kind==='peek')this.update({watch:{...s.watch,peek:false},players:s.players.map(p=>p.seat===s.mySeat?p:{...p,cards:[13+(p.seat%4)*15,12+(p.seat%4)*15]})});
     else {const count=Math.min(5,s.community.length+1);this.update({community:[18,20,36,42,55].slice(0,count),watch:{...s.watch,reveal:count<5}});}
     this.log(`演示：${kind==='peek'?'对手手牌已亮出':'补发公共牌'}（不扣费）`);
   }
   reserve():void{
     const s=this.start();if(!s)return;
-    this.update({actions:[],betting:undefined,players:s.players.map(p=>p.seat===1?{...p,cards:[],keepSeatReason:1,keepSeatDeadline:Date.now()/1000+180}:p)});
+    this.update({actions:[],betting:undefined,players:s.players.map(p=>p.seat===s.mySeat?{...p,cards:[],keepSeatReason:1,keepSeatDeadline:Date.now()/1000+180}:p)});
     this.log('演示：留座 180 秒；点击返回游戏恢复操作');
   }
   async keepSeat(keep:boolean):Promise<void>{if(keep)this.reserve();else this.turn();}

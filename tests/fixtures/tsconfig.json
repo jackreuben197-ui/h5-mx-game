@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.json","include":["./layout-audit.ts","../../src/**/*.d.ts"]}

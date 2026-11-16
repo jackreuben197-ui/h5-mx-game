@@ -78,6 +78,7 @@ export class TableMenuView {
     exit.onclick = () => { this.setOpen(false); leave(); };
     const row=(key:string,sprite:Sprite,click:()=>void,fontSize=55)=>{
       const b=element('button','mx-menu-item');b.type='button';background(b,sprite);b.style.setProperty('--menu-label-size',String(fontSize));
+      b.dataset.menuAction=key;
       b.append(element('span','mx-menu-row-label',()=>i18nMgr.Get(key)));b.onclick=()=>{this.setOpen(false);click();};return b;
     };
     const personal=row('UITexas_Setting','menuSetting',actions.settings,50);

@@ -33,3 +33,27 @@ test('release gesture rejects taps, unchanged amounts, wrong pointers, cancellat
   assert.equal(g.begin(1,'turn1','0'),true);assert.equal(g.begin(2,'turn1','0'),false);g.move(2);assert.equal(g.finish(2,'turn1','3'),false);assert.equal(g.finish(1,'turn1','3'),false);
   g.begin(1,'turn1','0');g.move(1);assert.equal(g.finish(1,'turn1','3'),true);assert.equal(g.finish(1,'turn1','3'),false);
 });
+
+test('top pair bets remain separate from each other and their stack captions',()=>{
+  for(const profile of ['classic','balanced','oval'])for(const [width,height] of [[320,400],[375,500],[440,782]])for(const count of [5,7,9]){
+    const layout=new TableLayout();layout.profile=profile;layout.resize(width,height,false);
+    const positions=[...layout.positions({seatCount:count,mySeat:1,players:[]}).values()];
+    const topY=Math.min(...positions.map(p=>p.y)),top=positions.filter(p=>p.y===topY);
+    assert.equal(top.length,2);
+    const bets=top.map(p=>({left:p.x+(p.betX-80)*p.scale,right:p.x+(p.betX+80)*p.scale,top:p.y+(p.betY-35)*p.scale,stackBottom:p.y+154*p.scale})).sort((a,b)=>a.left-b.left);
+    assert.ok(bets[0].right<bets[1].left,`${profile} ${width}×${height}: top bets overlap`);
+    assert.ok(bets.every(b=>b.top>b.stackBottom),`${profile}: bet touches stack at 110% text`);
+  }
+});
+
+test('hero card and dealer offsets stay avatar-relative across viewport and seat changes',()=>{
+ for(const profile of ['balanced','oval','classic'])for(const [width,height] of [[320,400],[375,500],[390,844],[440,782],[768,1024]])for(const mine of [1,5,9]){
+  const layout=new TableLayout();layout.profile=profile;layout.resize(width,height,false);
+  const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
+  const avatar=profile==='balanced'?60:profile==='oval'?50:58;
+  const ratio=p.scale*layout.unit*199/avatar;
+  assert.ok(Math.abs(p.cardsY*p.scale*layout.unit/ratio-(profile==='classic'?-75:65))<.001);
+  assert.ok(Math.abs(p.dealerX*p.scale*layout.unit/ratio-(profile==='classic'?-107:-54))<.001);
+  if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-(profile==='balanced'?30:25)*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
+ }
+});
