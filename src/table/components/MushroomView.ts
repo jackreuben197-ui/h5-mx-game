@@ -40,7 +40,7 @@ export class MushroomView {
     const node=this.stage.querySelector<HTMLElement>(`.mx-seat[data-seat="${id}"]`);if(!node)return;
     const r=node.getBoundingClientRect(),stage=this.stage.getBoundingClientRect(),unit=stage.width/this.stage.offsetWidth;
     if(!unit)return;const scale=Number(node.dataset.scale??1),side=node.dataset.edge==='right'?-1:1;
-    return {x:(r.left-stage.left)/unit+75*scale*side,y:(r.top-stage.top)/unit-92*scale,scale,side};
+    return {x:(r.left-stage.left)/unit+75*scale*side,y:(r.top-stage.top)/unit-74*scale,scale,side};
   }
   destroy():void {this.destroyed=true;this.motion?.cancel();this.mirror?.cancel();this.bindings.destroy();this.root.remove();}
 }

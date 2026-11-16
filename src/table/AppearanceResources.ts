@@ -12,6 +12,6 @@ export class AppearanceResources {
     await Promise.all(urls.map(imageReady));
   }
   static async prepareSelected(): Promise<void> {
-    await Promise.all([this.desk(settings.deskType), this.cards(settings.pokerCardType)]);
+    await Promise.all([this.desk(settings.deskType), this.cards(settings.tableCardType)]);
   }
 }

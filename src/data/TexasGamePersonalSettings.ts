@@ -72,11 +72,23 @@ const TexasGameDfaultShortCutsList: ShortCut[] = [
     }
 ] as const;
 
+const defaultShortcuts3 = [3, 6, 7];
+const originalShortcuts = defaultShortcuts3.map(index => TexasGameDfaultShortCutsList[index]!);
+
 export class TexasGamePersonalSettings extends EventSource {
     static readonly APPEARANCE_CHANGE = 'APPEARANCE_CHANGE';
     static readonly ACCOUNT_CHANGE = 'ACCOUNT_CHANGE';
     @observable(TexasGamePersonalSettings.APPEARANCE_CHANGE)
     appearance: Readonly<TableAppearance> = defaultAppearance();
+    get supportsLayoutCustomization(): boolean { return this.appearance.layout !== 'original'; }
+    // 初代固定使用编号桌布与预设显示尺寸，其他布局保存的选择继续保留。
+    get tableAppearance(): Readonly<TableAppearance> {
+        if (this.supportsLayoutCustomization) return this.appearance;
+        return {...this.appearance, style:'legacy', cardBack:'original', publicCardSize:100, tableTextSize:100, betButtonSize:100};
+    }
+    get tableCardType(): PokerCardType { return this.supportsLayoutCustomization ? this.pokerCardType : AssetCollectionType.SpriteFrameCard0; }
+    get tableSliderSubmit(): 'release' | 'confirm' { return this.supportsLayoutCustomization ? this.sliderSubmit : 'confirm'; }
+    get tableShortcuts(): readonly ShortCut[] { return this.supportsLayoutCustomization ? this.shortCuts : originalShortcuts; }
     private accountID = 0;
     private saved: Record<string, unknown> = {};
     get revision(): number { return this.accountRevision; }
@@ -116,7 +128,7 @@ export class TexasGamePersonalSettings extends EventSource {
         const layout=this.availableLayouts.includes(p.layout as TableLayoutId)?p.layout!:this.availableLayouts[0]??'original';
         const size=(v:unknown)=>TABLE_SIZE_STEPS.includes(v as 100)?v as number:100;
         if(p.feltColor==='#8b72b5')p={...p,feltColor:'#57427f'};
-        return {layout,style:layout==='original'?'legacy':'solid',feltColor:TABLE_FELT_COLORS.includes(p.feltColor as typeof TABLE_FELT_COLORS[number])?p.feltColor!:this.defaultFelt,cardBack:p.cardBack==='original'||TABLE_CARD_BACKS.includes(p.cardBack as 'red')?p.cardBack!:'original',publicCardSize:size(p.publicCardSize),tableTextSize:size(p.tableTextSize),betButtonSize:size(p.betButtonSize)};
+        return {layout,style:p.style==='solid'?'solid':'legacy',feltColor:TABLE_FELT_COLORS.includes(p.feltColor as typeof TABLE_FELT_COLORS[number])?p.feltColor!:this.defaultFelt,cardBack:p.cardBack==='original'||TABLE_CARD_BACKS.includes(p.cardBack as 'red')?p.cardBack!:'original',publicCardSize:size(p.publicCardSize),tableTextSize:size(p.tableTextSize),betButtonSize:size(p.betButtonSize)};
     }
     public static readonly SLIDER_SUBMIT_CHANGE = 'SLIDER_SUBMIT_CHANGE';
     @observable(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE)
@@ -130,7 +142,7 @@ export class TexasGamePersonalSettings extends EventSource {
         this.customRatios = {};
         this.write('TEXAS_CUSTOM_POT_RATIOS', this.customRatios);
         this.setSliderSubmit('confirm');
-        this.shortCut3ActionsIndex = [3, 6, 7];
+        this.shortCut3ActionsIndex = [...defaultShortcuts3];
         this.shortCut5ActionsIndex = [2, 3, 4, 6, 7];
         this.shortCutMode = shortCutMode.Button3;
     }
@@ -258,7 +270,7 @@ export class TexasGamePersonalSettings extends EventSource {
         this.sliderSubmit = this.read<string>('TEXAS_SLIDER_SUBMIT', 'confirm') === 'release' ? 'release' : 'confirm';
         const custom = this.read<unknown>('TEXAS_CUSTOM_POT_RATIOS', {});
         this.customRatios = custom && typeof custom === 'object' && !Array.isArray(custom) ? custom as Record<string, (number | null)[]> : {};
-        this._shortCut3ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_3, [3, 6, 7]), [3, 6, 7]);
+        this._shortCut3ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_3, defaultShortcuts3), [...defaultShortcuts3]);
         this._shortCut5ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_5, [2, 3, 4, 6, 7]), [2, 3, 4, 6, 7]);
         this.shortCutMode = this.read<number>(StorageKey.TEXAS_SHORTCUTS_MODE, shortCutMode.Button3) === 2 ? shortCutMode.Button5 : shortCutMode.Button3;
         this.showBB = this.read<unknown>(StorageKey.SHOW_BB, false) === true;

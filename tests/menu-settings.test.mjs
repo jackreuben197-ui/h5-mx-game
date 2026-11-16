@@ -14,6 +14,45 @@ import { BringOutRules } from '../.test-build/logic/BringOutRules.js';
 import { ShortcutBet } from '../.test-build/logic/ShortcutBet.js';
 import { TexasGamePersonalSettings } from '../.test-build/data/TexasGamePersonalSettings.js';
 const target={roomID:1001,matchID:0,roomType:0};
+test('original uses its preset cards and betting controls while modern layouts restore saved choices',()=>{
+  const settings=new TexasGamePersonalSettings('layout-test');
+  settings.updateAppearance({layout:'classic',cardBack:'gold',publicCardSize:110,tableTextSize:90,betButtonSize:105});
+  settings.setPokerCardTypeToStorage(2);
+  settings.setSliderSubmit('release');
+  settings.shortCutMode=2;
+  settings.setCustomPotRatio(1,79);
+  settings.updateAppearance({layout:'original'});
+  assert.equal(settings.supportsLayoutCustomization,false);
+  assert.equal(settings.tableCardType,1);
+  assert.equal(settings.tableSliderSubmit,'confirm');
+  assert.deepEqual(settings.tableShortcuts.map(x=>x.name),['1/2','1.0','1.2']);
+  assert.deepEqual([settings.tableAppearance.cardBack,settings.tableAppearance.publicCardSize,settings.tableAppearance.tableTextSize,settings.tableAppearance.betButtonSize],['original',100,100,100]);
+  for(const layout of ['classic','balanced','oval']){
+    settings.updateAppearance({layout});
+    assert.equal(settings.supportsLayoutCustomization,true);
+    assert.equal(settings.tableCardType,2);
+    assert.equal(settings.tableSliderSubmit,'release');
+    assert.equal(settings.tableShortcuts.length,5);
+    assert.equal(settings.tableShortcuts[1].name,'79%');
+    assert.deepEqual([settings.tableAppearance.cardBack,settings.tableAppearance.publicCardSize,settings.tableAppearance.tableTextSize,settings.tableAppearance.betButtonSize],['gold',110,90,105]);
+  }
+});
+test('numbered desks work in every layout and original preserves the modern felt choice',()=>{
+  const settings=new TexasGamePersonalSettings('desk-style-test');
+  settings.setDeskTypeToStorage(10);
+  for(const layout of ['classic','balanced','oval']){
+    settings.updateAppearance({layout,style:'legacy'});
+    assert.equal(settings.tableAppearance.style,'legacy');
+    assert.equal(settings.deskType,10);
+    settings.updateAppearance({style:'solid',feltColor:'#3296d2'});
+    assert.equal(settings.tableAppearance.style,'solid');
+    settings.updateAppearance({layout:'original'});
+    assert.equal(settings.tableAppearance.style,'legacy');
+    settings.updateAppearance({layout});
+    assert.equal(settings.tableAppearance.style,'solid');
+    assert.equal(settings.tableAppearance.feltColor,'#3296d2');
+  }
+});
 test('CC shortcut pots keep all configured buttons and clamp low/high/all-in amounts',()=>{
   const settings=new TexasGamePersonalSettings();
   const state={mySeat:4,players:[{seat:4,chips:1000}],pot:450,actions:['call','raise','allin'],betting:{call:50,min:100,max:1000,allIn:1000,step:1}};

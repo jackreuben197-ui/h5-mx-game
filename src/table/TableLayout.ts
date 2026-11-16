@@ -16,11 +16,13 @@ export class TableLayout {
   landscape = false;
   origin = { x: 720, y: 1000 };
   private seats = new SeatPositionCaculator();
-  resize(width: number, height: number, landscape: boolean): void {
+  private viewportBottom = 0;
+  resize(width: number, height: number, landscape: boolean, viewportBottom = height - 57): void {
     this.landscape = landscape;
-    // Classic's lowest chip label reaches about y=740 in its 782-unit design.
-    // Fit the whole layout above the fixed footer on short viewports, keeping cards/buttons together.
-    if(!landscape&&this.profile==='classic')height=Math.min(height,(height-50)*782/740);
+    this.viewportBottom = viewportBottom;
+    // Start fitting the composition only below its design height. The hero is then
+    // constrained separately by the real bottom of the viewport (including safe areas).
+    if(!landscape&&this.profile==='classic')height=Math.min(height,(height-44)*782/738);
     this.unit = landscape ? height / 1440 : width / height > 0.75 ? height / 2688 : width / 1440;
     this.width = width / this.unit;
     this.height = height / this.unit;
@@ -113,10 +115,15 @@ export class TableLayout {
         const local=199/profile.avatar;
         p.x=Math.max(34*unit,Math.min(this.width-34*unit,x/profile.width*this.width));
         p.y=y/profile.height*height;
+        if(profile.id==='classic'&&slot===0)p.y=Math.min(p.y,this.viewportBottom/this.unit-52*unit);
         p.scale=profile.avatar*unit/199;
         // Reserve the complete local player group above navigation, then anchor every
         // child to this adjusted avatar. Design distances scale with the existing seat unit.
-        if(mine)p.y=Math.min(p.y,height-50/this.unit-(profile.heroInfoY*local+54)*p.scale);
+        if(mine){
+          const bottom=Math.min(height-50/this.unit,this.viewportBottom/this.unit);
+          const groupBottom=Math.max(profile.heroInfoY*local+54,profile.heroDealer[1]*local+38.5);
+          p.y=Math.min(p.y,bottom-groupBottom*p.scale);
+        }
         p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
         p.cardsX=face?0:(x<220?14:-14)*local;
         p.cardsY=(mine?profile.heroCardsY:face?0:14)*local;

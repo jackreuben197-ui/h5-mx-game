@@ -13,7 +13,7 @@ import '../chat.css';
 /** CC UIChatDlg: cached history, incremental rows, top paging, fixed composer. */
 export class TableChatView {
   readonly button=element('button','mx-chat-button');
-  readonly support=element('button','mx-support-button');
+  readonly support=element('button','mx-support-button mx-table-tool-button');
   readonly dialog:RecordDialogView;
   readonly danmu=new DanmuView();
   private emoji:ChatEmojiView;
@@ -28,14 +28,19 @@ export class TableChatView {
   private dead=false;private quickData:unknown=[];
   constructor(private records:RoomRecords,private error:(e:unknown)=>void){
     const data=records.data;
-    const assets = {send:new URL('../../assets/raw/chat/send.png',import.meta.url).href,quick:new URL('../../assets/raw/chat/quick.png',import.meta.url).href,input:new URL('../../assets/raw/chat/input.png',import.meta.url).href,panel:new URL('../../assets/raw/chat/panel.png',import.meta.url).href,support:new URL('../../assets/raw/chat/support.png',import.meta.url).href,supportBg:new URL('../../assets/raw/chat/support-bg.png',import.meta.url).href};
+    const assets = {send:new URL('../../assets/raw/chat/send.png',import.meta.url).href,quick:new URL('../../assets/raw/chat/quick.png',import.meta.url).href,input:new URL('../../assets/raw/chat/input.png',import.meta.url).href,panel:new URL('../../assets/raw/chat/panel.png',import.meta.url).href};
     this.dialog=new RecordDialogView(()=>`${data.record?.name??''}\n#${records.target.roomID}`,()=>this.close(),'left',200);
     this.dialog.root.classList.add('mx-chat-dialog');
     this.emoji=new ChatEmojiView(this.dialog.body);this.dialog.panel.append(this.emoji.root);
-    for(const [key,url] of Object.entries(assets)){this.dialog.root.style.setProperty(`--chat-${key}`,`url("${url}")`);this.support.style.setProperty(`--chat-${key}`,`url("${url}")`);}
+    for(const [key,url] of Object.entries(assets))this.dialog.root.style.setProperty(`--chat-${key}`,`url("${url}")`);
     SpriteAtlas.paint(this.button,'chat');this.button.append(element('span','',()=>i18nMgr.Get('MX_Chat')));
     this.button.hidden=!!data.mtt;this.button.onclick=()=>this.open();
-    this.support.append(element('span','',()=>i18nMgr.Get('MX_Support')),element('i',''));this.support.onclick=()=>void records.supportChat?.().catch(error);
+    this.support.type='button';
+    const supportBackground=element('span','mx-table-tool-background');supportBackground.setAttribute('aria-hidden','true');
+    const supportIcon=element('img','mx-table-tool-icon mx-support-icon');supportIcon.alt='';supportIcon.draggable=false;
+    supportIcon.src=new URL('../../assets/raw/chat/support.png',import.meta.url).href;
+    this.support.append(supportBackground,element('span','mx-support-label',()=>i18nMgr.Get('MX_Support')),supportIcon);
+    this.support.onclick=()=>void records.supportChat?.().catch(error);
     this.input.maxLength=80;this.input.placeholder='Enter text here...';this.input.setAttribute('aria-label',i18nMgr.Get('MX_Chat'));
     this.send.setAttribute('aria-label',i18nMgr.Get('MX_ChatSend'));
     this.send.onclick=()=>void this.submit();this.input.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();void this.submit();}};

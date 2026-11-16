@@ -1,5 +1,9 @@
 {
   "chip-add.png": "assets/textures/scene/table/other/table_node_add_chip.png",
   "diamond-add.png": "assets/textures/scene/table/other/table_node_add_diamond.png",
+  "action-bg.png": "assets/textures/scene/table/other/table_bg_action.png",
+  "chip.png": "assets/textures/scene/table/icon/table_icon_chip.png",
+  "diamond.png": "assets/textures/dialog/playerinfo/diamondbig.png",
+  "plus.png": "assets/textures/scene/table/icon/table_icon_add.png",
   "safety.png": "assets/textures/scene/table/icon/table_icon_safety_guard.png"
 }

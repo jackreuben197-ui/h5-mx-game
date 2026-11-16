@@ -246,10 +246,10 @@ export class TableView {
     const appearance=async()=>{
       const generation=++this.appearanceGeneration;
       try {
-        const appearance=this.settings.appearance;
+        const appearance=this.settings.tableAppearance;
         const solid=appearance.style==='solid';
         const felt=appearance.feltColor==='#57427f'?purpleFelt:classicFelt;
-        const [url]=await Promise.all([solid?imageReady(felt).then(()=>felt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.pokerCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
+        const [url]=await Promise.all([solid?imageReady(felt).then(()=>felt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.tableCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
         if(generation!==this.appearanceGeneration)return;
         this.root.dataset.felt=solid?'solid':'legacy';
         this.root.dataset.feltTone=solid&&appearance.feltColor==='#57427f'?'flat-purple':'shaded';
@@ -262,7 +262,7 @@ export class TableView {
     };
     this.settingsOff.push(this.settings.on(Settings.DESK_TYPE_CHANGE,()=>void appearance()),this.settings.on(Settings.POKER_CARD_TYPE_CHANGE,()=>void appearance()));
     const applyLayout=()=>{
-      const a=this.settings.appearance;
+      const a=this.settings.tableAppearance;
       this.layout.profile=a.layout;
       this.root.dataset.tableLayout=a.layout;
       this.root.style.setProperty('--mx-table-text-scale',String(a.tableTextSize/100));
@@ -272,7 +272,7 @@ export class TableView {
     this.settingsOff.push(this.settings.on(Settings.APPEARANCE_CHANGE,()=>{applyLayout();void appearance();}),this.settings.on(Settings.ACCOUNT_CHANGE,()=>{this.personalSettings.close();applyLayout();void appearance();}));
     this.layout.profile=this.settings.appearance.layout;
     this.root.dataset.tableLayout=this.layout.profile;
-    this.root.style.setProperty('--mx-table-text-scale',String(this.settings.appearance.tableTextSize/100));
+    this.root.style.setProperty('--mx-table-text-scale',String(this.settings.tableAppearance.tableTextSize/100));
     void appearance();
     this.stage.append(
       this.below,
@@ -350,14 +350,15 @@ export class TableView {
     const own = this.layout.positions(state).get(state.mySeat);
     for(const property of ['left','right','width'])this.controls.root.style.removeProperty(property);
     for(const name of ['--mx-op-upper-y','--mx-op-fold-x','--mx-op-main-x'])this.controls.root.style.removeProperty(name);
-    if(this.layout.landscape)this.controls.setScale?.(.24*this.settings.appearance.betButtonSize/100);
+    const buttonScale=this.settings.tableAppearance.betButtonSize/100;
+    if(this.layout.landscape)this.controls.setScale?.(.24*buttonScale);
     if (own && !this.layout.landscape) {
       const operationTop = (own.y - 210 * own.scale) * this.layout.unit - 28;
       this.controls.root.style.top = `${operationTop}px`;
       this.controls.root.style.setProperty('--mx-operation-row-y', `${operationTop}px`);
       // CC Operation.adjustPostion places freeCallNode 910 scaled units above my seat.
       this.controls.root.style.setProperty('--mx-raise-center-y', `${(own.y - 910 * own.scale) * this.layout.unit}px`);
-      this.controls.setScale?.(own.scale * this.layout.unit * this.settings.appearance.betButtonSize/100);
+      this.controls.setScale?.(own.scale * this.layout.unit * buttonScale);
       const profile=this.layout.modern;
       if(profile){
         this.controls.root.style.left=`calc(${own.x*this.layout.unit}px - 35%)`;
@@ -367,8 +368,14 @@ export class TableView {
         this.controls.root.style.top=`${rowY-28}px`;
         this.controls.root.style.setProperty('--mx-operation-row-y',`${rowY-28}px`);
         this.controls.root.style.setProperty('--mx-raise-center-y',`${Math.max(160*u,rowY-180*u)}px`);
-        this.controls.setScale?.(41.25/137*u*this.settings.appearance.betButtonSize/100);
-        this.controls.root.style.setProperty('--mx-op-upper-y',`${profile.heroRaiseLift*u}px`);
+        this.controls.setScale?.(41.25/137*u*buttonScale);
+        let upperY=profile.heroRaiseLift*u;
+        if(profile.id==='classic'){
+          const handTop=(own.y+own.cardsY*own.scale)*this.layout.unit-35.5*u;
+          upperY=Math.max(65*u,rowY-handTop+(6+41.25*buttonScale/2)*u);
+          this.controls.root.style.setProperty('--mx-classic-quick-lift',`${upperY-65*u}px`);
+        }
+        this.controls.root.style.setProperty('--mx-op-upper-y',`${upperY}px`);
         this.controls.root.style.setProperty('--mx-op-fold-x',`${-103*u}px`);
         this.controls.root.style.setProperty('--mx-op-main-x',`${103*u}px`);
       }
@@ -399,7 +406,7 @@ export class TableView {
     this.root.dataset.orientation = landscape ? 'landscape' : 'portrait';
     const { width, height } = this.viewport.getBoundingClientRect();
     if (width <= 0 || height <= 0) return;
-    this.layout.resize(width, landscape ? height : box.height, landscape);
+    this.layout.resize(width, landscape ? height : box.height, landscape, height);
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
     this.squid?.resize(l.suggest);
@@ -415,7 +422,7 @@ export class TableView {
       transform: `scale(${l.unit})`,
     });
     const dual=!!this.data.info.snapshot?.secondCommunity?.length;
-    const boardSize=this.settings.appearance.publicCardSize/100;
+    const boardSize=this.settings.tableAppearance.publicCardSize/100;
     l.publicCardScale=boardSize;
     if (landscape) {
       const scale = Math.min(1, l.width / 1900) * (dual ? .85 : 1);

@@ -1,5 +1,15 @@
 import type { SeatState } from '../../data/SeatData.js';
-import type { SeatEffects, EffectAnchor } from '../../effects/SeatEffects.js';
+import type { SeatEffect, SeatEffects, EffectAnchor } from '../../effects/SeatEffects.js';
+
+export function seatEffectAnchor(seat: HTMLElement, effect: SeatEffect): EffectAnchor {
+  const {left,top}=seat.getBoundingClientRect();
+  // 头像的实测宽度包含牌桌缩放和座位移动时的缩放。
+  const avatar=seat.querySelector<HTMLElement>('.mx-avatar-fallback');
+  const scale=(avatar?.getBoundingClientRect().width??199)/199;
+  const layout=seat.closest<HTMLElement>('.mx-table')?.dataset.tableLayout;
+  const allInLift=effect!=='win'&&layout&&layout!=='original'?32*scale:0;
+  return {x:left,y:top-allInLift,scale,opacity:Number(getComputedStyle(seat).opacity)};
+}
 /** CC SeatPlayer action / WINNER lifecycle, isolated to this seat's subscription. */
 export class SeatEffectView {
   private previous?: SeatState;
@@ -17,7 +27,8 @@ export class SeatEffectView {
     if (allin && !this.allin) {
       this.allin = true;
       const generation = ++this.generation;
-      void this.effects.play(`${this.id}:allin`, state.mine ? 'allin-self' : 'allin-other', this.anchor).then(played => {
+      const effect = state.mine ? 'allin-self' : 'allin-other';
+      void this.effects.play(`${this.id}:allin`, effect, () => seatEffectAnchor(this.root,effect)).then(played => {
         if (generation === this.generation) this.root.classList.toggle('mx-spine-allin', played);
       });
     } else if (!allin && this.allin) {
@@ -29,15 +40,8 @@ export class SeatEffectView {
     if (!win) this.effects.stop(`${this.id}:win`);
     // CC WINNER initIgnore: reconnect / ShowBB / resize must not replay settlement.
     else if (old && state.presentation !== 'sync' && !old.player?.settlement?.win)
-      void this.effects.play(`${this.id}:win`, 'win', this.anchor);
+      void this.effects.play(`${this.id}:win`, 'win', () => seatEffectAnchor(this.root,'win'));
   }
-  private anchor = (): EffectAnchor => {
-    const rect = this.root.getBoundingClientRect();
-    // The avatar is 199 CC design units, including both stage and moving-seat scale.
-    const avatar = this.root.querySelector<HTMLElement>('.mx-avatar-fallback');
-    return { x: rect.left, y: rect.top, scale: (avatar?.getBoundingClientRect().width ?? 199) / 199,
-      opacity: Number(getComputedStyle(this.root).opacity) };
-  };
   cancel(): void {
     ++this.generation; this.allin = false;
     this.effects?.stop(`${this.id}:allin`); this.effects?.stop(`${this.id}:win`);

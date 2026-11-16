@@ -2,6 +2,7 @@ import type { TableSnapshot } from '../../core/types.js';
 import type { SeatEffects } from '../../effects/SeatEffects.js';
 import type { SeatComponent } from './SeatView.js';
 import { element } from '../dom.js';
+import { seatEffectAnchor } from './SeatEffectView.js';
 
 /** DEV-only visual test on the live table. Never writes data or sends commands. */
 export class AllInTestView {
@@ -51,12 +52,8 @@ export class AllInTestView {
     this.lastSeat = player.seat;
     const generation = this.generation;
     this.status.textContent = `座位 ${player.seat} · ${own ? '本人' : '其他玩家'}`;
-    const shown = await this.effects.play(this.key, own ? 'allin-self' : 'allin-other', () => {
-      const rect = node.getBoundingClientRect();
-      const avatar = node.querySelector<HTMLElement>('.mx-avatar-fallback');
-      return { x:rect.left, y:rect.top, scale:(avatar?.getBoundingClientRect().width ?? 199)/199,
-        opacity:Number(getComputedStyle(node).opacity) };
-    });
+    const effect = own ? 'allin-self' : 'allin-other';
+    const shown = await this.effects.play(this.key,effect,()=>seatEffectAnchor(node,effect));
     if (generation !== this.generation || this.dead) return;
     if (!shown) this.status.textContent = '动画加载失败';
   }

@@ -3,6 +3,36 @@ import assert from 'node:assert/strict';
 import { TableLayout } from '../.test-build/table/TableLayout.js';
 import { SliderBetGesture } from '../.test-build/table/SliderBetGesture.js';
 
+test('classic avatars use the full 58px design diameter and keep the hero above the menu',()=>{
+  const layout=new TableLayout();
+  layout.profile='classic';
+  layout.resize(440,782,false,725);
+  const positions=layout.positions({seatCount:8,mySeat:1,players:[]});
+  for(const seat of positions.values()) assert.equal(Math.round(199*seat.scale*layout.unit*100)/100,58);
+  const hero=positions.get(1);
+  assert.ok(hero.y*layout.unit+52<=725+1e-9);
+});
+
+test('modern dealer markers clear the chip row and the bottom marker stays above the footer',()=>{
+  for(const profile of ['classic','balanced','oval']){
+    const layout=new TableLayout();
+    layout.profile=profile;
+    layout.resize(375,500,false,443);
+    const positions=layout.positions({seatCount:8,mySeat:1,players:[]});
+    for(const [id,seat] of positions){
+      if(id===1){
+        assert.ok((seat.y+(seat.dealerY+38.5)*seat.scale)*layout.unit<=443+1e-9);
+        assert.ok(seat.dealerX+37.5< -99.5);
+      }else{
+        // QA profiles place ring-layout dealers beside the chip row; classic below it.
+        const dealer={l:seat.dealerX-37.5,r:seat.dealerX+37.5,t:seat.dealerY-38.5,b:seat.dealerY+38.5};
+        const chips={l:-99.5,r:99.5,t:102,b:175};
+        assert.ok(dealer.r<=chips.l||dealer.l>=chips.r||dealer.b<=chips.t||dealer.t>=chips.b);
+      }
+    }
+  }
+});
+
 test('all new layouts retain seat IDs and distinct in-bounds avatars for 2–9 seats',()=>{
   for(const profile of ['classic','balanced','oval'])for(const [width,height] of [[320,400],[320,480],[360,640],[375,500],[390,844],[430,932],[768,1024]])for(let count=2;count<=9;count++)for(let mine=1;mine<=count;mine++){
     const layout=new TableLayout();layout.profile=profile;layout.resize(width,height,false);

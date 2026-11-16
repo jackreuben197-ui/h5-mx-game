@@ -33,6 +33,7 @@ export class ActionControls {
   private offAccount: () => void;
   private submittedKey = '';
   private offSubmit: () => void;
+  private offAppearance: () => void;
   private busy = false;
   private disposed = false;
   private accountGeneration = 0;
@@ -46,8 +47,16 @@ export class ActionControls {
   ) {
     this.auto=new AutoOperationView(command);
     this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submittedKey='';this.refresh();});
-    this.offSubmit = this.settings.on(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE, () => { this.gesture.cancel(); this.confirm.hidden = this.settings.sliderSubmit === 'release'; });
-    this.confirm.hidden = this.settings.sliderSubmit === 'release';
+    const updateSubmitMode = () => {
+      this.gesture.cancel();
+      this.confirm.hidden = this.settings.tableSliderSubmit === 'release';
+    };
+    this.offSubmit = this.settings.on(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE, updateSubmitMode);
+    this.offAppearance = this.settings.on(TexasGamePersonalSettings.APPEARANCE_CHANGE, () => {
+      updateSubmitMode();
+      this.refresh();
+    });
+    updateSubmitMode();
     this.offSettings=this.settings.on(TexasGamePersonalSettings.SHORTCUTS_CHANGGE,()=>this.refresh());
     i18nLabel.bind(this.root, () => i18nMgr.Get("MX_TableActions", [], "牌桌操作"), 'aria-label');
     for (const [action, label] of [
@@ -110,7 +119,7 @@ export class ActionControls {
     this.range.onpointercancel = this.range.onlostpointercapture = () => { this.gesture.cancel(); };
     this.range.onpointerup = e => {
       const completed=this.gesture.finish(e.pointerId,this.key,this.range.value);
-      if (!completed || this.mode !== 'raise' || this.settings.sliderSubmit !== 'release') return;
+      if (!completed || this.mode !== 'raise' || this.settings.tableSliderSubmit !== 'release') return;
       const selection = this.selection();
       if (selection) void this.submit(selection.action, selection.amount);
     };
@@ -249,7 +258,7 @@ export class ActionControls {
   private refresh() {
     this.root.dataset.mode = this.mode;
     this.quick.replaceChildren();
-    const items = this.state ? ShortcutBet.calculate(this.settings.shortCuts,this.state) : [];
+    const items = this.state ? ShortcutBet.calculate(this.settings.tableShortcuts,this.state) : [];
     const layout: Record<number, readonly [number, number][]> = {
       1:[[-190,370]],2:[[-190,370],[190,370]],3:[[-250,300],[0,395],[250,300]],
       4:[[-300,240],[-120,370],[120,370],[300,240]],
@@ -308,6 +317,7 @@ export class ActionControls {
   destroy() {
     this.offSettings();
     this.offSubmit();
+    this.offAppearance();
     this.offAccount();
     this.gesture.cancel();
     this.auto.destroy();
