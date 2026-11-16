@@ -13,6 +13,7 @@ export class DiamondPurchaseView {
   private data?:DiamondCatalog;
   private product=0;private channel=0;private busy=false;private dead=false;private epoch=0;
   private receiptOrder='';
+  private offBalance?:()=>void;
   private offOrders?:()=>void;
   private timer?:ReturnType<typeof setInterval>;
   private status=element('p','mx-diamond-status');
@@ -26,6 +27,7 @@ export class DiamondPurchaseView {
     this.root.style.setProperty('--diamond-usdt',`url("${new URL('../../assets/raw/diamond-purchase/usdt.png',import.meta.url).href}")`);
     this.root.hidden=true;SpriteAtlas.paint(this.pay,'dialogConfirm');
     this.pay.onclick=()=>void this.purchase();this.root.append(this.balance,this.grid,this.rate,this.channels,this.status,this.pay);
+    this.offBalance=service.subscribeBalance?.(balance=>{if(this.data){this.data={...this.data,balance};if(!this.root.hidden)this.render();}});
     this.offOrders=service.subscribeOrders?.(notice=>{
       if(this.dead)return;
       if(notice.orderNo===this.receiptOrder){this.receipt.show(false);this.receiptOrder='';if(this.timer)clearInterval(this.timer);this.timer=undefined;}
@@ -111,5 +113,5 @@ export class DiamondPurchaseView {
     catch(e){if(epoch===this.epoch)this.status.textContent=e instanceof Error?e.message:'';}
     finally{if(epoch===this.epoch){this.busy=false;this.render();}}
   }
-  destroy():void{this.dead=true;this.offOrders?.();this.reset();this.receipt.destroy();this.root.remove();}
+  destroy():void{this.dead=true;this.offBalance?.();this.offOrders?.();this.reset();this.receipt.destroy();this.root.remove();}
 }

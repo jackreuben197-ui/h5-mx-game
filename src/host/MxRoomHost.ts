@@ -5,6 +5,9 @@ import { RoomPanelCache } from '../logic/RoomPanelCache.js';
 import type { BuyInWallet } from '../core/Seating.js';
 import { MttRoomLifecycle } from '../logic/MttRoomLifecycle.js';
 import { EnterRoomRequest } from '../net/requests/EnterRoomRequest.js';
+import { TableSettingNewLabels } from '../logic/TableSettingNewLabels.js';
+import { GameplayTableSettingData } from '../data/GameplayTableSettingData.js';
+import { GuestSitdownFlow, SeatLoginRequired } from '../logic/GuestSitdownFlow.js';
 import { GameplayTableSettingDataProvider } from '../logic/GameplayTableSettingDataProvider.js';
 import { EmojiService } from '../logic/EmojiService.js';
 import { GlobalConfigStore } from '../data/GlobalConfigStore.js';
@@ -81,9 +84,13 @@ export class MxRoomHost implements RoomHost {
   private off: (() => void)[] = [];
   private revision = 0;
   private quoteID = 0;
+  readonly guestSitdown:GuestSitdownFlow;
   private tableSettingProvider?: GameplayTableSettingDataProvider;
   getTableSettings() { return this.roomData.tableSettings; }
-  private updateTableSettings(): void { this.roomData.tableSettings.update(this.roomData.record,this.roomData.snapshot?.roomInfo,this.roomData.snapshot?.handInfo); }
+  private updateTableSettings(): void {
+    const d=this.roomData.tableSettings;
+    if(!d.newLabels&&this.roomData.record&&this.current)d.newLabels=new TableSettingNewLabels(this.http,this.roomData.record.tribeId,this.current.signal,()=>d.emit(GameplayTableSettingData.LABELS_CHANGED));
+    this.roomData.tableSettings.update(this.roomData.record,this.roomData.snapshot?.roomInfo,this.roomData.snapshot?.handInfo); }
   private current?: RoomContext;
   private mttLifecycle?: MttRoomLifecycle;
   private project(data: ProtocolRoomData, target: RoomTarget): TableSnapshot {
@@ -162,6 +169,7 @@ export class MxRoomHost implements RoomHost {
     private transport: HostTransport,
     options: { runtime?: HoldemRuntime; timeoutMs?: number; http?: HttpOptions } = {},
   ) {
+    this.guestSitdown=new GuestSitdownFlow(transport,()=>this.session.isGuestAccount||this.session.userID<=0||!this.session.token);
     this.runtime = new ProtocolRuntime(options.runtime);
     void this.runtime.load().catch(() => undefined);
     this.http = new HttpClient(() => this.session.token, options.http);
@@ -239,14 +247,21 @@ export class MxRoomHost implements RoomHost {
     const result=await this.http.request<{diamonds_wallet?:{diamonds?:number}}>('/api/user/user_diamonds_wallet',{}, {signal});
     return Number(result.diamonds_wallet?.diamonds??0);
   }
+  private assertBringInAllowed():void {
+    if(this.session.forbid)throw new Error(i18nMgr.Get('UIForbidBringInTips'));
+  }
   async refreshUser(signal?: AbortSignal): Promise<void> {
+    const token=this.session.token,balanceRevision=this.session.diamondRevision;
     const { user } = await new UserInfoRequest(this.http).execute(signal);
+    signal?.throwIfAborted();
+    if(token!==this.session.token)throw new Error('登录状态已更换');
     this.session.update('syncUser', {
       uid: user.p_u_id ?? this.session.userID,
       sex: user.sex ?? this.session.sex,
       randomId: user.un_id,
       nickname: user.nickname,
       avatar: user.avatar,
+      raw:{user:balanceRevision===this.session.diamondRevision?user:{...user,diamonds:undefined}},
     });
   }
   async enter(
@@ -548,9 +563,11 @@ export class MxRoomHost implements RoomHost {
   async prepareSeat(target: RoomTarget, seat: number, signal: AbortSignal): Promise<BuyInQuote> {
     if(seat===0)return this.prepareBringIn(target,signal);
     const c = this.seatContext(target, seat);
+    if(this.session.isGuestAccount){this.guestSitdown.begin(target,seat);throw new SeatLoginRequired();}
     if(c.seatingBusy) throw new Error('坐下请求正在处理');
     c.quote = undefined;
     await this.refreshUser(signal);
+    this.assertBringInAllowed();
     try { await this.roomData.media?.prepareSeat(); }
     catch(error) {
       if(signal.aborted)throw error;
@@ -609,6 +626,7 @@ export class MxRoomHost implements RoomHost {
   async sitDown(target: RoomTarget, selection: BuyInSelection, signal: AbortSignal): Promise<void> {
     const c = this.seatContext(target), q = c.quote;
     if(!q || q.id !== selection.quoteID || c.seatingBusy) throw new Error('带入信息已失效，请重新选择座位');
+    this.assertBringInAllowed();
     if(q.mode==='add') {
       if(this.roomData.snapshot?.myInfo?.seatId!==q.seat)throw new Error('座位已变更');
       const info=this.roomData.snapshot!.roomInfo!, mine=this.roomData.snapshot!.myInfo!;
@@ -666,6 +684,8 @@ export class MxRoomHost implements RoomHost {
     const seat=this.roomData.snapshot?.myInfo?.seatId;
     if(!seat)throw new Error('请先坐下');
     c.quote=undefined;
+    await this.refreshUser(signal);
+    this.assertBringInAllowed();
     const {wallet,diamondBalance}=await this.panelFunds(c).get();
     signal.throwIfAborted();
     if(this.seatContext(target)!==c||this.roomData.snapshot?.myInfo?.seatId!==seat)throw new Error('座位已变更');
@@ -811,6 +831,7 @@ export class MxRoomHost implements RoomHost {
     finally { c.seatingBusy = false; }
   }
   destroy(): void {
+    this.guestSitdown.cancel();
     this.mttLifecycle?.destroy();
     this.off.forEach((off) => off());
     this.client.destroy();

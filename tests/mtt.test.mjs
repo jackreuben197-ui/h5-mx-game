@@ -84,3 +84,23 @@ test('MTT next blind deadline counts down without resetting on presentation refr
  assert.equal(m.getUpBlindRemainingSeconds(deadline+1),0);
  progress.setUpBlindLeftTime(0);m.applyProgress(progress.toObject());assert.equal(m.nextSmallBlind,0);assert.equal(m.upBlindDeadline,0);
 });
+
+test('MTT observer entry failure keeps continue-watching disabled and stale success cannot revive a disposed panel',async()=>{
+ for(const dispose of [false,true]){
+  const d=setup(),t=new FakeTransport(),sent=[],a=new AbortController();t.send=(...x)=>sent.push(x);let finish,reject;
+  const life=new MttRoomLifecycle(d,{roomID:10,matchID:55},{},pb,t,a.signal,()=>true,()=>new Promise((r,j)=>{finish=r;reject=j;}),()=>{},()=>{});
+  life.leave({...new pb.ServerMessageLeaveNotification().toObject(),reason:pb.Def.LeaveReason.LR_NOCHIP,storeChips:0});
+  if(dispose){life.destroy();finish();}else reject(Error('observer failed'));
+  await new Promise(r=>setTimeout(r,0));const panels=sent.filter(x=>x[0]==='showPanel');
+  assert.equal(panels.length,dispose?1:2);assert.equal(panels.at(-1)[1].props.canContinueWatching,false);
+  if(!dispose)assert.equal(panels.at(-1)[1].props.watchingPending,false);
+  const hide=sent.filter(x=>x[0]==='h5Hide').length;t.emit('panelEvent',{panelRequestId:panels.at(-1)[3],event:'continueWatching'});assert.equal(sent.filter(x=>x[0]==='h5Hide').length,hide);life.destroy();
+ }
+});
+test('MTT return-lobby from an active eliminated observer sends leave once and ignores duplicate panel events after disposal',async()=>{
+ const d=setup(),t=new FakeTransport(),sent=[],a=new AbortController(),ws=[],nav=[];t.send=(...x)=>sent.push(x);let life;
+ life=new MttRoomLifecycle(d,{roomID:10,matchID:55},{send:(...x)=>ws.push(x)},pb,t,a.signal,()=>true,async()=>{},()=>{},()=>{nav.push(true);life.destroy();});
+ life.leave({...new pb.ServerMessageLeaveNotification().toObject(),reason:pb.Def.LeaveReason.LR_NOCHIP,storeChips:0});await new Promise(r=>setTimeout(r,0));
+ const panel=sent.filter(x=>x[0]==='showPanel').at(-1);for(let i=0;i<2;i++)t.emit('panelEvent',{panelRequestId:panel[3],event:'returnLobby'});
+ assert.equal(ws.length,1);assert.equal(ws[0][0],pb.Code.MSG_D_LEAVE);assert.equal(nav.length,1);assert.equal(sent.at(-1)[1].name,'lobby');
+});

@@ -1,7 +1,7 @@
 import { StringHelper } from './StringHelper.js';
 import type { TableSettingBasic } from './GameplayTableSettingBasic.js';
 import type { RoomJackpotConfig } from '@silenthill/agreement-web';
-export interface TableSettingRow { id:string; title:string; value:string; color:string; enabled?:boolean; tips?:string; detail?:string; }
+export interface TableSettingRow { isNew?:boolean; id:string; title:string; value:string; color:string; enabled?:boolean; tips?:string; detail?:string; }
 /** CC UIGameplayTableSetting.RefreshUI, with prefab setters replaced by row descriptions. */
 export class GameplayTableSetting {
   private rows: TableSettingRow[]=[];

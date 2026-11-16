@@ -37,6 +37,7 @@ export interface RoomRecords {
     playerMuted(userRID: number): Promise<boolean>;
     setPlayerMuted(userRID: number, muted: boolean): Promise<void>;
     managePlayer(userRID: number, action: 'stand' | 'leave'): Promise<void>;
+    subscribeDiamondBalance?(listener:(balance:number)=>void):()=>void;
     diamondBalance(): Promise<number>;
     giftDiamonds(userRID: number, amount: number): Promise<void>;
     refreshReport(): Promise<void>;

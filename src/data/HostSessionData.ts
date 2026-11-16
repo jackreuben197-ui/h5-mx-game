@@ -1,5 +1,13 @@
+import { EventSource } from '../binding/EventSource.js';
+import { observable } from '../binding/observable.js';
 /** Login context is memory-only. Never include token in snapshots, logs or errors. */
-export class HostSessionData {
+export class HostSessionData extends EventSource {
+  static readonly DIAMONDS_CHANGE='session:diamonds';
+  @observable(HostSessionData.DIAMONDS_CHANGE) diamonds?:number;
+  diamondRevision=0;
+  setDiamonds(value:number|undefined):void {if(!Object.is(this.diamonds,value)){this.diamondRevision++;this.diamonds=value;}}
+  forbid=false;
+  isGuestAccount=false;
   token = '';
   userID = 0;
   userRID = 0;
@@ -16,11 +24,17 @@ export class HostSessionData {
     if (['enterTable', 'enterMtt', 'h5Ready', 'syncToken'].includes(action) && typeof p.token === 'string')
       this.token = p.token;
     if (action === 'syncUser') {
-      this.userID = Number(p.uid) || 0;
+      const nextID=Number(p.uid)||0;
+      if(nextID!==this.userID){this.forbid=false;this.isGuestAccount=false;this.setDiamonds(undefined);}
+      this.userID = nextID;
+      if(typeof p.isExperience==='boolean')this.isGuestAccount=p.isExperience;
+      const user=(p.raw as {user?:{forbid?:number;diamonds?:number}}|undefined)?.user;
+      if(user?.forbid!=null)this.forbid=Number(user.forbid)===0;
       this.userRID = Number(p.randomId) || 0;
       this.nickname = String(p.nickname ?? '');
       this.avatar = String(p.avatar ?? '');
       this.sex = Number(p.sex) || 0;
+      if(user?.diamonds!=null&&Number.isFinite(Number(user.diamonds)))this.setDiamonds(Number(user.diamonds));
     }
     if (action === 'syncUserClub') {
       const response = p.response as { data?: unknown } | undefined;
@@ -38,6 +52,7 @@ export class HostSessionData {
     }
   }
   clear(): void {
+    this.forbid=false;this.isGuestAccount=false;this.setDiamonds(undefined);
     this.token = '';
     this.userID = 0;
     this.userRID = 0;

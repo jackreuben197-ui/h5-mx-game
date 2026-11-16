@@ -76,6 +76,7 @@ export class GameClient {
       options.onState?.(state);
     });
   }
+  requestSeat(seat:number):void {this.table?.requestSeat(seat);}
   enter(target: RoomTarget): Promise<void> {
     return this.controller.enter(target);
   }

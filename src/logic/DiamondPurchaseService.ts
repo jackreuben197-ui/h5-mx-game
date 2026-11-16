@@ -1,3 +1,4 @@
+import { HostSessionData } from '../data/HostSessionData.js';
 import { RoomPanelCache } from './RoomPanelCache.js';
 import type { DiamondPurchase,DiamondCatalog,DiamondOrderRequest,DiamondReceipt,DiamondProduct,DiamondPayType,DiamondOrderNotice } from '../core/DiamondPurchase.js';
 import type { HttpClient } from '../net/http/HttpClient.js';
@@ -6,7 +7,14 @@ export class DiamondPurchaseService implements DiamondPurchase {
   private notices=new Map<string,number>();
   private listeners=new Set<(notice:DiamondOrderNotice)=>void>();
   private cache:RoomPanelCache<DiamondCatalog>;
-  constructor(private http:HttpClient,private signal:AbortSignal){this.cache=new RoomPanelCache(()=>this.fetchCatalog(),signal);signal.addEventListener("abort",()=>{this.listeners.clear();this.notices.clear();},{once:true});}
+  constructor(private http:HttpClient,private signal:AbortSignal,private session?:HostSessionData){
+    const off=session?.on(HostSessionData.DIAMONDS_CHANGE,()=>this.invalidate());signal.addEventListener('abort',()=>off?.(),{once:true});this.cache=new RoomPanelCache(()=>this.fetchCatalog(),signal);signal.addEventListener("abort",()=>{this.listeners.clear();this.notices.clear();},{once:true});}
+  subscribeBalance(listener:(balance:number)=>void):()=>void {
+    const owner=this.session?.userRID;
+    const off=this.session?.on(HostSessionData.DIAMONDS_CHANGE,(value:number|undefined)=>{if(value!==undefined&&!this.signal.aborted&&owner===this.session?.userRID)listener(value);})??(()=>{});
+    this.signal.addEventListener('abort',off,{once:true});
+    return ()=>{off();this.signal.removeEventListener('abort',off);};
+  }
   subscribeOrders(listener:(notice:DiamondOrderNotice)=>void):()=>void{this.listeners.add(listener);return ()=>this.listeners.delete(listener);}
   notifyOrder(notice:DiamondOrderNotice):boolean{
     if(this.signal.aborted||!notice.orderNo||![2,3,4,5].includes(notice.status)||this.notices.get(notice.orderNo)===notice.status)return false;
@@ -16,7 +24,7 @@ export class DiamondPurchaseService implements DiamondPurchase {
     for(const listener of this.listeners)listener(notice);
     return true;
   }
-  peek():DiamondCatalog|undefined{return this.cache.peek();}
+  peek():DiamondCatalog|undefined{const value=this.cache.peek();return value?{...value,balance:this.session?.diamonds??value.balance}:undefined;}
   invalidate():void{this.cache.invalidate();}
   catalog():Promise<DiamondCatalog>{return this.cache.get();}
   static quote(item:DiamondProduct,pay:DiamondPayType):DiamondOrderRequest {
@@ -26,6 +34,7 @@ export class DiamondPurchaseService implements DiamondPurchase {
     return {price_id:item.id,pay_id:pay.id,gold_count:item.gold_count,pay_price:round(total-discount)};
   }
   private async fetchCatalog():Promise<DiamondCatalog>{
+    const revision=this.session?.diamondRevision;
     const [catalog,user,wallet]=await Promise.all([
       this.http.request<Pick<DiamondCatalog,'list'|'pay_types'>>('/api/prop/gold/price/list',{source_type:2,gold_types:[4],pay_gold_types:[],trader_type:0,limit:100,offset:0},{signal:this.signal}),
       this.http.request<{user:{trader_expire_time?:number}}>('/api/user/info',{}, {signal:this.signal}),
@@ -35,7 +44,8 @@ export class DiamondPurchaseService implements DiamondPurchase {
     const isTrader=Date.now()<Number(user.user.trader_expire_time??0)*1000;
     const applying=isTrader?undefined:await this.http.request<{list:unknown[]}>('/api/user/trader/apply/list',{status:1},{signal:this.signal});
     this.signal.throwIfAborted();
-    return {...catalog,balance:wallet.diamonds_wallet.diamonds,isTrader,isApplying:!!applying?.list.length};
+    if(this.session&&revision===this.session.diamondRevision)this.session.setDiamonds(wallet.diamonds_wallet.diamonds);
+    return {...catalog,balance:this.session?.diamonds??wallet.diamonds_wallet.diamonds,isTrader,isApplying:!!applying?.list.length};
   }
   async order(request:DiamondOrderRequest):Promise<DiamondReceipt>{
     const result=await this.http.request<DiamondReceipt>('/api/order/user/usdt/recharge',request,{signal:this.signal});

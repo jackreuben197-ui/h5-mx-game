@@ -33,7 +33,10 @@ export class HistoryController extends EventSource {
     private generation = 0;
     private quoteGeneration = 0;
     private bindings = new BindingScope(this);
-    constructor(readonly records: RoomRecords) { super(); this.bindings.bind({ replay: records.data.replay, global: records.config.global, diamonds: records.config.diamonds, privateUc: records.config.privateUc }); }
+    private latestBalance?:number;
+    private balanceRevision=0;
+    private offBalance?:()=>void;
+    constructor(readonly records: RoomRecords) { super(); this.offBalance=records.subscribeDiamondBalance?.(balance=>{this.latestBalance=balance;this.balanceRevision++;if(this.state.open&&this.state.quote?.balance!==undefined)this.state={...this.state,quote:{...this.state.quote,balance}};}); this.bindings.bind({ replay: records.data.replay, global: records.config.global, diamonds: records.config.diamonds, privateUc: records.config.privateUc }); }
     @bindEvent(GlobalConfigStore.CONFIG_CHANGED, { dataSource: 'global', initIgnore: true })
     private onGlobalConfig(): void { void this.refreshQuote(); }
     @bindEvent(DiamondModel.CONFIG_CHANGED, { dataSource: 'diamonds', initIgnore: true })
@@ -84,10 +87,11 @@ export class HistoryController extends EventSource {
         const data = this.state.data;
         if (!data || !this.state.open)
             return;
-        const generation = this.generation, quoteGeneration = ++this.quoteGeneration;
+        const generation = this.generation, quoteGeneration = ++this.quoteGeneration,balanceRevision=this.balanceRevision;
         this.state = { ...this.state, quoteLoading: true };
         try {
             const quote = await this.records.historyQuote(data);
+            if(balanceRevision!==this.balanceRevision&&quote.balance!==undefined)quote.balance=this.latestBalance;
             if (generation === this.generation && quoteGeneration === this.quoteGeneration)
                 this.state = { ...this.state, quote };
         }
@@ -143,5 +147,5 @@ export class HistoryController extends EventSource {
             this.state = { ...this.state, collecting: false };
         }
     }
-    destroy(): void { this.close(); this.bindings.destroy(); super.clear(); }
+    destroy(): void { this.offBalance?.();this.close(); this.bindings.destroy(); super.clear(); }
 }

@@ -1,3 +1,4 @@
+import type { GuestSitdownFlow } from '../logic/GuestSitdownFlow.js';
 import { i18nMgr } from '../i18n/i18nMgr.js';
 import type { HostMessage, HostTransport } from './HostTransport.js';
 import type { ClientState, RoomTarget } from '../core/types.js';
@@ -18,6 +19,7 @@ export class H5EntryController {
   private readonly resumeKey = 'mx.seated-table.v1';
   stateChanged(state: ClientState): void {
     if(this.disposed||state.phase==='destroyed')return;
+    this.guest?.stateChanged(state,seat=>this.game.requestSeat(seat));
     if(state.phase==='error'){
       queueMicrotask(()=>{
         if(this.disposed||this.game.getState()!==state)return;
@@ -62,12 +64,18 @@ export class H5EntryController {
   constructor(
     private transport: HostTransport,
     private game: GameClient,
+    private guest?:GuestSitdownFlow,
   ) {
     this.off = transport.subscribe((message) => this.receive(message));
   }
   private receive(message: HostMessage): void {
     const raw = message.payload,
       p = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    if(message.action==='tableSitdownAuth'){
+      if(this.guest?.auth(p.state)&&p.state==='switching')this.game.leave();
+      return;
+    }
+    if(message.action==='exitTable')this.guest?.cancel();
     if(message.action==='syncUser'){this.userRID=Number(p.randomId)||0;this.restore();}
     if(message.action==='wsOpen'&&this.restoring&&this.matchesRestoreSocket(p.url)){
       const target=this.restoring;this.restoring=undefined;
@@ -143,6 +151,7 @@ export class H5EntryController {
         ['loading', 'entering', 'table'].includes(current.phase)
       )
         return;
+      this.guest?.entering(roomID);
       void this.game.enter({ roomID, roomType, matchID: 0, clubID, observer: false });
     } catch (error) {
       this.toast(error instanceof Error ? error.message : '入桌参数错误');
@@ -152,6 +161,7 @@ export class H5EntryController {
     this.transport.send('showToast', { type: 'fail', message });
   }
   destroy(): void {
+    this.guest?.cancel();
     this.disposed=true;
     this.off();
     this.token = '';

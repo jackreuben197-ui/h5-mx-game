@@ -98,6 +98,7 @@ export class TableView {
   private layout = new TableLayout();
   private deskBackground = new DeskBackgroundView(() => this.layout.unit);
   private bringOut: BringOutView;
+  requestSeat(seat:number):void {void this.buyIn.open(seat);}
   private buyIn: BuyInController;
   private buyInView: BuyInView;
   private showBB = false;

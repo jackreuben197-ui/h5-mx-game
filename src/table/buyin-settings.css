@@ -29,3 +29,5 @@
 .mx-room-settings-tooltip p{white-space:pre-line;margin:calc(24 * var(--su)) 0 0}.mx-room-settings-tooltip strong{display:block;padding-right:calc(45 * var(--su));font-weight:400}
 .mx-room-settings-tip-close{position:absolute;right:calc(10 * var(--su));top:calc(10 * var(--su));color:white;background:transparent;border:0;font-size:calc(65 * var(--su));cursor:pointer}
 .mx-room-settings [hidden],.mx-room-settings[hidden],.mx-buyin-cancel[hidden]{display:none!important}
+
+.mx-room-setting-new{color:#fff;background:#e84c58;border-radius:.25em;padding:.05em .3em;font-size:.65em;line-height:1.3;flex-shrink:0}

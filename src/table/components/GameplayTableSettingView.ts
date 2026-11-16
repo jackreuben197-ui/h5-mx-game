@@ -10,6 +10,7 @@ import { TableSettingRowView } from './TableSettingRowView.js';
 /** Bound to this room's basicInfo/permissions, independently of the buy-in amount UI. */
 export class GameplayTableSettingView {
   readonly root=element('section','mx-room-settings');
+  private viewed=new Set<string>();
   private mode:'security'|'rules'='security';
   private warning=element('div','mx-room-settings-warning');
   private warningLabel=element('span','');
@@ -30,14 +31,18 @@ export class GameplayTableSettingView {
     this.bindings.bind({basic:data});i18nMgr.register(this);
   }
   show(mode:'security'|'rules'|null):void {
+    if(mode===null&&!this.root.hidden){void this.data.newLabels?.report(this.viewed);this.viewed.clear();}
     this.root.hidden=mode===null;if(mode===null){this.tooltip.hidden=true;return;}
     if(this.mode!==mode){this.mode=mode;this.tooltip.hidden=true;}
+    void this.data.newLabels?.load();
     this.refresh();
   }
   @bindEvent(GameplayTableSettingData.BASIC_CHANGED,'basic')
   private onBasicChanged():void {this.refresh();}
   @bindEvent(GameplayTableSettingData.PERMISSIONS_CHANGED,'basic')
   private onPermissionsChanged():void {this.refresh();}
+  @bindEvent(GameplayTableSettingData.LABELS_CHANGED,'basic')
+  private onLabelsChanged():void {this.refresh();}
   refreshLanguage():void {this.tooltip.hidden=true;this.refresh();}
   private refresh():void {
     const b=this.data.basicInfo;if(!b || this.root.hidden)return;
@@ -62,11 +67,14 @@ export class GameplayTableSettingView {
       if(this.mode==='security'&&row.id==='Safe')heading('UITableSetting_additionalFeatures');
       retained.add(row.id);let view=this.rows.get(row.id);
       if(!view){view=new TableSettingRowView((title,text)=>{this.tipTitle.textContent=title;this.tipText.textContent=text;this.tooltip.hidden=false;});this.rows.set(row.id,view);}
+      const key=({UICreateTable_randSeat:'room_random_seat',UICreateTable_FouceShowCard:'room_force_show_card',UICreateTable_iosTitle:'room_only_ios'} as Record<string,string>)[row.id]??row.id;
+      row.isNew=this.data.newLabels?.isNew(key)??false;
+      if(row.isNew)this.viewed.add(key);
       view.update(row,this.mode==='rules');nodes.push(view.root);
     }
     for(const [id,view] of this.rows)if(!retained.has(id)){view.root.remove();this.rows.delete(id);}
     for(const node of [...this.list.children])if(!nodes.includes(node as HTMLElement))node.remove();
     nodes.forEach((node,index)=>{if(this.list.children[index]!==node)this.list.insertBefore(node,this.list.children[index]??null);});
   }
-  destroy():void {this.bindings.destroy();this.root.remove();}
+  destroy():void {this.show(null);this.bindings.destroy();this.root.remove();}
 }

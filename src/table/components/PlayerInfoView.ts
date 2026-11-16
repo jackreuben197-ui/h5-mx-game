@@ -30,6 +30,8 @@ export class PlayerInfoView {
   private generation = 0;
   private muted = false;
   private balance?: number;
+  private offBalance?:()=>void;
+  private balanceRevision=0;
   private busy = false;
   get currentSeat(): number { return this.root.hidden ? 0 : this.player?.seat ?? 0; }
   get currentUserRID(): number | undefined { return this.player?.userRid; }
@@ -47,6 +49,9 @@ export class PlayerInfoView {
     this.profile = this.records?.peekPlayerProfile?.(player.userRid ?? 0);
     this.tab = 'data';
     this.muted = false; this.balance = undefined;
+    this.offBalance?.();
+    this.offBalance=this.records?.subscribeDiamondBalance?.(value=>{this.balanceRevision++;this.balance=value;this.renderBody();});
+    const balanceRevision=this.balanceRevision;
     this.dialog.show(true);
     this.render();
     if (!this.records || !Number.isSafeInteger(player.userRid) || (player.userRid ?? 0) <= 0) return;
@@ -58,7 +63,7 @@ export class PlayerInfoView {
       if (profile?.basic?.remark_name !== undefined) this.onRemark?.(player.userRid!, profile.basic.remark_name, profile.basic.nick_name || player.name);
       this.dialog.status.textContent = profile ? '' : t('MX_NoData', '暂无数据');
       this.render();
-      if (this.canGift()) void this.records.diamondBalance().then(value => {if (generation === this.generation) {this.balance = value; this.render();}}).catch(() => undefined);
+      if (this.canGift()) void this.records.diamondBalance().then(value => {if (generation === this.generation&&balanceRevision===this.balanceRevision) {this.balance = value; this.render();}}).catch(() => undefined);
       if (this.canManage()) void this.records.playerMuted(player.userRid!).then(value => {if (generation === this.generation) {this.muted = value; this.render();}}).catch(() => undefined);
       if (this.canUseProps()) void this.emojis?.refresh().then(() => {if (generation === this.generation) this.render();}).catch(() => undefined);
     } catch (error) {
@@ -299,6 +304,6 @@ export class PlayerInfoView {
     const scale = Math.min(width / 340, height / 680, 1);
     this.root.style.setProperty('--player-profile-unit', `${scale}px`);
   }
-  close(): void { ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.confirmDialog?.close('player-admin'); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }
+  close(): void { this.offBalance?.();this.offBalance=undefined; ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.confirmDialog?.close('player-admin'); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }
   destroy(): void { this.close(); this.dialog.destroy(); }
 }

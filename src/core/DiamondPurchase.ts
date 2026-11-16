@@ -5,6 +5,7 @@ export interface DiamondOrderRequest {price_id:number; pay_price:number; pay_id:
 export interface DiamondReceipt {usdt_address:{qr_code:string;address:string;address_type:string};order?:{order_no:string;amount:number};}
 export interface DiamondOrderNotice {orderNo:string;status:number;}
 export interface DiamondPurchase {
+  subscribeBalance?(listener:(balance:number)=>void):()=>void;
   subscribeOrders?(listener:(notice:DiamondOrderNotice)=>void):()=>void;
   peek?():DiamondCatalog|undefined;
   catalog():Promise<DiamondCatalog>;

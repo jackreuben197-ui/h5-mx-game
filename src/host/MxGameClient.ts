@@ -46,7 +46,7 @@ export class MxGameClient {
         options.onState?.(state);
       },
     });
-    this.entry = new H5EntryController(this.transport, this.game);
+    this.entry = new H5EntryController(this.transport, this.game,this.host instanceof MxRoomHost?this.host.guestSitdown:undefined);
     try {
       this.transport.start();
     } catch (error) {

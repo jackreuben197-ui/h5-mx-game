@@ -1,7 +1,7 @@
 import { RoomPanelCache } from './RoomPanelCache.js';
 import { DiamondPurchaseService } from './DiamondPurchaseService.js';
 import { TableChatService } from './TableChatService.js';
-import type { HostSessionData } from '../data/HostSessionData.js';
+import { HostSessionData } from '../data/HostSessionData.js';
 import { JackpotService } from './JackpotService.js';
 import type { GlobalConfigStore } from '../data/GlobalConfigStore.js';
 import type { DiamondModel } from '../data/DiamondModel.js';
@@ -42,11 +42,16 @@ export class RoomRecordsService implements RoomRecords {
         global: GlobalConfigStore;
         diamonds: DiamondModel;
         privateUc: PrivateUcChargeStore;
-    },session?:HostSessionData) {
-        this.diamondPurchase=new DiamondPurchaseService(http,signal);
+    },private session?:HostSessionData) {
+        this.diamondPurchase=new DiamondPurchaseService(http,signal,session);
         if(session)this.chatService=new TableChatService(data,target,session,client,pb,http,signal);
         this.jackpotFeature=new JackpotService(data,http,transport,signal);
         this.storage = new ReplayStorage(transport, userRID, target.roomID, target.matchID);
+    }
+    subscribeDiamondBalance(listener:(balance:number)=>void):()=>void {
+      const off=this.session?.on(HostSessionData.DIAMONDS_CHANGE,(value:number|undefined)=>{if(value!==undefined&&!this.signal.aborted&&this.session?.userRID===this.userRID)listener(value);})??(()=>{});
+      this.signal.addEventListener('abort',off,{once:true});
+      return ()=>{off();this.signal.removeEventListener('abort',off);};
     }
     chatHistory(older=false,force=false):Promise<void>{return this.chatService?.history(older,force)??Promise.resolve();}
     sendChat(text:string,danmu:boolean):Promise<void>{return this.chatService?.send(text,danmu)??Promise.resolve();}
@@ -300,8 +305,11 @@ export class RoomRecordsService implements RoomRecords {
         await this.post(action === 'stand' ? '/api/roomcenter/room/user_stand_up' : '/api/roomcenter/room/user_leave', {room_id: this.target.roomID, user_random_id: userRID});
     }
     async diamondBalance(): Promise<number> {
+        const revision=this.session?.diamondRevision;
         const value = await this.post<{diamonds_wallet?: {diamonds?: number}}>('/api/user/user_diamonds_wallet', {});
-        return Number(value?.diamonds_wallet?.diamonds || 0);
+        const balance=Number(value?.diamonds_wallet?.diamonds || 0);
+        if(this.session){if(revision===this.session.diamondRevision)this.session.setDiamonds(balance);return this.session.diamonds??balance;}
+        return balance;
     }
     async giftDiamonds(userRID: number, amount: number): Promise<void> {
         this.requireGift(userRID);
@@ -332,12 +340,9 @@ export class RoomRecordsService implements RoomRecords {
                 }
                 quote.revealPrice = quote.freeCount > 0 ? 0 : await pricing.getViewPubPrice(getViewPubRound(model.publicCards));
             })() : undefined,
-            !privateUc ? (async () => { const value = await this.post<{
-                diamonds_wallet?: {
-                    diamonds?: number;
-                };
-            }>('/api/user/user_diamonds_wallet', {}); quote.balance = value?.diamonds_wallet?.diamonds; })() : undefined,
+            !privateUc ? this.diamondBalance().then(balance=>{quote.balance=balance;}) : undefined,
         ]);
+        if(!privateUc&&this.session?.diamonds!==undefined)quote.balance=this.session.diamonds;
         return quote;
     }
     async peek(data: ReplayHandData): Promise<void> {
