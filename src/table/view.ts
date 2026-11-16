@@ -467,7 +467,6 @@ export class TableView {
         place(this.pot.total,l.width/2,Math.max(profile.potY/782*l.height,infoY+100));
         place(this.pot.pool,l.width/2,Math.max(profile.potY/782*l.height,infoY+100)+22*u);
       }
-      this.root.style.setProperty('--mx-avatar-radius',profile.avatarRadius);
       this.root.style.setProperty('--mx-hero-card-height',`${120*profile.heroCardHeight/profile.heroCardWidth}px`);
       this.root.style.setProperty('--mx-ring-hand-type-y',`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`);
       this.root.style.setProperty('--mx-ring-win-x',`${-120*199/profile.avatar}px`);
