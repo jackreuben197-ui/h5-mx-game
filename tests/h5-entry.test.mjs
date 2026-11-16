@@ -71,3 +71,22 @@ test('refresh restores only the same seated account after H5 opens its socket',a
   entry.stateChanged({phase:'table',table:{mySeat:1}});entry.stateChanged({phase:'hidden'});assert.equal(map.size,0);entry.destroy();
  }finally{globalThis.sessionStorage=previous;}
 });
+
+
+test('entry failure returns to its H5 source or home; obsolete failure cannot close a new session',async()=>{
+ const previous=globalThis.location;
+ try {
+  for(const hash of ['#/club/index?club=48','#/gameList','', '#//evil.test']){
+   globalThis.location={hash};
+   const transport=new FakeTransport();let state={phase:'hidden'},left=0;
+   const game={getState:()=>state,enter:t=>{state={phase:'entering',target:t};return Promise.resolve();},leave(){left++;state={phase:'hidden'};},element:{style:{setProperty(){}}}};
+   const entry=new H5EntryController(transport,game);
+   transport.emit('enterTable',{token:'test',websocketPort:1234,roomId:1001,roomInfo:{rid:1001,room_type:0}});
+   state={phase:'error',error:'timeout'};entry.stateChanged(state);await Promise.resolve();
+   assert.equal(left,1);
+   assert.deepEqual(transport.sent.find(v=>v.action==='h5Navigate').payload,{path:hash.startsWith('#/')&&!hash.startsWith('#//')?hash.slice(1):'/home',replace:true,ensureVisible:true});
+   state={phase:'error'};entry.stateChanged(state);state={phase:'entering'};await Promise.resolve();assert.equal(left,1);
+   entry.destroy();
+  }
+ }finally{if(previous===undefined)delete globalThis.location;else globalThis.location=previous;}
+});

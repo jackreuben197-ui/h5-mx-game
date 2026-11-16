@@ -726,9 +726,10 @@ export class MxRoomHost implements RoomHost {
   async showdown(target:RoomTarget,cardIndex:number,signal:AbortSignal):Promise<void> {
     const c=this.seatContext(target),s=this.roomData.snapshot!,seat=s.myInfo?.seatId;
     const p=s.playersList.find(p=>p.seatId===seat);
-    if(c.showdownPending||!p||(p.status!==this.pb!.Def.CanPlayStatus.NORMAL&&p.status!==this.pb!.Def.CanPlayStatus.AGREE_POST)||p.action===this.pb!.Def.Action.NONE||p.action===this.pb!.Def.Action.FOLD||!p.cardsList[cardIndex]||p.cardsList[cardIndex]<=0)throw new Error('当前不能亮出这张牌');
+    if(c.showdownPending||!p||(p.status!==this.pb!.Def.CanPlayStatus.NORMAL&&p.status!==this.pb!.Def.CanPlayStatus.AGREE_POST)||p.action===this.pb!.Def.Action.NONE||!Number.isInteger(cardIndex)||cardIndex<0||!p.cardsList[cardIndex]||p.cardsList[cardIndex]<=0)throw new Error('当前不能亮出这张牌');
     const hand=s.handInfo?.handNum;
-    const selection=[...((p as typeof p & {showCardsSelection?:number[]}).showCardsSelection??new Array(p.cardsList.length).fill(0))];
+    const previous=(p as typeof p & {showCardsSelection?:number[]}).showCardsSelection;
+    const selection=p.cardsList.map((_,index)=>previous?.[index]===1?1:0);
     selection[cardIndex]=selection[cardIndex]===1?0:1;
     c.showdownPending=true;
     try{
@@ -736,7 +737,7 @@ export class MxRoomHost implements RoomHost {
       const latest=this.roomData.snapshot;
       if(this.current===c&&!signal.aborted&&latest&&latest.handInfo?.handNum===hand&&latest.myInfo?.seatId===seat){
         const current=latest.playersList.find(v=>v.seatId===seat) as (typeof p & {showCardsSelection?:number[]})|undefined;
-        if(current){current.showCardsSelection=selection;c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});}
+        if(current&&current.cardsList.length===selection.length&&current.action!==this.pb!.Def.Action.NONE){current.showCardsSelection=selection;c.receive({type:'snapshot',snapshot:this.project(this.roomData,target)});}
       }
     }finally{c.showdownPending=false;}
   }

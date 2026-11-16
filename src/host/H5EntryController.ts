@@ -14,18 +14,29 @@ export class H5EntryController {
   private restoring?: RoomTarget;
   private hadTableSession = false;
   private disposed = false;
+  private returnPath = '/home';
   private readonly resumeKey = 'mx.seated-table.v1';
   stateChanged(state: ClientState): void {
     if(this.disposed||state.phase==='destroyed')return;
+    if(state.phase==='error'){
+      queueMicrotask(()=>{
+        if(this.disposed||this.game.getState()!==state)return;
+        this.game.leave();
+        this.transport.send('h5Navigate',{path:this.returnPath,replace:true,ensureVisible:true});
+      });
+    }
     const leaving=state.phase==='hidden'&&this.hadTableSession;
     if(state.phase!=='hidden')this.hadTableSession=true;
     else this.hadTableSession=false;
     try {
       if(state.phase==='table'&&state.table?.mySeat&&state.target&&this.userRID&&this.port)
-        sessionStorage.setItem(this.resumeKey,JSON.stringify({userRID:this.userRID,port:this.port,target:state.target}));
+        sessionStorage.setItem(this.resumeKey,JSON.stringify({userRID:this.userRID,port:this.port,target:state.target,returnPath:this.returnPath}));
       else if(leaving||state.phase==='error'||(state.phase==='table'&&!state.table?.mySeat))
         sessionStorage.removeItem(this.resumeKey);
     } catch { /* Storage restrictions do not prevent normal table entry. */ }
+  }
+  private validReturnPath(value: unknown): string {
+    return typeof value==='string'&&value.startsWith('/')&&!value.startsWith('//')&&!/[\\\r\n]/.test(value)?value:'/home';
   }
   private matchesRestoreSocket(url: unknown): boolean {
     if(typeof url!=='string')return false;
@@ -43,6 +54,7 @@ export class H5EntryController {
       const t=saved?.target;
       if(saved?.userRID!==this.userRID){sessionStorage.removeItem(this.resumeKey);return;}
       if(!t||!Number.isSafeInteger(t.roomID)||t.roomID<=0||!Number.isSafeInteger(t.matchID)||t.matchID<0||!Number.isSafeInteger(t.roomType)||!Number.isInteger(saved.port)||saved.port<=0)return;
+      this.returnPath=this.validReturnPath(saved.returnPath);
       this.restoring=t;this.port=saved.port;
       this.transport.send('wsConnect',{port:this.port,roomId:t.roomID,matchId:t.matchID});
     } catch { /* No valid saved room. */ }
@@ -63,6 +75,8 @@ export class H5EntryController {
       queueMicrotask(()=>{if(this.token&&this.game.getState().phase==='hidden')void this.game.enter(target);});
     }
     if(message.action==='enterTable'||message.action==='enterMtt'){
+      if(this.game.getState().phase==='hidden')
+        this.returnPath=this.validReturnPath(typeof location==='undefined'?undefined:location.hash.slice(1));
       this.restoring=undefined;this.restoreAttempted=true;
       this.port=Number(p.websocketPort)||this.port;
     }

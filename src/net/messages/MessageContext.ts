@@ -43,6 +43,7 @@ export class MessageContext {
     this.state.settlement = undefined;
     for (const p of this.state.playersList) {
       p.cardsList = [];
+      (p as Player.AsObject & { showCardsSelection?: number[] }).showCardsSelection = [];
       p.action = this.pb.Def.Action.NONE;
       p.roundBet = 0;
       p.handBet = 0;
