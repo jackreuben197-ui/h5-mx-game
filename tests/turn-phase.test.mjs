@@ -290,3 +290,30 @@ test('NEED_POST sends one CC fire-and-forget agree request per status transition
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(count(),2,'a new NEED_POST transition sends again');
 });
+
+
+test('folded player can select and deselect end-of-hand show cards without revealing early',async t=>{
+ const transport=new FakeTransport(),host=new MxRoomHost(transport,{runtime:pb,timeoutMs:250}),abort=new AbortController(),updates=[],choices=[];
+ t.after(()=>{abort.abort();host.destroy();});
+ const room=record(),entry=snapshot(),mine=entry.getPlayersList().find(p=>p.getSeatId()===4);
+ mine.setStatus(pb.Def.CanPlayStatus.NORMAL);mine.setAction(pb.Def.Action.FOLD);
+ transport.emit('enterTable',{token:'00000000000000000000000000000000'});
+ transport.onSend=(action,payload)=>{
+  if(action==='ccStorageOp'){queueMicrotask(()=>transport.emit('ccStorageResult',{requestId:payload.requestId,ok:true,value:null}));return;}
+  if(action!=='wsSend')return;
+  const packet=outbound(payload.data);
+  if(packet.code===pb.Code.MSG_R_ROOMS){const reply=new pb.ServerMessageRooms();reply.setRpcId(pb.ClientMessageRooms.deserializeBinary(packet.body).getRpcId());reply.setRoomsList([room]);transport.frame(packet.code,0,0,reply);}
+  else if(packet.code===pb.Code.MSG_D_ENTER_ROOM)transport.frame(packet.code,1001,0,entry);
+  else if(packet.code===pb.Code.MSG_D_SHOWDOWN){choices.push(pb.ClientMessageShowdown.deserializeBinary(packet.body).getShowCardsList());transport.frame(packet.code,1001,0,new pb.ServerMessageShowdown());}
+ };
+ await host.enter(target,abort.signal,u=>updates.push(u));
+ await host.showdown(target,0,abort.signal);assert.deepEqual(choices.at(-1),[1,0]);
+ assert.deepEqual(updates.at(-1).snapshot.players.find(p=>p.seat===4).showCardsSelection,[1,0]);
+ await host.showdown(target,1,abort.signal);assert.deepEqual(choices.at(-1),[1,1]);
+ await host.showdown(target,0,abort.signal);assert.deepEqual(choices.at(-1),[0,1]);
+ await assert.rejects(host.showdown(target,-1,abort.signal));
+ transport.frame(pb.Code.MSG_S_HAND_CLEAR,1001,0,new pb.ServerMessageHandClear());
+ await new Promise(resolve=>setImmediate(resolve));
+ await assert.rejects(host.showdown(target,0,abort.signal));
+ assert.deepEqual(updates.at(-1).snapshot.players.find(p=>p.seat===4).showCardsSelection,[]);
+});

@@ -448,7 +448,8 @@
     "media/muteBtnBg.png": "assets/textures/scene/table/other/muteBtnBg.png",
     "media/sndicon.png": "assets/textures/dialog/playerinfo/sndicon.png",
     "media/videoicon.png": "assets/textures/dialog/playerinfo/videoicon.png",
-    "media/btnbg.png": "assets/textures/dialog/playerinfo/btnbg.png"
+    "media/btnbg.png": "assets/textures/dialog/playerinfo/btnbg.png",
+    "show_card_eye.png": "assets/textures/widget/poker/show_card_eye.png"
   },
   "cards1": {
     "0": "cards1/0.png",
