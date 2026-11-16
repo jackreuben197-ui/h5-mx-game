@@ -16,14 +16,8 @@
 .mx-room-setting-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:calc(20 * var(--su));min-height:calc(86 * var(--su));padding:calc(16 * var(--su)) 0;border-bottom:1px solid #ffffff18}
 .mx-room-setting-heading{display:flex;align-items:center;min-width:0;gap:calc(16 * var(--su))}
 .mx-room-setting-label{overflow-wrap:anywhere}
-.mx-room-setting-state{display:flex;align-items:center;justify-content:flex-end;gap:calc(18 * var(--su));max-width:calc(390 * var(--su));text-align:right}
-.mx-room-setting-value{overflow-wrap:anywhere;white-space:pre-line}
+.mx-room-setting-value{max-width:calc(390 * var(--su));text-align:right;overflow-wrap:anywhere;white-space:pre-line}
 .mx-room-setting-info{display:block;appearance:none;-webkit-appearance:none;background-color:transparent;background-repeat:no-repeat;box-shadow:none;border:0;padding:0;flex-shrink:0;width:calc(45 * var(--su));height:calc(45 * var(--su));cursor:pointer}
-.mx-room-setting-switch{position:relative;display:block;width:calc(118 * var(--su));height:calc(58 * var(--su));flex-shrink:0;--mx-switch-color:#858585}
-.mx-room-setting-switch[data-on=true]{--mx-switch-color:#00d5ab}
-.mx-room-setting-switch-track{position:absolute;inset:0}
-.mx-room-setting-switch-knob{position:absolute;left:0;top:0;width:calc(58 * var(--su));height:calc(58 * var(--su))}
-.mx-room-setting-switch[data-on=true] .mx-room-setting-switch-knob{left:calc(60 * var(--su))}
 .mx-room-setting-detail{grid-column:1 / -1;font-size:calc(36 * var(--su));color:#ffc706;white-space:pre-line;margin:calc(12 * var(--su)) 0 0}
 .mx-room-settings-tooltip{position:absolute;z-index:2;left:6%;right:6%;top:32%;max-height:60%;overflow:auto;background:#39414bef;backdrop-filter:blur(3px);border:1px solid #ffffff50;border-radius:calc(35 * var(--su));padding:calc(48 * var(--su));box-shadow:0 4px 15px #0005;font-size:calc(40 * var(--su))}
 .mx-room-settings-tooltip p{white-space:pre-line;margin:calc(24 * var(--su)) 0 0}.mx-room-settings-tooltip strong{display:block;padding-right:calc(45 * var(--su));font-weight:400}

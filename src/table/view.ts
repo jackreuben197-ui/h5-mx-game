@@ -410,6 +410,7 @@ export class TableView {
     this.layout.resize(width, landscape ? height : box.height, landscape, height);
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
+    this.menu.root.style.setProperty('--mx-menu-scale', String(l.menuScale));
     this.squid?.resize(l.suggest);
     this.jackpot?.resize(l.width,l.height,l.suggest);
     this.mtt?.resize(l.width,l.height,l.suggest);
@@ -467,7 +468,6 @@ export class TableView {
         place(this.pot.total,l.width/2,Math.max(profile.potY/782*l.height,infoY+100));
         place(this.pot.pool,l.width/2,Math.max(profile.potY/782*l.height,infoY+100)+22*u);
       }
-      this.root.style.setProperty('--mx-avatar-radius',profile.avatarRadius);
       this.root.style.setProperty('--mx-hero-card-height',`${120*profile.heroCardHeight/profile.heroCardWidth}px`);
       this.root.style.setProperty('--mx-ring-hand-type-y',`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`);
       this.root.style.setProperty('--mx-ring-win-x',`${-120*199/profile.avatar}px`);

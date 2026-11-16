@@ -70,7 +70,7 @@ export class GameplayTableSettingView {
       const key=({UICreateTable_randSeat:'room_random_seat',UICreateTable_FouceShowCard:'room_force_show_card',UICreateTable_iosTitle:'room_only_ios'} as Record<string,string>)[row.id]??row.id;
       row.isNew=this.data.newLabels?.isNew(key)??false;
       if(row.isNew)this.viewed.add(key);
-      view.update(row,this.mode==='rules');nodes.push(view.root);
+      view.update(row);nodes.push(view.root);
     }
     for(const [id,view] of this.rows)if(!retained.has(id)){view.root.remove();this.rows.delete(id);}
     for(const node of [...this.list.children])if(!nodes.includes(node as HTMLElement))node.remove();
