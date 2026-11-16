@@ -21,7 +21,7 @@ export class BuyInView {
   private details = element('div','mx-buyin-details');
   private amountBox = element('div','mx-buyin-amount-area');
   private amount = element('output','mx-buyin-amount');
-  private sliderHandle = element('span','mx-buyin-slider-handle');
+  private sliderRail = element('span','mx-buyin-slider-rail');
   private autoArea = element('div','mx-buyin-auto-area');
   private slider = element('input','mx-buyin-slider');
   private limits = element('div','mx-buyin-limits');
@@ -50,10 +50,10 @@ export class BuyInView {
     this.cancel.type='button';this.cancel.onclick=()=>controller.close();
     i18nMgr.register(this);
     this.root.hidden = true;
-    this.panel.setAttribute('role','dialog'); this.panel.setAttribute('aria-modal','true'); i18nLabel.bind(this.panel, () => i18nMgr.Get("MX_SeatAndBuyIn", [], "坐下与带入"), 'aria-label');
+    this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); i18nLabel.bind(this.root, () => i18nMgr.Get("MX_SeatAndBuyIn", [], "坐下与带入"), 'aria-label');
     this.slider.type='range'; i18nLabel.bind(this.slider, () => i18nMgr.Get("UITexas_AddChips", [], "带入筹码"), 'aria-label');
     this.slider.oninput=()=>{const q=controller.data.state.quote;if(q)controller.data.update({amount:Math.min(q.max,q.min+Number(this.slider.value)*q.step)});};
-    this.wallet = new WalletSelectView(clubID => controller.data.update({clubID}));
+    this.wallet = new WalletSelectView(this.root, this.body, clubID => controller.data.update({clubID}));
     this.tipButton.type='button';i18nLabel.bind(this.tipButton, () => i18nMgr.Get("MX_BuyInDepositDetails", [], "带入押金说明"), 'aria-label');
     SpriteAtlas.paintWarning(this.tipButton);this.tip.hidden=true;
     this.tipButton.onclick=()=>{this.tip.hidden=!this.tip.hidden;this.tipButton.setAttribute('aria-expanded',String(!this.tip.hidden));};
@@ -61,16 +61,17 @@ export class BuyInView {
     this.confirm.type='button'; this.confirm.onclick=()=>controller.data.state.step==='amount'?void controller.submit():controller.next();
     this.close.type='button'; this.close.textContent='×';i18nLabel.bind(this.close, () => i18nMgr.Get("MX_CloseBuyIn", [], "关闭带入窗口"), 'aria-label');this.close.onclick=()=>controller.close();
     this.root.onclick=(event)=>{if(event.target===this.root)controller.close();};
-    this.root.onkeydown=(event)=>{if(event.key==='Escape')controller.close();};
+    this.root.onkeydown=(event)=>{if(event.key==='Escape'&&!this.wallet.close(true))controller.close();};
     SpriteAtlas.paint(this.confirm,'dialogConfirm');
-    SpriteAtlas.paint(this.sliderHandle,'sliderHandle');
+    const sliderHandle=element('span','mx-buyin-slider-handle');
+    SpriteAtlas.paint(sliderHandle,'sliderHandle');this.sliderRail.append(sliderHandle);
     const autoSwitch=element('span','mx-buyin-switch');const knob=element('span','mx-buyin-switch-knob');
     const switchTrack=element('span','mx-buyin-switch-track');
     // CC SwitchNode tints the white track; keep the handle outside that tint.
     SpriteAtlas.mask(switchTrack,'switchTrack','var(--mx-switch-color)');
     SpriteAtlas.paint(knob,'switchKnob');autoSwitch.append(switchTrack,knob);this.autoLabel.append(autoSwitch);
     this.autoArea.append(this.autoLabel,element('p','mx-buyin-auto-description',() => i18nMgr.Get("UIAutoRechageTips", [], "如果您不想将筹码自动带到牌桌，请不要使用此工具")),element('p','mx-buyin-auto-description',() => i18nMgr.Get("UIGesPwdTip5", [], "选择后，带入时无安全验证")));
-    const sliderTrack=element('div','mx-buyin-slider-track');sliderTrack.append(this.slider,this.sliderHandle);
+    const sliderTrack=element('div','mx-buyin-slider-track');sliderTrack.append(this.sliderRail,this.slider);
     const amountHeading = element('div', 'mx-buyin-amount-heading');amountHeading.append(this.amountTitle,this.tipButton);
     const amountSection=element('div','mx-buyin-amount-section');
     
@@ -78,7 +79,7 @@ export class BuyInView {
     this.amountBox.append(amountSection,this.autoArea,this.walletTitle,this.wallet.root);
     this.body.append(this.settings.root,this.details,this.amountBox,this.error);
     this.footer.append(this.cancel,this.confirm);
-    this.panel.append(this.title,this.body,this.close,this.footer); this.root.append(this.panel);
+    this.panel.append(this.title,this.body,this.close,this.footer); this.root.prepend(this.panel);
     if(records?.diamondPurchase&&confirmDialog){
       this.purchase=new DiamondPurchaseView(records.diamondPurchase,confirmDialog);this.body.append(this.purchase.root);this.root.append(this.purchase.receipt.root);
       for(const [diamond,key] of [[true,'UIMine_VIP_diamond'],[false,'UIClub_RoomSitApplyRecords_title']] as const){const button=element('button','',()=>i18nMgr.Get(key,[],diamond?'钻石':'带入申请'));button.onclick=()=>this.changeTab(diamond);button.dataset.diamond=String(diamond);this.tabs.append(button);}
@@ -112,10 +113,11 @@ export class BuyInView {
       }
       i18nLabel.bind(this.amountTitle, () => q.deposit?i18nMgr.Get("MX_BuyInDeposit", [], "带入筹码 + 押金"):i18nMgr.Get("UITexas_AddChips", [], "带入筹码"));
       this.tipButton.hidden=!q.deposit;if(!q.deposit)this.tip.hidden=true;
-      this.amount.textContent=money(s.amount); this.slider.min='0';this.slider.max=String(Math.ceil((q.max-q.min)/q.step));this.slider.step='1';this.slider.value=String(Math.ceil((s.amount-q.min)/q.step));
+      const steps=Math.ceil((q.max-q.min)/q.step);
+      this.amount.textContent=money(s.amount); this.slider.min='0';this.slider.max=String(steps);this.slider.step='1';this.slider.value=String(Math.ceil((s.amount-q.min)/q.step));
       this.limits.replaceChildren(element('span','',() => i18nMgr.Get("The_smallest", [], "最小")),element('span','',() => i18nMgr.Get("Maximum", [], "最大")));
       this.slider.setAttribute('aria-valuetext',`${money(s.amount)}，最小 ${money(q.min)}，最大 ${money(q.max)}`);
-      this.sliderHandle.style.left=`${Number(this.slider.max)>0?Number(this.slider.value)/Number(this.slider.max)*100:0}%`;
+      this.sliderRail.style.setProperty('--mx-buyin-slider-progress',`${steps>0?this.slider.valueAsNumber/steps*100:0}%`);
       this.wallet.render(q.wallets.filter(w=>q.returnClubID===undefined||w.club_id===q.returnClubID),s.clubID,s.busy);
       this.autoArea.hidden=!q.canAuto;this.auto.checked=s.auto;
     }
@@ -137,6 +139,7 @@ export class BuyInView {
     const diamond=enabled&&this.diamondTab;
     this.panel.classList.toggle('mx-buyin-diamond-tab',diamond);
     this.details.hidden=this.amountBox.hidden=diamond||this.controller.data.state.step!=='amount';
+    if(this.amountBox.hidden||this.wallet.root.hidden)this.wallet.close();
     this.footer.hidden=diamond;
     for(const button of this.tabs.querySelectorAll('button'))button.setAttribute('aria-selected',String((button.dataset.diamond==='true')===diamond));
     if(this.frame)this.onFrameResize(this.frame.width,this.frame.height);
@@ -147,6 +150,7 @@ export class BuyInView {
     this.root.dataset.short=String(height<2290*unit);
     this.root.style.setProperty('--mx-setup-unit',`${unit}px`);
     this.root.style.setProperty('--dialog-width',`${Math.min(width-16,1100*unit)}px`);
+    this.wallet.positionList();
   }
   destroy(): void { this.purchase?.destroy();this.settings.destroy();this.bindings.destroy();this.root.remove(); }
 }

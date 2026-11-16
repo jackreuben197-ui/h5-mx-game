@@ -10,6 +10,7 @@ export class TableLayout {
   get modern() { return !this.landscape && this.profile !== 'original' ? tableLayouts[this.profile] : undefined; }
   publicCardScale=1;
   unit = 1;
+  menuScale = 1;
   width = 1440;
   height = 2688;
   suggest = 1;
@@ -20,10 +21,13 @@ export class TableLayout {
   resize(width: number, height: number, landscape: boolean, viewportBottom = height - 57): void {
     this.landscape = landscape;
     this.viewportBottom = viewportBottom;
+    const scaleForHeight = (h: number) => landscape ? h / 1440 : width / h > 0.75 ? h / 2688 : width / 1440;
+    const originalUnit = scaleForHeight(height);
     // Start fitting the composition only below its design height. The hero is then
     // constrained separately by the real bottom of the viewport (including safe areas).
     if(!landscape&&this.profile==='classic')height=Math.min(height,(height-44)*782/738);
-    this.unit = landscape ? height / 1440 : width / height > 0.75 ? height / 2688 : width / 1440;
+    this.unit = scaleForHeight(height);
+    this.menuScale = originalUnit / this.unit;
     this.width = width / this.unit;
     this.height = height / this.unit;
     this.suggest = Math.min(1, Math.max(this.height / 2688, 0.85));

@@ -62,7 +62,7 @@ export class GameplayTableSettingView {
       if(this.mode==='security'&&row.id==='Safe')heading('UITableSetting_additionalFeatures');
       retained.add(row.id);let view=this.rows.get(row.id);
       if(!view){view=new TableSettingRowView((title,text)=>{this.tipTitle.textContent=title;this.tipText.textContent=text;this.tooltip.hidden=false;});this.rows.set(row.id,view);}
-      view.update(row,this.mode==='rules');nodes.push(view.root);
+      view.update(row);nodes.push(view.root);
     }
     for(const [id,view] of this.rows)if(!retained.has(id)){view.root.remove();this.rows.delete(id);}
     for(const node of [...this.list.children])if(!nodes.includes(node as HTMLElement))node.remove();

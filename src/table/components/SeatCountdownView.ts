@@ -52,7 +52,7 @@ export class SeatCountdownView {
       return;
     }
     this.ring.hidden = false; this.handle.hidden = false;
-    const color = keep ? '#0ee3fe' : '#14fd00';
+    const color = keep ? '#0ee3fe' : 'var(--mx-action-countdown-color, #14fd00)';
     this.root.style.setProperty('--mx-countdown-color',color);
     this.texture.style.backgroundColor = color;
     this.handle.style.backgroundColor = color;
@@ -78,11 +78,12 @@ export class SeatCountdownView {
       }
       target -= length;
     }
-    const table=this.root.closest<HTMLElement>('.mx-table');
-    if(this.rounded||(this.keep&&table?.dataset.tableLayout==='balanced')){
+    const balanced=this.root.closest<HTMLElement>('.mx-table')?.dataset.tableLayout==='balanced';
+    if(this.rounded||balanced){
       // Match the conic mask ray to the rounded avatar perimeter (199px, 28% radius).
       const angle=ballProgress*Math.PI*2,dx=Math.sin(angle),dy=-Math.cos(angle);
-      const half=95.5,radius=51.72,corner=half-radius;
+      const halfStroke=balanced&&!this.keep&&!this.rounded?3:4;
+      const half=199/2-halfStroke,radius=199*.28-halfStroke,corner=half-radius;
       let distance=half/Math.max(Math.abs(dx),Math.abs(dy));
       if(Math.abs(dx*distance)>corner&&Math.abs(dy*distance)>corner){
         const projection=(Math.abs(dx)+Math.abs(dy))*corner;

@@ -409,6 +409,7 @@ export class TableView {
     this.layout.resize(width, landscape ? height : box.height, landscape, height);
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
+    this.menu.root.style.setProperty('--mx-menu-scale', String(l.menuScale));
     this.squid?.resize(l.suggest);
     this.jackpot?.resize(l.width,l.height,l.suggest);
     this.mtt?.resize(l.width,l.height,l.suggest);
