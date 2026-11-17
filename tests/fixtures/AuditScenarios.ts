@@ -43,6 +43,21 @@ export const auditScenarios:AuditScenario[]=[
  s('media-voice','音视频','语音／静音／发言图标',['麦克风','发言标记','四按钮底栏']),s('media-video','音视频','视频占位／窗花／开关',['视频槽','四款窗花','六按钮底栏'],'本地占位画面，不访问摄像头、麦克风或 Agora；使用底栏开关。'),
  s('mtt-wait','赛事','等待开赛',['赛事倒计时']),s('mtt-break','赛事','休息／决赛调整',['赛事休息']),s('mtt-bubble','赛事','泡沫同步',['泡沫提示']),s('mtt-transfer','赛事','拆合桌等待',['换桌提示']),s('mtt-addon','赛事','增购／托管',['ADD-ON','取消托管']),
 ];
+auditScenarios.push(
+ s('insurance-rules','窗口','保险说明与模拟房间赔率',['规则','Outs赔率表','毛玻璃']),
+ s('insurance-rules-standard','窗口','经典保险说明／完整赔率表',['经典规则','多人赔率','内部滚动']),
+ s('insurance-rules-ev','窗口','EV保险说明',['EV规则','无Outs表']),
+ s('sidepots-long','玩家','九个长金额边池',['长金额','换行','不压筹码图标']),
+ s('report-departed','窗口','战绩已离桌玩家',['删除线','暗色','本人红点','输赢颜色']),
+ s('menu','窗口','侧菜单全部入口',['返回','设置','保险规则','带入']),
+ s('settings-quick','窗口','快捷下注设置',['初代入口','三五按钮','百分比','提交模式']),
+ s('settings-system','窗口','系统设置',['音效','金额显示']),
+ s('intro-mushroom','玩法','蘑菇介绍完整图文',['图片','确认按钮','长文本']),
+ s('intro-critical','玩法','暴击介绍完整图文',['图片','确认按钮','长文本']),
+ s('intro-squid','玩法','鱿鱼介绍完整图文',['图片','确认按钮','不再提示']),
+ s('bring-deposit','入座','押金不占带入限额',['1000+60','4000+60','关闭提示续带入']),
+ s('settlement-bets','流程','结算时旧下注仍在快照',['赢家筹码','旧下注清理']),
+);
 export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  const count=Math.min(9,Math.max(2,o.seats)),hero=Math.min(count,Math.max(1,o.hero)),scene=o.scene;
  const n=scene==='four'?4:scene==='five'?5:scene==='six'?6:o.cards;
@@ -66,10 +81,12 @@ export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  if(scene.startsWith('keep-')||scene==='reserved')update(p=>p.seat===actor?{...p,cards:[],action:'',keepSeatReason:scene==='reserved'?1:Number(scene.split('-')[1]),keepSeatDeadline:Date.now()/1000+120}:p);
  if(scene.startsWith('acting-')||scene==='countdown-expire'){const seat=scene==='acting-other'?hero%count+1:hero;state.actingSeat=seat;state.countdowns=[{seat,deadline:Date.now()/1000+(scene==='countdown-expire'?4:30),totalTime:30}];if(seat===hero){state.actions=['fold','call','raise'];state.canAddTime=true;state.addTimeCost=10;}}
  if(scene==='allin'||scene==='insurance-buying')update(p=>({...p,action:'全下',chips:0,cards:[14,29],winPercent100:p.seat===hero?6789:undefined,insuranceDeadline:scene==='insurance-buying'&&p.seat===actor?Date.now()/1000+30:undefined}));
+ if(scene==='sidepots-long'){state.pot=123456789;state.pots=Array.from({length:9},(_,i)=>123456789+i*1000);}
  if(scene==='zero')update(p=>({...p,chips:0,roundBet:0,action:''}));
- if(scene==='settlement'||scene==='split'){state.handEnded=true;update(p=>({...p,action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[14]},win:p.seat===hero||p.seat===actor||p.seat===count?{handValueType:7,collectedChips:12345}:undefined}}));}
+ if(scene==='settlement'||scene==='split'||scene==='settlement-bets'){state.handEnded=true;update(p=>({...p,action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[14]},win:p.seat===hero||p.seat===actor||p.seat===count?{handValueType:7,collectedChips:12345}:undefined}}));}
+ if(scene==='settlement-bets')update(p=>({...p,roundBet:123456}));
  if(scene==='empty'||scene==='observer'||(scene.startsWith('bring-')&&scene!=='bring-out')){state.mySeat=0;state.actions=[];state.players=scene==='empty'?[]:players.filter(p=>p.seat!==hero);}
  if(scene.startsWith('handtype-')){state.handEnded=true;update(p=>({...p,cards:[14,29],action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[]},win:{handValueType:Number(scene.split('-')[1])+1,collectedChips:12345}}}));}
- if(scene==='figma'){state.showBB=true;state.dealerSeat=hero;state.community=[8,2,57,38,11];state.pot=400;state.pots=[400];state.roundBet=240;state.betting={id:'figma',call:240,min:480,max:1999,step:1,allIn:2000};update(p=>({...p,cards:p.seat===hero?[29,10]:[0,0],action:p.seat===count?'下注':'',roundBet:p.seat===hero?460:p.seat%3?40:240}));}
+ if(scene==='figma'){if(o.layout==='classic')state.secondCommunity=[10,57,45,38,29];state.showBB=true;state.dealerSeat=hero;state.community=[8,2,57,38,11];state.pot=400;state.pots=[400];state.roundBet=240;state.betting={id:'figma',call:240,min:480,max:1999,step:1,allIn:2000};update(p=>({...p,cards:p.seat===hero?[29,10]:[0,0],action:p.seat===count?'下注':'',roundBet:p.seat===hero?460:p.seat%3?40:240}));}
  return state;
 }

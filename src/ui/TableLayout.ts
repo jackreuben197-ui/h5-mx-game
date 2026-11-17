@@ -13,6 +13,8 @@ export interface SeatPlacement {
   betIconX: number;
   dealerX: number;
   dealerY: number;
+  winX?: number;
+  winY?: number;
 }
 export interface LayoutPoint { x: number; y: number; scale?: number; }
 export interface LayoutContentOptions { dual: boolean; boardSize: number; jackpotHeight: number; }

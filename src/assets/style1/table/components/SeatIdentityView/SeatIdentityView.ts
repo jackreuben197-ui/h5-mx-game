@@ -1,3 +1,4 @@
+import { chipLabel } from '../../ChipLabel.js';
 import { resourceURL } from '../../ResourcePath.js';
 import config from './config.json';
 import { localFrame } from '../../LocalFrame.js';
@@ -70,8 +71,8 @@ export class SeatIdentityView {
   destroy(): void { this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
     const p = state.player;
-    this.squid.hidden=!(p?.squidIn||p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
-    this.squidMask.hidden=!p?.squidIn||!!p.squidCount;
+    this.squid.hidden=!(p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
+    this.squidMask.hidden=true;
     const keepDeadline=p?.keepSeatDeadline??0;
     const keeping=!!p?.keepSeatReason;
     this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping || state.foldCountdown ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);
@@ -83,7 +84,7 @@ export class SeatIdentityView {
     this.name.hidden = state.mine;
     this.line.hidden = state.mine;
     this.name.textContent = p?.name ?? '';
-    this.chips.textContent = p ? new ChipFormatter(state.smallBlind, state.showBB,state.isMtt).showPlayerBalanceWithShowBB(p.chips) : '';
+    chipLabel(this.chips,p ? new ChipFormatter(state.smallBlind, state.showBB,state.isMtt).showPlayerBalanceWithShowBB(p.chips) : '');
     this.avatarImage.set(p?.avatar ?? '', String(p?.userRid ?? ''));
     const win = p?.settlement?.win;
     const winPercent100=p?.winPercent100;
@@ -95,8 +96,7 @@ export class SeatIdentityView {
     this.handType.hidden=!state.mine||!state.handValueType||!!p?.folded||!!state.handEnded;
     if(!this.handType.hidden)i18nLabel.bind(this.handType,()=>handValueTypeToString(state.handValueType as HandValueType));
     this.win.hidden = !win;
-    this.info.hidden = !p || !!win;
-    i18nLabel.bind(this.win, () => win ? `${handValueTypeToString(win.handValueType as HandValueType) ?? ''}\n+${ChipFormatter.format(win.collectedChips,state.smallBlind,state.showBB)}` : '');
+    chipLabel(this.win, () => win ? `${handValueTypeToString(win.handValueType as HandValueType) ?? ''}\n+${ChipFormatter.format(win.collectedChips,state.smallBlind,state.showBB)}` : '');
     this.fold.hidden = !p?.folded;
     i18nLabel.bind(this.action, () => p?.folded ? '' : ccActionText(p?.action ?? ''));
     this.actionText = this.action.textContent ?? '';

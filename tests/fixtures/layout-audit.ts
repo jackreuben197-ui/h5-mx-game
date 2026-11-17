@@ -31,10 +31,14 @@ if(game.getState().phase==='table'){
  await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
  const click=(selector:string)=>stage.querySelector<HTMLElement>(selector)?.click();
  if(scene==='raise')click('.mx-operation-raise');
- if(scene==='report')click('.mx-nav-button[data-action="report"]');
+ if(scene.startsWith('report'))click('.mx-nav-button[data-action="report"]');
  if(scene==='history')click('.mx-nav-button[data-action="replay"]');
  if(scene==='profile')click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
- if(scene==='settings'){click('.mx-menu');click('.mx-menu-item[data-menu-action="UITexas_Setting"]');}
+ if(scene.startsWith('settings')){click('.mx-menu');click('.mx-menu-item[data-menu-action="UITexas_Setting"]');}
+ if(scene==='settings-quick')click('.mx-settings-tabs button:nth-child(2)');
+ if(scene==='settings-system')click('.mx-settings-tabs button:nth-child(3)');
+ if(scene==='menu'||scene.startsWith('insurance-rules'))click('.mx-menu');
+ if(scene.startsWith('insurance-rules'))click('.mx-menu-item[data-menu-action=UITexas_InsureRules]');
  if(scene==='chat')click('.mx-chat-button');
  if(scene.startsWith('bring-')&&scene!=='bring-out')click(`.mx-seat[data-seat="${options.hero}"] .mx-avatar-fallback`);
  if(scene==='rules')click('.mx-table-add-chips');

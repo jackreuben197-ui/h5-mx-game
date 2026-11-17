@@ -25,17 +25,17 @@ export class LayoutProfile extends LayoutOriginal {
         const local=199/profile.avatar;
         p.x=Math.max(34*unit,Math.min(this.width-34*unit,x/profile.width*this.width));
         p.y=y/profile.height*height;
-        if(profile.id==='classic'&&slot===0)p.y=Math.min(p.y,this.viewportBottom/this.unit-52*unit);
+        if(profile.id==='classic'&&slot===0)p.y=Math.min(p.y,this.viewportBottom/this.unit-40*unit);
         p.scale=profile.avatar*unit/199;
         // Reserve the complete local player group above navigation, then anchor every
         // child to this adjusted avatar. Design distances scale with the existing seat unit.
         if(mine){
-          const bottom=Math.min(height-50/this.unit,this.viewportBottom/this.unit);
+          const bottom=Math.min(height-50/this.unit,(this.viewportBottom-2)/this.unit);
           const groupBottom=Math.max(profile.heroInfoY*local+54,profile.heroDealer[1]*local+38.5);
           p.y=Math.min(p.y,bottom-groupBottom*p.scale);
         }
         p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
-        p.cardsX=face?0:(x<220?14:-14)*local;
+        p.cardsX=face?0:14*local;
         p.cardsY=(mine?profile.heroCardsY:face?0:14)*local;
         p.cardScale=mine?profile.heroCardWidth*local/120:face?58*local/(390-270/Math.max(2,player?.cards.length??2)):18*local/65;
         p.handSpread=mine?profile.heroHandSpread:270;
@@ -46,10 +46,10 @@ export class LayoutProfile extends LayoutOriginal {
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
         if(!mine&&((state.community?.length??0)||state.secondCommunity?.length)){
           const dual=!!state.secondCommunity?.length;
-          const cardWidth=this.metrics.boardWidth*unit*publicCardScale*(dual?.85:1);
+          const cardWidth=this.metrics.boardWidth*unit*publicCardScale;
           const cardHeight=cardWidth*71.02/50.59;
           const center=profile.boardY/profile.height*height;
-          const gap=cardHeight+10*unit;
+          const gap=profile.id==='classic'?176/120*cardWidth+.01*unit:cardHeight+10*unit;
           const halfWidth=cardWidth*Math.max((state.community?.length??0),state.secondCommunity?.length??0)/2;
           const top=center-cardHeight/2-(dual?gap/2:0),bottom=center+cardHeight/2+(dual?gap/2:0);
           const bx=p.x+p.betX*p.scale,by=p.y+p.betY*p.scale,halfBet=35*p.scale;
@@ -60,6 +60,8 @@ export class LayoutProfile extends LayoutOriginal {
         }
         p.dealerX=(mine?profile.heroDealer[0]:(x<220?1:-1)*profile.otherDealerX)*local;
         p.dealerY=(mine?profile.heroDealer[1]:profile.otherDealerY)*local;
+        p.winX=mine?-100*local:p.betX;
+        p.winY=mine?(profile.id==='classic'?0:profile.heroCardsY)*local:p.betY;
       }
       this.origin={x:this.width/2,y:profile.boardY/profile.height*height};
     return result;
@@ -68,14 +70,14 @@ export class LayoutProfile extends LayoutOriginal {
     if(this.landscape)return super.content(options);
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
-    const scale=m.boardWidth/120*u*boardSize*(dual?.85:1);
-    const y=profile.boardY/782*l.height, gap=(71.02/50.59*120)*scale+10*u;
+    const scale=m.boardWidth/120*u*boardSize;
+    const y=profile.boardY/782*l.height, gap=profile.id==='classic'?176*scale+.01*u:(71.02/50.59*120)*scale+10*u;
     const infoY=Math.max(profile.infoY/782*l.height,dual?y+gap/2+88*scale+75:0);
     const potY=dual&&m.separateDualPot?Math.max(profile.potY/782*l.height,infoY+100):profile.potY/782*l.height;
     return {
       board:{x:l.width/2,y:y-(dual?gap/2:0),scale}, secondBoard:{x:l.width/2,y:y+gap/2,scale},
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
-      styles:{'--mx-layout-unit':`${u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
+      styles:{'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
         '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`,
         '--mx-ring-win-x':`${-120*199/profile.avatar}px`,

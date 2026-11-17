@@ -30,6 +30,8 @@ export class TableChatView {
   private dead=false;private quickData:unknown=[];
   constructor(private records:RoomRecords,private error:(e:unknown)=>void){
     const data=records.data;
+    window.visualViewport?.addEventListener('resize',this.fitKeyboard);
+    window.visualViewport?.addEventListener('scroll',this.fitKeyboard);
     const assets = {send:resourceURL(config.paths.send),quick:resourceURL(config.paths.quick),input:resourceURL(config.paths.input),panel:resourceURL(config.paths.panel)};
     this.dialog=new RecordDialogView(()=>`${data.record?.name??''}\n#${records.target.roomID}`,()=>this.close(),'left',config.layout.dockTop);
     this.dialog.root.classList.add('mx-chat-dialog');
@@ -59,7 +61,7 @@ export class TableChatView {
   open():void{
     if(this.records.data.mtt)return;
     this.bullet.checked=false;this.dialog.footer.querySelectorAll<HTMLInputElement>('.mx-chat-modes input').forEach((radio,index)=>radio.checked=index===0);
-    this.records.data.chat.setChatDialogOpen(true);this.input.value='';this.dialog.show(true);this.render();
+    this.records.data.chat.setChatDialogOpen(true);this.input.value='';this.dialog.show(true);this.fitKeyboard();this.render();
     this.scrollBottom();void this.records.chatHistory?.(false,this.records.data.chat.needsLatestHistorySync).catch(this.error);
     void this.records.chatQuickMessages?.().then(raw=>{if(!this.dead){this.quickData=raw;this.renderQuick();}}).catch(this.error);
   }
@@ -99,6 +101,11 @@ export class TableChatView {
     const parse=(raw:unknown):string[]=>{if(typeof raw==='string'){try{return parse(JSON.parse(raw));}catch{return raw.trim()?[raw]:[];}}if(Array.isArray(raw))return raw.flatMap(v=>typeof v==='string'?[v]:parse(v));if(raw&&typeof raw==='object'){const v=raw as Record<string,any>;if(v.data||v.list)return parse(v.data??v.list);const item=v.multi_language??v;const locale=i18nMgr.language;return [String(item[locale==='en'?'us_name':locale==='pt'?'br_name':'cn_name']??item.us_name??'')].filter(Boolean);}return [];};
     this.quick.replaceChildren(...parse(this.quickData).map(text=>{const b=element('button','',text);b.onclick=()=>{this.input.value=text;this.quick.hidden=true;this.input.focus();};return b;}));
   }
-  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=width/config.layout.screenWidth;this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${config.layout.panelWidth*unit}px`);}
-  destroy():void{this.dead=true;this.close();this.bindings.destroy();this.dialog.destroy();this.danmu.destroy();this.emoji.destroy();this.button.remove();this.support.remove();}
+  private fitKeyboard=():void=>{
+    const viewport=window.visualViewport;if(!viewport||this.dialog.root.hidden)return;
+    const top=this.dialog.panel.getBoundingClientRect().top;
+    this.dialog.panel.style.maxHeight=`${Math.max(0,viewport.offsetTop+viewport.height-top)}px`;
+  };
+  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=width/config.layout.screenWidth;this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${config.layout.panelWidth*unit}px`);this.fitKeyboard();}
+  destroy():void{window.visualViewport?.removeEventListener('resize',this.fitKeyboard);window.visualViewport?.removeEventListener('scroll',this.fitKeyboard);this.dead=true;this.close();this.bindings.destroy();this.dialog.destroy();this.danmu.destroy();this.emoji.destroy();this.button.remove();this.support.remove();}
 }

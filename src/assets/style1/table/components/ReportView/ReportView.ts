@@ -88,7 +88,7 @@ export class ReportView {
         this.list.replaceChildren();
         if (state.tab === 'battle') {
             const players = TexasReportPresentation.filterAndSortPlayers(report.players, tableUsers, state.onlyTable);
-            const headers = [t('UITexasReport_player', '玩家'), t('UITexasReport_hand', '手数'), t('UITexasReport_bring', '总带入'), t('UITexasReport_pl', '盈亏')];
+            const headers = [t('UITexasReport_player', '玩家'), `${t('UITexasReport_hand', '手数')}\n${t('MX_TablePoolRate', '本桌入池率')}`, t('UITexasReport_bring', '总带入'), t('UITexasReport_pl', '盈亏')];
             if (mode !== 'none')
                 headers.splice(3, 0, t('UIFantasy_dairuyajin', '押金'), t(mode === 'mush' ? 'UIMush' : 'UISquid', mode === 'mush' ? '蘑菇' : '鱿鱼'));
             this.table(headers, players.map(p => {

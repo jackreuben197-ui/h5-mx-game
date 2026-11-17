@@ -34,6 +34,9 @@ export class BuyInController {
     if(step === 'security') this.data.update({step:'rules'});
     else if(step === 'rules') this.data.update({step:'amount'});
   }
+  skipNotices(): void {
+    if(!this.data.state.busy && ['security','rules'].includes(this.data.state.step))this.data.update({step:'amount'});
+  }
   async submit(): Promise<void> {
     const s = this.data.state;
     if(!this.actions || !s.quote || s.busy) return;

@@ -179,15 +179,8 @@ export class PersonalSettingsView {
   private async choose(load:()=>Promise<()=>void>):Promise<void>{const generation=++this.generation;this.status.textContent='';this.panel.setAttribute('aria-busy','true');try{const apply=await load();if(generation===this.generation)apply();}catch(e){if(generation===this.generation)this.status.textContent=e instanceof Error?e.message:String(e);}finally{if(generation===this.generation)this.panel.removeAttribute('aria-busy');}}
   private refresh():void{
     this.appearanceRefresh.forEach(refresh=>refresh());
-    const quickTab=this.tabs[1]!;
-    const quickHidden=!this.settings.supportsLayoutCustomization;
-    if(quickTab.hidden!==quickHidden){
-      quickTab.hidden=quickHidden;
-      if(quickHidden&&!this.pages[1]!.hidden){
-        this.selectTab(0);
-        if(!this.root.hidden)this.tabs[0]?.focus({preventScroll:true});
-      }
-    }
+    // Legacy tables also retain the quick-bet mode and ratio controls.
+    this.tabs[1]!.hidden=false;
     this.submitModes.forEach((b,i)=>b.setAttribute('aria-pressed',String(this.settings.sliderSubmit===(i===0?'release':'confirm'))));
     const numbered=this.settings.tableAppearance.style==='legacy';
     this.desks.forEach((b,i)=>b.setAttribute('aria-pressed',String(numbered&&i+1===this.settings.deskType)));

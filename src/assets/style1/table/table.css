@@ -45,7 +45,7 @@
 .mx-room-info{white-space:pre-line;line-height:1.02;font-size:38px}
 .mx-pot{font-weight:bold}.mx-pools{display:flex;flex-direction:column;gap:var(--mx-PotView-mx-pools-gap);width:var(--mx-PotView-mx-pools-width);height:auto;background:none;align-items:center;justify-content:flex-start;transform:translate(var(--mx-PotView-mx-pools-transform),var(--mx-PotView-mx-pools-transform-2))}
 .mx-side-pools{display:flex;flex-wrap:wrap;gap:var(--mx-PotView-mx-side-pools-gap);width:var(--mx-PotView-mx-side-pools-width);align-items:center;justify-content:flex-start}
-.mx-pool-side{flex:0 0 168.08px!important;width:var(--mx-PotView-mx-pool-side-width)!important;height:var(--mx-PotView-mx-pool-side-height)!important;font-size:var(--mx-PotView-mx-pool-side-font-size);line-height:var(--mx-PotView-mx-pool-side-line-height)}
+.mx-pool-side{flex:0 0 auto;height:var(--mx-PotView-mx-pool-side-height);font-size:var(--mx-PotView-mx-pool-side-font-size);line-height:var(--mx-PotView-mx-pool-side-line-height)}
 .mx-pool-side .mx-pot-chip{left:var(--mx-PotView-mx-pot-chip-left);top:var(--mx-PotView-mx-pot-chip-top);width:var(--mx-PotView-mx-pot-chip-width);height:var(--mx-PotView-mx-pot-chip-height)}
 .mx-pool-side{padding-left:var(--mx-PotView-mx-pool-side-padding-left)}
 .mx-pool-item{position:relative;display:block;width:var(--mx-PotView-mx-pool-item-width);height:var(--mx-PotView-mx-pool-item-height);font-weight:bold}
@@ -130,7 +130,7 @@
 .mx-seat-timer-texture{position:absolute;inset:var(--mx-SeatCountdownView-mx-seat-timer-texture-inset)}
 
 /* UIRoomTexas btn_menu icon is 70 below its top anchor. */
-.mx-table-menu{--mx-menu-left:61px;--mx-menu-top:70px;--mx-menu-size:89px}
+.mx-table-menu{--mx-menu-left:61px;--mx-menu-top:70px;--mx-menu-size:108px}
 .mx-menu{left:var(--mx-menu-left);top:var(--mx-menu-top);width:var(--mx-menu-size);height:var(--mx-menu-size)}
 
 /* UIBringIn / WalletItem: CC assets, measured against the 398x724 reference. */
@@ -365,3 +365,14 @@
 /* Empty operation/auto-operation space must not intercept the hero's hand. */
 .mx-operation[data-mode=actions],.mx-operation[data-mode=actions] .mx-operation-row,.mx-operation[data-mode=actions] .mx-operation-quick,.mx-operation[data-mode=actions] .mx-auto-operation{pointer-events:none}
 .mx-operation[data-mode=actions] button:not(:disabled){pointer-events:auto}
+
+.mx-chip-unit{font-size:.65em;line-height:1;font-weight:400;margin-left:.12em}
+.mx-pool-item{width:max-content;min-width:var(--mx-PotView-mx-pool-side-width);max-width:100%;padding-inline:var(--mx-PotView-mx-pool-item-padding-4) var(--mx-PotView-mx-pool-item-padding-2);white-space:nowrap}
+.mx-side-pools{flex-wrap:wrap;justify-content:center}
+.mx-seat-bet{display:flex;align-items:center;gap:8px;width:max-content;min-width:var(--mx-SeatBetView-mx-seat-bet-width);padding-inline:8px;margin-left:0;translate:-50% 0}
+.mx-seat-bet[data-chip-side=right]{flex-direction:row-reverse}
+.mx-seat-bet-chip{position:static;margin:0;flex-shrink:0}
+.mx-seat-bet-value{position:static;width:auto;flex:1;text-align:center}
+/* The native range is an input hit target; the visible rail/thumb own its outline. */
+.mx-table:not([data-orientation=landscape]) .mx-raise-range{outline:none}
+.mx-table:not([data-orientation=landscape]) .mx-raise-track:has(.mx-raise-range:focus-visible){filter:drop-shadow(0 0 2px #ffffff80)}

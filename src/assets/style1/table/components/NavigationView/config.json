@@ -12,7 +12,8 @@
     "emoji": "raw/ui/emoji.png",
     "effect": "raw/ui/effect.png",
     "voice": "raw/ui/voice.png",
-    "camera": "raw/ui/camera.png"
+    "camera": "raw/ui/camera.png",
+    "cert": "raw/ui/cert.png"
   },
   "layout": {
     "css": {
@@ -86,9 +87,9 @@
       "mx-nav-button-min-height-2": "0",
       "mx-nav-button-gap-5": "0",
       "mx-nav-button-padding-4": "0",
-      "mx-nav-button-font-size-7": "8px",
-      "mx-nav-icon-width-5": "15px",
-      "mx-nav-icon-height-5": "15px",
+      "mx-nav-button-font-size-7": "11px",
+      "mx-nav-icon-width-5": "22px",
+      "mx-nav-icon-height-5": "22px",
       "mx-nav-logo-width-7": "64px",
       "mx-nav-logo-height-4": "30px",
       "mx-nav-logo-margin-3": "0",
@@ -111,5 +112,10 @@
   "sizing": {
     "mode": "responsive",
     "root": ".mx-navigation"
+  },
+  "images": {
+    "cert": {
+      "pack": false
+    }
   }
 }

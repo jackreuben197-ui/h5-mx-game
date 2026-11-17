@@ -1,3 +1,4 @@
+import { chipLabel } from '../../ChipLabel.js';
 import { componentBox } from '../../ComponentBox.js';
 import config from './config.json';
 import type { SeatState } from '../../../../../data/SeatData.js';
@@ -16,11 +17,12 @@ export class SeatBetView {
   render(state: SeatState): void {
     const player = state.player;
     // Set the new amount before revealing a reused bet node.
-    this.label.textContent = player?.roundBet ? ChipFormatter.format(player.roundBet, state.smallBlind, state.showBB) : '';
-    this.root.hidden = !player?.roundBet || !!player.folded;
+    chipLabel(this.label,player?.roundBet ? ChipFormatter.format(player.roundBet, state.smallBlind, state.showBB) : '');
+    this.root.hidden = !player?.roundBet || !!player.folded || !!state.handEnded;
   }
   place(x: number, y: number, iconX: number): void {
     place(this.root, x, y);
+    this.root.dataset.chipSide = iconX > 100 ? 'right' : 'left';
     // CC icon's parent is at -50 relative to the bet center.
     place(this.chip, config.layout.chipOriginX - config.layout.chipInsetX + iconX, config.layout.chipY);
   }

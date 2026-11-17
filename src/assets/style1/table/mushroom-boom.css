@@ -15,3 +15,6 @@
 .mx-mushroom-pool[data-side=right] .mx-mushroom-count{left:var(--mx-MushroomView-mx-mushroom-count-left-2)}
 
 .mx-gameplay-guide-image[data-kind=critical-hit]{width:var(--mx-GameplayGuideDialog-mx-gameplay-guide-image-width-2);background-size:var(--mx-GameplayGuideDialog-mx-gameplay-guide-image-background-size-3) var(--mx-GameplayGuideDialog-mx-gameplay-guide-image-background-size-4);background-position:var(--mx-GameplayGuideDialog-mx-gameplay-guide-image-background-position-3) var(--mx-GameplayGuideDialog-mx-gameplay-guide-image-background-position-4)}
+
+.mx-gameplay-guide-image,.mx-gameplay-guide-commit{flex-shrink:0}
+.mx-gameplay-guide .mx-special-content{overflow-y:auto;max-height:80vh}

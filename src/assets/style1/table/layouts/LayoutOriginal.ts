@@ -34,7 +34,7 @@ export class LayoutOriginal implements TableLayout {
       ? { x: this.width / 2, y: this.height * 0.43 }
       : { x: this.width / 2, y: 1000 * this.suggest };
   }
-  positions(state: TableSnapshot): Map<number, SeatPlacement> {
+  positions(state: TableSnapshot, publicCardScale=1): Map<number, SeatPlacement> {
     this.seats.arrageSeatPositions(state.seatCount);
     const positions = this.seats.getPositions(state.seatCount),
       wide = this.landscape ? landscapeLayout(this.width, this.height, state.seatCount) : null;
@@ -75,6 +75,7 @@ export class LayoutOriginal implements TableLayout {
       }
       result.set(id, {
         betX, betY, betIconX,
+        winX:mine?-320:betX,winY:mine?-50:betY,
         x: landscapeSeat?.x ?? this.width / 2 + p.position.x,
         y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
@@ -94,32 +95,66 @@ export class LayoutOriginal implements TableLayout {
         dealerY: dealer[1]!,
       });
     }
+    if(!this.landscape&&this.id==='original'){
+      for(const [id,p] of result){
+        p.scale*=1.1;
+        // Original Figma leaves room above the top avatar and below the middle
+        // bets. Keep the CC seat arrangement, adjusting within its design unit.
+        const slot=(id-(state.mySeat||1)+state.seatCount)%state.seatCount;
+        const position=positions[slot];
+        const top=[SeatPosition.TopMiddle,SeatPosition.TopMiddleLeft,SeatPosition.TopMiddleRight].includes(position!);
+        const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
+        p.y+=(top?topClearance:id===state.mySeat?-80:-60)*this.suggest;
+        if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-200;}
+      }
+      if(state.community?.length){
+        const content=this.content({dual:!!state.secondCommunity?.length,boardSize:publicCardScale,jackpotHeight:0});
+        const boards=state.secondCommunity?.length?[content.board,content.secondBoard]:[content.board];
+        const scale=content.board.scale??1;
+        const top=Math.min(...boards.map(board=>board.y-88*scale));
+        const bottom=Math.max(...boards.map(board=>board.y+88*scale));
+        for(const [id,p] of result){
+          if(id===state.mySeat)continue;
+          const x=p.x+p.betX*p.scale,y=p.y+p.betY*p.scale,half=35*p.scale;
+          if(x+120*p.scale>content.board.x-365*scale&&x-120*p.scale<content.board.x+365*scale&&y+half>top-12&&y-half<bottom+12){
+            const above=top-half-12,below=bottom+half+12;
+            p.betY=((Math.abs(y-above)<Math.abs(y-below)?above:below)-p.y)/p.scale;
+          }
+          p.winY=p.betY;
+        }
+      }
+    }
     if(!this.landscape&&state.mySeat){
       const own=result.get(state.mySeat);
-      if(own)own.y=Math.min(own.y,this.height-54/this.unit-160*own.scale);
+      if(own)own.y=Math.min(own.y,(this.viewportBottom-2)/this.unit-160*own.scale);
     }
     return result;
   }
 
   content({dual, boardSize, jackpotHeight}: LayoutContentOptions): LayoutContent {
     const l=this;
-    const scale=l.landscape ? Math.min(1,l.width/1900)*(dual?.85:1) : l.suggest*(dual?.85:1);
+    const scale=l.landscape ? Math.min(1,l.width/1900)*(dual?.85:1) : l.suggest*(dual?.85:1)*(this.id==='original'?1.4:1);
     const gap=176*scale*boardSize+24;
-    const center=l.landscape ? l.height*(dual?.48:.54) : dual ? l.height*.45 : l.height/2-(l.suggest===1?176:0);
+    const center=l.landscape ? l.height*(dual?.48:.54) : dual ? l.height*.45 : l.height/2;
+    // The original Figma places the middle group below the top player's
+    // nameplate. Keep that space even when Jackpot is disabled.
+    const originalMiddle=!l.landscape;
+    const infoFont=l.height/l.width<1.5?28:38;
+    const infoClearance=infoFont*2.2+12;
     return {
       board:{x:l.width/2,y:center-(dual?gap/2:0),scale:scale*boardSize},
       secondBoard:{x:l.width/2,y:center+gap/2,scale:scale*boardSize},
-      total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:(697.8+jackpotHeight)*l.suggest},
-      pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:(775.6+jackpotHeight)*l.suggest},
-      info:l.landscape?{x:l.width/2-650*scale,y:l.height*.44}:{x:l.width/2,y:((dual?517.8:1000)+jackpotHeight)*l.suggest},
-      styles:{},
+      total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:originalMiddle?l.height*.339:(697.8+jackpotHeight)*l.suggest},
+      pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:originalMiddle?l.height*.301:(775.6+jackpotHeight)*l.suggest},
+      info:l.landscape?{x:l.width/2-650*scale,y:l.height*.44}:{x:l.width/2,y:dual?center+gap/2+88*scale*boardSize+infoClearance:Math.min(l.height*.426,center-88*scale*boardSize-infoClearance)},
+      styles:originalMiddle?{'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{},
     };
   }
   controls(state: TableSnapshot, buttonSize: number): LayoutControls {
     if(this.landscape)return {scale:.24*buttonSize,styles:{}};
     const own=this.positions(state).get(state.mySeat);
     if(!own)return {styles:{}};
-    const top=(own.y-210*own.scale)*this.unit-28;
+    const top=(own.y-180*own.scale)*this.unit-28;
     return {scale:own.scale*this.unit*buttonSize,styles:{
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
       '--mx-raise-center-y':`${(own.y-910*own.scale)*this.unit}px`,

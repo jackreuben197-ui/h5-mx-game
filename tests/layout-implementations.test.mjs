@@ -38,3 +38,11 @@ test('QA action rows follow the adjusted hero rather than an absolute screen hei
     assert.ok(controls.styles.left.includes(`${own.x*layout.unit}px`));
   }
 });
+
+test('modern layouts keep public card width at the same setting for single and dual boards',()=>{
+ for(const id of ['classic','balanced','oval'])for(const dual of [false,true])for(const size of [.9,1,1.1]){
+  const layout=defaultTableUi.createLayout(id);layout.resize(440,782,false);
+  const content=layout.content({dual,boardSize:size,jackpotHeight:0});
+  assert.ok(Math.abs(content.board.scale*120*layout.unit-50.59*size)<.001);
+ }
+});

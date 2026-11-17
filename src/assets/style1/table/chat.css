@@ -64,3 +64,8 @@
 .mx-game:has(.mx-table-confirm:not([hidden])) ~ .mx-test-menu{visibility:hidden}
 /* Keep the CC 94×115 shield ratio within the existing hit area. */
 .mx-game .mx-table-tools .mx-table-safety{background-size:contain;background-position:center}
+
+/* Chat shares the report glass surface, including the docked outline. */
+.mx-chat-dialog[data-dock=left]>.mx-record-panel{background:linear-gradient(135deg,rgba(150,155,165,.18),rgba(48,55,70,.16) 52%,rgba(115,120,133,.20));backdrop-filter:blur(3px);border:1px solid #ffffffa3;border-radius:0 40px 0 0;overflow:hidden}
+.mx-chat-dialog .mx-record-panel::before{display:none}
+.mx-chat-dialog .mx-record-body{min-height:0;flex:1;overflow-y:auto}

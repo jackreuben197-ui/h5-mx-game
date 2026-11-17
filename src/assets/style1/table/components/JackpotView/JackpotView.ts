@@ -56,9 +56,9 @@ export class JackpotView {
   get extraHeight():number{return (this.data.jackpot.enabled?77:0)+(this.data.record?.calltime===1&&this.data.callTime.state.stay?70:0);}
   resize(width:number,height:number,scale:number):void{
     this.width=width;this.height=height;this.scale=scale;
-    for(const e of [this.button,this.progress]){e.style.left=`${width/2}px`;e.style.transform=`translate(-50%,-50%) scale(${scale})`;}
-    this.button.style.top=`${(config.layout.baseY+config.layout.buttonHalfHeight)*scale}px`;
-    this.progress.style.top=`${(config.layout.baseY+(this.data.jackpot.enabled?config.layout.buttonHeight:0)+config.layout.progressOffset)*scale}px`;
+    for(const e of [this.button,this.progress]){e.style.left=`${width/2}px`;e.style.transform=`translate(-50%,-50%) scale(var(--mx-jackpot-scale,${scale}))`;}
+    this.button.style.top=`var(--mx-jackpot-y, ${(config.layout.baseY+config.layout.buttonHalfHeight)*scale}px)`;
+    this.progress.style.top=`var(--mx-calltime-y, ${(config.layout.baseY+(this.data.jackpot.enabled?config.layout.buttonHeight:0)+config.layout.progressOffset)*scale}px)`;
     this.start.style.left=`${width/2}px`;this.start.style.top=`${height/2+config.layout.startOffsetY*scale}px`;this.start.style.width=`${config.layout.startWidth*scale}px`;this.start.style.height=`${config.layout.startHeight*scale}px`;
   }
   private cancel():void{this.animation?.cancel();cancelAnimationFrame(this.frame);}

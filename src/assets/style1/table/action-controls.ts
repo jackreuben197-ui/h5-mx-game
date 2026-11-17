@@ -1,3 +1,4 @@
+import { chipLabel } from './ChipLabel.js';
 import { ActionButton } from './components/ActionButton/ActionButton.js';
 import { SeatCountdownView } from './components/SeatCountdownView/SeatCountdownView.js';
 import { SliderBetGesture } from './SliderBetGesture.js';
@@ -173,7 +174,7 @@ export class ActionControls {
     const percent = Math.round(Number(this.range.value) / Math.max(1, Number(this.range.max)) * 100);
     this.range.parentElement?.style.setProperty('--mx-raise-progress', `${percent}%`);
     this.percent.textContent=`${percent}%`;
-    this.raiseValue.textContent=ChipFormatter.format(v.amount, this.state?.smallBlind, this.state?.showBB);
+    chipLabel(this.raiseValue,ChipFormatter.format(v.amount, this.state?.smallBlind, this.state?.showBB));
     this.range.setAttribute('aria-valuetext', `${percent}% ${v.action === 'allin' ? i18nMgr.Get('adaptation30074', [], '全下') : i18nMgr.Get('adaptation10045', [], '加注')} ${this.raiseValue.textContent}`);
     i18nLabel.bind(this.confirm, () => i18nMgr.Get('UITexas_confirm', [], '确定'));
   }
@@ -265,11 +266,11 @@ export class ActionControls {
       const button=node('button','mx-quick-bet');button.type='button';
       const bg=node('span','mx-quick-bg');SpriteAtlas.paint(bg,'betPercent');
       const ratio=node('span','mx-quick-ratio');
-      const title=node('span','mx-quick-title',()=>i18nMgr.Get('UITexas_Pot',[],'POT'));
+      const title=node('span','mx-quick-title',()=>i18nMgr.Get('adaptation20005',[],'底池'));
       const valueBg=node('span','mx-quick-value-bg');SpriteAtlas.paint(valueBg,'betValue');
       const value=node('span','mx-quick-value');
       i18nLabel.bind(ratio,()=>item.label);
-      i18nLabel.bind(value,()=>ChipFormatter.format(item.amount,this.state?.smallBlind,this.state?.showBB));
+      chipLabel(value,()=>ChipFormatter.format(item.amount,this.state?.smallBlind,this.state?.showBB));
       button.append(bg,title,ratio,valueBg,value);
       const point=layout[items.length]?.[index];
       if(point){button.style.left=`calc(50% + ${point[0]*this.opScale}px)`;button.style.top=`calc(50% - ${point[1]*this.opScale}px)`;}
@@ -287,8 +288,8 @@ export class ActionControls {
         (action === 'check' && actions.includes('call')) ||
         (action === 'raise' && (!canRaise || this.mode === 'raise')) ||
         (action === 'allin' && (canRaise || !b?.allIn));
-      if (action === 'call') i18nLabel.bind(button, () => `${i18nMgr.Get("UITexas_call")}\n${ChipFormatter.format(b?.call ?? 0, s?.smallBlind, s?.showBB)}`);
-      if (action === 'straddle') i18nLabel.bind(button, () => `${i18nMgr.Get('UITexas_straddle',[],'抓')}\n${ChipFormatter.format(b?.straddle??0,s?.smallBlind,s?.showBB)}`);
+      if (action === 'call') chipLabel(button, () => `${i18nMgr.Get("UITexas_call")}\n${ChipFormatter.format(b?.call ?? 0, s?.smallBlind, s?.showBB)}`);
+      if (action === 'straddle') chipLabel(button, () => `${i18nMgr.Get('UITexas_straddle',[],'抓')}\n${ChipFormatter.format(b?.straddle??0,s?.smallBlind,s?.showBB)}`);
     });
     if (canRaise && b) {
       this.range.max = String(

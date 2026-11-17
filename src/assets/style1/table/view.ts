@@ -1,3 +1,4 @@
+import { InsuranceRulesView } from './components/InsuranceRulesView/InsuranceRulesView.js';
 import { TableEffectAnchors } from '../effects/TableEffectAnchors.js';
 import { bindTableAppearance } from './appearance/TableAppearanceContext.js';
 import { classicFelt, purpleFelt, cardBacks } from './appearance/TableSkin.js';
@@ -95,6 +96,7 @@ export class TableView {
   private allInTest?: AllInTestView;
   private report?: ReportView;
   private history?: HistoryView;
+  private insuranceRules?:InsuranceRulesView;
   private playerInfo: PlayerInfoView;
   private emoji?: EmojiView;
   private seatEmoji?: SeatEmojiView;
@@ -209,6 +211,8 @@ export class TableView {
     if (options.records) {
       this.report = new ReportView(new ReportController(options.records));
       this.history = new HistoryView(new HistoryController(options.records));
+      this.insuranceRules=new InsuranceRulesView(options.records.data);
+      this.root.append(this.insuranceRules.root);
     }
     if (options.emojis) {
       this.emoji = new EmojiView(new EmojiController(options.emojis));
@@ -241,7 +245,7 @@ export class TableView {
         return this.showBB;
       }, options.seating ? async () => { if(this.squid)this.squid.standup();else await options.seating!.standup(); } : undefined, {
         settings:()=>this.personalSettings.open(),
-        rules:(insurance)=>options.seating?.rules?.(insurance),
+        rules:(insurance)=>{if(insurance&&this.insuranceRules)this.insuranceRules.open();else options.seating?.rules?.(insurance);},
         bringIn:()=>this.buyIn.open(0),
         bringOut:()=>{const state=this.data.info.snapshot;if(state)this.bringOut.open(state);},
         keepSeat:async keep=>{if(options.records?.data.mtt){await options.records.mttAutoOp?.(true);return;}if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
@@ -374,6 +378,7 @@ export class TableView {
     this.personalSettings.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
+    this.insuranceRules?.onFrameResize(box.width,box.height);
     this.playerInfo.onFrameResize(box.width,box.height);
     this.emoji?.onFrameResize(box.width,box.height);
     this.bringOut.onFrameResize(box.width,box.height);
@@ -382,7 +387,9 @@ export class TableView {
     this.root.dataset.orientation = landscape ? 'landscape' : 'portrait';
     const { width, height } = this.viewport.getBoundingClientRect();
     if (width <= 0 || height <= 0) return;
-    this.layout.resize(width, landscape ? height : box.height, landscape, height);
+    const navigationBox=this.navigation.root.getBoundingClientRect();
+    const contentBottom=landscape||!navigationBox.height?height:Math.min(height,navigationBox.top-box.top);
+    this.layout.resize(width, landscape ? height : box.height, landscape, contentBottom);
     const l = this.layout;
     this.menu.resize(l.unit, l.height, l.suggest);
     this.menu.root.style.setProperty('--mx-menu-scale',String(l.menuScale));
@@ -456,6 +463,7 @@ export class TableView {
     this.personalSettings.destroy();
     this.report?.destroy();
     this.history?.destroy();
+    this.insuranceRules?.destroy();
     this.playerInfo.destroy();
     this.emoji?.destroy(); this.seatEmoji?.destroy();
     this.bringOut.destroy();

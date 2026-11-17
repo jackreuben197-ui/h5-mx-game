@@ -31,7 +31,7 @@ export class SquidView {
   this.count.style.backgroundImage=`url("${url('table_icon_squid')}")`;
   this.start.src=url('squid_start');this.start.hidden=true;
   i18nLabel.bind(this.join,()=>i18nMgr.Get('UICowboy_JoinGame'));
-  i18nLabel.bind(this.stand,()=>i18nMgr.Get('UITexas_standUp'));
+  i18nLabel.bind(this.stand,()=>i18nMgr.Get('MX_SquidStand'));
   this.join.style.backgroundImage=`url("${url('table_bg_jkp_pool')}")`;
   this.stand.style.backgroundImage=`url("${url('table_bg_stand_up')}")`;
   this.join.onclick=()=>{if(this.pending)return;this.pending=true;this.join.disabled=true;void this.actions.joinSquid?.().catch(this.failed).finally(()=>{this.pending=false;this.join.disabled=false;});};

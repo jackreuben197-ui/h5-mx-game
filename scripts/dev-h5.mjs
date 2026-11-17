@@ -37,7 +37,8 @@ try {
 
   // H5 的 Vite 配置用 cwd 查找 .env，使用该工作区安装的 Vite 和插件。
   process.chdir(h5Root);
-  process.env.VITE_BRIDGE_TARGET = 'h5-cc-game';
+  // Keep the shell's selected protocol version. Forcing the installed legacy
+  // package can remove newer exports required by the shell login overlay.
   process.env.VITE_H5_ONLY = 'false';
   process.env.VITE_WS_PROXY_URL = '';
   process.env.VITE_WS_URL_TEMPLATE = `ws://${host}:${port}/mx-ws{0}`;

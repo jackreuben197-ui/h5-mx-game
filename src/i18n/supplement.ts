@@ -1,5 +1,9 @@
 // MX-only UI strings missing from the shared CC language package.
 export const supplement: Record<string, Record<string, string>> = {
+  MX_SquidStand:{cn:'站起',zh:'站起',en:'Stand up',pt:'Levantar'},
+  MX_TablePoolRate:{cn:'本桌入池率',zh:'本桌入池率',en:'Table VPIP',pt:'VPIP da mesa'},
+  MX_InsurancePlayers:{cn:'人底池',zh:'人底池',en:'players in pot',pt:'jogadores no pote'},
+  MX_InsuranceOdds:{cn:'赔率',zh:'賠率',en:'Odds',pt:'Cotações'},
   MX_AmountDisplay:{"cn": "金额显示", "zh": "金額顯示", "en": "Amount display", "pt": "Exibição de valores"},
   MX_NumberAmount:{"cn": "数字", "zh": "數字", "en": "Numbers", "pt": "Números"},
   MX_CardBacks:{"cn": "牌背设置", "zh": "牌背設定", "en": "Card backs", "pt": "Verso das cartas"},

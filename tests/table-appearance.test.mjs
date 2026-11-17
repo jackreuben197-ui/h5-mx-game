@@ -9,7 +9,7 @@ test('classic avatars use the full 58px design diameter and keep the hero above 
   const positions=layout.positions({seatCount:8,mySeat:1,players:[]});
   for(const seat of positions.values()) assert.equal(Math.round(199*seat.scale*layout.unit*100)/100,58);
   const hero=positions.get(1);
-  assert.ok(hero.y*layout.unit+52<=725+1e-9);
+  assert.ok((hero.y+(26*199/58+54)*hero.scale)*layout.unit<=725+1e-9);
 });
 
 test('modern dealer markers clear the chip row and the bottom marker stays above the footer',()=>{
@@ -80,7 +80,7 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
   const avatar=profile==='balanced'?60:profile==='oval'?50:58;
   const ratio=p.scale*layout.unit*199/avatar;
-  assert.ok(Math.abs(p.cardsY*p.scale*layout.unit/ratio-(profile==='classic'?-75:65))<.001);
+  assert.ok(Math.abs(p.cardsY*p.scale*layout.unit/ratio-(profile==='classic'?-65:65))<.001);
   assert.ok(Math.abs(p.dealerX*p.scale*layout.unit/ratio-(profile==='classic'?-107:-54))<.001);
   if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-(profile==='balanced'?30:25)*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
  }

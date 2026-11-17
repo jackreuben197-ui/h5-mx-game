@@ -18,7 +18,7 @@ export class ReportController extends EventSource {
     get tabs(): ReportTab[] {
         const tabs: ReportTab[] = ['battle'];
         const basic = this.basic;
-        if ((basic?.hasInsurance ?? ((this.records.data.record?.insuranceOn ?? 0) > 0)) && this.mode !== 'squid') tabs.push('insurance');
+        // Product QA: insurance stays in the summary, not a separate report page.
         // RoomRecord uses 1 = enabled, 2 = disabled; raw truthiness also enabled closed tables.
         if (basic?.jackpot ?? (this.records.data.record?.jackpot === 1)) tabs.push('jackpot');
         if (this.mode !== 'none') tabs.push('mode');

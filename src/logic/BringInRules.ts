@@ -8,12 +8,12 @@ export class BringInRules {
     public caculateCanBringMinMax() {
         let needDeposit = this.roomData.basicInfo.deposit;
         let totalChips = 0;
-        needDeposit = needDeposit - this.deposit;
+        needDeposit = Math.max(0, needDeposit - this.deposit);
         totalChips = this.totalChips;
         let step = this.roomData.basicInfo.sbante.sb * 2;
         let minAmount = this.roomData.basicInfo.curMinRate * step;
         minAmount += needDeposit;
-        const maxAmount = this.roomData.basicInfo.curMaxRate * step - totalChips;
+        const maxAmount = this.roomData.basicInfo.curMaxRate * step - totalChips + needDeposit;
         return {
             minAmount,
             maxAmount,

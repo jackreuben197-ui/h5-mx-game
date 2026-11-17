@@ -1,5 +1,5 @@
+import { chipLabel } from '../../ChipLabel.js';
 import config from './config.json';
-import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import { PotData } from '../../../../../data/PotData.js';
@@ -19,13 +19,14 @@ export class PotView {
   private onFormat(): void { this.onAmount(this.data.amount); this.onPools(this.data.pools); }
   @bindEvent(PotData.CHANGE, 'pot')
   private onAmount(amount: number): void {
-    i18nLabel.bind(this.total, () => `${i18nMgr.Get("adaptation20005")}: ${ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB)}`);
+    chipLabel(this.total, () => `${i18nMgr.Get("adaptation20005")}: ${ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB)}`);
   }
   @bindEvent(PotData.POOLS, 'pot')
   private onPools(pools: readonly number[]): void {
     this.pool.hidden = !pools.length;
     const items = pools.slice(0, 9).map((amount, index) => {
       const item = element('span', index === 0 ? 'mx-pool-item mx-pool-main' : 'mx-pool-item mx-pool-side', ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
+      chipLabel(item,ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
       SpriteAtlas.paint(item, config.paths.pool);
       const chip = element('i', 'mx-pot-chip');
       SpriteAtlas.paint(chip, config.paths.chip);

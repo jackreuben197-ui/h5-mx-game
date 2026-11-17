@@ -8,8 +8,8 @@
 .mx-record-overlay[data-dock]>.mx-record-panel{top:var(--record-top);height:calc(var(--mx-RecordDialogView-mx-record-panel-height-4) - var(--record-top));max-height:calc(var(--mx-RecordDialogView-mx-record-panel-max-height-9) - var(--record-top))}
 .mx-record-overlay[data-dock=left]{justify-content:flex-start}
 .mx-record-overlay[data-dock=right]{justify-content:flex-end}
-.mx-record-overlay[data-dock=left]>.mx-record-panel{border-left:0;border-top-left-radius:0;border-bottom-left-radius:0}
-.mx-record-overlay[data-dock=right]>.mx-record-panel{border-right:0;border-top-right-radius:0;border-bottom-right-radius:0}
+.mx-record-overlay[data-dock=left]>.mx-record-panel{border-left:0;border-top-left-radius:calc(120 * var(--record-unit));border-bottom-left-radius:0}
+.mx-record-overlay[data-dock=right]>.mx-record-panel{border-right:0;border-top-right-radius:0;border-bottom-right-radius:0;border-bottom-left-radius:0}
 .mx-record-header,.mx-record-footer,.mx-record-status{flex-shrink:0}
 .mx-record-header{position:relative;padding:calc(var(--mx-RecordDialogView-mx-record-header-padding-4) * var(--record-unit)) calc(var(--mx-RecordDialogView-mx-record-header-padding-5) * var(--record-unit)) calc(var(--mx-RecordDialogView-mx-record-header-padding-6) * var(--record-unit));text-align:center}
 .mx-record-header h2{margin:var(--mx-RecordDialogView-mx-record-header-margin-6) calc(var(--mx-RecordDialogView-mx-record-header-margin-7) * var(--record-unit)) calc(var(--mx-RecordDialogView-mx-record-header-margin-8) * var(--record-unit));font-size:calc(var(--mx-RecordDialogView-mx-record-header-font-size-2) * var(--record-unit));font-weight:400}
@@ -45,7 +45,7 @@
 .mx-report-remaining{grid-column:1/-1;text-align:right}
 .mx-report-list{overflow-x:auto;min-height:calc(var(--mx-ReportView-mx-report-list-min-height) * var(--record-unit));background:#ffffff16;border-radius:calc(var(--mx-ReportView-mx-report-list-border-radius) * var(--record-unit));padding:calc(var(--mx-ReportView-mx-report-list-padding) * var(--record-unit)) calc(var(--mx-ReportView-mx-report-list-padding-2) * var(--record-unit))}
 .mx-record-table{width:var(--mx-ReportView-mx-record-table-width);border-collapse:separate;border-spacing:0;font-size:calc(var(--mx-ReportView-mx-record-table-font-size) * var(--record-unit));text-align:center;table-layout:fixed}
-.mx-record-table th{font-weight:400;color:#fff;height:calc(var(--mx-ReportView-mx-record-table-height) * var(--record-unit));padding:var(--mx-ReportView-mx-record-table-padding) var(--mx-ReportView-mx-record-table-padding-2)}
+.mx-record-table th{font-weight:400;color:#fff;white-space:pre-line;height:calc(var(--mx-ReportView-mx-record-table-height) * var(--record-unit));padding:var(--mx-ReportView-mx-record-table-padding) var(--mx-ReportView-mx-record-table-padding-2)}
 .mx-record-table td{height:calc(var(--mx-ReportView-mx-record-table-height-2) * var(--record-unit));padding:calc(var(--mx-ReportView-mx-record-table-padding-3) * var(--record-unit)) var(--mx-ReportView-mx-record-table-padding-4);white-space:pre-line;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .mx-record-table th:first-child,.mx-record-table td:first-child{width:var(--mx-ReportView-mx-record-table-width-2)}
 .mx-record-table td+td{background:linear-gradient(#ffffff30,#ffffff30) left center/1px 55% no-repeat}
@@ -149,3 +149,10 @@
 .mx-history-last-action{display:flex;flex-direction:column;align-items:center;line-height:var(--mx-HistoryPlayerView-mx-history-last-action-line-height)}
 
 .mx-game:has(.mx-record-overlay:not([hidden])) ~ .mx-test-menu{visibility:hidden}
+
+.mx-report-overlay .mx-record-own{color:white}
+.mx-report-overlay .mx-record-own .mx-report-player-link::before{content:'● ';color:#ff5050}
+.mx-record-offline .mx-report-player-link{opacity:.55;text-decoration:line-through}
+.mx-history-overlay .mx-record-own,.mx-history-player.mx-record-own .mx-history-overview-profits span{color:var(--mx-accent,#00cfa5)}
+.mx-report-overlay .mx-profit-positive{color:#ff5050}
+.mx-report-overlay .mx-profit-negative{color:#50a0ff}

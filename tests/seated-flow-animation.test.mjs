@@ -190,3 +190,25 @@ test('diamond tables allow wallet-free buy-in, positive-chip return and zero-chi
   }finally{signal.abort();host.destroy();}
  }
 });
+
+test('closing informational notices continues to amount without submitting or losing the quote', async t => {
+  const quote={id:21,seat:3,roomName:'押金桌',smallBlind:1000,min:106000,max:406000,step:2000,deposit:6000,
+    wallets:[{club_id:5,gold:500000,club_name:'测试钱包'}],returnOrNew:0,canAuto:true,
+    security:{ip:true,gps:true,delay:true,media:false}};
+  const submitted=[];
+  const controller=new BuyInController({prepare:async()=>quote,submit:async v=>submitted.push(v),standup:async()=>false});
+  t.after(()=>controller.destroy());
+  for(const step of ['security','rules']){
+    await controller.open(3);if(step==='rules')controller.next();
+    assert.equal(controller.data.state.step,step);
+    controller.skipNotices();
+    assert.equal(controller.data.state.step,'amount');
+    assert.equal(controller.data.state.quote.id,21);
+    assert.equal(controller.data.state.amount,106000);
+    assert.equal(controller.data.state.auto,false);
+    assert.equal(submitted.length,0);
+    controller.close();
+  }
+  await controller.open(3);controller.skipNotices();controller.data.update({amount:406000});await controller.submit();
+  assert.deepEqual(submitted,[{quoteID:21,amount:406000,clubID:5,autoAmount:0}]);
+});

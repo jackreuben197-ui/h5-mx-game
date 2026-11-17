@@ -15,7 +15,7 @@ const target = { roomID:1001, matchID:0, roomType:0 };
 const info = () => ({ ...new pb.RoomInfo().toObject(), smallBlind:1000,currentMinRate:10,currentMaxRate:100,deposit:500,limitRetainMinRate:10,limitRetainMaxRate:100 });
 test('CC bring-in min/max and retain branches preserve protocol integer units', () => {
   const room = info();
-  assert.deepEqual(new BringInRules(room).caculateCanBringMinMax(), {minAmount:20500,maxAmount:200000,step:2000,needDeposit:true});
+  assert.deepEqual(new BringInRules(room).caculateCanBringMinMax(), {minAmount:20500,maxAmount:200500,step:2000,needDeposit:true});
   const q = { seat:4, returnOrNew:1 }, selection={amount:30000,clubID:5,autoAmount:0};
   const builder=new SeatedDataBuilder();
   assert.equal(builder.build(target,{...room,retainType:2},q,selection).store,10000);
@@ -73,4 +73,12 @@ test('unrelated snapshots do not restart legacy countdown; add-time updates its 
     assert.deepEqual(mapper.map(data,target,3).countdowns,[{seat:2,deadline:120,totalTime:25}]);
     data.snapshot.operatorList=[];assert.deepEqual(mapper.map(data,target,4).countdowns,[]);
   } finally {Date.now=now;}
+});
+
+test('deposit is outside the playable cap and already funded deposit is not charged twice',()=>{
+ const room={...info(),smallBlind:1000,currentMinRate:50,currentMaxRate:200,deposit:6000};
+ assert.deepEqual(new BringInRules(room).caculateCanBringMinMax(),{minAmount:106000,maxAmount:406000,step:2000,needDeposit:true});
+ assert.deepEqual(new BringInRules(room,100000,6000).caculateCanBringMinMax(),{minAmount:100000,maxAmount:300000,step:2000,needDeposit:false});
+ assert.deepEqual(new BringInRules(room,100000,4000).caculateCanBringMinMax(),{minAmount:102000,maxAmount:302000,step:2000,needDeposit:true});
+ assert.deepEqual(new BringInRules(room,100000,7000).caculateCanBringMinMax(),{minAmount:100000,maxAmount:300000,step:2000,needDeposit:false});
 });

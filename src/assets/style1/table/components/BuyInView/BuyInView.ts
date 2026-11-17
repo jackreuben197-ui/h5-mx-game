@@ -50,7 +50,7 @@ export class BuyInView {
   private frame?:{width:number;height:number};
   constructor(private controller: BuyInController,private records?:RoomRecords,confirmDialog?:TableConfirmDialog) {
     this.settings=new GameplayTableSettingView(controller.settings);
-    this.cancel.type='button';this.cancel.onclick=()=>controller.close();
+    this.cancel.type='button';this.cancel.onclick=()=>controller.skipNotices();
     i18nMgr.register(this);
     this.root.hidden = true;
     this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); i18nLabel.bind(this.root, () => i18nMgr.Get("MX_SeatAndBuyIn", [], "坐下与带入"), 'aria-label');
@@ -97,7 +97,7 @@ export class BuyInView {
     this.panel.dataset.step=s.step;
     const settingsStep=s.step==='security'||s.step==='rules';
     this.settings.show(settingsStep?s.step as 'security'|'rules':null);
-    this.details.hidden=settingsStep;this.cancel.hidden=s.step!=='security';this.close.hidden=settingsStep;
+    this.details.hidden=settingsStep;this.cancel.hidden=!settingsStep;this.close.hidden=settingsStep;
     if(this.lastStep!==s.step){this.body.scrollTop=0;this.lastStep=s.step;}
     i18nLabel.bind(this.title, () => ({closed:'',loading:i18nMgr.Get("MX_LoadingBuyInDetails", [], "正在获取带入信息"),security:i18nMgr.Get("UISecuritySetting_title", [], "安全提示"),rules:i18nMgr.Get("UITableSetting_title", [], "牌局配置"),amount:s.quote?.mode==='add'?i18nMgr.Get('UITexas_AddChipsMenu'):s.quote?.returnAmount!==undefined?i18nMgr.Get("MX_ReturnBuyIn", [], "返场带入"):i18nMgr.Get("UIClub_RoomSitApplyRecords_title", [], "带入申请")}[s.step]));
     const q=s.quote;
@@ -117,12 +117,12 @@ export class BuyInView {
       i18nLabel.bind(this.amountTitle, () => q.deposit?i18nMgr.Get("MX_BuyInDeposit", [], "带入筹码 + 押金"):i18nMgr.Get("UITexas_AddChips", [], "带入筹码"));
       this.tipButton.hidden=!q.deposit;if(!q.deposit)this.tip.hidden=true;
       const steps=Math.ceil((q.max-q.min)/q.step);
-      this.amount.textContent=money(s.amount); this.slider.min='0';this.slider.max=String(steps);this.slider.step='1';this.slider.value=String(Math.ceil((s.amount-q.min)/q.step));
+      this.amount.textContent=q.deposit?`${money(s.amount-q.deposit)} + ${money(q.deposit)}`:money(s.amount); this.slider.min='0';this.slider.max=String(steps);this.slider.step='1';this.slider.value=String(Math.ceil((s.amount-q.min)/q.step));
       this.limits.replaceChildren(element('span','',() => i18nMgr.Get("The_smallest", [], "最小")),element('span','',() => i18nMgr.Get("Maximum", [], "最大")));
       this.slider.setAttribute('aria-valuetext',`${money(s.amount)}，最小 ${money(q.min)}，最大 ${money(q.max)}`);
       this.sliderRail.style.setProperty('--mx-buyin-slider-progress',`${steps>0?this.slider.valueAsNumber/steps*100:0}%`);
       this.wallet.render(q.wallets.filter(w=>q.returnClubID===undefined||w.club_id===q.returnClubID),s.clubID,s.busy);
-      this.autoArea.hidden=!q.canAuto;this.auto.checked=s.auto;
+      this.autoArea.hidden=true;this.auto.checked=false;
     }
     this.error.textContent=s.error;
     this.confirm.hidden=s.step==='loading';i18nLabel.bind(this.confirm, () => s.step==='security'?i18nMgr.Get("UITableSetting_nextPage", [], "下一页"):i18nMgr.Get("UITexas_confirm", [], "确定"));
