@@ -1,3 +1,5 @@
+import { SquidIn } from '../../src/net/messages/texas/SquidIn.js';
+import { MessageContext } from '../../src/net/messages/MessageContext.js';
 import type {Action,RoomHost,RoomTarget,TableSnapshot,TableUpdate} from '../../src/core/types.js';
 import type {BuyInSelection,BuyInQuote} from '../../src/core/Seating.js';
 import type {RoomRecords} from '../../src/core/RoomRecords.js';
@@ -72,7 +74,7 @@ export class AuditHost implements RoomHost {
   if(scene==='emoji'){d.emoji.emojiEvent({type:710,userID:99+this.options.hero});this.later(()=>d.emoji.emojiEvent({type:717,userID:101}),600);}
   if(scene==='gift')d.emoji.diamondGiftEvent({senderID:99+this.options.hero,receiverID:101,amount:100},'local');if(scene==='throw')d.emoji.throwPropEvent({userID:99+this.options.hero,targetUserID:101,type:600});
   if(scene==='chat')await this.records?.chatHistory?.();
-  if(scene.startsWith('squid-')){d.record!.squidBase=10;d.record!.squidMode=0;d.squid.state={...d.squid.state,enabled:true,seat:this.state.mySeat,base:10,mode:0,remaining:3,showJoin:scene==='squid-join',start:0};this.publish({players:this.state.players.map(p=>({...p,squidIn:true,squidCount:p.seat===this.state.mySeat?0:1}))});if(scene==='squid-result')d.squid.finish(this.state.players.map(p=>({userID:p.userRid!,nick:p.name,avatar:p.avatar??'',money:p.seat===this.state.mySeat?-100:20,squidNum:p.seat===this.state.mySeat?0:1,rate:1,isPunish:p.seat===this.state.mySeat})));}
+  if(scene.startsWith('squid-')){d.record!.squidBase=10;d.record!.squidMode=0;d.squid.state={...d.squid.state,enabled:true,seat:this.state.mySeat,base:10,mode:0,remaining:3,showJoin:scene==='squid-join',start:0};this.publish({players:this.state.players.map(p=>({...p,squidIn:scene==='squid-join'?p.seat!==this.state.mySeat&&p.seat!==2:true,squidCount:p.seat===this.state.mySeat||p.seat===2?0:1}))});if(scene==='squid-result')d.squid.finish(this.state.players.map(p=>({userID:p.userRid!,nick:p.name,avatar:p.avatar??'',money:p.seat===this.state.mySeat?-100:20,squidNum:p.seat===this.state.mySeat?0:1,rate:1,isPunish:p.seat===this.state.mySeat})));}
   if(scene==='reconnect')this.publish({},'sync');
  }
  async prepareSeat(_t:RoomTarget,seat:number){this.quote={id:++this.serial,seat:seat||this.options.hero,roomName:'离线验收',smallBlind:10,min:this.options.scene==='bring-deposit'?106000:2100,max:this.options.scene==='bring-deposit'?406000:20100,step:100,returnOrNew:0,deposit:this.options.scene==='bring-deposit'?6000:100,canAuto:true,security:{ip:true,gps:true,delay:true,media:false},wallets:[{club_id:1,gold:this.options.scene==='bring-insufficient'?0:this.options.scene==='bring-deposit'?500000:100000,club_name:'模拟钱包A'},{club_id:2,gold:50000,club_name:'模拟钱包B'}],funding:this.options.scene==='bring-score'?'score':this.options.scene==='bring-diamond'?'diamond':'wallet',diamondBalance:100000};return this.quote;}
@@ -82,5 +84,7 @@ export class AuditHost implements RoomHost {
  async keepSeat(_t:RoomTarget,keep:boolean){this.publish({players:this.state.players.map(p=>p.seat===this.state.mySeat?{...p,keepSeatReason:keep?1:0,keepSeatDeadline:keep?Date.now()/1000+120:0,canPlayStatus:1}:p)});}
  async agreePost(){this.publish({players:this.state.players.map(p=>({...p,canPlayStatus:1}))});}
  async addTime(){await this.features.addTime();}async agreeSecondPcs(_t:RoomTarget,v:boolean){await this.features.agreeSecondPcs(v);}async buyInsurance(_t:RoomTarget,list:Parameters<DemoFeatures['buyInsurance']>[0],confirm:boolean){await this.features.buyInsurance(list,confirm);}async watchSettlement(_t:RoomTarget,kind:'peek'|'reveal'){await this.features.watchSettlement(kind);}
- async joinSquid(){this.features.data.squid.state={...this.features.data.squid.state,showJoin:false};this.publish({players:this.state.players.map(p=>({...p,squidIn:true}))});}
+ async joinSquid(){this.squidPlayerJoin(this.state.mySeat);}
+ squidPlayerJoin(seat:number){if(!this.pb)return;const d=this.features.data;const body=new this.pb.ServerMessageSquidIn();body.setSeatId(seat);body.setEnable(true);body.setFirstIn(true);SquidIn(body.toObject(),new MessageContext(d,this.pb));this.publish({players:this.state.players.map(p=>p.seat===seat?{...p,squidIn:true}:p)});d.squid.refresh(d.record!,d.snapshot!.roomInfo,d.snapshot!.playersList,this.state.mySeat,0);}
+
 }

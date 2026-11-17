@@ -9,7 +9,7 @@ export class SeatedDataBuilder {
       store:0, clubId:0, applyBringIn:false, autoOnTableNoStore:false,
       autoOnTableFix:0, depositAdvance:0, autoOnTableMax:0,
     };
-    // CC RT_AUTO initialization, before the commit callback.
+    // CC initializes automatic retention for both direct returns and new buy-ins.
     if(info.retainType === 1) {
       seatedData.autoOnTable = info.limitRetainMinRate * info.smallBlind * 2;
       seatedData.autoOnTableFix = info.limitRetainMinRate * info.smallBlind * 2;
@@ -23,7 +23,7 @@ export class SeatedDataBuilder {
       seatedData.autoOnTable = selection.autoAmount;
     } else if(info.retainType === 2) {
       // CC BringInProviderTexas.commit: manual retained chips.
-      const store = selection.amount - (quote.returnAmount !== undefined ? info.deposit : 0) - info.limitRetainMinRate * info.smallBlind * 2;
+      const store = selection.amount - (quote.autoReturn ? info.deposit : 0) - info.limitRetainMinRate * info.smallBlind * 2;
       seatedData.store = quote.autoReturn ? Math.max(0, store) : store;
     }
     return seatedData;

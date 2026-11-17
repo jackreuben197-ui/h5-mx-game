@@ -36,3 +36,19 @@ test('dealt players and waiting newcomers follow CC join-button rules without re
  msg.handInfo={...msg.handInfo,handNum:msg.handInfo.handNum+1,dealOrderList:[1,4]};msg.playersList=msg.playersList.map(p=>p.seatId===4?{...p,inSquid:true}:p);StartInfo(msg,c);assert.equal(data.squid.showJoin,false);assert.equal(data.snapshot.playersList.find(p=>p.seatId===4).status,pb.Def.CanPlayStatus.NORMAL);
  data.restoreSpecialOperations(2,3);assert.equal(data.squid.state.start,0);
 });
+
+test('each first-in broadcast announces joining and maps the zero-count participant mask state',()=>{
+ const {data,c,router}=setup();
+ for(const seat of [4,1,4]){
+  const player=data.snapshot.playersList.find(p=>p.seatId===seat);player.inSquid=false;
+  const before=data.squid.state.noticeSerial;
+  const join=new pb.ServerMessageSquidIn();join.setSeatId(seat);join.setEnable(true);join.setFirstIn(true);
+  router.dispatch({code:1125,body:join.serializeBinary()},c);
+  const mapped=new EnterRoomMapper(pb).map(data,target,before+1).players.find(p=>p.seat===seat);
+  assert.equal(mapped.squidIn,true);assert.equal(mapped.squidCount,0);
+  assert.equal(data.squid.state.notice,'UISquidJoinInNewTips1');assert.equal(data.squid.state.noticeSerial,before+1);
+  join.setFirstIn(false);router.dispatch({code:1125,body:join.serializeBinary()},c);
+  assert.equal(data.squid.state.noticeSerial,before+1,'ordinary updates do not announce a new participant');
+ }
+ data.restoreSpecialOperations(2,3);assert.equal(data.squid.state.notice,'');assert.equal(data.squid.state.noticeSerial,0);
+});

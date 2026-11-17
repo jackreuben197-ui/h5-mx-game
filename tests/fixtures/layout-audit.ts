@@ -24,6 +24,7 @@ const target={roomID:909090,matchID:scene.startsWith('mtt-')?900001:0,roomType:0
 const game=new GameClient(stage,{host,preferences:prefs,layout:q.get('orientation')==='auto'?'auto':'portrait',minimumLoadingMs:0,onState:s=>{stage.dataset.phase=s.phase;stage.dataset.hand=String(s.table?.handNum??0);if(s.phase==='error'){stage.dataset.ready='true';log(s.error??'');}},onLeave:()=>log('已离桌；点击重新进入可恢复。')});
 function button(label:string,run:()=>unknown){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{Promise.resolve(run()).catch(e=>log(String(e)));};bar.append(b);}
 button('下一步',()=>host.next());button('播放',()=>host.play());button('暂停',()=>host.stop());button('重置发牌',()=>host.reset());button('重连快照',()=>host.publish({},'sync'));button('下一位庄家',()=>host.publish({dealerSeat:(host.state.dealerSeat??0)%host.state.seatCount+1}));button('站起',()=>host.standup());button('离桌',()=>game.leave());button('重新进入',async()=>{await game.enter(target);await host.activate();});button('切桌',async()=>{target.roomID++;await game.enter({...target});});
+if(scene.startsWith('squid-'))button('模拟他人中途加入',()=>host.squidPlayerJoin(host.state.players.find(p=>p.seat!==host.state.mySeat)!.seat));
 button('导出场景清单',()=>{const blob=new Blob([JSON.stringify(auditScenarios,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='offline-scenarios.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 await game.enter(target);
 if(game.getState().phase==='table'){

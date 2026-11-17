@@ -613,7 +613,9 @@ export class MxRoomHost implements RoomHost {
     if(info.antiCheatType === 4) throw new Error('当前人脸验证桌尚未支持');
 
     const limits = new BringInRules(info).caculateCanBringMinMax();
-    const min = returnAmount ?? limits.minAmount, max = returnAmount ?? limits.maxAmount;
+    // CC only restores the old amount on direct return. Its buy-in dialog uses
+    // the normal selectable range when automatic retention requires more chips.
+    const min = autoReturn ? returnAmount! : limits.minAmount, max = autoReturn ? returnAmount! : limits.maxAmount;
     if(!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min < 0 || max < min || limits.step <= 0)
       throw new Error('当前带入范围无效');
     const quote: BuyInQuote = { funding:diamond?'diamond':score?'score':'wallet',diamondBalance,scoreClubID:direct?(compatible?.club_id ?? (diamond?0:wallets.length===1?wallets[0]!.club_id:target.clubID ?? this.roomData.record!.clubId)):undefined,id:++this.quoteID,seat,roomName:this.roomData.record!.name,smallBlind:info.smallBlind,
