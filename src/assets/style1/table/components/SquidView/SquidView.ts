@@ -24,7 +24,7 @@ export class SquidView {
  private join=element('button','mx-squid-join');
  private stand=element('button','mx-squid-stand');
  private start=element('img','mx-squid-start');
- private started=0;private resultSerial=0;private notice='';
+ private started=0;private resultSerial=0;private noticeSerial=0;
  private closeTimer?:ReturnType<typeof setTimeout>;private loop?:ReturnType<typeof setInterval>;
  private animation?:Animation;private pending=false;
  constructor(private records:SpecialOperations,private actions:SeatingActions,private confirm:TableConfirmDialog,private failed:(error:unknown)=>void){
@@ -46,7 +46,7 @@ export class SquidView {
   const s=this.records.data.squid.state;
   this.count.hidden=!s.enabled;this.count.textContent=String(s.remaining);this.count.dataset.count=String(s.remaining);this.count.setAttribute('aria-label',`${i18nMgr.Get('UISquid')} ${s.remaining}`);
   this.join.hidden=!s.showJoin;this.stand.hidden=!s.enabled||!s.seat;
-  if(s.notice&&s.notice!==this.notice)this.failed(i18nMgr.Get(s.notice));this.notice=s.notice;
+  if(s.notice&&s.noticeSerial!==this.noticeSerial)this.failed(i18nMgr.Get(s.notice));this.noticeSerial=s.noticeSerial;
   if(s.start!==this.started){this.started=s.start;if(s.start){this.animation?.cancel();this.start.hidden=false;this.animation=this.start.animate(viewConfig.layout.startAnimation.frames,{duration:viewConfig.layout.startAnimation.duration});this.animation.onfinish=()=>{this.start.hidden=true;};}}
   if(s.resultSerial!==this.resultSerial){this.resultSerial=s.resultSerial;clearTimeout(this.closeTimer);this.result.content.replaceChildren();
    if(s.results.length){const title=element('img','mx-squid-over');title.src=url('squid_over');this.result.content.append(title);

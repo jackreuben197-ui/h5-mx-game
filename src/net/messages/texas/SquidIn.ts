@@ -5,6 +5,6 @@ export function SquidIn(body:ServerMessageSquidIn.AsObject,context:MessageContex
  player.inSquid=body.enable;
  if(body.squidTotalLimit>0)context.data.squid.totalLimit=body.squidTotalLimit;
  if(body.seatId===context.state.myInfo?.seatId)context.data.squid.showJoin=context.data.squid.state.enabled&&!body.enable;
- if(body.firstIn)context.data.squid.state={...context.data.squid.state,notice:'UISquidJoinInNewTips1'};
+ if(body.firstIn)context.data.squid.state={...context.data.squid.state,notice:'UISquidJoinInNewTips1',noticeSerial:context.data.squid.state.noticeSerial+1};
  return true;
 }

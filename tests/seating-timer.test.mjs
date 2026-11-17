@@ -16,12 +16,12 @@ const info = () => ({ ...new pb.RoomInfo().toObject(), smallBlind:1000,currentMi
 test('CC bring-in min/max and retain branches preserve protocol integer units', () => {
   const room = info();
   assert.deepEqual(new BringInRules(room).caculateCanBringMinMax(), {minAmount:20500,maxAmount:200500,step:2000,needDeposit:true});
-  const q = { seat:4, returnOrNew:1 }, selection={amount:30000,clubID:5,autoAmount:0};
+  const q = { seat:4, returnOrNew:0 }, selection={amount:30000,clubID:5,autoAmount:0};
   const builder=new SeatedDataBuilder();
   assert.equal(builder.build(target,{...room,retainType:2},q,selection).store,10000);
   const auto=builder.build(target,{...room,retainType:1},q,selection);
   assert.equal(auto.autoOnTable,20000);assert.equal(auto.autoOnTableFix,20000);assert.equal(auto.autoOnTableMax,200000);
-  const returned=builder.build(target,{...room,retainType:2},{...q,returnAmount:30000},selection);
+  const returned=builder.build(target,{...room,retainType:2},{...q,returnAmount:30000,autoReturn:true},selection);
   assert.equal(returned.store,9500);
   const smallReturn=builder.build(target,{...room,retainType:2},{...q,returnAmount:9468,autoReturn:true},{...selection,amount:9468});
   assert.equal(smallReturn.store,0,'CC manual retain sends zero store when returned chips are below the retained minimum');

@@ -212,3 +212,49 @@ test('closing informational notices continues to amount without submitting or lo
   await controller.open(3);controller.skipNotices();controller.data.update({amount:406000});await controller.submit();
   assert.deepEqual(submitted,[{quoteID:21,amount:406000,clubID:5,autoAmount:0}]);
 });
+
+test('CC retention return uses a selectable buy-in below the automatic threshold and direct seating otherwise', async t => {
+ for(const [retainType,returned,direct] of [[1,180,false],[1,340,true],[1,500,true],[0,180,true],[2,180,true]]) {
+  const transport=new FakeTransport(),signal=new AbortController();
+  const host=new MxRoomHost(transport,{runtime:pb,timeoutMs:200,http:{baseURL:'https://test.invalid/api',fetch:async url=>Response.json({code:0,data:
+    String(url).endsWith('/user/info')?{user:{un_id:777,nickname:'测试玩家'}}:
+    {return_table:true,last_bring_out:{to_wallet:returned,fee:0,club_id:1},wallet:[{club_id:1,club_name:'俱乐部',gold:10000}]}})}});
+  t.after(()=>{signal.abort();host.destroy()});
+  const initial=snapshot();initial.getMyInfo().setSeatId(0);
+  initial.setPlayersList(initial.getPlayersList().filter(p=>p.getSeatId()!==4));
+  initial.getRoomInfo().setCurrentMinRate(10);initial.getRoomInfo().setCurrentMaxRate(100);
+  initial.getRoomInfo().setSmallBlind(10);initial.getRoomInfo().setDeposit(140);
+  initial.getRoomInfo().setRetainType(retainType);initial.getRoomInfo().setLimitRetainMinRate(10);initial.getRoomInfo().setLimitRetainMaxRate(100);
+  transport.emit('enterTable',{token:'00000000000000000000000000000000'});
+  let seated;
+  transport.onSend=(action,payload)=>{
+    if(action!=='wsSend')return;const packet=outbound(payload.data);
+    if(packet.code===pb.Code.MSG_R_ROOMS){const reply=new pb.ServerMessageRooms(),room=record();room.setGoldType(1);reply.setRpcId(pb.ClientMessageRooms.deserializeBinary(packet.body).getRpcId());reply.setRoomsList([room]);transport.frame(packet.code,0,0,reply);}
+    else if(packet.code===pb.Code.MSG_D_ENTER_ROOM)transport.frame(packet.code,1001,0,initial);
+    else if(packet.code===pb.Code.MSG_D_SEATED){seated=pb.ClientMessageSeated.deserializeBinary(packet.body).toObject();const reply=new pb.ServerMessageSeated();reply.setRecvSeatId(4);reply.setChips(seated.bringIn);transport.frame(packet.code,1001,0,reply);}
+  };
+  const target={roomID:1001,matchID:0,roomType:0};await host.enter(target,signal.signal,()=>{});
+  const buyIn=new BuyInController({prepare:seat=>host.prepareSeat(target,seat,signal.signal),submit:value=>host.sitDown(target,value,signal.signal),standup:()=>host.standup(target,signal.signal)});
+  t.after(()=>buyIn.destroy());
+  await buyIn.open(4);
+  if(!direct) {
+    assert.equal(buyIn.data.state.step,'amount');
+    assert.equal(seated,undefined,'low return waits for a newly selected amount');
+    assert.equal(buyIn.data.state.quote.min,340);
+    assert.equal(buyIn.data.state.quote.max,2140);
+    assert.equal(buyIn.data.state.amount,340);
+    // 0.40 remaining plus 1.40 deposit must not lock the slider at 1.80.
+    buyIn.data.update({amount:540});
+    await buyIn.submit();
+  }
+  assert.equal(buyIn.data.state.step,'closed');
+  assert.equal(seated.bringIn,direct?returned:540);
+  assert.equal(seated.returnOrNew,1);assert.equal(seated.clubId,1);
+  assert.equal(seated.autoOnTable,retainType===1?200:0);
+  assert.equal(seated.autoOnTableFix,retainType===1?200:0);
+  assert.equal(seated.autoOnTableMax,retainType===1?2000:0);
+  assert.equal(seated.autoUseWallet,false);assert.equal(seated.autoOnTableNoStore,false);
+  assert.equal(seated.store,0);
+  assert.ok(seated.autoOnTable===0 || seated.bringIn>=seated.autoOnTable,'server 20017 cannot be triggered');
+ }
+});

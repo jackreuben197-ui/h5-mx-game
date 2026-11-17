@@ -30,3 +30,6 @@
 .mx-squid-result-row{z-index:1}
 .mx-squid-lose{left:calc(var(--mx-SquidView-mx-squid-lose-left) - var(--mx-SquidView-mx-squid-lose-left-2));right:auto;top:var(--mx-SquidView-mx-squid-lose-top-3);width:var(--mx-SquidView-mx-squid-lose-width-3);height:var(--mx-SquidView-mx-squid-lose-height);transform:translateY(var(--mx-SquidView-mx-squid-lose-transform)) rotate(var(--mx-SquidView-mx-squid-lose-transform-2));object-fit:contain;z-index:1}
 .mx-squid-result-row>strong{position:relative;z-index:2}
+
+/* Keep the tied squid above avatars, including the classic avatar layer. */
+.mx-seat-squid-mask{z-index:2}

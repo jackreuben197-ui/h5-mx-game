@@ -72,7 +72,7 @@ export class SeatIdentityView {
   render(state: SeatState): void {
     const p = state.player;
     this.squid.hidden=!(p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
-    this.squidMask.hidden=true;
+    this.squidMask.hidden=!(p?.squidIn && p.squidCount===0);
     const keepDeadline=p?.keepSeatDeadline??0;
     const keeping=!!p?.keepSeatReason;
     this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping || state.foldCountdown ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);
