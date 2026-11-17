@@ -1,0 +1,43 @@
+.mx-round-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mx-RoundCheckbox-gap);
+  cursor: pointer;
+}
+
+.mx-round-selection {
+  display: inline-block;
+  box-sizing: border-box;
+  flex: none;
+  width: var(--mx-round-selection-size, var(--mx-RoundCheckbox-size));
+  height: var(--mx-round-selection-size, var(--mx-RoundCheckbox-size));
+  border: var(--mx-RoundCheckbox-outer-stroke) solid #ffffff80;
+  border-radius: 50%;
+  background-color: #ffffff22;
+}
+
+.mx-round-selection:checked,
+[aria-pressed="true"] > .mx-round-selection {
+  background-image: radial-gradient(circle closest-side,
+    transparent var(--mx-RoundCheckbox-ring-inner-radius),
+    #74ffe8 var(--mx-RoundCheckbox-ring-inner-radius) var(--mx-RoundCheckbox-ring-outer-radius),
+    transparent var(--mx-RoundCheckbox-ring-outer-radius));
+}
+
+.mx-round-checkbox-input {
+  appearance: none;
+  margin: 0;
+  cursor: inherit;
+}
+
+.mx-round-checkbox-input:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .mx-round-checkbox-input {
+    appearance: auto;
+    background: none;
+  }
+}

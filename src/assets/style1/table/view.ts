@@ -361,7 +361,6 @@ export class TableView {
     this.applyLayoutStyles(this.controls.root,controls.styles,this.controlStyles);
     if(controls.scale!==undefined)this.controls.setScale?.(controls.scale);
     this.sound.present(state);
-    this.settlementWatch.setScale(this.layout.unit);
     this.navigation.render?.(state);
     this.media?.render();
     this.controls.render(state);
@@ -391,6 +390,10 @@ export class TableView {
     const contentBottom=landscape||!navigationBox.height?height:Math.min(height,navigationBox.top-box.top);
     this.layout.resize(width, landscape ? height : box.height, landscape, contentBottom);
     const l = this.layout;
+    const bubbleWidth = landscape ? Math.min(width, box.height) : width;
+    const bubbleDesignWidth = landscape || l.id === 'original' ? 1242 : 440;
+    this.root.style.setProperty('--mx-side-bubble-unit', `${bubbleWidth / bubbleDesignWidth}px`);
+    this.settlementWatch.resize(l.unit,landscape ? 0 : box.height - contentBottom);
     this.menu.resize(l.unit, l.height, l.suggest);
     this.menu.root.style.setProperty('--mx-menu-scale',String(l.menuScale));
     this.squid?.resize(l.suggest);

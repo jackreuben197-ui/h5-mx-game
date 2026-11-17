@@ -29,6 +29,8 @@ export class AuditHost implements RoomHost {
   if(this.options.scene==='intro-mushroom'){data.record!.mushroomBase=100;localStorage.removeItem('mx-mushroom-intro-hidden');}
   if(this.options.scene==='intro-critical'){data.record!.criticalHit=1;data.record!.ante=100;localStorage.removeItem('mx-critical-hit-intro-hidden');}
   if(this.options.scene==='intro-squid'){data.record!.squidBase=100;localStorage.removeItem('mx-squid-intro-hidden');}
+  if(this.options.scene==='report')data.snapshot!.handInfo!.inSquid=true;
+  if(this.options.scene==='report-mushroom')data.record!.mushroomMode=1;
   if(this.options.scene.startsWith('insurance-rules')){
    data.snapshot!.roomInfo!.insuranceMode=this.options.scene.endsWith('-ev')?2:this.options.scene.endsWith('-standard')?0:1;
    // Synthetic odds, deliberately long to exercise scrolling; never used online.

@@ -7,7 +7,7 @@ import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { HistoryCardsView } from '../HistoryCardsView/HistoryCardsView.js';
 import { HistorySectionHeaderView } from '../HistorySectionHeaderView/HistorySectionHeaderView.js';
-import { element } from '../../dom.js';
+import { element, profitClass } from '../../dom.js';
 /** CC HistoryScoreSection: Score / Showdown / Showdown2 share the same row layout. */
 export class HistoryScoreView {
     readonly root = componentBox(element('section', 'mx-history-score'),config);
@@ -34,8 +34,11 @@ export class HistoryScoreView {
                 });
             }
             const profits = element('div', 'mx-history-score-profits');
-            if (dual) profits.append(...[0, 1].map(i => element('span', '', StringHelper.GetDecimalN((player.winAnte2[i] ?? 0) / 100))));
-            else profits.append(element('span', '', second ? (player.winAnte2.length > 1 ? StringHelper.GetLongString(player.winAnte2[1]!) : '') : StringHelper.GetLongString(player.winAnte)));
+            const amounts = dual ? [player.winAnte2[0] ?? 0, player.winAnte2[1] ?? 0] : [second ? player.winAnte2[1] : player.winAnte];
+            for (const amount of amounts) {
+                const text = amount === undefined ? '' : dual ? StringHelper.GetDecimalN(amount / 100) : StringHelper.GetLongString(amount);
+                profits.append(element('span', profitClass(amount ?? 0), text));
+            }
             if (player.insuranceGain) profits.append(element('small', '', StringHelper.GetSignedLongString(player.insuranceGain)));
             row.append(position, hands, boards, profits);
             this.root.append(row);

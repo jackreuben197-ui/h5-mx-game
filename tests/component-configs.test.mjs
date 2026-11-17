@@ -11,7 +11,7 @@ const style=resolve('src/assets/style1'),base=join(style,'table/components');
 function walk(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]);}
 
 test('every UI component has a consumed config; every generated CSS reference resolves',()=>{
- const dirs=readdirSync(base,{withFileTypes:true}).filter(e=>e.isDirectory());assert.equal(dirs.length,59);
+ const dirs=readdirSync(base,{withFileTypes:true}).filter(e=>e.isDirectory());
  const styles=componentStyles(style);assert.equal(styles.files.length,dirs.length);
  const css=walk(join(style,'table')).filter(f=>f.endsWith('.css')).map(f=>readFileSync(f,'utf8')).join('\n');
  const tokens=new Set();

@@ -9,7 +9,8 @@ import { bindEvent } from '../../../../../binding/bindEvent.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
-import { element } from '../../dom.js';
+import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
+import { element, profitClass } from '../../dom.js';
 const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
 export class ReportView {
     readonly dialog: RecordDialogView;
@@ -23,7 +24,7 @@ export class ReportView {
     private list = element('div', 'mx-report-list');
     private summary = element('div', 'mx-report-summary');
     private observers = element('div', 'mx-report-observers');
-    private page = element('div', 'mx-record-pages');
+    private pagination: RecordPaginationView;
     private playerInfo: ReportPlayerInfoView;
     private tick?: ReturnType<typeof setInterval>;
     constructor(readonly controller: ReportController) {
@@ -38,7 +39,8 @@ export class ReportView {
         label.append(this.filter, this.filterLabel);
         this.dialog.header.append(this.room, label, this.remaining);
         this.dialog.body.append(this.list, this.summary, this.observers);
-        this.dialog.footer.append(this.page, this.tabs);
+        this.pagination = new RecordPaginationView(round => void controller.select('mode', round));
+        this.dialog.footer.append(this.pagination.root, this.tabs);
         this.bindings.bind({ panel: controller, report: controller.records.data.report });
         i18nMgr.register(this);
     }
@@ -133,20 +135,10 @@ ${StringHelper.GetLongString(p.storeChips)}` : ''), StringHelper.GetSignedLongSt
         }));
         this.observers.replaceChildren(element('h3', '', `${t('MX_Observers', '观众')}　${report.observers.length}`), rail);
         this.summary.hidden = this.observers.hidden = state.tab !== 'battle';
-        this.page.hidden = state.tab !== 'mode';
-        this.page.replaceChildren();
-        if (state.tab === 'mode') {
-            const total = TexasReportPresentation.getTotalRound(report.squidRounds);
-            for (const [label, delta] of [['‹', -1], ['›', 1]] as const) {
-                const b = element('button', '', label);
-                b.type = 'button';
-                b.disabled = state.loading || (delta < 0 ? state.round <= 1 : state.round >= total);
-                b.onclick = () => void this.controller.select('mode', state.round + delta);
-                this.page.append(b);
-                if (delta < 0)
-                    this.page.append(element('span', '', `${state.round}/${total}`));
-            }
-        }
+        const total = state.tab === 'mode' ? TexasReportPresentation.getTotalRound(report.squidRounds) : 0;
+        this.pagination.root.hidden = total === 0;
+        this.pagination.update(total ? state.round || total : 0, total, state.loading);
+        this.pagination.labels(t('MX_ReportRound', '轮次'), t('MX_PreviousRound', '上一轮'), t('MX_NextRound', '下一轮'));
     }
     private table(headers: string[], rows: {
         cells: string[];
@@ -170,7 +162,7 @@ ${StringHelper.GetLongString(p.storeChips)}` : ''), StringHelper.GetSignedLongSt
                 b.onclick = () => void this.playerInfo.open(player);
                 td.replaceChildren(b);
             } if (index === row.cells.length - 1)
-                td.className = row.score > 0 ? 'mx-profit-positive' : row.score < 0 ? 'mx-profit-negative' : ''; tr.append(td); });
+                td.className = profitClass(row.score); tr.append(td); });
             body.append(tr);
         });
         table.append(body);

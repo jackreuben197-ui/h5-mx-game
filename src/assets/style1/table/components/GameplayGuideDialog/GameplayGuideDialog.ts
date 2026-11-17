@@ -1,5 +1,6 @@
 import config from './config.json';
 import { DialogSurface } from '../DialogSurface/DialogSurface.js';
+import { RoundCheckbox } from '../RoundCheckbox/RoundCheckbox.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { element } from '../../dom.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
@@ -9,19 +10,17 @@ export class GameplayGuideDialog {
   private title=element('h2','');
   private picture=element('div','mx-gameplay-guide-image');
   private text=element('p','');
-  private toggle=element('input','');
-  private label=element('span','',()=>i18nMgr.Get('UIGuild_NoticeNoShow'));
+  private toggle=new RoundCheckbox(()=>i18nMgr.Get('UIGuild_NoticeNoShow'));
   private commit=element('button','mx-gameplay-guide-commit',()=>i18nMgr.Get('adaptation10012'));
   private current?:{kind:string;title:()=>string;image:string;content:()=>string;close:()=>void};
   constructor(){
-    this.toggle.type='checkbox';const label=element('label','');label.append(this.toggle,this.label);
     SpriteAtlas.paint(this.commit,config.paths.dialogConfirm);
-    this.surface.content.append(this.title,this.picture,this.text,label,this.commit);
-    this.commit.onclick=()=>{const current=this.current;if(!current)return;localStorage.setItem(`mx-${current.kind}-intro-hidden`,String(this.toggle.checked));this.current=undefined;this.surface.show(false);current.close();};
+    this.surface.content.append(this.title,this.picture,this.text,this.toggle.root,this.commit);
+    this.commit.onclick=()=>{const current=this.current;if(!current)return;localStorage.setItem(`mx-${current.kind}-intro-hidden`,String(this.toggle.input.checked));this.current=undefined;this.surface.show(false);current.close();};
     i18nMgr.register(this);
   }
   show(kind:string,title:()=>string,image:string,content:()=>string,close:()=>void):void {
-    this.current={kind,title,image,content,close};this.toggle.checked=true;this.refreshLanguage();this.surface.show(true);
+    this.current={kind,title,image,content,close};this.toggle.input.checked=true;this.refreshLanguage();this.surface.show(true);
   }
   refreshLanguage():void {
     if(!this.current)return;

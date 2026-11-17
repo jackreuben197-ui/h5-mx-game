@@ -10,6 +10,9 @@ export function element<K extends keyof HTMLElementTagNameMap>(
   else node.textContent = text;
   return node;
 }
+export function profitClass(value: number): string {
+  return value > 0 ? 'mx-profit-positive' : value < 0 ? 'mx-profit-negative' : '';
+}
 export function place(node: HTMLElement, x: number, y: number): void {
   node.style.left = `${x}px`;
   node.style.top = `${y}px`;

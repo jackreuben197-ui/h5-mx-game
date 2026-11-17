@@ -12,7 +12,6 @@
   "layout": {
     "css": {
       "mx-settlement-watch-right": "0",
-      "mx-settlement-watch-gap": "0",
       "mx-settlement-watch-button-gap": "1px",
       "mx-settlement-watch-button-padding": "1px",
       "mx-settlement-watch-button-padding-2": "2px",
@@ -22,14 +21,9 @@
       "mx-settlement-watch-title-line-height": "1.1",
       "mx-settlement-watch-price-gap": "1px",
       "mx-settlement-watch-price-line-height": "1",
-      "mx-settlement-watch-diamond-width": "8px",
-      "mx-settlement-watch-diamond-height": "8px"
+      "mx-settlement-watch-diamond-width-ratio": 0.23
     },
-    "buttonWidth": 150,
-    "buttonHeight": 120,
-    "bottom": 360,
-    "titleSize": 32,
-    "costSize": 28
+    "bottom": 360
   },
   "sizing": {
     "mode": "responsive",

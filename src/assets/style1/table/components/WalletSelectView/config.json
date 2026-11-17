@@ -58,12 +58,7 @@
       "mx-wallet-balance-font-size-2": "8px",
       "mx-wallet-chip-width-2": "12px",
       "mx-wallet-chip-height-2": "12px",
-      "mx-wallet-selected-width": "12px",
-      "mx-wallet-selected-height": "12px",
-      "mx-wallet-selected-border-radius": "50%",
-      "mx-wallet-selected-width-2": "6px",
-      "mx-wallet-selected-height-2": "6px",
-      "mx-wallet-selected-border-radius-2": "50%",
+      "mx-wallet-selection-size": "12px",
       "mx-wallet-current-border-radius-2": "999px"
     }
   },

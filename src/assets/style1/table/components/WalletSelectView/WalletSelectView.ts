@@ -8,6 +8,7 @@ import { uniqueId } from '../../../../../core/uniqueId.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { element } from '../../dom.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
+import { roundSelectionIndicator } from '../RoundCheckbox/RoundCheckbox.js';
 /** CC UIBringIn._setClubItemData: club_logo is a remote URL, never an atlas entry. */
 export class WalletSelectView {
   readonly root = componentBox(element('div', 'mx-wallet-select'),config);
@@ -77,8 +78,7 @@ export class WalletSelectView {
       this.list.replaceChildren(...wallets.map(wallet => {
         const button = element('button', 'mx-wallet-option'); button.type = 'button';
         button.setAttribute('aria-pressed', String(wallet.club_id === clubID));
-        const indicator = element('span', 'mx-wallet-selected'); indicator.setAttribute('aria-hidden', 'true');
-        button.append(this.row(wallet), indicator);
+        button.append(this.row(wallet), roundSelectionIndicator());
         button.onclick = event => { this.close(event.detail === 0); this.select(wallet.club_id); };
         return button;
       }));

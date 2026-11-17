@@ -82,6 +82,10 @@ export const supplement: Record<string, Record<string, string>> = {
   MX_Collect: {"cn": "收藏", "zh": "收藏", "en": "Favorite", "pt": "Favoritar"},
   MX_NextHand: {"cn": "下一手", "zh": "下一手", "en": "Next hand", "pt": "Próxima mão"},
   MX_PreviousHand: {"cn": "上一手", "zh": "上一手", "en": "Previous hand", "pt": "Mão anterior"},
+  MX_ReportRound: {"cn": "轮次", "zh": "輪次", "en": "Round", "pt": "Rodada"},
+  MX_PreviousRound: {"cn": "上一轮", "zh": "上一輪", "en": "Previous round", "pt": "Rodada anterior"},
+  MX_NextRound: {"cn": "下一轮", "zh": "下一輪", "en": "Next round", "pt": "Próxima rodada"},
+  MX_PreviousPage: {cn:'上一页',zh:'上一頁',en:'Previous page',pt:'Página anterior'},
   MX_ReturnToTable: {cn:'返回牌桌',zh:'返回牌桌',en:'Return to table',pt:'Voltar à mesa'},
   "MX_ConfirmRaise": {
     "cn": "确认加注",

@@ -1,0 +1,23 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": { "x": 0, "y": 0 },
+  "paths": {
+    "previous": "raw/ui/recordPrev.png",
+    "next": "raw/ui/recordNext.png",
+    "thumb": "raw/ui/recordSlider.png"
+  },
+  "layout": {
+    "css": {
+      "width": "1050",
+      "column-gap": "50",
+      "control-size": "100",
+      "track-height": "12",
+      "thumb-size": "90",
+      "count-size": "40",
+      "count-height": "50",
+      "count-offset": "5"
+    }
+  },
+  "sizing": { "mode": "composite", "root": null }
+}

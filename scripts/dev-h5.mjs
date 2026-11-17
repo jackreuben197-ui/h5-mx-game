@@ -18,7 +18,7 @@ if (!existsSync(h5Vite)) {
   throw new Error(`H5 依赖未安装：${h5Root}。请在该目录安装依赖，或使用 MX_H5_ROOT 指定已有的 H5 工作区。`);
 }
 
-const h5Origin = `http://${host}:${port}`;
+const h5Origins = [`http://${host}:${port}`, `http://localhost:${port}`];
 const h5Entry = '/src/entry/cocos-h5-entry.ts';
 const entryPath = '/mx-h5-dev-entry.js';
 const entryId = '\0mx-h5-dev-entry';
@@ -29,7 +29,7 @@ try {
   const mx = await createMxServer({
     root: mxRoot,
     cacheDir: 'node_modules/.vite-h5',
-    server: { host, port: mxPort, strictPort: true, cors: { origin: h5Origin } },
+    server: { host, port: mxPort, strictPort: true, cors: { origin: h5Origins } },
   });
   servers.push(mx);
   await mx.listen();
@@ -41,7 +41,6 @@ try {
   // package can remove newer exports required by the shell login overlay.
   process.env.VITE_H5_ONLY = 'false';
   process.env.VITE_WS_PROXY_URL = '';
-  process.env.VITE_WS_URL_TEMPLATE = `ws://${host}:${port}/mx-ws{0}`;
   const { createServer, loadConfigFromFile } = await import(pathToFileURL(h5Vite).href);
   const loaded = await loadConfigFromFile({ command: 'serve', mode }, resolve(h5Root, 'vite.config.ts'));
   const config = loaded?.config;
@@ -67,6 +66,11 @@ try {
     root: h5Root,
     mode,
     cacheDir: `node_modules/.vite-mx-${port}`,
+    define: {
+      ...config.define,
+      // Keep the WS proxy on the same host as the page for either loopback address.
+      'import.meta.env.VITE_WS_URL_TEMPLATE': 'window.location.origin.replace(/^http/, "ws") + "/mx-ws{0}"',
+    },
     optimizeDeps: { ...config.optimizeDeps, include },
     plugins: [...config.plugins, {
       name: 'mx-h5-dev',
@@ -117,7 +121,7 @@ try {
         server.httpServer.on('upgrade', (request, socket, head) => {
           if (!request.url?.startsWith('/mx-ws:')) return;
           const match = /^\/mx-ws:([1-9]\d{0,4})$/.exec(request.url);
-          if (!match || Number(match[1]) > 65535 || request.headers.origin !== h5Origin) {
+          if (!match || Number(match[1]) > 65535 || !h5Origins.includes(request.headers.origin)) {
             socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
             return;
           }
@@ -155,7 +159,7 @@ try {
   });
   servers.push(h5);
   await h5.listen();
-  console.log(`H5 + MX 联调：${h5Origin}/#/home\nH5 源码：${h5Root}`);
+  console.log(`H5 + MX 联调：${h5Origins.map(origin => `${origin}/#/home`).join(' 或 ')}\nH5 源码：${h5Root}`);
 } catch (error) {
   await Promise.allSettled(servers.map(server => server.close()));
   throw error;

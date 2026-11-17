@@ -6,6 +6,7 @@ import { bindEvent } from '../../../../../binding/bindEvent.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
+import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { HistoryScoreView } from '../HistoryScoreView/HistoryScoreView.js';
 import { HistoryPlayerView } from '../HistoryPlayerView/HistoryPlayerView.js';
@@ -17,10 +18,7 @@ export class HistoryView {
     readonly root: HTMLElement;
     private bindings = new BindingScope(this);
     private room = element('div', 'mx-record-room');
-    private previous = element('button', 'mx-history-page-button');
-    private next = element('button', 'mx-history-page-button');
-    private page = element('span', '');
-    private slider = element('input', '');
+    private pagination: RecordPaginationView;
     private details = element('button', 'mx-history-details');
     private detailsLabel = element('span', '');
     private detailsArrow = element('span', 'mx-record-icon');
@@ -40,8 +38,6 @@ export class HistoryView {
         this.root = this.dialog.root;
         this.root.classList.add('mx-history-overlay');
         this.dialog.header.append(this.room);
-        SpriteAtlas.paint(this.previous, config.paths.recordPrev);
-        SpriteAtlas.paint(this.next, config.paths.recordNext);
         SpriteAtlas.paint(this.detailsArrow, config.paths.recordDetails);
         this.details.append(this.detailsLabel, this.detailsArrow);
         const diamond = element('span', 'mx-record-icon');
@@ -49,37 +45,22 @@ export class HistoryView {
         const balanceLine = element('span', 'mx-history-balance-value');
         balanceLine.append(diamond, this.balanceValue);
         this.balance.append(this.balanceLabel, balanceLine);
-        const pages = element('div', 'mx-record-pages');
-        const thumb = element('span', '');
-        SpriteAtlas.paint(thumb, config.paths.recordSlider);
-        this.slider.style.setProperty('--thumb-image', thumb.style.backgroundImage);
-        this.slider.style.setProperty('--thumb-size', thumb.style.backgroundSize);
-        this.slider.style.setProperty('--thumb-position', thumb.style.backgroundPosition);
-        this.slider.type = 'range';
-        this.slider.min = '1';
-        this.slider.step = '1';
-        this.slider.oninput = () => { this.page.textContent = `${this.slider.value}/${controller.state.total}`; this.updateSlider(); };
-        this.slider.onchange = () => void controller.go(Number(this.slider.value));
-        this.previous.onclick = () => void controller.go(controller.state.page - 1);
-        this.next.onclick = () => void controller.go(controller.state.page + 1);
+        this.pagination = new RecordPaginationView(page => void controller.go(page));
         this.details.onclick = () => controller.details();
         this.collect.onclick = () => void controller.collect();
         this.peek.onclick = () => void controller.watch('peek');
         this.reveal.onclick = () => void controller.watch('reveal');
         this.retry.onclick = () => void controller.go(controller.state.page);
-        for (const button of [this.previous, this.next, this.details, this.collect, this.peek, this.reveal, this.retry])
+        for (const button of [this.details, this.collect, this.peek, this.reveal, this.retry])
             button.type = 'button';
-        const track = element('div', 'mx-history-page-track');
-        track.append(this.slider, this.page);
-        pages.append(this.previous, track, this.next);
-        const actions = element('div', 'mx-record-tabs');
+        const actions = element('div', 'mx-record-tabs mx-history-collect-actions');
         actions.append(this.collect, this.retry);
         const watch = element('div', 'mx-record-tabs mx-history-watch');
         watch.append(this.peek, this.reveal);
         const controls = element('div', 'mx-history-footer-actions');
-        controls.append(watch, actions);
+        controls.append(watch);
         this.balance.hidden = true;
-        this.dialog.footer.append(this.balance, controls, pages);
+        this.dialog.footer.append(this.balance, controls, this.pagination.root, actions);
         this.bindings.bind({ panel: controller });
         i18nMgr.register(this);
     }
@@ -98,16 +79,8 @@ export class HistoryView {
         }
         const { data, model } = state;
         const busy = state.loading || !!state.buying || state.collecting;
-        this.previous.disabled = busy || state.page <= 1;
-        this.next.disabled = busy || state.page >= state.total;
-        this.slider.disabled = busy || state.total < 2;
-        this.slider.max = String(Math.max(1, state.total));
-        this.slider.value = String(state.page);
-        this.slider.setAttribute('aria-label', t('UITexasReport_hand', '手数'));
-        this.previous.setAttribute('aria-label', t('MX_PreviousHand', '上一手'));
-        this.next.setAttribute('aria-label', t('MX_NextHand', '下一手'));
-        this.page.textContent = `${state.page}/${state.total}`;
-        this.updateSlider();
+        this.pagination.update(state.page, state.total, busy);
+        this.pagination.labels(t('UITexasReport_hand', '手数'), t('MX_PreviousHand', '上一手'), t('MX_NextHand', '下一手'));
         this.detailsLabel.textContent = t('MX_HistoryDetails', '查看详情');
         this.detailsArrow.style.transform = state.details ? 'scaleY(-1)' : '';
         this.details.setAttribute('aria-expanded', String(state.details));
@@ -193,7 +166,6 @@ export class HistoryView {
         }
         content.scrollTop = scroll;
     }
-    private updateSlider(): void { this.slider.style.setProperty('--progress', `${Number(this.slider.max) > 1 ? (Number(this.slider.value) - 1) / (Number(this.slider.max) - 1) * 100 : 0}%`); }
     open(): void { this.controller.open(); }
     onFrameResize(width: number, height: number): void { this.dialog.onFrameResize(width, height); }
     destroy(): void { this.bindings.destroy(); this.controller.destroy(); this.dialog.destroy(); }

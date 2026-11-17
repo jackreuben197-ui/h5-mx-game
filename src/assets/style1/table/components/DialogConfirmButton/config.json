@@ -1,0 +1,17 @@
+{
+  "w": 353,
+  "h": 67,
+  "anchor": { "x": 0, "y": 0 },
+  "paths": {
+    "background": "raw/ui/dialogConfirm.png"
+  },
+  "layout": {
+    "css": {
+      "font-size": "23px",
+      "sprite-overlap": "2px"
+    }
+  },
+  "images": {
+    "background": { "pack": false }
+  }
+}

@@ -5,5 +5,5 @@
 
 /* Same original 80px end caps; separate center fill avoids Chromium's border-image
    fill seams. Height scales uniformly, so vertical slices remain proportional. */
-.mx-confirm-texture::before{border:0;border-image:none;left:calc(44.693cqh - 1px);right:calc(44.693cqh - 1px);background-image:var(--mx-button-image);background-size:153.512% 100%;background-position:center;background-repeat:no-repeat}
+.mx-confirm-texture::before{border:0;border-image:none;inset-inline:calc(44.693cqh - var(--mx-confirm-texture-overlap,1px));background-image:var(--mx-button-image);background-size:153.512% 100%;background-position:center;background-repeat:no-repeat}
 .mx-confirm-texture::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:0 solid transparent;border-image-source:var(--mx-button-image);border-image-slice:0 80;border-image-width:0 44.693cqh;border-image-repeat:stretch}

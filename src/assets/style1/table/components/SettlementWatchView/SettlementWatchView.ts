@@ -45,12 +45,8 @@ export class SettlementWatchView {
     };
     price(this.peek,watch?.peekCost,false);price(this.reveal,watch?.revealCost,watch?.revealFree);
   }
-  setScale(unit:number):void{
-    this.root.style.setProperty('--mx-watch-width',`${config.layout.buttonWidth*unit}px`);
-    this.root.style.setProperty('--mx-watch-height',`${config.layout.buttonHeight*unit}px`);
-    this.root.style.setProperty('--mx-watch-bottom',`${config.layout.bottom*unit}px`);
-    this.root.style.setProperty('--mx-watch-title',`${config.layout.titleSize*unit}px`);
-    this.root.style.setProperty('--mx-watch-cost',`${config.layout.costSize*unit}px`);
+  resize(unit:number,navigationInset:number):void{
+    this.root.style.setProperty('--mx-watch-bottom',`${Math.max(config.layout.bottom*unit,navigationInset)}px`);
   }
   destroy():void{this.root.remove();}
 }

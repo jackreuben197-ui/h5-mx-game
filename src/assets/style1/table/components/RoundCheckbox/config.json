@@ -1,0 +1,19 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": { "x": 0, "y": 0 },
+  "paths": {},
+  "layout": {
+    "css": {
+      "gap": "8px",
+      "size": "19px",
+      "outer-stroke": "1px",
+      "ring-inner-radius": "56%",
+      "ring-outer-radius": "76%"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-round-checkbox"
+  }
+}

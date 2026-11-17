@@ -240,18 +240,12 @@ export class ActionControls {
     css.setProperty('--mx-op-main-x', `${275.647 * scale}px`);
     css.setProperty('--mx-op-upper-y', `${200 * scale}px`);
     css.setProperty('--mx-op-straddle-y', `${155.812 * scale}px`);
-    css.setProperty('--mx-op-add-x', `${-546 * scale}px`);
-    css.setProperty('--mx-op-add-y', `${65 * scale}px`);
-    css.setProperty('--mx-op-add-width', `${150 * scale}px`);
-    css.setProperty('--mx-op-add-height', `${120 * scale}px`);
     css.setProperty('--mx-op-auto-gap', `${500 * scale}px`);
     css.setProperty('--mx-op-quick-width', `${144 * scale}px`);
     css.setProperty('--mx-op-quick-height', `${143 * scale}px`);
     css.setProperty('--mx-op-quick-font', `${20*scale}px`);
     css.setProperty('--mx-op-quick-ratio-font', `${40*scale}px`);
     css.setProperty('--mx-op-quick-value-font', `${34*scale}px`);
-    css.setProperty('--mx-op-add-title', `${30*scale}px`);
-    css.setProperty('--mx-op-add-cost', `${28*scale}px`);
   }
   private refresh() {
     this.root.dataset.mode = this.mode;

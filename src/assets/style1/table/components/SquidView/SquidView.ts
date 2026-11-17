@@ -10,8 +10,9 @@ import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { element } from '../../dom.js';
-import { SpriteAtlas } from '../../SpriteAtlas.js';
+import { dialogConfirmButton } from '../DialogConfirmButton/DialogConfirmButton.js';
 import { DialogSurface } from '../DialogSurface/DialogSurface.js';
+import { RoundCheckbox } from '../RoundCheckbox/RoundCheckbox.js';
 import { TableConfirmDialog } from '../TableConfirmDialog/TableConfirmDialog.js';
 const url=(name:string)=>resourceURL((viewConfig.paths as Record<string,string>)[name]!);
 export class SquidView {
@@ -77,13 +78,31 @@ export class SquidView {
   if(s.enabled&&mine?.inSquid&&s.mode===1){this.confirm.open({owner:'squid-standup',title:()=>mine.squidCount<=0?i18nMgr.Get('UIGuild_TipsTitle'):'',message:()=>i18nMgr.Get(mine.squidCount<=0?'UISquid_Tips3':'UIDelayLeaveTips'),cancel:()=>i18nMgr.Get(mine.squidCount<=0?'adaptation10013':'UIPause_sdXLZk7S'),commit:()=>i18nMgr.Get(mine.squidCount<=0?'adaptation10012':'UILeave'),onCancel:()=>{},onCommit:perform});}else perform();
  }
  showIntro():void {
-  clearInterval(this.loop);let page=0;const mode=this.records.data.squid.state.mode;
-  const title=element('h2','',()=>`${i18nMgr.Get('UIDialogSquid_BloodyTip')} ${i18nMgr.Get('UIDialogSquid_SoonStartTip')}`),picture=element('img','mx-squid-page'),text=element('p',''),bar=element('div','mx-squid-pages'),left=element('button','','‹'),right=element('button','','›'),commit=element('button','mx-squid-commit',()=>i18nMgr.Get('adaptation10012')),label=element('label',''),toggle=element('input','');toggle.type='checkbox';toggle.checked=true;
-  label.append(toggle,element('span','',()=>i18nMgr.Get('UIGuild_NoticeNoShow')));SpriteAtlas.paint(commit,viewConfig.paths.dialogConfirm);
-  left.className='mx-squid-prev';right.className='mx-squid-next';left.style.backgroundImage=`url("${url('icon_lelft_arrow')}")`;right.style.backgroundImage=`url("${url('icon_right_arrow')}")`;left.textContent=right.textContent='';
+  clearInterval(this.loop);
+  let page=0;
+  const mode=this.records.data.squid.state.mode;
+  const title=element('h2','',()=>`${i18nMgr.Get('UIDialogSquid_BloodyTip')} ${i18nMgr.Get('UIDialogSquid_SoonStartTip')}`);
+  const picture=element('img','mx-squid-page');
+  const text=element('p','');
+  const bar=element('div','mx-squid-pages');
+  const left=element('button','mx-squid-prev');
+  const right=element('button','mx-squid-next');
+  left.type=right.type='button';
+  i18nLabel.bind(left,()=>i18nMgr.Get('MX_PreviousPage'),'aria-label');
+  i18nLabel.bind(right,()=>i18nMgr.Get('UITableSetting_nextPage'),'aria-label');
+  left.style.backgroundImage=`url("${url('icon_lelft_arrow')}")`;
+  right.style.backgroundImage=`url("${url('icon_right_arrow')}")`;
+  const toggle=new RoundCheckbox(()=>i18nMgr.Get('UIGuild_NoticeNoShow'),true);
+  const footer=element('div','mx-squid-intro-footer');
+  const commit=dialogConfirmButton(()=>i18nMgr.Get('adaptation10012'),()=>{
+   clearInterval(this.loop);
+   localStorage.setItem('mx-squid-intro-hidden',String(toggle.input.checked));
+   this.intro.show(false);
+  });
+  footer.append(commit);
   const render=()=>{picture.src=url(`squid_dialog_page_${page+1}`);i18nLabel.bind(text,()=>i18nMgr.Get(page===0?(mode===1?'UIDialogSquid_BloodyPage1':'UIDialogSquid_NormalPage1'):page===1?(mode===1?'UIDialogSquid_Tips1':'UIDialogSquid_Tips2'):'UIDialogSquid_BloodyPage3'));bar.replaceChildren(...[0,1,2].map(i=>{const dot=element('span','');dot.classList.toggle('selected',i===page);return dot;}));};
-  left.onclick=()=>{clearInterval(this.loop);page=(page+2)%3;render();};right.onclick=()=>{clearInterval(this.loop);page=(page+1)%3;render();};commit.onclick=()=>{clearInterval(this.loop);localStorage.setItem('mx-squid-intro-hidden',String(toggle.checked));this.intro.show(false);};
-  this.intro.content.replaceChildren(title,bar,picture,text,left,right,label,commit);render();this.intro.show(true);this.loop=setInterval(()=>{page=(page+1)%3;render();},2000);
+  left.onclick=()=>{clearInterval(this.loop);page=(page+2)%3;render();};right.onclick=()=>{clearInterval(this.loop);page=(page+1)%3;render();};
+  this.intro.content.replaceChildren(title,bar,picture,text,left,right,toggle.root,footer);render();this.intro.show(true);this.loop=setInterval(()=>{page=(page+1)%3;render();},2000);
  }
  destroy():void{clearTimeout(this.closeTimer);clearInterval(this.loop);this.animation?.cancel();this.bindings.destroy();this.result.destroy();this.intro.destroy();this.root.remove();}
 }
