@@ -1,0 +1,36 @@
+{
+  "w": 682,
+  "h": 176,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.5
+  },
+  "paths": {},
+  "slots": [
+    0,
+    141,
+    281,
+    421,
+    562
+  ],
+  "layout": {
+    "css": {
+      "mx-public-slot-top": "168.46px",
+      "mx-public-slot-top-2": "2",
+      "mx-board-width": "0",
+      "mx-board-height": "0",
+      "mx-board-transform-origin": "0",
+      "mx-board-transform-origin-2": "0",
+      "mx-public-slot-width": "120px",
+      "mx-public-slot-height": "176px",
+      "mx-public-slot-margin-left": "-60px",
+      "mx-public-slot-margin-top": "-88px"
+    },
+    "emphasisLift": 20,
+    "cardWidth": 120
+  },
+  "sizing": {
+    "mode": "fixed",
+    "root": ".mx-board"
+  }
+}

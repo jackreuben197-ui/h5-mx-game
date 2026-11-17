@@ -1,0 +1,81 @@
+{
+  "paths": {
+    "bgm": "audio/bgm.mp3",
+    "deal": "audio/deal.mp3",
+    "fold": "audio/fold.mp3",
+    "check": "audio/check.mp3",
+    "chips": "audio/chips.mp3",
+    "allin": "audio/allin.mp3",
+    "turn": "audio/turn.mp3",
+    "alert": "audio/action-alert.mp3",
+    "three": "audio/countdown-three.mp3"
+  },
+  "media": {
+    "bgm": {
+      "type": "audio",
+      "pack": false,
+      "preload": "metadata",
+      "loop": true,
+      "volume": 0.3
+    },
+    "deal": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "fold": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "check": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "chips": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "allin": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "turn": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "alert": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    },
+    "three": {
+      "type": "audio",
+      "pack": "table-sfx",
+      "preload": "lazy",
+      "volume": 1
+    }
+  },
+  "mediaPacks": {
+    "table-sfx": {
+      "format": "mp3",
+      "sampleRate": 48000,
+      "channels": 2,
+      "gapSeconds": 0.1,
+      "maxDecodedBytes": 33554432,
+      "bitrateKbps": 128,
+      "maxClipSeconds": 5
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "toastBg": "raw/ui/toastBg.png"
+  },
+  "layout": {
+    "css": {
+      "mx-table-toast-left": "50%",
+      "mx-table-toast-top": "50%",
+      "mx-table-toast-top-2": "350",
+      "mx-table-toast-max-width": "1200",
+      "mx-table-toast-max-width-2": "100%",
+      "mx-table-toast-max-width-3": "16px",
+      "mx-table-toast-padding": "40",
+      "mx-table-toast-padding-2": "100",
+      "mx-table-toast-font-size": "60",
+      "mx-table-toast-line-height": "70",
+      "mx-table-toast-transform": "-50%",
+      "mx-table-toast-transform-2": "100"
+    },
+    "displayMs": 2600
+  },
+  "images": {
+    "toastBg": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-table-toast"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "w": 800,
+  "h": 900,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.6666666666666666
+  },
+  "paths": {
+    "dealer": "raw/ui/dealer.png"
+  },
+  "identity": {
+    "x": 400,
+    "y": 600
+  },
+  "layout": {
+    "css": {
+      "mx-seat-width": "0",
+      "mx-seat-height": "0",
+      "mx-seat-transform-origin": "0",
+      "mx-seat-transform-origin-2": "0",
+      "mx-dealer-width": "75px",
+      "mx-dealer-height": "77px",
+      "mx-dealer-margin-left": "-37.5px",
+      "mx-dealer-margin-top": "-38.5px"
+    }
+  },
+  "sizing": {
+    "mode": "fixed",
+    "root": ".mx-seat"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "recordPosition": "raw/ui/recordPosition.png"
+  },
+  "layout": {
+    "css": {
+      "mx-history-score-border-radius": "90",
+      "mx-history-score-padding": "25",
+      "mx-history-score-padding-2": "35",
+      "mx-history-position-width": "103",
+      "mx-history-position-height": "70",
+      "mx-history-position-font-size": "31",
+      "mx-history-score-row-grid-template-columns": "120",
+      "mx-history-score-row-grid-template-columns-2": "260",
+      "mx-history-score-row-grid-template-columns-3": "0",
+      "mx-history-score-row-grid-template-columns-4": "1fr",
+      "mx-history-score-row-grid-template-columns-5": "140",
+      "mx-history-score-row-column-gap": "18",
+      "mx-history-score-row-margin-top": "18",
+      "mx-history-score-row-min-height": "170",
+      "mx-history-score-position-gap": "10",
+      "mx-history-type-font-size": "28",
+      "mx-history-score-profits-gap": "20",
+      "mx-history-score-profits-padding-top": "42",
+      "mx-history-score-profits-min-height": "128",
+      "mx-history-insurance-margin": "20"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-history-score"
+  }
+}

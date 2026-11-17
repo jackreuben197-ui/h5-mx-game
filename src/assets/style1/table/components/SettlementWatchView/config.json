@@ -1,0 +1,38 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "operationExtra": "raw/ui/operationExtra.png",
+    "recordDiamond": "raw/ui/recordDiamond.png"
+  },
+  "layout": {
+    "css": {
+      "mx-settlement-watch-right": "0",
+      "mx-settlement-watch-gap": "0",
+      "mx-settlement-watch-button-gap": "1px",
+      "mx-settlement-watch-button-padding": "1px",
+      "mx-settlement-watch-button-padding-2": "2px",
+      "mx-settlement-watch-button-padding-3": "3px",
+      "mx-settlement-watch-bg-inset": "0",
+      "mx-settlement-watch-bg-transform": "-1",
+      "mx-settlement-watch-title-line-height": "1.1",
+      "mx-settlement-watch-price-gap": "1px",
+      "mx-settlement-watch-price-line-height": "1",
+      "mx-settlement-watch-diamond-width": "8px",
+      "mx-settlement-watch-diamond-height": "8px"
+    },
+    "buttonWidth": 150,
+    "buttonHeight": 120,
+    "bottom": 360,
+    "titleSize": 32,
+    "costSize": 28
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-settlement-watch"
+  }
+}

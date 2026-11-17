@@ -1,0 +1,83 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "returnGame": "raw/ui/returnGame.png",
+    "jpt_award": "raw/jackpot/jpt_award.png",
+    "icon_limit_hand": "raw/jackpot/icon_limit_hand.png"
+  },
+  "layout": {
+    "css": {
+      "mx-jackpot-inset": "0",
+      "mx-jackpot-pool-width": "295px",
+      "mx-jackpot-pool-height": "77px",
+      "mx-jackpot-pool-padding": "0",
+      "mx-jackpot-pool-background-size": "100%",
+      "mx-jackpot-pool-background-size-2": "100%",
+      "mx-jackpot-pool-font-size": "47.28px",
+      "mx-jackpot-pool-line-height": "48px",
+      "mx-jackpot-pool-transform": "1.15",
+      "mx-calltime-gap": "10px",
+      "mx-calltime-height": "70px",
+      "mx-calltime-font-size": "40px",
+      "mx-calltime-line-height": "40px",
+      "mx-calltime-width": "45px",
+      "mx-calltime-height-2": "45px",
+      "mx-jackpot-start-background-size": "100.653%",
+      "mx-jackpot-start-background-size-2": "100.653%",
+      "mx-jackpot-start-background-position": "60%",
+      "mx-jackpot-start-background-position-2": "60%",
+      "mx-jackpot-start-transform": "-50%",
+      "mx-jackpot-start-transform-2": "-50%"
+    },
+    "baseY": 650,
+    "buttonHalfHeight": 38.5,
+    "buttonHeight": 77,
+    "progressOffset": 35,
+    "startOffsetY": -144,
+    "startWidth": 321,
+    "startHeight": 278,
+    "startAnimation": {
+      "frames": [
+        {
+          "transform": "translate(-50%,-50%) scale(0)",
+          "opacity": 1
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.675
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.8166666666666667
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 0
+        }
+      ],
+      "duration": 2000
+    }
+  },
+  "images": {
+    "returnGame": {
+      "pack": false
+    },
+    "jpt_award": {
+      "pack": false
+    },
+    "icon_limit_hand": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-jackpot"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "confirmTextBg": "raw/ui/confirmTextBg.png",
+    "confirmCancel": "raw/ui/confirmCancel.png",
+    "dialogConfirm": "raw/ui/dialogConfirm.png"
+  },
+  "layout": {
+    "css": {
+      "mx-table-confirm-inset": "0",
+      "mx-table-confirm-padding": "12px",
+      "mx-confirm-panel-gap": "10px",
+      "mx-confirm-panel-width": "78vw",
+      "mx-confirm-panel-width-2": "430px",
+      "mx-confirm-panel-max-width": "100%",
+      "mx-confirm-panel-min-height": "0",
+      "mx-confirm-panel-padding": "18px",
+      "mx-confirm-panel-padding-2": "18px",
+      "mx-confirm-panel-padding-3": "20px",
+      "mx-confirm-title-margin": "0",
+      "mx-confirm-title-font-size": "19px",
+      "mx-confirm-title-line-height": "1.25",
+      "mx-confirm-body-min-height": "40px",
+      "mx-confirm-body-padding": "6px",
+      "mx-confirm-body-padding-2": "5px",
+      "mx-confirm-text-bg-inset": "0",
+      "mx-confirm-text-bg-width": "100%",
+      "mx-confirm-text-bg-height": "100%",
+      "mx-confirm-message-margin": "0",
+      "mx-confirm-message-font-size": "14px",
+      "mx-confirm-message-line-height": "1.35",
+      "mx-confirm-buttons-gap": "16px",
+      "mx-confirm-buttons-width": "100%",
+      "mx-confirm-cancel-width": "100%",
+      "mx-confirm-cancel-width-2": "16px",
+      "mx-confirm-cancel-width-3": "2",
+      "mx-confirm-cancel-height": "48px",
+      "mx-confirm-cancel-min-height": "0",
+      "mx-confirm-cancel-padding": "0",
+      "mx-confirm-cancel-border-radius": "0",
+      "mx-confirm-cancel-font-size": "15px",
+      "mx-confirm-cancel-line-height": "1",
+      "mx-confirm-cancel-background-size": "100%",
+      "mx-confirm-cancel-background-size-2": "100%",
+      "mx-confirm-commit-background-size": "100%",
+      "mx-confirm-commit-background-size-2": "100%",
+      "mx-confirm-panel-max-height": "100dvh",
+      "mx-confirm-panel-max-height-2": "24px",
+      "mx-confirm-body-min-height-2": "0",
+      "mx-confirm-message-line-height-2": "1.65",
+      "mx-confirm-commit-width": "70%"
+    }
+  },
+  "images": {
+    "confirmTextBg": {
+      "pack": false
+    },
+    "confirmCancel": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-table-confirm"
+  }
+}

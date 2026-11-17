@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { releaseSource } from './release-source.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const run = (file, args, cwd = root) => execFileSync(file, args, { cwd, stdio: 'inherit', env: process.env });
@@ -35,12 +36,13 @@ try {
   process.env.VITE_MX_API_BASE_URL = process.env.VITE_MX_API_BASE_URL || api;
   run(process.execPath, ['scripts/check-protocol.mjs'], stage);
   run(process.execPath, ['scripts/sync-i18n.mjs'], stage);
-  run('npm', ['run', 'assets:pack']);
   run('npm', ['run', 'check']);
   run(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--config', 'vite.host.config.ts', '--mode', mode]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
-  const version = { version: pkg.version, mxCommit: git(root, 'rev-parse', 'HEAD'), h5Commit: git(shell, 'rev-parse', 'HEAD'),
-    mxDirty: !!git(root, 'status', '--porcelain'), h5Dirty: !!git(shell, 'status', '--porcelain'), mode, builtAt: new Date().toISOString() };
+  const h5Source = releaseSource(shell, root);
+  const version = { version: pkg.version, mxCommit: git(root, 'rev-parse', 'HEAD'),
+    h5Commit: h5Source.kind === 'repository' ? h5Source.commit : null, h5Source,
+    mxDirty: !!git(root, 'status', '--porcelain'), h5Dirty: h5Source.dirty, mode, builtAt: new Date().toISOString() };
   version.buildId = createHash('sha256').update(JSON.stringify(version)).digest('hex').slice(0, 16);
   const clientDir = `mx-client/${version.buildId}`;
   const manifest = JSON.parse(await readFile(join(root, 'dist/client/.vite/manifest.json'), 'utf8'));

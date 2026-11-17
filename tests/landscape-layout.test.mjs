@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { landscapeLayout } from '../.test-build/core/landscape-layout.js';
+import { landscapeLayout } from '../.test-build/assets/style1/table/layouts/landscape-layout.js';
 
 test('wide 9/8/7 layouts match requested side counts with hero at bottom center', () => {
   const expected = {

@@ -1,0 +1,59 @@
+.mx-special-dialog{position:absolute;inset:var(--mx-DialogSurface-mx-special-dialog-inset);z-index:80;display:flex;align-items:center;justify-content:center;color:white;text-align:center}
+.mx-special-panel{position:relative;isolation:isolate;flex:none;transform-origin:center;padding:var(--mx-DialogSurface-mx-special-panel-padding);border:0;background:transparent}
+.mx-special-panel>.mx-confirm-frame{position:absolute;inset:var(--mx-DialogSurface-mx-confirm-frame-inset);z-index:0;width:var(--mx-DialogSurface-mx-confirm-frame-width);height:var(--mx-DialogSurface-mx-confirm-frame-height);border:40px solid transparent;border-image-slice:120 fill;border-image-width:40px;pointer-events:none;box-sizing:border-box}
+.mx-special-content{position:relative;z-index:1}
+.mx-game:has(.mx-special-dialog:not([hidden])) ~ .mx-test-menu{visibility:hidden}
+.mx-special-dialog button{font:inherit;color:inherit;border:0;cursor:pointer;background-color:transparent;background-repeat:no-repeat;background-size:var(--mx-DialogSurface-mx-special-dialog-background-size) var(--mx-DialogSurface-mx-special-dialog-background-size-2)}
+.mx-special-dialog button:disabled{opacity:.55;cursor:default}
+.mx-second-pcs .mx-special-content{height:var(--mx-DialogSurface-mx-special-content-height);padding:var(--mx-DialogSurface-mx-special-content-padding-5) var(--mx-DialogSurface-mx-special-content-padding-6) var(--mx-DialogSurface-mx-special-content-padding-7);box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
+.mx-second-pcs h2{font-size:var(--mx-AgreeSecondPcsView-mx-second-pcs-font-size);font-weight:400;margin:var(--mx-AgreeSecondPcsView-mx-second-pcs-margin) var(--mx-AgreeSecondPcsView-mx-second-pcs-margin-2) var(--mx-AgreeSecondPcsView-mx-second-pcs-margin-3)}
+.mx-second-pcs p{font-size:var(--mx-AgreeSecondPcsView-mx-second-pcs-font-size-2);margin:var(--mx-AgreeSecondPcsView-mx-second-pcs-margin-4) var(--mx-AgreeSecondPcsView-mx-second-pcs-margin-5) var(--mx-AgreeSecondPcsView-mx-second-pcs-margin-6)}
+.mx-second-clock{color:#ffed82;font-size:var(--mx-AgreeSecondPcsView-mx-second-clock-font-size);margin-bottom:var(--mx-AgreeSecondPcsView-mx-second-clock-margin-bottom)}
+.mx-second-players{height:var(--mx-AgreeSecondPcsView-mx-second-players-height);display:flex;justify-content:center;max-width:var(--mx-AgreeSecondPcsView-mx-second-players-max-width)}
+.mx-second-avatar{width:var(--mx-AgreeSecondPcsView-mx-second-avatar-width);height:var(--mx-AgreeSecondPcsView-mx-second-avatar-height);object-fit:cover;border:2px solid #363c65;border-radius:var(--mx-AgreeSecondPcsView-mx-second-avatar-border-radius);box-sizing:border-box}
+.mx-second-avatar:not(:first-child){margin-left:var(--mx-AgreeSecondPcsView-mx-second-avatar-margin-left)}
+.mx-second-count{font-size:var(--mx-AgreeSecondPcsView-mx-second-count-font-size);margin:var(--mx-AgreeSecondPcsView-mx-second-count-margin) var(--mx-AgreeSecondPcsView-mx-second-count-margin-2)}
+.mx-second-buttons{display:flex;gap:var(--mx-AgreeSecondPcsView-mx-second-buttons-gap);width:var(--mx-AgreeSecondPcsView-mx-second-buttons-width);height:var(--mx-AgreeSecondPcsView-mx-second-buttons-height);margin-top:auto}
+.mx-second-buttons button{flex:1;font-size:var(--mx-AgreeSecondPcsView-mx-second-buttons-font-size)}
+.mx-insurance .mx-special-content{padding:var(--mx-DialogSurface-mx-special-content-padding-8) var(--mx-DialogSurface-mx-special-content-padding-9) var(--mx-DialogSurface-mx-special-content-padding-10);box-sizing:border-box;font-size:var(--mx-DialogSurface-mx-special-content-font-size)}
+.mx-insurance-title{font-size:var(--mx-InsuranceView-mx-insurance-title-font-size);margin-bottom:var(--mx-InsuranceView-mx-insurance-title-margin-bottom)}
+.mx-insurance-tabs{display:flex;justify-content:center;gap:var(--mx-InsuranceView-mx-insurance-tabs-gap);margin-bottom:var(--mx-InsuranceView-mx-insurance-tabs-margin-bottom)}
+.mx-insurance-tabs:empty{display:none}
+.mx-insurance-tabs button{border-radius:var(--mx-InsuranceView-mx-insurance-tabs-border-radius);background:#333a50;padding:var(--mx-InsuranceView-mx-insurance-tabs-padding) var(--mx-InsuranceView-mx-insurance-tabs-padding-2)}
+.mx-insurance-tabs button.selected{background:#00ad92}
+.mx-insurance-players{display:flex;justify-content:center;flex-wrap:wrap;gap:var(--mx-InsuranceView-mx-insurance-players-gap);margin-bottom:var(--mx-InsuranceView-mx-insurance-players-margin-bottom)}
+.mx-insurance-player{width:var(--mx-InsuranceView-mx-insurance-player-width);font-size:var(--mx-InsuranceView-mx-insurance-player-font-size);overflow:hidden}
+.mx-insurance-player>div:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-insurance-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--mx-InsuranceView-mx-insurance-cards-gap);margin:var(--mx-InsuranceView-mx-insurance-cards-margin) var(--mx-InsuranceView-mx-insurance-cards-margin-2)}
+.mx-insurance .mx-card{position:relative;display:inline-block;flex:none;width:var(--mx-CardView-mx-card-width-4);height:var(--mx-CardView-mx-card-height-3)}
+.mx-insurance-player .mx-card{width:var(--mx-CardView-mx-card-width-5);height:var(--mx-CardView-mx-card-height-4)}
+.mx-insurance-outs{width:var(--mx-InsuranceView-mx-insurance-outs-width);max-height:var(--mx-InsuranceView-mx-insurance-outs-max-height);overflow:auto;margin:var(--mx-InsuranceView-mx-insurance-outs-margin) auto var(--mx-InsuranceView-mx-insurance-outs-margin-2);scrollbar-width:none}
+.mx-insurance-outs .mx-insurance-cards{justify-content:flex-start}
+.mx-insurance-odds{display:flex;justify-content:space-between;text-align:left;white-space:pre-wrap}
+.mx-insurance-sorting{display:flex;justify-content:center;gap:var(--mx-InsuranceView-mx-insurance-sorting-gap);font-size:var(--mx-InsuranceView-mx-insurance-sorting-font-size);margin-top:var(--mx-InsuranceView-mx-insurance-sorting-margin-top)}
+.mx-insurance-sorting button{display:flex;align-items:center;gap:var(--mx-InsuranceView-mx-insurance-sorting-gap-2);padding:var(--mx-InsuranceView-mx-insurance-sorting-padding)}
+.mx-insurance-sorting button::before{content:'';display:block;flex:none;width:var(--mx-InsuranceView-mx-insurance-sorting-width);height:var(--mx-InsuranceView-mx-insurance-sorting-height);border:2px solid #ddd8;border-radius:var(--mx-InsuranceView-mx-insurance-sorting-border-radius);background:#8f959e}
+.mx-insurance-sorting button[aria-pressed=true]::before{background:#39d4bf;box-shadow:inset 0 0 0 3px #8f959e}
+.mx-insurance-details{display:grid;grid-template-columns:repeat(var(--mx-InsuranceView-mx-insurance-details-grid-template-columns),var(--mx-InsuranceView-mx-insurance-details-grid-template-columns-2));gap:var(--mx-InsuranceView-mx-insurance-details-gap) var(--mx-InsuranceView-mx-insurance-details-gap-2);font-size:var(--mx-InsuranceView-mx-insurance-details-font-size);margin-bottom:var(--mx-InsuranceView-mx-insurance-details-margin-bottom)}
+.mx-insurance-choose{grid-column:1/-1;font-size:var(--mx-InsuranceView-mx-insurance-choose-font-size)}
+.mx-insurance-options{display:grid;grid-template-columns:repeat(var(--mx-InsuranceView-mx-insurance-options-grid-template-columns),var(--mx-InsuranceView-mx-insurance-options-grid-template-columns-2));gap:var(--mx-InsuranceView-mx-insurance-options-gap) var(--mx-InsuranceView-mx-insurance-options-gap-2)}
+.mx-insurance-option{position:relative;display:flex;align-items:flex-end;justify-content:center;height:var(--mx-InsuranceView-mx-insurance-option-height);padding:var(--mx-InsuranceView-mx-insurance-option-padding)}
+/* Figma 11903:32788: price starts at 0, panel at 49.68 / 3.312 = 15px. */
+.mx-insurance-premium{position:absolute;top:var(--mx-InsuranceView-mx-insurance-premium-top);left:var(--mx-InsuranceView-mx-insurance-premium-left);transform:translateX(var(--mx-InsuranceView-mx-insurance-premium-transform));z-index:1;font-size:var(--mx-InsuranceView-mx-insurance-premium-font-size);box-sizing:border-box;min-width:var(--mx-InsuranceView-mx-insurance-premium-min-width);max-width:var(--mx-InsuranceView-mx-insurance-premium-max-width);padding:var(--mx-InsuranceView-mx-insurance-premium-padding) var(--mx-InsuranceView-mx-insurance-premium-padding-2);line-height:var(--mx-InsuranceView-mx-insurance-premium-line-height);border:1px solid #f2f2f2cc;border-radius:var(--mx-InsuranceView-mx-insurance-premium-border-radius);background:linear-gradient(143.427deg,#05e7ae 7.55%,#027a5c 71.92%);white-space:nowrap}
+.mx-insurance-option-title{width:var(--mx-InsuranceView-mx-insurance-option-title-width);height:var(--mx-InsuranceView-mx-insurance-option-title-height);background-size:var(--mx-InsuranceView-mx-insurance-option-title-background-size) var(--mx-InsuranceView-mx-insurance-option-title-background-size-2);display:grid;place-items:center;font-size:var(--mx-InsuranceView-mx-insurance-option-title-font-size)}
+.mx-insurance-footer{display:flex;align-items:center;justify-content:center;gap:var(--mx-InsuranceView-mx-insurance-footer-gap);margin-top:var(--mx-InsuranceView-mx-insurance-footer-margin-top);height:var(--mx-InsuranceView-mx-insurance-footer-height)}
+.mx-insurance-footer button{white-space:pre-line}
+.mx-insurance-cancel,.mx-insurance-buy{width:var(--mx-InsuranceView-mx-insurance-buy-width);height:var(--mx-InsuranceView-mx-insurance-buy-height);font-size:var(--mx-InsuranceView-mx-insurance-buy-font-size)!important}
+.mx-insurance-cancel{font-size:var(--mx-InsuranceView-mx-insurance-cancel-font-size)!important}
+.mx-insurance-delay{width:var(--mx-InsuranceView-mx-insurance-delay-width);height:var(--mx-InsuranceView-mx-insurance-delay-height);border:3px solid #3ee7b0!important;border-radius:var(--mx-InsuranceView-mx-insurance-delay-border-radius);font-size:var(--mx-InsuranceView-mx-insurance-delay-font-size)!important}
+
+.mx-insurance-odds{color:#56ffe1;font-size:var(--mx-InsuranceView-mx-insurance-odds-font-size)}
+.mx-insurance-odds span:last-child{margin-left:auto}
+.mx-insurance-player:first-child>div:last-child{color:#5fff65}
+.mx-insurance-delay{position:relative;border:0!important}
+.mx-insurance-delay-ring{position:absolute;inset:var(--mx-InsuranceView-mx-insurance-delay-ring-inset);border:3px solid #14fd00;border-radius:var(--mx-InsuranceView-mx-insurance-delay-ring-border-radius);pointer-events:none}
+.mx-insurance-delay-diamond{display:block;width:var(--mx-InsuranceView-mx-insurance-delay-diamond-width);height:var(--mx-InsuranceView-mx-insurance-delay-diamond-height);margin:auto}
+.mx-insurance-delay-cost{display:block;margin-top:var(--mx-InsuranceView-mx-insurance-delay-cost-margin-top);font-size:var(--mx-InsuranceView-mx-insurance-delay-cost-font-size)}
+
+.mx-second-buttons{position:relative}
+.mx-second-buttons:before{content:"";position:absolute;left:var(--mx-AgreeSecondPcsView-mx-second-buttons-left);right:var(--mx-AgreeSecondPcsView-mx-second-buttons-right);top:var(--mx-AgreeSecondPcsView-mx-second-buttons-top);border-top:1px solid #ffffff35}

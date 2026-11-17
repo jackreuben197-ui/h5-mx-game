@@ -1,5 +1,6 @@
 import { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
-import { getBrand } from '../table/appearance/BrandManifest.js';
+import { activeUi } from '../config/UiConfig.js';
+const getBrand = activeUi.getBrand;
 const brand=getBrand(new URLSearchParams(location.search).get('brand')??'mx');
 const settings=new TexasGamePersonalSettings(brand.id,brand.defaultFelt,brand.layouts);
 settings.setAccount(1);

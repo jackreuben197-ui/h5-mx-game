@@ -3,8 +3,9 @@ import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createServer as createMxServer } from 'vite';
 
-const mxRoot = fileURLToPath(new URL('../', import.meta.url));
-const h5Root = resolve(mxRoot, process.env.MX_H5_ROOT || '../h5-game');
+const mxRoot = fileURLToPath(new URL('..', import.meta.url));
+const siblingH5 = resolve(mxRoot, '../h5-game');
+const h5Root = resolve(mxRoot, process.env.MX_H5_ROOT || (existsSync(resolve(siblingH5,'node_modules/vite/dist/node/index.js')) ? siblingH5 : 'deps/h5-game'));
 const h5Vite = resolve(h5Root, 'node_modules/vite/dist/node/index.js');
 const host = '127.0.0.1';
 const port = Number(process.env.MX_H5_PORT || 5175);

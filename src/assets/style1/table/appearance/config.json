@@ -1,0 +1,38 @@
+{
+  "paths": {
+    "classicFelt": "raw/table-personal/classic-felt.webp",
+    "purpleFelt": "raw/table-personal/purple-felt.png",
+    "red": "raw/table-personal/red.svg",
+    "green": "raw/table-personal/green.svg",
+    "blue": "raw/table-personal/blue.svg",
+    "indigo": "raw/table-personal/indigo.svg",
+    "black": "raw/table-personal/black.svg",
+    "gold": "raw/table-personal/gold.svg"
+  },
+  "images": {
+    "classicFelt": {
+      "pack": false
+    },
+    "purpleFelt": {
+      "pack": false
+    },
+    "red": {
+      "pack": false
+    },
+    "green": {
+      "pack": false
+    },
+    "blue": {
+      "pack": false
+    },
+    "indigo": {
+      "pack": false
+    },
+    "black": {
+      "pack": false
+    },
+    "gold": {
+      "pack": false
+    }
+  }
+}

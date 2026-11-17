@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SeatEffectView } from '../.test-build/table/components/SeatEffectView.js';
+import { SeatEffectView } from '../.test-build/assets/style1/table/components/SeatEffectView.js';
 const base = { mine: false, handNum: 1, presentation: 'live', player: { action: '', cards: [], name: 'test' } };
 function create() {
   const calls = [], classes = new Set();

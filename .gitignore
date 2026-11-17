@@ -5,3 +5,6 @@ dist/
 
 # Historical visual QA screenshots
 docs/qa/
+
+# Generated only by production asset builds
+src/assets/*/resources/generated/

@@ -1,0 +1,60 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "avatar": "raw/ui/avatar.png",
+    "recordPosition": "raw/ui/recordPosition.png"
+  },
+  "layout": {
+    "css": {
+      "mx-history-player-grid-template-columns": "160",
+      "mx-history-player-grid-template-columns-2": "230",
+      "mx-history-player-grid-template-columns-3": "0",
+      "mx-history-player-grid-template-columns-4": "1fr",
+      "mx-history-player-grid-template-columns-5": "140",
+      "mx-history-player-column-gap": "15",
+      "mx-history-player-min-height": "270",
+      "mx-history-player-padding-block": "10",
+      "mx-history-player-min-height-2": "230",
+      "mx-history-identity-gap": "20",
+      "mx-history-identity-padding-top": "12",
+      "mx-history-identity-min-width": "0",
+      "mx-record-avatar-width": "90",
+      "mx-record-avatar-height": "90",
+      "mx-record-avatar-border-radius": "50%",
+      "mx-record-avatar-width-2": "100%",
+      "mx-record-avatar-height-2": "100%",
+      "mx-history-name-max-width": "100%",
+      "mx-history-name-min-width": "0",
+      "mx-history-name-font-size": "39",
+      "mx-history-boards-gap": "20",
+      "mx-history-boards-min-width": "0",
+      "mx-history-caption-gap": "15",
+      "mx-history-caption-margin-top": "14",
+      "mx-history-caption-font-size": "30",
+      "mx-history-handtype-min-width": "100",
+      "mx-history-handtype-height": "45",
+      "mx-history-handtype-padding": "0",
+      "mx-history-handtype-padding-2": "12",
+      "mx-history-overview-profits-gap": "20",
+      "mx-history-overview-profits-height": "128",
+      "mx-history-name-font-size-2": "29",
+      "mx-history-name-margin-bottom": "5",
+      "mx-history-boards-padding-top": "42",
+      "mx-history-overview-actions-grid-template-columns": "3fr",
+      "mx-history-overview-actions-grid-template-columns-2": "1fr",
+      "mx-history-overview-actions-grid-template-columns-3": "1fr",
+      "mx-history-overview-actions-gap": "4",
+      "mx-history-overview-actions-font-size": "28",
+      "mx-history-last-action-line-height": "1.15"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-history-player"
+  }
+}

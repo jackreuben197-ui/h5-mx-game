@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {AsyncImage} from '../.test-build/table/AsyncImage.js';
+import {AsyncImage} from '../.test-build/assets/style1/table/AsyncImage.js';
 test('seat image hides old bitmap and ignores late load/error after replacement, leave and destroy',()=>{
  const image={hidden:false,src:'old',removeAttribute(){this.src='';}};
  const view=new AsyncImage(image);

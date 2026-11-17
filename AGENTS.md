@@ -1,5 +1,60 @@
 # h5-mx-game — 开发约定与跨机器交接
 
+## 2026-11-17 kong-qa 合入 reorg
+
+已将固定 origin/kong-qa 提交 ce51d94a762f5685f1af2f167c8b5777323ca824 纳入 codex/reorg 历史；QA 是原基点 cc1dea0 的后代，先完整备份，再推进基点，保留所有工作区文件。没有创建额外提交、没有推送；用户明确最终在自己的 codex/reorg 分支手动提交未提交的改造和冲突处理。恢复快照在本机 /tmp/mx-integrated-qa-20261117-105348，不是跨机器依赖。
+
+迁移保留 style1 目录、局部坐标盒和 TableLayout 接口，将 QA 坐标放进各 Layout 实现；加入游客坐下续接、冻结账号检查、NEW 标签、钻石定向同步、布局/有效设置、弃牌按钮倒计时及资源更新。钱包浮层通过 AnchoredPopup 显式适配坐标。274 项回归、生产双构建和 types 通过，3168 组布局与固定 QA 实现一致；后续仅调整倒计时固定外框 CSS，diff 检查通过，未重复全量构建。外部 H5 源码与锁文件未改。
+
+本次真实 H5 5174 验证测试账号登录回原桌、竞技场2保险-1（92331122，7座）坐下、带入200测试筹码、收手牌和行动倒计时。游客登录后的自动续接在观察瞬间未出现，后续看到带入窗口，但不能据此宣称整条自动续接时序已完整验证；冻结、MTT等特殊线上场景也未重测。用户最新要求保留头像倒计时固定外框；弃牌按钮不带头像圆环，倒计时沿按钮圆角边缘走，实服计算框大小吻合（约40.63px），非离线演示。
+
+
+## 2026-11-17 独立素材边界（用户确认）
+
+Spine、表情、桌布属于独立素材及专用加载/播放能力，不要求做成通用UI组件或统一组件config。保留在style1内并严格区分资源和代码；使用方选择挂载位置、层级、尺寸和播放时机。用于打包的路径清单可保留，但不强行配置化个性化播放逻辑。这是接受的架构边界，不是“UI剥离未完成”事项；剩余解耦重点是组件间DOM查询、定位和共用CSS耦合。
+
+## 2026-11-16 组件配置补齐（覆盖下方“首批六个”记录）
+
+在 `codex/reorg` 完成 style1/table/components 下58个组件的 config.json；直接本地图片引用使用 resources 相对原路径，动态媒体/道具图标也通过 paths 解析。组件 CSS 的数值迁入 layout.css，通过 build/component-styles.mjs 生成 virtual:mx-component-config.css；保留原规则顺序与适配条件，不在 dev 打图集。布局算法中的面板尺寸、缩放参数与部分动画参数迁入各自 layout，原数据绑定/协议/金额逻辑保留。
+
+独立根组件用 ComponentBox 读取响应式 w/h（auto 保留原 CSS，数值为设计像素并使用 anchor）；原固定盒仍用 LocalFrame。组合组件 sizing.mode=composite 不另造根盒，实际几何由子组件负责。sizing.root 是定位说明。paths 为空不代表遗漏：公共牌/牌谱牌使用 CardView，效果/动态桌布使用现有资源加载器。Spine/表情资源清单、桌布 image-sources.json 仍有独立职责；不要宣称全项目素材都由58份组件配置打包。共享 CSS 的颜色/阴影仍留在 style1，不声称仅改JSON能实现任意UI重构。
+
+预加载只收配置中需提前加载的图像；原生九宫格/弹窗素材默认按需，LoadingAssets 的背景与进度条显式预载。字体也由路径扫描输出。自动操作图标判断必须使用业务值 fold/call，不能拿资源路径做动作比较。详情见 style1/README.md。
+
+最终252项串行回归、TypeScript、双Vite生产构建及types通过，保留既有大chunk警告；17份CSS回填2408个配置值后与迁移前一致（两处图片URL改由同路径配置解析），490个原始素材哈希不变。内置浏览器真实H5 5174入口确认MX容器和配置CSS变量加载，无控制台error；页面未登录，没有本轮入桌逐窗视觉验收。仍未提交、推送，H5/CC外部源码及锁文件未修改。
+
+## 2026-11-16 短音效合包、长音频独立
+
+按用户确认增加自动分流：mediaPacks.maxClipSeconds默认5秒，<=阈值的非循环音效参与原分组MP3打包；长音频、loop:true、pack:false、单个解码体积超预算均保留原路径独立输出。ffprobe先探测，接近阈值再按样本数确认；两种路径在组件配置里保持一致。生产描述符playback=buffer/stream驱动播放方式：短包缓存AudioBuffer，独立音频使用HTMLAudioElement，不进入整文件fetch/decode缓存，stop/destroy释放；dev原文件均走独立播放器。表情/道具尚未配置化的原流程保持不变，不能宣称全项目音频全部迁移。
+
+12项相关测试通过，包含阈值相等/超限、短循环独立、pack:false、单文件内存超限和独立播放器不fetch/decode及停止释放。TypeScript、双Vite生产构建及types通过；实际产物8个短音效合包，BGM独立（保留已有大chunk警告）。仍在codex/reorg，未提交推送，无浏览器听测。
+
+## 2026-11-16 原路径配置与媒体构建（覆盖下方资源键约定）
+
+用户明确 paths 必须是真实原文件路径、相对 style1/resources 且不带 resources/ 前缀，例如 raw/ui/fold.png。组件 config.json 已转换；CardView faces/alternate 也使用原路径。build 扫描 config.json、去重、生成以原路径为key的图集；dev直接加载原图，不依赖任何生成atlas或预打包。资源生成由 Vite buildStart 负责，npm prebuild 已移除，assets:import 也不打图集。旧生成图片已移出源码，产物仅在 resources/generated（gitignore）。旧未改造组件仍通过 sharedSprites/config.json 的薄别名适配；不要将兼容别名重新放入新 paths。
+
+音频规则在 audio/TableSound/config.json：8个短音效按table-sfx打包，BGM独立。构建需ffmpeg，支持wav/mp3，按用户要求当前默认mp3/128kbps；写Xing/LAME信息并以FFmpeg回解码校验采样时间轴，约2.04MB WAV降为171KB MP3，解码内存不随压缩缩小。format/bitrateKbps/group/sampleRate/channels/gapSeconds/maxDecodedBytes由配置指定。AudioSpritePlayer按原路径查片段，默认静音，销毁/关音效/隐藏取消待播放；emoji/道具音频尚未迁入音频包。视频只接独立原文件+按秒片段的VideoClipView/MediaElementSegment；没有视频拼接/转码，当前无本地视频素材，不能声称视频实测完成。详细 schema、限制及命令见 style1/README.md。
+
+本轮配置/图集/音频9项针对性回归通过（含MP3时间轴、静音间隔和体积回归，未作浏览器听测）；最终生产双构建和types通过（已有大chunk警告），dev实际HTTP模块不引用generated；生产模块按原路径查图集/音频包且不再单独导入fold原图/原音频。490个原始素材哈希不变。不能沿用上一轮235项数字称本轮全量通过。H5/CC/锁文件未改，仍在codex/reorg，未提交推送。
+
+## 2026-11-16 UI 风格目录第一版（优先于下方旧路径记录）
+
+本轮按用户后续明确授权，在 `codex/reorg` 将完整风格归到 `src/assets/style1/`；覆盖上文“资源目录暂不调整”的旧约定。旧 `src/table`、风格 effects/audio 和所有素材已迁入；风格内 `resources/` 只放素材，`table/`、`effects/`、`audio/` 放代码，`build/` 放资源处理工具。共享 Spine runtime 仍在 `src/effects/spine/vendor`。不改 CC 或 H5 外部源码。
+
+选择入口为 `src/config/UiConfig.ts`（运行时）和 `AppearanceConfig.ts`（纯数据选项），接口在 `src/ui/`；业务、协议、定向数据绑定留在 MX 原层。牌桌布局偏好仍是共享功能，不因绑定风格实现而隐藏或锁死设置。所有具体坐标算法在 style1/table/layouts。单风格内部更改只改 style1；换成另一目录时需改这两个装配入口及构建包装入口，不宣称零配置切换。
+
+组件均有独立目录。第一批实际读取 config.json 的组件是 SeatView、SeatIdentityView（头像/昵称）、HandCardsView、PublicCardsView、CardView、ActionButton，包含 w/h/anchor/paths；paths 的图集项使用逻辑资源名，不是网络地址。坐标均为直接父组件的局部坐标；anchor 是0–1的比例，默认约定0,0，保留CC中心锚点的组件显式声明。LocalFrame 明确宽高、锚点和变换原点，跨组件飞行动画通过适配函数转换，不拿兄弟元素当内部布局坐标基准。其余组件已归目录，但尚未逐一配置化，CSS仍有风格内共享规则；不要声称所有组件完全可独立替换或整套UI已完全解耦。
+
+更多目录/配置示例见 src/assets/style1/README.md。本轮235项串行测试通过，生产构建及types通过（已有大chunk警告）；517个资源文件校验，仅ui-atlas.json的source路径变更，素材二进制不变。已恢复本机4179源码服务和5174真实H5临时挂载，并在IAB实际看到大厅（未登录，有外壳下载提示）；尚未入桌验收这次组件坐标改动，不能以构建/协议测试替代视觉回归。临时配置仅位于/tmp，H5源码未改。代码未提交、未推送。
+
+## 2026-11-16 reorg 整理
+
+用户最新要求：本轮在 `codex/reorg` 分支处理检查发现的问题；资源目录后续由用户另行规整，本轮不改资源分类。此约定优先于下方旧的 kong 分支要求。`deps/h5-game` 当前是 MX 跟踪的源码副本，不是有效子模块；根 `.gitmodules` 的旧声明已移除，不改 H5 源码及环境。发布脚本通过 releaseSource 区分独立仓库、MX 内副本与无 Git 目录；本机即使残留失效子模块 gitfile，也从 MX 根读取副本信息，不把 MX 提交冒充 H5 独立提交。测试脚本默认串行执行。 本轮已按现有锁文件 npm ci 恢复 Agora 等依赖；check、229项串行回归、完整 release:web-mobile 均通过，生成 version.json 的 H5 来源为 vendored，独立 h5Commit 为 null。资源/H5源码/锁文件没有变动；未提交或推送。
+
+## 2026-11-16 UI 布局接口边界
+
+用户明确：牌桌 layout 设置是 MX 共享功能，多个桌面共享；新项目配置固定的是 UI 实现，不是锁死布局选项。不能通过 UI 配置隐藏或改写共享设置。TableLayout 已改为 interface，布局实现位于 src/table/layouts，含原 core/seat-layout 和 landscape-layout 坐标算法。TableView 的座位/公共牌/底池/信息/操作区坐标由实现输出，原布局名称分支已移出；MountOptions.ui.createLayout 根据共享设置选择产品绑定的实现。examples/configured-layout.ts 为入口示例。原“固定布局则隐藏其他选项”的尝试已撤销，没有 fixedLayout 配置，MxGameClient 的共享设置初始化未改。迁移前后624组座位坐标完全一致；232项串行测试通过。资源目录未调整。仅完成布局能力这一部分，弹窗/整页UI/资源映射尚未全量接口化；不要宣称整个UI已完全解耦。
+
 ## 2026-11-16 协议缺口修复（kong-qa）
 
 本轮只修用户指定的协议审计事项：冻结账号 forbid==0 的坐下/返场/补充及提交拦截；体验账号 isExperience → H5 table-sitdown 登录 → switching 清理 → 真实身份原桌恢复后续接座位；玩法设置新标签 read/num、read 与三次阈值；钻石余额定向同步到资料/牌谱/购钻并隔离旧 HTTP、关闭解绑。新增 GuestSitdownFlow / TableSettingNewLabels，未扩展举报或其他玩法。
@@ -56,12 +111,12 @@
 | 引用 | 作用与约束 | 当前记录（仅定位参考） |
 | --- | --- | --- |
 | h5-cc-game | 业务逻辑、协议、prefab、设计资源和动画的核对基准；只读参考 | 旧机器 `/Users/magicd/repos/github/h5-cc-game` |
-| h5-game | 外部 Vue 大厅、登录、HTTP/WS 外壳及 bridge 宿主；原样使用，不改源码和环境配置 | MX 的 `deps/h5-game` submodule，远端 `git@github.com:soolary/h5-game.git`；当前锁定 `53b61bb24a8fae2e271013765f00e54b91bb82e9` |
+| h5-game | 外部 Vue 大厅、登录、HTTP/WS 外壳及 bridge 宿主；原样使用，不改源码和环境配置 | MX 跟踪的 `deps/h5-game` 源码副本；上游 `git@github.com:soolary/h5-game.git`。不是有效 submodule，历史提交不能代表当前副本版本 |
 | h5-cc-i18n | 正式多语言词库；沿用其 key、locale 与运行时 | `@silenthill/h5-cc-i18n`，`github:guysoup027/h5-cc-i18n#46f6c805dd2144e0c7fb8b7bd9486f3ed8edc437` |
 | agreement-web | protobuf 协议、Code/Def、消息编解码 | `@silenthill/agreement-web`，`git+ssh://git@github.com/kingofake/agreement-web.git#921be247732066cdae55477ce3a81c29fbbb6b6c` |
 | h5-cc-bridge | 外壳侧桥接依赖；MX 通过自己的 HostTransport 适配现有契约 | H5 package.json 引用 `@silenthill/h5-cc-bridge` / `github:soolary/h5-cc-bridge#main`，不是 MX 新建 WS 的理由 |
 
-MX 旧机器路径是 `/Users/magicd/repos/github/h5-mx-game`。上表提交仅记录本次状态，实际版本以仓库锁文件和 submodule gitlink 为准；不要擅自升级依赖。用户明确要求参考 CC，**不要参考 h5-px-game 或 CC 下的 pixi-client 作为旧版基准**。外部 `dev/h5-game` 若由用户提供，也必须保持原样。
+MX 旧机器路径是 `/Users/magicd/repos/github/h5-mx-game`。上表提交仅记录本次状态，实际版本以仓库锁文件和当前 Git 跟踪状态为准；不要擅自升级依赖。用户明确要求参考 CC，**不要参考 h5-px-game 或 CC 下的 pixi-client 作为旧版基准**。外部 `dev/h5-game` 若由用户提供，也必须保持原样。
 
 ## 2. 必须保留的架构约定
 
@@ -122,7 +177,7 @@ MX 旧机器路径是 `/Users/magicd/repos/github/h5-mx-game`。上表提交仅�
 
 1. 用户提供 MX、CC、H5、i18n、agreement 等外部目录后先核实。MX 的 Git/npm 操作必须在 MX 根目录，切勿因工具 cwd 在 CC 就改错仓库。
 2. 安装 Node >=22.12、npm、Git、Git LFS；准备私有 GitHub SSH 访问权限。MX 用 npm ci 和现有 package-lock；H5 按自己的 packageManager/锁文件安装（本次为 pnpm@11.18.0），不要为升级包管理器擅改外壳。
-3. MX clone 前本机运行 `git lfs install`；clone 后执行 `git lfs install --local`、`git lfs pull`、`git submodule update --init --recursive`、`npm ci`。根仓库 LFS 配置不自动替子模块配置 LFS。
+3. MX clone 前本机运行 `git lfs install`；clone 后执行 `git lfs install --local`、`git lfs pull`、`npm ci`。根仓库 LFS 配置不自动替子模块配置 LFS。
 4. `npm run check`、`npm test`、`npm run build`。生产客户端在 `dist/client`，须整目录连同 chunk/资源/CSS 分发，不能只拷贝 mx-game.js。
 5. MX 开发资源服务：`npm run dev -- --port 4179 --strictPort`。Vite 配置本身没有固定 4179；不要误称 npm run dev 不带参数就必是该端口。
 6. 主流程入口使用真实 H5 的大厅/登录并挂载 MX。**MX 根 `/` 和 `/entry-preview.html` 是演示/离线回放，不是在线验收入口**。

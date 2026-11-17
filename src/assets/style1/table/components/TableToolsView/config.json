@@ -1,0 +1,66 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "diamond_add": "raw/table-tools/diamond-add.png",
+    "chip_add": "raw/table-tools/chip-add.png",
+    "safety": "raw/table-tools/safety.png",
+    "diamond": "raw/table-tools/diamond.png",
+    "chip": "raw/table-tools/chip.png",
+    "plus": "raw/table-tools/plus.png",
+    "toolBackground": "raw/table-tools/action-bg.png"
+  },
+  "layout": {
+    "css": {
+      "mx-table-tools-right": "3.5%",
+      "mx-table-tools-right-2": "7.5",
+      "mx-table-tools-top": "2.5%",
+      "mx-table-tools-top-2": "120",
+      "mx-table-tools-gap": "35",
+      "mx-table-tools-padding": "0",
+      "mx-table-tools-background-size": "100%",
+      "mx-table-tools-background-size-2": "100%",
+      "mx-table-add-chips-width": "185",
+      "mx-table-add-chips-height": "100",
+      "mx-table-safety-width": "93",
+      "mx-table-safety-height": "135",
+      "mx-table-add-chips-left": "50%",
+      "mx-table-add-chips-left-2": "43",
+      "mx-table-tool-plus-left": "50%",
+      "mx-table-tool-plus-left-2": "40",
+      "mx-table-tool-plus-width": "42",
+      "mx-table-tool-plus-height": "42"
+    }
+  },
+  "images": {
+    "diamond_add": {
+      "pack": false
+    },
+    "chip_add": {
+      "pack": false
+    },
+    "safety": {
+      "pack": false
+    },
+    "diamond": {
+      "pack": false
+    },
+    "chip": {
+      "pack": false
+    },
+    "plus": {
+      "pack": false
+    },
+    "toolBackground": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-table-tools"
+  }
+}

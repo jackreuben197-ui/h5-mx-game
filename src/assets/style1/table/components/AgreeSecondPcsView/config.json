@@ -1,0 +1,46 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "dialogConfirm": "raw/ui/dialogConfirm.png"
+  },
+  "layout": {
+    "css": {
+      "mx-second-pcs-font-size": "26px",
+      "mx-second-pcs-margin": "0",
+      "mx-second-pcs-margin-2": "0",
+      "mx-second-pcs-margin-3": "40px",
+      "mx-second-pcs-font-size-2": "19px",
+      "mx-second-pcs-margin-4": "0",
+      "mx-second-pcs-margin-5": "0",
+      "mx-second-pcs-margin-6": "22px",
+      "mx-second-clock-font-size": "26px",
+      "mx-second-clock-margin-bottom": "26px",
+      "mx-second-players-height": "44px",
+      "mx-second-players-max-width": "280px",
+      "mx-second-avatar-width": "46px",
+      "mx-second-avatar-height": "46px",
+      "mx-second-avatar-border-radius": "50%",
+      "mx-second-avatar-margin-left": "-15px",
+      "mx-second-count-font-size": "20px",
+      "mx-second-count-margin": "16px",
+      "mx-second-count-margin-2": "0",
+      "mx-second-buttons-gap": "12px",
+      "mx-second-buttons-width": "100%",
+      "mx-second-buttons-height": "56px",
+      "mx-second-buttons-font-size": "20px",
+      "mx-second-buttons-left": "-5px",
+      "mx-second-buttons-right": "-5px",
+      "mx-second-buttons-top": "-5px"
+    },
+    "panelWidth": 347
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

@@ -1,5 +1,8 @@
 # h5-mx-game
 
+当前 UI 风格已迁至 [src/assets/style1](src/assets/style1/README.md)，在 `codex/reorg` 分支。UI 实现、布局、动画、音效及素材都由该目录维护；共享业务和定向数据绑定保留在 MX。头像/座位/手牌/公共牌/牌/操作按钮已有独立组件配置；其他组件的配置化仍需继续。下文历史 `src/table` 路径现对应 `src/assets/style1/table`。
+
+
 TypeScript + HTML DOM 德州客户端，参考 h5-cc-game 的业务逻辑、协议与设计资源。完整 UI 由 `mountMxGame(container)` 挂载在一个 DIV 内；Spine 特效使用独立透明 WebGL Canvas，不引入 Canvas 游戏引擎。
 
 **继续开发及换机器前先读 [AGENTS.md](AGENTS.md)。** 外部 CC、H5、i18n、agreement、bridge 的来源、约束、版本、当前进度和真实 H5 启动方式都记录在那里。外部目录由使用者在新机器上提供，不依赖旧机器绝对路径。
@@ -7,7 +10,7 @@ TypeScript + HTML DOM 德州客户端，参考 h5-cc-game 的业务逻辑、协�
 ## 环境与 Git LFS
 
 - Node >=22.12、npm、Git 和 Git LFS。
-- 私有 GitHub 依赖/submodule 需要相应 SSH 访问权限。
+- 私有 GitHub 依赖需要相应 SSH 访问权限。
 - MX 使用 package-lock.json / npm ci；H5 外壳使用自己的 packageManager 和锁文件。
 
 克隆前在新机器执行一次 `git lfs install`。克隆 MX 后在仓库根执行：
@@ -15,7 +18,6 @@ TypeScript + HTML DOM 德州客户端，参考 h5-cc-game 的业务逻辑、协�
 ```sh
 git lfs install --local
 git lfs pull
-git submodule update --init --recursive
 npm ci
 npm run check
 npm test
@@ -48,7 +50,7 @@ npm run build
 
 ### 单命令联调（补充）
 
-在同级 `../h5-game` 按锁文件安装依赖后，从 MX 仓库运行：
+先为 H5 按锁文件安装依赖，再从 MX 仓库运行。默认优先使用已安装依赖的同级 `../h5-game`，否则使用 `deps/h5-game`；显式 `MX_H5_ROOT` 优先：
 
 ```sh
 npm run dev:h5
@@ -71,7 +73,7 @@ const game = mountMxGame(containerDiv, { layout: 'portrait' });
 
 ## 外部系统与数据流程
 
-- `deps/h5-game` 为外部 submodule，负责登录、导航、WS 及双工 bridge；不要修改其源码来适配 MX。
+- `deps/h5-game` 为仓库内跟踪的外部 H5 源码副本（不是 submodule），负责登录、导航、WS 及双工 bridge；不要修改其源码来适配 MX。
 - MX 只有 HTTP 直连配置：`src/config/HttpConfig.ts`，当前为测试环境。WS 不配置地址、不直接连接。
 - H5 挂载 → MX 隐藏预加载/ccReady → h5Ready/ccAck → enterTable → 等资源加载 → Rooms/EnterRoom → 数据驱动 UI。
 - WS 增量经 `net/messages/texas/TexasMessageHandler.ts` 的 switch 和原名消息函数更新数据，再由定向装饰器绑定刷新组件。重连 SyncEnter 静态恢复，不重复播放发牌。
@@ -94,9 +96,29 @@ const game = mountMxGame(containerDiv, { layout: 'portrait' });
 
 `components` 工厂支持替换座位、公共牌、底池等 UI。金额沿用 CC 工具类，ShowBB 不重复实现。配置弹窗读取当前房间数据与权限，不能手填展示状态。
 
+## UI 实现配置与共享设置
+
+MX 的布局设置、保存、账号/品牌隔离和数据事件属于共享功能。产品 UI 配置不能为固定风格而删掉这些功能；配置固定的是渲染实现，设置决定当前使用哪个布局选项。
+
+`TableLayout` 是纯布局接口，`src/table/layouts/LayoutOriginal/Classic/Balanced/Oval` 实现座位、牌、底池、房间信息和操作区坐标。`TableView` 应用输出，不按布局名称计算这些位置；原坐标算法从 core 移到 layouts，未改业务规则。
+
+```ts
+const implementations = {
+  original: LayoutOriginal,
+  classic: LayoutClassic,
+  balanced: LayoutBalanced,
+  oval: LayoutOval,
+};
+mountMxGame(container, {
+  ui: { createLayout: preference => new implementations[preference]() },
+});
+```
+
+新项目在自己的配置中绑定自己的实现，继续消费 MX 的共享设置。完整示例见 [examples/configured-layout.ts](examples/configured-layout.ts)。这次先拆出桌面布局能力；弹窗、资源加载、样式和整页 UI 工厂尚未全部接口化，不能据此宣称全部 UI 已完全解耦。
+
 ## 资源与国际化
 
-`npm run dev` 使用原始散图；`npm run build` 的 prebuild 才打包 UI/牌面图集和桌布。Spine 自带 atlas 保持原样，相关动画和声音按需加载。网络头像及俱乐部 logo 直接用动态地址。
+`npm run dev` 使用原始散图；`npm run build` 的 Vite 构建钩子才扫描组件 config.json，按原文件路径生成图集与短音效包；产物在资源目录 generated/，已忽略。音效打包需要 ffmpeg，dev/test 不需要。Spine 自带 atlas 保持原样，相关动画和声音按需加载。网络头像及俱乐部 logo 直接用动态地址。
 
 ```sh
 npm run assets:import -- /实际的/h5-cc-game
@@ -143,6 +165,6 @@ MX_H5_ROOT=/absolute/path/to/h5-game npm run release:web-mobile
 
 **当前仓库默认仍连接测试服务**。正式上线前应通过 H5 原有的 `VITE_API_BASE_URL`、`VITE_WS_URL_TEMPLATE` 等环境配置指向目标服务，不会自动把测试地址换成生产地址。若使用 `/api` 等相对地址或 WS 代理，服务器必须已有相应反向代理；静态目录本身不提供代理。部署域名需被后端允许，语音/视频需要 HTTPS。
 
-`version.json` 记录包版本、MX/H5 Git 提交、未提交状态、构建时间和 buildId。MX 位于 `mx-client/<buildId>/`，H5 JS/CSS 带 hash；入口和 `version.json` 建议设置 `Cache-Control: no-cache`，版本资源可长期缓存。发布时优先切换完整目录并保留上一版本供回滚，不要边覆盖边删除正在使用的旧资源。已有 Service Worker 的站点需在部署流程中处理旧缓存。
+`version.json` 记录包版本、MX Git 提交、H5 来源、未提交状态、构建时间和 buildId。`h5Source.kind` 区分独立仓库 repository、MX 内副本 vendored 和无 Git 目录 directory。独立仓库才填写 `h5Commit`；副本在 `h5Source` 记录所属 MX 提交及相对路径，dirty 只检查 H5 子目录；无 Git 目录的 commit/dirty 为 null，不伪造版本信息。MX 位于 `mx-client/<buildId>/`，H5 JS/CSS 带 hash；入口和 `version.json` 建议设置 `Cache-Control: no-cache`，版本资源可长期缓存。发布时优先切换完整目录并保留上一版本供回滚，不要边覆盖边删除正在使用的旧资源。已有 Service Worker 的站点需在部署流程中处理旧缓存。
 
 构建成功只生成本地产物，不自动提交、推送发布仓库或操作服务器。直接通过普通静态服务器访问输出目录即可验证，无需 4179/5174 服务。

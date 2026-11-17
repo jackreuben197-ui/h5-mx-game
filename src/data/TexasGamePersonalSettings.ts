@@ -5,9 +5,8 @@ import LocalStorage from './LocalStorage.js';
 const StorageKey = { SHOW_BB:'SHOW_BB', TEXAS_DESKTYPE:'TEXAS_DESKTYPE', TEXAS_POKERCARDTYPE:'TEXAS_POKERCARDTYPE', SOUND_IS_OPEN:'SOUND_IS_OPEN', TEXAS_SHORTCUTS_3:'TEXAS_SHORTCUTS_3', TEXAS_SHORTCUTS_5:'TEXAS_SHORTCUTS_5', TEXAS_SHORTCUTS_MODE:'TEXAS_SHORTCUTS_MODE' };
 const AssetCollectionType = { SpriteFrameCard0:1, SpriteFrameCard1:2 } as const;
 type PokerCardType = 1 | 2;
-export const TABLE_SIZE_STEPS = [90,95,100,105,110] as const;
-export const TABLE_FELT_COLORS = ['#079d80','#57427f','#3296d2','#269fa8','#78858e','#34383f','#843f50'] as const;
-export const TABLE_CARD_BACKS = ['red','green','blue','indigo','black','gold'] as const;
+import { TABLE_SIZE_STEPS, TABLE_FELT_COLORS, TABLE_CARD_BACKS } from '../config/AppearanceConfig.js';
+export { TABLE_SIZE_STEPS, TABLE_FELT_COLORS, TABLE_CARD_BACKS } from '../config/AppearanceConfig.js';
 export type TableLayoutId = 'original' | 'classic' | 'balanced' | 'oval';
 export interface TableAppearance {
     layout: TableLayoutId;

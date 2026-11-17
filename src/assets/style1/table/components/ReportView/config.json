@@ -1,0 +1,53 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-report-filter-gap": "20",
+      "mx-report-filter-margin": "0",
+      "mx-report-filter-width": "50",
+      "mx-report-filter-height": "50",
+      "mx-report-filter-border-radius": "50%",
+      "mx-report-list-min-height": "1200",
+      "mx-report-list-border-radius": "90",
+      "mx-report-list-padding": "40",
+      "mx-report-list-padding-2": "32",
+      "mx-record-table-width": "100%",
+      "mx-record-table-font-size": "40",
+      "mx-record-table-height": "135",
+      "mx-record-table-padding": "0",
+      "mx-record-table-padding-2": "3px",
+      "mx-record-table-height-2": "105",
+      "mx-record-table-padding-3": "8",
+      "mx-record-table-padding-4": "3px",
+      "mx-record-table-width-2": "25%",
+      "mx-report-player-link-padding": "0",
+      "mx-report-player-link-border-radius": "0",
+      "mx-report-observers-margin": "20",
+      "mx-report-observers-margin-2": "0",
+      "mx-report-observers-margin-3": "0",
+      "mx-report-observers-margin-4": "35",
+      "mx-report-observer-rail-gap": "70",
+      "mx-report-observer-rail-padding": "60",
+      "mx-report-observer-rail-padding-2": "50",
+      "mx-record-person-gap": "18",
+      "mx-record-person-padding": "0",
+      "mx-record-person-border-radius": "0",
+      "mx-record-person-font-size": "30",
+      "mx-record-person-width": "140",
+      "mx-record-person-height": "140",
+      "mx-record-person-border-radius-2": "50%",
+      "mx-record-person-max-width": "100%"
+    },
+    "dockTop": 185
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

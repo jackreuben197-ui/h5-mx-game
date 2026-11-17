@@ -1,0 +1,21 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-desk-animation-inset": "0",
+      "mx-desk-animation-inset-2": "0",
+      "mx-desk-animation-width": "100%",
+      "mx-desk-animation-height": "100%"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-desk-animation"
+  }
+}

@@ -1,0 +1,277 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "dialogConfirm": "raw/ui/dialogConfirm.png",
+    "page_bar_normal": "raw/squid/page_bar_normal.png",
+    "squid_reward_bg": "raw/squid/squid_reward_bg.png",
+    "table_icon_squid_sm": "raw/squid/table_icon_squid_sm.png",
+    "squid_end_bg": "raw/squid/squid_end_bg.png",
+    "squid_bg_red": "raw/squid/squid_bg_red.png",
+    "icon_lelft_arrow": "raw/squid/icon_lelft_arrow.png",
+    "squid_mask": "raw/squid/squid_mask.png",
+    "squid_dialog_page_1": "raw/squid/squid_dialog_page_1.png",
+    "page_bar_select": "raw/squid/page_bar_select.png",
+    "squid_dialog_page_2": "raw/squid/squid_dialog_page_2.png",
+    "squid_dialog_page_3": "raw/squid/squid_dialog_page_3.png",
+    "table_icon_squid": "raw/squid/table_icon_squid.png",
+    "squid_over": "raw/squid/squid_over.png",
+    "table_bg_jkp_pool": "raw/squid/table_bg_jkp_pool.png",
+    "icon_right_arrow": "raw/squid/icon_right_arrow.png",
+    "squid_lose": "raw/squid/squid_lose.png",
+    "table_bg_stand_up": "raw/squid/table_bg_stand_up.png",
+    "squid_start": "raw/squid/squid_start.png"
+  },
+  "layout": {
+    "css": {
+      "mx-squid-inset": "0",
+      "mx-squid-count-left": "12px",
+      "mx-squid-count-top": "245px",
+      "mx-squid-count-width": "95px",
+      "mx-squid-count-height": "169px",
+      "mx-squid-count-background-size": "100%",
+      "mx-squid-count-background-size-2": "100%",
+      "mx-squid-count-font-size": "26px",
+      "mx-squid-count-padding": "0",
+      "mx-squid-count-padding-2": "0",
+      "mx-squid-count-padding-3": "96px",
+      "mx-squid-count-padding-4": "20px",
+      "mx-squid-stand-left": "0",
+      "mx-squid-stand-top": "390px",
+      "mx-squid-stand-width": "250px",
+      "mx-squid-stand-height": "105px",
+      "mx-squid-stand-border-radius": "0",
+      "mx-squid-stand-border-radius-2": "50px",
+      "mx-squid-stand-border-radius-3": "50px",
+      "mx-squid-stand-border-radius-4": "0",
+      "mx-squid-stand-font-size": "38px",
+      "mx-squid-join-bottom": "600px",
+      "mx-squid-join-left": "50%",
+      "mx-squid-join-transform": "-50%",
+      "mx-squid-join-width": "296px",
+      "mx-squid-join-height": "77px",
+      "mx-squid-join-background-size": "100%",
+      "mx-squid-join-background-size-2": "100%",
+      "mx-squid-join-font-size": "38px",
+      "mx-squid-start-left": "50%",
+      "mx-squid-start-top": "50%",
+      "mx-squid-start-width": "321px",
+      "mx-squid-start-height": "278px",
+      "mx-squid-start-transform": "-50%",
+      "mx-squid-start-transform-2": "-50%",
+      "mx-squid-over-width": "180px",
+      "mx-squid-over-max-height": "90px",
+      "mx-squid-over-margin": "15px",
+      "mx-squid-result-row-gap": "12px",
+      "mx-squid-result-row-min-height": "70px",
+      "mx-squid-result-row-padding": "10px",
+      "mx-squid-result-row-width": "45px",
+      "mx-squid-result-row-height": "45px",
+      "mx-squid-result-row-border-radius": "50%",
+      "mx-squid-result-row-font-size": "11px",
+      "mx-squid-result-row-font-size-2": "18px",
+      "mx-squid-lose-right": "2px",
+      "mx-squid-lose-top": "-4px",
+      "mx-squid-lose-width": "50px",
+      "mx-squid-reward-right": "0",
+      "mx-squid-reward-bottom": "-5px",
+      "mx-squid-reward-font-size": "12px",
+      "mx-squid-intro-width": "100%",
+      "mx-squid-intro-font-size": "22px",
+      "mx-squid-intro-margin": "0",
+      "mx-squid-page-width": "100%",
+      "mx-squid-page-height": "240px",
+      "mx-squid-intro-width-2": "100%",
+      "mx-squid-intro-min-height": "90px",
+      "mx-squid-intro-margin-2": "0",
+      "mx-squid-intro-font-size-2": "16px",
+      "mx-squid-intro-font-size-3": "22px",
+      "mx-squid-intro-width-3": "100%",
+      "mx-squid-intro-font-size-4": "14px",
+      "mx-squid-pages-width": "65%",
+      "mx-squid-pages-font-size": "20px",
+      "mx-squid-commit-width": "180px",
+      "mx-squid-commit-height": "48px",
+      "mx-squid-commit-background-size": "100%",
+      "mx-squid-commit-background-size-2": "100%",
+      "mx-squid-count-padding-5": "0",
+      "mx-squid-count-background-size-3": "100%",
+      "mx-squid-count-background-size-4": "100%",
+      "mx-squid-count-right": "-4px",
+      "mx-squid-count-top-2": "0",
+      "mx-squid-count-width-2": "38px",
+      "mx-squid-count-height-2": "38px",
+      "mx-squid-count-line-height": "38px",
+      "mx-squid-count-border-radius": "50%",
+      "mx-squid-intro-font-size-5": "20px",
+      "mx-squid-pages-width-2": "100%",
+      "mx-squid-pages-gap": "4px",
+      "mx-squid-pages-margin": "12px",
+      "mx-squid-pages-margin-2": "0",
+      "mx-squid-pages-margin-3": "15px",
+      "mx-squid-pages-height": "5px",
+      "mx-squid-pages-background-size": "100%",
+      "mx-squid-pages-background-size-2": "100%",
+      "mx-squid-page-height-2": "280px",
+      "mx-squid-intro-font-size-6": "14px",
+      "mx-squid-intro-min-height-2": "70px",
+      "mx-squid-next-top": "43%",
+      "mx-squid-next-width": "62px",
+      "mx-squid-next-height": "62px",
+      "mx-squid-next-background-size": "100%",
+      "mx-squid-next-background-size-2": "100%",
+      "mx-squid-prev-left": "0",
+      "mx-squid-next-right": "0",
+      "mx-squid-commit-width-2": "100%",
+      "mx-squid-commit-height-2": "52px",
+      "mx-squid-over-left": "50%",
+      "mx-squid-over-top": "-80px",
+      "mx-squid-over-transform": "-50%",
+      "mx-squid-over-width-2": "165px",
+      "mx-squid-over-height": "170px",
+      "mx-squid-result-row-border-radius-2": "40px",
+      "mx-squid-result-row-min-height-2": "60px",
+      "mx-squid-result-row-margin-bottom": "4px",
+      "mx-squid-result-row-padding-2": "8px",
+      "mx-squid-result-row-padding-3": "12px",
+      "mx-squid-result-row-font-size-3": "14px",
+      "mx-squid-lose-right-2": "75px",
+      "mx-squid-lose-width-2": "66px",
+      "mx-squid-lose-top-2": "5px",
+      "mx-squid-reward-top": "-4px",
+      "mx-squid-reward-padding": "3px",
+      "mx-squid-reward-padding-2": "8px",
+      "mx-squid-join-font-size-2": "40px",
+      "mx-squid-stand-font-size-2": "30px",
+      "mx-squid-page-height-3": "240px",
+      "mx-squid-pages-width-3": "78%",
+      "mx-squid-pages-margin-4": "10px",
+      "mx-squid-pages-margin-5": "0",
+      "mx-squid-commit-font-size": "23px",
+      "mx-squid-intro-border-radius": "50%",
+      "mx-squid-intro-width-4": "12px",
+      "mx-squid-intro-height": "12px",
+      "mx-squid-count-font-size-2": "23.45px",
+      "mx-squid-over-top-2": "-80px",
+      "mx-squid-count-left-2": "2.4px",
+      "mx-squid-count-top-3": "190.6px",
+      "mx-squid-count-width-3": "95px",
+      "mx-squid-count-height-3": "208px",
+      "mx-squid-stand-left-2": "0",
+      "mx-squid-stand-top-2": "285px",
+      "mx-squid-stand-width-2": "250px",
+      "mx-squid-stand-height-2": "105px",
+      "mx-squid-stand-border-radius-5": "0",
+      "mx-squid-stand-background-size": "100%",
+      "mx-squid-stand-background-size-2": "100%",
+      "mx-squid-stand-padding": "0",
+      "mx-squid-stand-padding-2": "20px",
+      "mx-squid-stand-padding-3": "0",
+      "mx-squid-stand-padding-4": "80px",
+      "mx-squid-count-right-2": "4px",
+      "mx-squid-count-top-4": "2px",
+      "mx-squid-count-width-4": "34px",
+      "mx-squid-count-height-4": "34px",
+      "mx-squid-count-line-height-2": "34px",
+      "mx-squid-join-background-size-3": "100%",
+      "mx-squid-join-background-size-4": "100%",
+      "mx-squid-pages-border-radius": "999px",
+      "mx-squid-lose-left": "50%",
+      "mx-squid-lose-left-2": "17px",
+      "mx-squid-lose-top-3": "50%",
+      "mx-squid-lose-width-3": "85.37px",
+      "mx-squid-lose-height": "65.43px",
+      "mx-squid-lose-transform": "-50%",
+      "mx-squid-lose-transform-2": "-5deg"
+    },
+    "countY": 190.6,
+    "standY": 285,
+    "startAnimation": {
+      "frames": [
+        {
+          "transform": "translate(-50%,-50%) scale(0)",
+          "opacity": 1
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.675
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.8166667
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 0
+        }
+      ],
+      "duration": 2000
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-squid"
+  },
+  "images": {
+    "page_bar_normal": {
+      "pack": false
+    },
+    "squid_reward_bg": {
+      "pack": false
+    },
+    "table_icon_squid_sm": {
+      "pack": false
+    },
+    "squid_end_bg": {
+      "pack": false
+    },
+    "squid_bg_red": {
+      "pack": false
+    },
+    "icon_lelft_arrow": {
+      "pack": false
+    },
+    "squid_mask": {
+      "pack": false
+    },
+    "squid_dialog_page_1": {
+      "pack": false
+    },
+    "page_bar_select": {
+      "pack": false
+    },
+    "squid_dialog_page_2": {
+      "pack": false
+    },
+    "squid_dialog_page_3": {
+      "pack": false
+    },
+    "table_icon_squid": {
+      "pack": false
+    },
+    "squid_over": {
+      "pack": false
+    },
+    "table_bg_jkp_pool": {
+      "pack": false
+    },
+    "icon_right_arrow": {
+      "pack": false
+    },
+    "squid_lose": {
+      "pack": false
+    },
+    "table_bg_stand_up": {
+      "pack": false
+    },
+    "squid_start": {
+      "pack": false
+    }
+  }
+}

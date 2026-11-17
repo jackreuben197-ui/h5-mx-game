@@ -1,0 +1,60 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "pool": "raw/ui/pool.png",
+    "chip": "raw/ui/chip.png"
+  },
+  "layout": {
+    "css": {
+      "mx-pot-font-size": "60px",
+      "mx-pool-item-font-size": "43px",
+      "mx-pool-item-border-radius": "30px",
+      "mx-pool-item-min-width": "140px",
+      "mx-pool-item-max-width": "900px",
+      "mx-pool-item-padding": "0",
+      "mx-pool-item-padding-2": "24px",
+      "mx-pool-item-padding-3": "0",
+      "mx-pool-item-padding-4": "60px",
+      "mx-pot-transform": "-50%",
+      "mx-pot-transform-2": "-50%",
+      "mx-pot-font-size-2": "60px",
+      "mx-pool-width": "333px",
+      "mx-pool-height": "60px",
+      "mx-pool-transform": "-50%",
+      "mx-pool-transform-2": "-50%",
+      "mx-pool-font-size": "43.42px",
+      "mx-pool-line-height": "60px",
+      "mx-pools-gap": "20px",
+      "mx-pools-width": "940px",
+      "mx-pools-transform": "-50%",
+      "mx-pools-transform-2": "-30px",
+      "mx-side-pools-gap": "20px",
+      "mx-side-pools-width": "940px",
+      "mx-pool-side-width": "168.08px",
+      "mx-pool-side-height": "41px",
+      "mx-pool-side-font-size": "33.6px",
+      "mx-pool-side-line-height": "41px",
+      "mx-pot-chip-left": "0",
+      "mx-pot-chip-top": "0",
+      "mx-pot-chip-width": "41px",
+      "mx-pot-chip-height": "41px",
+      "mx-pool-side-padding-left": "32px",
+      "mx-pool-item-width": "333px",
+      "mx-pool-item-height": "60px",
+      "mx-pot-chip-left-2": "-8px",
+      "mx-pot-chip-top-2": "3px",
+      "mx-pot-chip-width-2": "50px",
+      "mx-pot-chip-height-2": "50px",
+      "mx-side-pools-margin-top": "61px"
+    }
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

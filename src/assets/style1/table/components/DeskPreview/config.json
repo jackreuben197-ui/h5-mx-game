@@ -1,0 +1,24 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-settings-desk-thumb-left": "29.44%",
+      "mx-settings-desk-thumb-top": "17.28%",
+      "mx-settings-desk-thumb-width": "41.12%",
+      "mx-settings-desk-thumb-height": "48.44%",
+      "mx-settings-desk-thumb-border-radius": "12"
+    },
+    "columns": 4,
+    "rows": 4
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

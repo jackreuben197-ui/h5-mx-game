@@ -1,0 +1,21 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-chat-emoji-layer-inset": "0",
+      "mx-chat-emoji-layer-inset-2": "0",
+      "mx-chat-emoji-layer-width": "100%",
+      "mx-chat-emoji-layer-height": "100%"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-chat-emoji-layer"
+  }
+}

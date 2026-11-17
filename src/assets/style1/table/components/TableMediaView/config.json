@@ -1,0 +1,117 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "table_icon_effect": "raw/media/table_icon_effect.png",
+    "btnbg": "raw/media/btnbg.png",
+    "speaking": "raw/media/speaking.png",
+    "vm3": "raw/media/vm3.png",
+    "vm2": "raw/media/vm2.png",
+    "vm1": "raw/media/vm1.png",
+    "table_icon_audio_disabled": "raw/media/table_icon_audio_disabled.png",
+    "vm4": "raw/media/vm4.png",
+    "sound": "raw/media/sound.png",
+    "table_icon_audio": "raw/media/table_icon_audio.png",
+    "videoicon": "raw/media/videoicon.png",
+    "table_icon_effect_disabled": "raw/media/table_icon_effect_disabled.png",
+    "video": "raw/media/video.png",
+    "mutemic": "raw/media/mutemic.png",
+    "table_icon_camera": "raw/media/table_icon_camera.png",
+    "table_icon_camera_disabled": "raw/media/table_icon_camera_disabled.png",
+    "sndicon": "raw/media/sndicon.png",
+    "muteBtnBg": "raw/media/muteBtnBg.png"
+  },
+  "layout": {
+    "css": {
+      "mx-avatar-mic-left": "15.7",
+      "mx-avatar-mic-top": "-5.3",
+      "mx-avatar-mic-width": "18.6",
+      "mx-avatar-mic-height": "18.6",
+      "mx-avatar-mic-left-2": "-34.3",
+      "mx-avatar-video-mask-left": "-99.5px",
+      "mx-avatar-video-mask-top": "-99.5px",
+      "mx-avatar-video-mask-width": "199px",
+      "mx-avatar-video-mask-height": "199px",
+      "mx-avatar-video-mask-border-radius": "50%",
+      "mx-avatar-video-mask-background-size": "100%",
+      "mx-avatar-video-mask-background-size-2": "100%",
+      "mx-avatar-mic-left-3": "55.5px",
+      "mx-avatar-mic-top-2": "-34.5px",
+      "mx-avatar-mic-width-2": "69px",
+      "mx-avatar-mic-height-2": "69px",
+      "mx-media-controls-right": "11.5",
+      "mx-media-controls-bottom": "320",
+      "mx-media-remote-width": "177",
+      "mx-media-remote-height": "82",
+      "mx-media-remote-padding": "0",
+      "mx-media-remote-font-size": "30",
+      "mx-media-remote-width-2": "70",
+      "mx-media-remote-height-2": "70",
+      "mx-media-controls-bottom-2": "205"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-media-controls"
+  },
+  "images": {
+    "table_icon_effect": {
+      "pack": false
+    },
+    "btnbg": {
+      "pack": false
+    },
+    "speaking": {
+      "pack": false
+    },
+    "vm3": {
+      "pack": false
+    },
+    "vm2": {
+      "pack": false
+    },
+    "vm1": {
+      "pack": false
+    },
+    "table_icon_audio_disabled": {
+      "pack": false
+    },
+    "vm4": {
+      "pack": false
+    },
+    "sound": {
+      "pack": false
+    },
+    "table_icon_audio": {
+      "pack": false
+    },
+    "videoicon": {
+      "pack": false
+    },
+    "table_icon_effect_disabled": {
+      "pack": false
+    },
+    "video": {
+      "pack": false
+    },
+    "mutemic": {
+      "pack": false
+    },
+    "table_icon_camera": {
+      "pack": false
+    },
+    "table_icon_camera_disabled": {
+      "pack": false
+    },
+    "sndicon": {
+      "pack": false
+    },
+    "muteBtnBg": {
+      "pack": false
+    }
+  }
+}

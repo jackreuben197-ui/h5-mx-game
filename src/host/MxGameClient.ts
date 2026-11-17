@@ -1,5 +1,6 @@
 import { TexasGamePersonalSettings } from '../data/TexasGamePersonalSettings.js';
-import { getBrand } from '../table/appearance/BrandManifest.js';
+import { activeUi } from '../config/UiConfig.js';
+const getBrand = activeUi.getBrand;
 import type { HttpOptions } from '../net/http/HttpClient.js';
 import { GameClient } from '../GameClient.js';
 import type { MountOptions } from '../MountOptions.js';

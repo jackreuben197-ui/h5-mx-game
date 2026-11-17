@@ -1,0 +1,61 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "mushroom": "raw/mushroom/mushroom.png",
+    "criticalhit": "raw/mushroom/criticalhit.png",
+    "critical_start": "raw/mushroom/critical_start.png"
+  },
+  "layout": {
+    "css": {
+      "mx-critical-start-left": "50%",
+      "mx-critical-start-top": "50%",
+      "mx-critical-start-width": "321px",
+      "mx-critical-start-height": "278px",
+      "mx-critical-start-transform": "-50%",
+      "mx-critical-start-transform-2": "-50%"
+    },
+    "startAnimation": {
+      "frames": [
+        {
+          "transform": "translate(-50%,-50%) scale(0)",
+          "opacity": 1
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.675
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 1,
+          "offset": 0.8166667
+        },
+        {
+          "transform": "translate(-50%,-50%) scale(3)",
+          "opacity": 0
+        }
+      ],
+      "duration": 2000
+    }
+  },
+  "images": {
+    "mushroom": {
+      "pack": false
+    },
+    "criticalhit": {
+      "pack": false
+    },
+    "critical_start": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

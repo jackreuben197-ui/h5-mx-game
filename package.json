@@ -10,13 +10,12 @@
     "dev": "vite --host 127.0.0.1",
     "dev:h5": "node scripts/dev-h5.mjs",
     "check": "tsc --noEmit",
-    "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
+    "test": "tsc -p tsconfig.test.json && node --test --test-concurrency=1 tests/*.test.mjs",
     "build": "npm run check && vite build && vite build --config vite.host.config.ts && npm run build:types",
     "preview": "vite preview --host 127.0.0.1",
     "assets:import": "python3 scripts/import-cc-assets.py",
     "build:types": "tsc -p tsconfig.types.json && node scripts/write-type-entry.mjs",
     "assets:pack": "node scripts/pack-assets.mjs",
-    "prebuild": "npm run assets:pack",
     "release:web-mobile": "node scripts/release-web-mobile.mjs"
   },
   "devDependencies": {

@@ -1,0 +1,48 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "emojiUc": "raw/ui/emojiUc.png",
+    "emojiDiamond": "raw/ui/emojiDiamond.png"
+  },
+  "layout": {
+    "css": {
+      "mx-emoji-item-height": "194",
+      "mx-emoji-item-width": "100%",
+      "mx-emoji-item-padding": "0",
+      "mx-emoji-preview-top": "0",
+      "mx-emoji-preview-left": "50%",
+      "mx-emoji-preview-transform": "-50%",
+      "mx-emoji-preview-width": "143",
+      "mx-emoji-preview-height": "143",
+      "mx-emoji-cost-bottom": "12",
+      "mx-emoji-cost-left": "0",
+      "mx-emoji-cost-right": "0",
+      "mx-emoji-cost-gap": "12",
+      "mx-emoji-cost-font-size": "38",
+      "mx-emoji-cost-line-height": "1",
+      "mx-emoji-cost-width": "34",
+      "mx-emoji-cost-height": "34",
+      "mx-emoji-selected-left": "8%",
+      "mx-emoji-selected-right": "8%",
+      "mx-emoji-selected-height": "10",
+      "mx-emoji-selected-bottom": "0",
+      "mx-emoji-selected-border-radius": "50%",
+      "mx-emoji-spinner-left": "35%",
+      "mx-emoji-spinner-top": "35%",
+      "mx-emoji-spinner-width": "30%",
+      "mx-emoji-spinner-height": "30%",
+      "mx-emoji-spinner-border-radius": "50%"
+    },
+    "previewArtWidth": 130,
+    "previewFrameWidth": 143
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-emoji-item"
+  }
+}

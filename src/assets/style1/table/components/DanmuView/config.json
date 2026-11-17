@@ -1,0 +1,29 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-danmu-inset": "0",
+      "mx-danmu-item-left": "0",
+      "mx-danmu-item-font-size": "50",
+      "mx-danmu-item-border-radius": "30px",
+      "mx-danmu-item-padding": "3px",
+      "mx-danmu-item-padding-2": "12px"
+    },
+    "lanes": 8,
+    "designWidth": 1440,
+    "topRatio": 0.2,
+    "laneHeight": 150,
+    "speedMin": 140,
+    "speedSpread": 60
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-danmu"
+  }
+}

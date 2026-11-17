@@ -1,0 +1,18 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {},
+    "avatarSize": 199,
+    "allInLift": 32
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

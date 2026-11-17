@@ -1,0 +1,67 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "timerRing": "raw/ui/timerRing.png",
+    "timerDot": "raw/ui/timerDot.png"
+  },
+  "layout": {
+    "css": {
+      "mx-seat-timer-left": "50%",
+      "mx-seat-timer-top": "50%",
+      "mx-seat-timer-transform": "-50%",
+      "mx-seat-timer-transform-2": "-50%",
+      "mx-seat-timer-texture-border-radius": "28%",
+      "mx-seat-timer-transform-3": "-50%",
+      "mx-seat-timer-transform-4": "-50%",
+      "mx-seat-timer-transform-5": "137",
+      "mx-seat-timer-transform-6": "199",
+      "mx-seat-timer-inset": "2px",
+      "mx-seat-timer-texture-border-radius-2": "50%",
+      "mx-seat-timer-inset-2": "0",
+      "mx-seat-timer-font-size": "24",
+      "mx-seat-timer-font-size-2": "199px",
+      "mx-seat-timer-font-size-3": "58",
+      "mx-seat-timer-left-2": "-99.5px",
+      "mx-seat-timer-top-2": "-99.5px",
+      "mx-seat-timer-width": "199px",
+      "mx-seat-timer-height": "199px",
+      "mx-seat-timer-inset-3": "-12px",
+      "mx-seat-timer-border-radius": "50%",
+      "mx-seat-timer-ring-inset": "0",
+      "mx-seat-timer-dot-width": "20px",
+      "mx-seat-timer-dot-height": "20px",
+      "mx-seat-timer-dot-margin": "-10px",
+      "mx-seat-timer-dot-left": "99.5px",
+      "mx-seat-timer-dot-top": "99.5px",
+      "mx-seat-timer-inset-4": "0",
+      "mx-seat-timer-border-radius-2": "50%",
+      "mx-seat-keep-seconds-left": "0",
+      "mx-seat-keep-seconds-width": "100%",
+      "mx-seat-keep-seconds-line-height": "1",
+      "mx-seat-keep-label-top": "70px",
+      "mx-seat-keep-label-font-size": "38px",
+      "mx-seat-keep-seconds-top": "120px",
+      "mx-seat-keep-seconds-font-size": "32px",
+      "mx-seat-timer-texture-inset": "0"
+    },
+    "points": 24,
+    "diameter": 199,
+    "pathInset": 4,
+    "balancedHalf": 95.5,
+    "balancedRadius": 51.72,
+    "actionColor": "#14fd00",
+    "keepColor": "#0ee3fe",
+    "balancedStroke": 3,
+    "roundedStroke": 4,
+    "cornerRatio": 0.28
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-seat-timer"
+  }
+}

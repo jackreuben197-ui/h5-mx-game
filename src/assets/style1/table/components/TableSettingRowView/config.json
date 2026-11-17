@@ -1,0 +1,42 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "infoTip": "raw/ui/infoTip.png",
+    "switchTrack": "raw/ui/switchTrack.png",
+    "switchKnob": "raw/ui/switchKnob.png"
+  },
+  "layout": {
+    "css": {
+      "mx-room-setting-row-grid-template-columns": "0",
+      "mx-room-setting-row-grid-template-columns-2": "1fr",
+      "mx-room-setting-row-column-gap": "20",
+      "mx-room-setting-row-min-height": "86",
+      "mx-room-setting-row-padding": "16",
+      "mx-room-setting-row-padding-2": "0",
+      "mx-room-setting-heading-min-width": "0",
+      "mx-room-setting-heading-gap": "16",
+      "mx-room-setting-value-max-width": "390",
+      "mx-room-setting-info-padding": "0",
+      "mx-room-setting-info-width": "45",
+      "mx-room-setting-info-height": "45",
+      "mx-room-setting-detail-font-size": "36",
+      "mx-room-setting-detail-margin": "12",
+      "mx-room-setting-detail-margin-2": "0",
+      "mx-room-setting-detail-margin-3": "0",
+      "mx-room-setting-new-border-radius": ".25em",
+      "mx-room-setting-new-padding": ".05em",
+      "mx-room-setting-new-padding-2": ".3em",
+      "mx-room-setting-new-font-size": ".65em",
+      "mx-room-setting-new-line-height": "1.3"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-room-setting-row"
+  }
+}

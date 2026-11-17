@@ -1,0 +1,27 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-history-cards-gap": "4",
+      "mx-history-cards-min-width": "0",
+      "mx-history-cards-grid-template-columns": "0",
+      "mx-history-cards-grid-template-columns-2": "1fr",
+      "mx-history-cards-width": "182",
+      "mx-history-cards-grid-template-columns-3": "5",
+      "mx-history-cards-grid-template-columns-4": "0",
+      "mx-history-cards-grid-template-columns-5": "1fr",
+      "mx-history-cards-width-2": "100%",
+      "mx-history-cards-max-width": "451"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-history-cards"
+  }
+}

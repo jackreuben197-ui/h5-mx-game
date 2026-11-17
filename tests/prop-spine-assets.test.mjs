@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import spine from '../src/effects/spine/vendor/spine38.js';
-import {THROW_PROP_EFFECTS} from '../.test-build/effects/spine/ThrowPropConfig.js';
+import {THROW_PROP_EFFECTS} from '../.test-build/assets/style1/effects/spine/ThrowPropConfig.js';
 
 for (const [type, clips] of Object.entries(THROW_PROP_EFFECTS)) {
   test(`CC throw prop ${type} retains every original Spine clip`, () => {
     for (const config of Object.values(clips)) {
-      const base = new URL(`../src/assets/spine/prop/${config.spine}`,import.meta.url);
+      const base = new URL(`../src/assets/style1/resources/spine/prop/${config.spine}`,import.meta.url);
       const atlas = new spine.TextureAtlas(readFileSync(new URL(base.href+'.atlas'),'utf8'), name => {
         const png = readFileSync(new URL(name,base));
         return {getImage:()=>({width:png.readUInt32BE(16),height:png.readUInt32BE(20)}),setFilters(){},setWraps(){}};

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { pb, FakeTransport, outbound, record, snapshot } from './helpers/protocol-fixture.mjs';
 import { MxRoomHost } from '../.test-build/host/MxRoomHost.js';
 import { BuyInController } from '../.test-build/logic/BuyInController.js';
-import { SeatPositionMotion } from '../.test-build/table/SeatPositionMotion.js';
+import { SeatPositionMotion } from '../.test-build/assets/style1/table/SeatPositionMotion.js';
 
 test('successful sit-down closes buy-in and keeps the live seat move without an immediate SyncEnter', async t => {
   const transport = new FakeTransport(), signal = new AbortController();

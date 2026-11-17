@@ -1,0 +1,35 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "recordPosition": "raw/ui/recordPosition.png"
+  },
+  "layout": {
+    "css": {
+      "mx-history-street-margin-top": "25",
+      "mx-history-street-padding-bottom": "30",
+      "mx-history-action-row-grid-template-columns": "105",
+      "mx-history-action-row-grid-template-columns-2": "0",
+      "mx-history-action-row-grid-template-columns-3": "1fr",
+      "mx-history-action-row-grid-template-columns-4": "230",
+      "mx-history-action-row-grid-template-columns-5": "250",
+      "mx-history-action-row-gap": "16",
+      "mx-history-action-row-min-height": "80",
+      "mx-history-bet-gap": "10",
+      "mx-history-action-min-width": "78",
+      "mx-history-action-height": "48",
+      "mx-history-action-padding": "0",
+      "mx-history-action-padding-2": "8",
+      "mx-history-action-border-radius": "10",
+      "mx-history-action-font-size": "33"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-history-street"
+  }
+}

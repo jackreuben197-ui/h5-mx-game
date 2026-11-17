@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SeatPositionCaculator } from '../.test-build/core/seat-layout.js';
+import { SeatPositionCaculator } from '../.test-build/assets/style1/table/layouts/seat-layout.js';
 import { applyUpdate } from '../.test-build/core/store.js';
 test('2–9 seats stay finite, distinct and inside portrait layouts', () => {
   for (const height of [2200, 2688, 3200])

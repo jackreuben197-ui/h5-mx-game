@@ -8,9 +8,9 @@ export { bindEvent } from './binding/bindEvent.js';
 export type { MountOptions } from './MountOptions.js';
 export type { MxMountOptions } from './host/MxGameClient.js';
 export type { HostTransport, HostMessage } from './host/HostTransport.js';
-export type { TableComponents } from './table/TableComponents.js';
-export type { SeatComponent, SeatPlacement } from './table/components/SeatView.js';
-export type { PublicCardsComponent } from './table/components/PublicCardsView.js';
+export type { TableComponents } from './ui/TableComponents.js';
+export type { SeatComponent } from './ui/Components.js';
+export type { PublicCardsComponent } from './ui/Components.js';
 export type * from './core/types.js';
 
 export { HttpClient } from './net/http/HttpClient.js';
@@ -24,3 +24,13 @@ export { HttpConfig } from './config/HttpConfig.js';
 export { i18nMgr } from './i18n/i18nMgr.js';
 export { i18nLabel } from './i18n/i18nLabel.js';
 export { CPErrorCode } from './i18n/CPErrorCode.js';
+
+export type { TableLayout, LayoutContent, LayoutContentOptions, LayoutControls, LayoutPoint } from './ui/TableLayout.js';
+export type { TableUiConfig } from './ui/TableUiConfig.js';
+export { LayoutOriginal } from './config/UiConfig.js';
+export { LayoutClassic } from './config/UiConfig.js';
+export { LayoutBalanced } from './config/UiConfig.js';
+export { LayoutOval } from './config/UiConfig.js';
+
+export type { SeatPlacement } from './ui/TableLayout.js';
+export type { UiSkin, GameSurface } from './ui/UiSkin.js';

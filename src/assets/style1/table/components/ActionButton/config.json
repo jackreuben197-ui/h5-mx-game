@@ -1,0 +1,22 @@
+{
+  "w": 137,
+  "h": 137,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.5
+  },
+  "paths": {
+    "fold": "raw/ui/fold.png",
+    "call": "raw/ui/call.png",
+    "raise": "raw/ui/raise.png"
+  },
+  "layout": {
+    "css": {}
+  },
+  "sizing": {
+    "mode": "fixed",
+    "root": null
+  },
+  "foldTimerSize": 147,
+  "timerDesignSize": 199
+}

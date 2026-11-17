@@ -1,0 +1,68 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "table_icon_mushroom": "raw/mushroom/table_icon_mushroom.png",
+    "pool_bg": "raw/mushroom/pool_bg.png",
+    "squid_bg_red": "raw/squid/squid_bg_red.png"
+  },
+  "layout": {
+    "css": {
+      "mx-mushroom-pool-width": "0",
+      "mx-mushroom-pool-height": "0",
+      "mx-mushroom-pool-transform-origin": "0",
+      "mx-mushroom-pool-transform-origin-2": "0",
+      "mx-mushroom-icon-left": "-37.5px",
+      "mx-mushroom-icon-top": "-69.75px",
+      "mx-mushroom-icon-width": "75px",
+      "mx-mushroom-icon-height": "95px",
+      "mx-mushroom-icon-background-size": "122.8571%",
+      "mx-mushroom-icon-background-size-2": "104.3478%",
+      "mx-mushroom-icon-background-position": "50%",
+      "mx-mushroom-icon-background-position-2": "100%",
+      "mx-mushroom-amount-left": "-129px",
+      "mx-mushroom-amount-top": "-67px",
+      "mx-mushroom-amount-width": "118px",
+      "mx-mushroom-amount-height": "34px",
+      "mx-mushroom-amount-background-size": "100%",
+      "mx-mushroom-amount-background-size-2": "100%",
+      "mx-mushroom-amount-font-size": "31px",
+      "mx-mushroom-amount-line-height": "34px",
+      "mx-mushroom-amount-padding-right": "16px",
+      "mx-mushroom-count-left": "3.5px",
+      "mx-mushroom-count-top": "-71.5px",
+      "mx-mushroom-count-width": "33px",
+      "mx-mushroom-count-height": "33px",
+      "mx-mushroom-count-background-size": "100%",
+      "mx-mushroom-count-background-size-2": "100%",
+      "mx-mushroom-count-font-size": "28px",
+      "mx-mushroom-count-line-height": "33px",
+      "mx-mushroom-amount-left-2": "11px",
+      "mx-mushroom-amount-padding-right-2": "0",
+      "mx-mushroom-amount-padding-left": "16px",
+      "mx-mushroom-count-left-2": "-36.5px"
+    },
+    "offsetX": 75,
+    "offsetY": -74,
+    "moveMs": 600
+  },
+  "images": {
+    "table_icon_mushroom": {
+      "pack": false
+    },
+    "pool_bg": {
+      "pack": false
+    },
+    "squid_bg_red": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-mushroom-pool"
+  }
+}

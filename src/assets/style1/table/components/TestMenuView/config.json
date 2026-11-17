@@ -1,0 +1,38 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-test-menu-top": "2.5dvh",
+      "mx-test-menu-top-2": "30vw",
+      "mx-test-menu-right": "12px",
+      "mx-test-menu-top-3": "70px",
+      "mx-test-menu-padding": "9px",
+      "mx-test-menu-padding-2": "13px",
+      "mx-test-menu-border-radius": "18px",
+      "mx-test-panel-right": "0",
+      "mx-test-panel-top": "100%",
+      "mx-test-panel-top-2": "8px",
+      "mx-test-panel-width": "252px",
+      "mx-test-panel-width-2": "100vw",
+      "mx-test-panel-width-3": "24px",
+      "mx-test-panel-max-height": "100dvh",
+      "mx-test-panel-max-height-2": "130px",
+      "mx-test-panel-padding": "12px",
+      "mx-test-panel-border-radius": "14px",
+      "mx-test-menu-border-radius-2": "8px",
+      "mx-test-menu-padding-3": "9px",
+      "mx-test-menu-padding-4": "7px",
+      "mx-test-menu-min-width": "0"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-test-menu"
+  }
+}

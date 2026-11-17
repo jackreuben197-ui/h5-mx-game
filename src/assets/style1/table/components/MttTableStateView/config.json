@@ -1,0 +1,56 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "waitStart": "raw/mtt/waitStart.png",
+    "wait": "raw/mtt/wait.png",
+    "return": "raw/mtt/return.png"
+  },
+  "layout": {
+    "css": {
+      "mx-mtt-inset": "0",
+      "mx-mtt-cancel-transform": "-50%",
+      "mx-mtt-cancel-transform-2": "-50%",
+      "mx-mtt-cancel-background-size": "100%",
+      "mx-mtt-cancel-background-size-2": "100%",
+      "mx-mtt-tip-height": "209px",
+      "mx-mtt-tip-font-size": "46px",
+      "mx-mtt-tip-line-height": "1.3",
+      "mx-mtt-tip-padding": "0",
+      "mx-mtt-tip-padding-2": "90px",
+      "mx-mtt-tip-height-2": "166px",
+      "mx-mtt-tip-font-size-2": "45px",
+      "mx-mtt-addon-width": "150px",
+      "mx-mtt-addon-height": "150px",
+      "mx-mtt-addon-font-size": "30px",
+      "mx-mtt-cancel-width": "581px",
+      "mx-mtt-cancel-height": "136px",
+      "mx-mtt-cancel-font-size": "52px"
+    },
+    "messageY": 1193,
+    "messageWidthGap": 377,
+    "cancelY": 1581,
+    "cancelBottomGap": 450,
+    "addOnRight": 100,
+    "addOnY": 400
+  },
+  "images": {
+    "waitStart": {
+      "pack": false
+    },
+    "wait": {
+      "pack": false
+    },
+    "return": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-mtt"
+  }
+}

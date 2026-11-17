@@ -1,0 +1,53 @@
+{
+  "w": 390,
+  "h": 176,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.5
+  },
+  "paths": {
+    "showEye": "raw/show_card_eye.png"
+  },
+  "back": {
+    "w": 130,
+    "h": 87
+  },
+  "layout": {
+    "css": {
+      "mx-card-slot-margin-top": "-2",
+      "mx-card-slot-margin-top-2": "-2",
+      "mx-hole-cards-width": "0",
+      "mx-hole-cards-height": "0",
+      "mx-hole-cards-transform-origin": "0",
+      "mx-hole-cards-transform-origin-2": "0",
+      "mx-card-slot-width": "120px",
+      "mx-card-slot-height": "176px",
+      "mx-card-slot-margin-left": "-60px",
+      "mx-card-slot-margin-top-3": "-88px",
+      "mx-card-slot-width-2": "65px",
+      "mx-card-slot-height-2": "87px",
+      "mx-card-slot-margin-left-2": "-32.5px",
+      "mx-card-slot-margin-top-4": "-43.5px",
+      "mx-card-selected-left": "25%",
+      "mx-card-selected-top": "100%",
+      "mx-card-selected-top-2": "2px",
+      "mx-card-selected-width": "48px",
+      "mx-card-selected-height": "48px",
+      "mx-card-selected-transform": "-50%",
+      "mx-card-selected-transform-2": "-50%"
+    },
+    "faceStripWidth": 270,
+    "backStripWidth": 80,
+    "backCenter": 45,
+    "emphasisLift": 10
+  },
+  "sizing": {
+    "mode": "fixed",
+    "root": ".mx-hole-cards"
+  },
+  "images": {
+    "showEye": {
+      "pack": false
+    }
+  }
+}

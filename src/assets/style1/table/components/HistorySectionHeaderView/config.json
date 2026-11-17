@@ -1,0 +1,39 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "recordPeople": "raw/ui/recordPeople.png",
+    "chip": "raw/ui/chip.png"
+  },
+  "layout": {
+    "css": {
+      "mx-record-icon-width": "54",
+      "mx-record-icon-height": "54",
+      "mx-record-icon-width-2": "40",
+      "mx-record-icon-height-2": "24",
+      "mx-history-street-heading-grid-template-columns": "210",
+      "mx-history-street-heading-grid-template-columns-2": "0",
+      "mx-history-street-heading-grid-template-columns-3": "1fr",
+      "mx-history-street-heading-grid-template-columns-4": "110",
+      "mx-history-street-heading-grid-template-columns-5": "210",
+      "mx-history-street-heading-gap": "12",
+      "mx-history-street-heading-min-height": "145",
+      "mx-history-street-heading-margin-bottom": "18",
+      "mx-history-pot-min-width": "0",
+      "mx-history-street-heading-margin": "0",
+      "mx-history-pot-gap": "5",
+      "mx-history-empty-cards-width": "70",
+      "mx-history-empty-cards-height": "115",
+      "mx-record-icon-width-3": "55",
+      "mx-record-icon-height-3": "45"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-history-street-heading"
+  }
+}

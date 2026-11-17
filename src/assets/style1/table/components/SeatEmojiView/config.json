@@ -1,0 +1,22 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-seat-emoji-layer-inset": "0"
+    },
+    "wideRatio": 0.75,
+    "screenWidth": 1440,
+    "screenHeight": 2688,
+    "avatarSize": 199
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-seat-emoji-layer"
+  }
+}

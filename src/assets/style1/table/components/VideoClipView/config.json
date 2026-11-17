@@ -1,0 +1,17 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {},
+    "objectFit": "contain"
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": null
+  }
+}

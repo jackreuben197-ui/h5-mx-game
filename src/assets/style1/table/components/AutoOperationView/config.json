@@ -1,0 +1,45 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "autoFoldOn": "raw/ui/autoFoldOn.png",
+    "autoFoldOff": "raw/ui/autoFoldOff.png",
+    "autoCallOn": "raw/ui/autoCallOn.png",
+    "autoCallOff": "raw/ui/autoCallOff.png",
+    "autoOn": "raw/ui/autoOn.png",
+    "autoOff": "raw/ui/autoOff.png"
+  },
+  "layout": {
+    "css": {
+      "mx-auto-operation-bottom": "100%",
+      "mx-auto-operation-left": "0",
+      "mx-auto-operation-right": "0",
+      "mx-auto-operation-gap": "12px",
+      "mx-auto-operation-padding-bottom": "10px",
+      "mx-auto-operation-border-radius": "18px",
+      "mx-auto-operation-padding": "6px",
+      "mx-auto-operation-padding-2": "12px",
+      "mx-auto-operation-font-size": "12px",
+      "mx-auto-operation-inset": "0",
+      "mx-auto-operation-padding-3": "0",
+      "mx-auto-operation-top": "50%",
+      "mx-auto-operation-padding-4": "0",
+      "mx-auto-operation-border-radius-2": "50%",
+      "mx-auto-operation-transform": "-50%",
+      "mx-auto-operation-transform-2": "-50%",
+      "mx-auto-operation-font-size-2": "9px",
+      "mx-auto-operation-border-radius-3": "0",
+      "mx-auto-operation-font-size-3": "30",
+      "mx-auto-operation-font-size-4": "137",
+      "mx-auto-operation-line-height": "1.35"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-auto-operation"
+  }
+}

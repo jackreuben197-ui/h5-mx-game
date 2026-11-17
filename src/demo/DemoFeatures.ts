@@ -1,3 +1,4 @@
+import { demoAvatar } from '../config/AppearanceConfig.js';
 import type { SpecialOperations } from '../core/RoomRecords.js';
 import type { TableSnapshot } from '../core/types.js';
 import type { PotInsuranceBuy } from '@silenthill/agreement-web';
@@ -54,7 +55,7 @@ export class DemoFeatures implements SpecialOperations {
     snapshot.setPlayersList(state.players.filter(p=>p.seat<=state.seatCount).map(p=>{
       const player=new pb.Player();player.setSeatId(p.seat);player.setName(p.name);player.setChip(p.chips);player.setCardsList([...p.cards]);
       // Local CC fallback avatars keep the demo entirely offline.
-      player.setAvatar(new URL('../assets/raw/ui/avatar.png',import.meta.url).href);
+      player.setAvatar(demoAvatar);
       return player;
     }));
     this.data.snapshot=snapshot.toObject();

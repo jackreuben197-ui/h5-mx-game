@@ -1,0 +1,32 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-report-summary-grid-template-columns": "2",
+      "mx-report-summary-grid-template-columns-2": "0",
+      "mx-report-summary-grid-template-columns-3": "1fr",
+      "mx-report-summary-gap": "22",
+      "mx-report-summary-gap-2": "25",
+      "mx-report-summary-margin-top": "30",
+      "mx-report-summary-padding": "38",
+      "mx-report-summary-padding-2": "55",
+      "mx-report-summary-border-radius": "85",
+      "mx-report-summary-gap-3": ".25em",
+      "mx-report-player-avatar-width": "72px",
+      "mx-report-player-avatar-height": "72px",
+      "mx-report-player-avatar-border-radius": "50%",
+      "mx-report-player-overlay-font-size": "18px",
+      "mx-report-player-overlay-margin": "8px"
+    }
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

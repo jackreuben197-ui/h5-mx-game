@@ -1,0 +1,28 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-test-heading-font-size": "12px",
+      "mx-test-heading-margin": "0",
+      "mx-test-heading-margin-2": "0",
+      "mx-test-heading-margin-3": "8px",
+      "mx-allin-test-gap": "6px",
+      "mx-allin-test-margin-top": "12px",
+      "mx-allin-test-padding-top": "12px",
+      "mx-test-heading-margin-bottom": "2px",
+      "mx-allin-test-status-font-size": "12px",
+      "mx-allin-test-status-line-height": "1.5"
+    },
+    "avatarSize": 199
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-allin-test"
+  }
+}

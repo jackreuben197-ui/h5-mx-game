@@ -1,0 +1,20 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-language-options-grid-template-columns": "1fr",
+      "mx-language-options-grid-template-columns-2": "1fr",
+      "mx-language-options-gap": "6px"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-language-test"
+  }
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SeatPositionMotion } from '../.test-build/table/SeatPositionMotion.js';
+import { SeatPositionMotion } from '../.test-build/assets/style1/table/SeatPositionMotion.js';
 
 const observing = { roomID: 1001, matchID: 0, seatCount: 9, mySeat: 0, presentation: 'live' };
 const seated = { ...observing, mySeat: 4 };

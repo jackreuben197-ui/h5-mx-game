@@ -5,7 +5,7 @@ import spine from '../src/effects/spine/vendor/spine38.js';
 import MagicEmojiConfig from '../.test-build/logic/MagicEmojiConfig.js';
 for(const config of MagicEmojiConfig.DEFINITIONS) {
  test(`CC emoji ${config.propCode}: original atlas, animation and preview bounds are valid`,()=>{
-  const base=new URL('../src/assets/spine/emoji/'+config.spine.split('/').slice(-2).join('/'),import.meta.url);
+  const base=new URL('../src/assets/style1/resources/spine/emoji/'+config.spine.split('/').slice(-2).join('/'),import.meta.url);
   const atlas=new spine.TextureAtlas(readFileSync(new URL(base.href+'.atlas'),'utf8'),name=>{
    const png=readFileSync(new URL(name,base));return {getImage:()=>({width:png.readUInt32BE(16),height:png.readUInt32BE(20)}),setFilters(){},setWraps(){}};
   });

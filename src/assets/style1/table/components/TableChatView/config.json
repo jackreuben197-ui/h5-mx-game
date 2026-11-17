@@ -1,0 +1,152 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "send": "raw/chat/send.png",
+    "quick": "raw/chat/quick.png",
+    "input": "raw/chat/input.png",
+    "panel": "raw/chat/panel.png",
+    "support": "raw/chat/support.png",
+    "support_bg": "raw/chat/support-bg.png",
+    "chat": "raw/ui/chat.png",
+    "toolBackground": "raw/table-tools/action-bg.png"
+  },
+  "layout": {
+    "css": {
+      "mx-support-button-padding": "0",
+      "mx-chat-button-left": "5.5%",
+      "mx-chat-button-bottom": "6.9%",
+      "mx-chat-button-width": "120",
+      "mx-chat-button-height": "146",
+      "mx-chat-button-bottom-2": "0",
+      "mx-chat-button-left-2": "0",
+      "mx-chat-button-right": "0",
+      "mx-chat-button-font-size": "36",
+      "mx-chat-unread-right": "0",
+      "mx-chat-unread-top": "0",
+      "mx-chat-unread-width": "9px",
+      "mx-chat-unread-height": "9px",
+      "mx-chat-unread-border-radius": "50%",
+      "mx-support-button-right": "3.5%",
+      "mx-support-button-top": "2.5%",
+      "mx-support-button-min-width": "200",
+      "mx-support-button-height": "100",
+      "mx-support-button-gap": "16",
+      "mx-support-button-padding-inline": "28",
+      "mx-chat-welcome-padding": "25",
+      "mx-chat-welcome-margin": "0",
+      "mx-chat-welcome-margin-2": "0",
+      "mx-chat-welcome-margin-3": "10px",
+      "mx-chat-message-gap": "24",
+      "mx-chat-message-margin": "30",
+      "mx-chat-message-margin-2": "0",
+      "mx-chat-avatar-width": "110",
+      "mx-chat-avatar-height": "110",
+      "mx-chat-avatar-border-radius": "50%",
+      "mx-chat-content-min-width": "0",
+      "mx-chat-meta-gap": "5px",
+      "mx-chat-meta-font-size": "32",
+      "mx-chat-meta-margin-bottom": "12",
+      "mx-chat-bubble-max-width": "100%",
+      "mx-chat-bubble-border-radius": "20",
+      "mx-chat-bubble-padding": "20",
+      "mx-chat-bubble-padding-2": "30",
+      "mx-chat-bubble-font-size": "42",
+      "mx-chat-composer-gap": "20",
+      "mx-chat-input-min-width": "0",
+      "mx-chat-input-height": "123",
+      "mx-chat-input-border-radius": "30",
+      "mx-chat-input-padding": "0",
+      "mx-chat-input-padding-2": "30",
+      "mx-chat-input-font-size": "42",
+      "mx-chat-quick-button-width": "120",
+      "mx-chat-quick-button-height": "120",
+      "mx-chat-modes-gap": "45",
+      "mx-chat-modes-padding-bottom": "25",
+      "mx-chat-modes-font-size": "40",
+      "mx-chat-modes-gap-2": "6px",
+      "mx-chat-quick-bottom": "100%",
+      "mx-chat-quick-left": "5%",
+      "mx-chat-quick-right": "5%",
+      "mx-chat-quick-max-height": "35vh",
+      "mx-chat-quick-border-radius": "12px",
+      "mx-chat-quick-padding": "8px",
+      "mx-chat-quick-width": "100%",
+      "mx-chat-quick-padding-2": "8px",
+      "mx-chat-quick-margin": "4px",
+      "mx-chat-quick-margin-2": "0",
+      "mx-chat-modes-gap-3": "50",
+      "mx-chat-modes-font-size-2": "42",
+      "mx-chat-modes-width": "50",
+      "mx-chat-modes-height": "50",
+      "mx-chat-modes-margin": "0",
+      "mx-chat-modes-border-radius": "50%",
+      "mx-chat-message-grid-template-columns": "100",
+      "mx-chat-message-grid-template-columns-2": "0",
+      "mx-chat-message-grid-template-columns-3": "1fr",
+      "mx-chat-message-gap-2": "12",
+      "mx-chat-message-gap-3": "40",
+      "mx-chat-message-margin-3": "20",
+      "mx-chat-message-margin-4": "0",
+      "mx-chat-avatar-width-2": "100",
+      "mx-chat-avatar-height-2": "100",
+      "mx-chat-meta-font-size-2": "24",
+      "mx-chat-meta-margin": "0",
+      "mx-chat-meta-gap-2": "16",
+      "mx-chat-bubble-font-size-2": "40",
+      "mx-chat-bubble-padding-3": "12",
+      "mx-chat-bubble-padding-4": "25",
+      "mx-chat-bubble-border-radius-2": "30",
+      "mx-chat-emoji-slot-width": "220",
+      "mx-chat-emoji-slot-height": "220",
+      "mx-table-tool-icon-top": "50%",
+      "mx-table-tool-icon-left": "50%",
+      "mx-table-tool-icon-transform": "-50%",
+      "mx-table-tool-icon-transform-2": "-50%",
+      "mx-table-tool-background-width": "180",
+      "mx-table-tool-background-height": "92.74",
+      "mx-table-tool-background-border-radius": "999px",
+      "mx-table-tool-background-width-2": "100%",
+      "mx-table-tool-background-width-3": "20",
+      "mx-table-tool-background-inset": "-16",
+      "mx-support-icon-width": "69",
+      "mx-support-icon-height": "72",
+      "mx-support-label-font-size": "28",
+      "mx-support-label-line-height": "1.1"
+    },
+    "dockTop": 200,
+    "screenWidth": 1440,
+    "panelWidth": 1050
+  },
+  "images": {
+    "send": {
+      "pack": false
+    },
+    "quick": {
+      "pack": false
+    },
+    "input": {
+      "pack": false
+    },
+    "panel": {
+      "pack": false
+    },
+    "support": {
+      "pack": false
+    },
+    "support_bg": {
+      "pack": false
+    },
+    "toolBackground": {
+      "pack": false
+    }
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

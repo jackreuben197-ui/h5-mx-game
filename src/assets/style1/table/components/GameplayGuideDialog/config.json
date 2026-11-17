@@ -1,0 +1,46 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "dialogConfirm": "raw/ui/dialogConfirm.png"
+  },
+  "layout": {
+    "css": {
+      "mx-gameplay-guide-font-size": "23.333px",
+      "mx-gameplay-guide-line-height": "31px",
+      "mx-gameplay-guide-margin": "0",
+      "mx-gameplay-guide-image-width": "206.667px",
+      "mx-gameplay-guide-image-height": "206.667px",
+      "mx-gameplay-guide-image-background-size": "127.0115%",
+      "mx-gameplay-guide-image-background-size-2": "107.6503%",
+      "mx-gameplay-guide-image-background-position": "46.8085%",
+      "mx-gameplay-guide-image-background-position-2": "64.2857%",
+      "mx-gameplay-guide-width": "233.333px",
+      "mx-gameplay-guide-margin-2": "0",
+      "mx-gameplay-guide-font-size-2": "13.333px",
+      "mx-gameplay-guide-line-height-2": "20px",
+      "mx-gameplay-guide-font-size-3": "13.333px",
+      "mx-gameplay-guide-gap": "6px",
+      "mx-gameplay-guide-width-2": "11px",
+      "mx-gameplay-guide-height": "11px",
+      "mx-gameplay-guide-margin-3": "0",
+      "mx-gameplay-guide-commit-width": "200px",
+      "mx-gameplay-guide-commit-height": "60px",
+      "mx-gameplay-guide-commit-font-size": "22px",
+      "mx-gameplay-guide-image-width-2": "166.667px",
+      "mx-gameplay-guide-image-background-size-3": "122.3077%",
+      "mx-gameplay-guide-image-background-size-4": "101.5957%",
+      "mx-gameplay-guide-image-background-position-3": "55.1724%",
+      "mx-gameplay-guide-image-background-position-4": "100%"
+    },
+    "panelWidth": 366.6666666666667
+  },
+  "sizing": {
+    "mode": "composite",
+    "root": null
+  }
+}

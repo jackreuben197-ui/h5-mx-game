@@ -5,7 +5,7 @@ import spine from '../src/effects/spine/vendor/spine38.js';
 
 for (const [kind, extension, version] of [['win','json','3.8.75'], ['allin-self','skel','3.8.64'], ['allin-other','skel','3.8.64']]) {
   test(`CC ${kind}: parse original asset and render every animation frame with valid mesh UVs`, () => {
-    const base = new URL(`../src/assets/spine/${kind}/skeleton.`, import.meta.url);
+    const base = new URL(`../src/assets/style1/resources/spine/${kind}/skeleton.`, import.meta.url);
     const png = readFileSync(new URL(`${base}png`));
     const texture = { getImage: () => ({ width: png.readUInt32BE(16), height: png.readUInt32BE(20) }), setFilters(){}, setWraps(){} };
     const atlas = new spine.TextureAtlas(readFileSync(new URL(`${base}atlas`), 'utf8'), () => texture);

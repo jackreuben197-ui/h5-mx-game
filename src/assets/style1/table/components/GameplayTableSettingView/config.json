@@ -1,0 +1,53 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {
+    "infoTip": "raw/ui/infoTip.png"
+  },
+  "layout": {
+    "css": {
+      "mx-room-settings-font-size": "46",
+      "mx-room-settings-line-height": "1.35",
+      "mx-room-settings-warning-gap": "22",
+      "mx-room-settings-warning-padding": "18",
+      "mx-room-settings-warning-padding-2": "24",
+      "mx-room-settings-warning-margin-bottom": "28",
+      "mx-room-settings-warning-border-radius": "26",
+      "mx-room-settings-warning-font-size": "40",
+      "mx-room-settings-warning-icon-width": "45",
+      "mx-room-settings-warning-icon-height": "45",
+      "mx-room-settings-calltime-margin": "0",
+      "mx-room-settings-calltime-margin-2": "0",
+      "mx-room-settings-calltime-margin-3": "28",
+      "mx-room-settings-calltime-padding": "25",
+      "mx-room-settings-calltime-border-radius": "30",
+      "mx-room-settings-calltime-font-size": "40",
+      "mx-room-settings-heading-font-size": "40",
+      "mx-room-settings-heading-margin": "26",
+      "mx-room-settings-heading-margin-2": "0",
+      "mx-room-settings-heading-margin-3": "24",
+      "mx-room-settings-tooltip-left": "6%",
+      "mx-room-settings-tooltip-right": "6%",
+      "mx-room-settings-tooltip-top": "32%",
+      "mx-room-settings-tooltip-max-height": "60%",
+      "mx-room-settings-tooltip-border-radius": "35",
+      "mx-room-settings-tooltip-padding": "48",
+      "mx-room-settings-tooltip-font-size": "40",
+      "mx-room-settings-tooltip-margin": "24",
+      "mx-room-settings-tooltip-margin-2": "0",
+      "mx-room-settings-tooltip-margin-3": "0",
+      "mx-room-settings-tooltip-padding-right": "45",
+      "mx-room-settings-tip-close-right": "10",
+      "mx-room-settings-tip-close-top": "10",
+      "mx-room-settings-tip-close-font-size": "65"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-room-settings"
+  }
+}

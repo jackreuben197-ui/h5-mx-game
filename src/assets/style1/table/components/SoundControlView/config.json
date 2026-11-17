@@ -1,0 +1,25 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "paths": {},
+  "layout": {
+    "css": {
+      "mx-sound-toggle-right": "8px",
+      "mx-sound-toggle-bottom": "66px",
+      "mx-sound-toggle-border-radius": "16px",
+      "mx-sound-toggle-font-size": "12px",
+      "mx-sound-toggle-padding": "4px",
+      "mx-sound-toggle-padding-2": "8px",
+      "mx-sound-toggle-right-2": "84px",
+      "mx-sound-toggle-bottom-2": "80px"
+    }
+  },
+  "sizing": {
+    "mode": "responsive",
+    "root": ".mx-sound-toggle"
+  }
+}

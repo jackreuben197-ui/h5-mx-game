@@ -1,8 +1,10 @@
 import type { ClientState, RoomHost } from './core/types.js';
-import type { TableComponents } from './table/TableComponents.js';
+import type { TableComponents } from './ui/TableComponents.js';
 export interface MountOptions {
   host: RoomHost;
   brand?: string;
+  /** UI implementations; omitted uses the existing MX appearance preferences. */
+  ui?: import('./ui/TableUiConfig.js').TableUiConfig;
   preferences?: import('./data/TexasGamePersonalSettings.js').TexasGamePersonalSettings;
   /** Minimum foreground loading display; defaults to 0 in all modes. */
   minimumLoadingMs?: number;
