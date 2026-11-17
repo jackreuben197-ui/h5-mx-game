@@ -8,13 +8,13 @@ export interface SeatPlacement {
   cardsY: number;
   cardScale: number;
   handSpread?: number;
+  /** With a custom spread, the back-card group ends at (cardsX, cardsY). */
+  backHandSpread?: number;
   betX: number;
   betY: number;
   betIconX: number;
   dealerX: number;
   dealerY: number;
-  winX?: number;
-  winY?: number;
 }
 export interface LayoutPoint { x: number; y: number; scale?: number; }
 export interface LayoutContentOptions { dual: boolean; boardSize: number; jackpotHeight: number; }

@@ -9,7 +9,7 @@
   "layout": {
     "css": {},
     "avatarSize": 199,
-    "allInLift": 0
+    "balancedSelfAllInLift": 176
   },
   "sizing": {
     "mode": "composite",

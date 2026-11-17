@@ -128,13 +128,16 @@ export class PersonalSettingsView {
       colors.hidden=!solid;
     });
     const quick=this.pages[1]!;
-    quick.append(this.heading('MX_SliderSubmit'));
+    const submitHeading=this.heading('MX_SliderSubmit');
     const submitModes=element('div','mx-settings-modes mx-settings-submit-modes');
     for(const [mode,key] of [['release','MX_SliderRelease'],['confirm','MX_SliderConfirm']] as const){
       const b=this.button(key,()=>this.settings.setSliderSubmit(mode));
       this.submitModes.push(b);submitModes.append(b);
     }
-    quick.append(submitModes,this.heading('UIGameplaySetting_QuickFillingSetting_GameButton'));
+    quick.append(submitHeading,submitModes,this.heading('UIGameplaySetting_QuickFillingSetting_GameButton'));
+    this.appearanceRefresh.push(()=>{
+      submitHeading.hidden=submitModes.hidden=!this.settings.supportsLayoutCustomization;
+    });
     const modes=element('div','mx-settings-modes');
     for(const mode of [shortCutMode.Button3,shortCutMode.Button5]){
       const b=element('button','',()=>i18nMgr.Get('UIGameplaySetting_DesktopSetting_MultiButton',[mode===1?3:5]));b.type='button';
@@ -181,7 +184,7 @@ export class PersonalSettingsView {
     this.appearanceRefresh.forEach(refresh=>refresh());
     // Legacy tables also retain the quick-bet mode and ratio controls.
     this.tabs[1]!.hidden=false;
-    this.submitModes.forEach((b,i)=>b.setAttribute('aria-pressed',String(this.settings.sliderSubmit===(i===0?'release':'confirm'))));
+    this.submitModes.forEach((b,i)=>b.setAttribute('aria-pressed',String(this.settings.tableSliderSubmit===(i===0?'release':'confirm'))));
     const numbered=this.settings.tableAppearance.style==='legacy';
     this.desks.forEach((b,i)=>b.setAttribute('aria-pressed',String(numbered&&i+1===this.settings.deskType)));
     this.cards.forEach((b,i)=>b.setAttribute('aria-pressed',String(i+1===this.settings.pokerCardType)));

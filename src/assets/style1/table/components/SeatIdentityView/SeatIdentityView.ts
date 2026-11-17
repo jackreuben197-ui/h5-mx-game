@@ -35,6 +35,8 @@ export class SeatIdentityView {
   private chips = element('strong', 'mx-stack');
   private fold = element('div', 'mx-fold-cover', () => i18nMgr.Get("UITexas_fold", [], "弃牌"));
   private win = element('div','mx-seat-win');
+  private winHandType = element('span','mx-seat-win-hand-type');
+  private winAmount = element('span','mx-seat-win-amount');
   private winPercent = element('div','mx-seat-win-percent');
   private winPercentTitle = element('span','mx-seat-win-percent-title');
   private winPercentValue = element('strong','mx-seat-win-percent-value');
@@ -53,9 +55,13 @@ export class SeatIdentityView {
     SpriteAtlas.paint(this.border, config.paths.border);
     SpriteAtlas.paint(this.info, config.paths.info);
     SpriteAtlas.paint(this.line, config.paths.line);
-    this.info.append(this.name, this.line, this.chips);
+    const stackSlot = element('div', 'mx-stack-slot');
+    stackSlot.append(this.chips, this.win);
+    this.info.append(this.name, this.line, stackSlot);
     SpriteAtlas.paint(this.action, config.paths.actionBubble);
     SpriteAtlas.paint(this.win, config.paths.winBoard);
+    this.win.hidden = true;
+    this.win.append(this.winHandType, this.winAmount);
     SpriteAtlas.paint(this.winPercentTitle, config.paths.winPercentTitle);
     SpriteAtlas.paint(this.winPercentValue, config.paths.winPercentValue);
     this.winPercent.append(this.winPercentTitle, this.winPercentValue);
@@ -66,7 +72,7 @@ export class SeatIdentityView {
     this.returnButton.hidden=true;
     SpriteAtlas.paint(this.returnButton,config.paths.returnGame);
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
-    this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info, this.win,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
+    this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
   destroy(): void { this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
@@ -96,7 +102,13 @@ export class SeatIdentityView {
     this.handType.hidden=!state.mine||!state.handValueType||!!p?.folded||!!state.handEnded;
     if(!this.handType.hidden)i18nLabel.bind(this.handType,()=>handValueTypeToString(state.handValueType as HandValueType));
     this.win.hidden = !win;
-    chipLabel(this.win, () => win ? `${handValueTypeToString(win.handValueType as HandValueType) ?? ''}\n+${ChipFormatter.format(win.collectedChips,state.smallBlind,state.showBB)}` : '');
+    if (win) {
+      this.winHandType.hidden = !win.handValueType;
+      if (!this.winHandType.hidden) {
+        i18nLabel.bind(this.winHandType, () => handValueTypeToString(win.handValueType as HandValueType) ?? '');
+      }
+      chipLabel(this.winAmount, `+${ChipFormatter.format(win.collectedChips, state.smallBlind, state.showBB)}`);
+    }
     this.fold.hidden = !p?.folded;
     i18nLabel.bind(this.action, () => p?.folded ? '' : ccActionText(p?.action ?? ''));
     this.actionText = this.action.textContent ?? '';

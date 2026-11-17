@@ -24,7 +24,10 @@
       "mx-public-slot-width": "120px",
       "mx-public-slot-height": "176px",
       "mx-public-slot-margin-left": "-60px",
-      "mx-public-slot-margin-top": "-88px"
+      "mx-public-slot-margin-top": "-88px",
+      "mx-public-slot-empty-border-radius": "15.54px",
+      "mx-public-slot-empty-backdrop-filter": "24.32px",
+      "mx-public-slot-empty-padding": "1.1px"
     },
     "emphasisLift": 20,
     "cardWidth": 120

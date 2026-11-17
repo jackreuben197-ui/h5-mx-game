@@ -403,6 +403,9 @@ export class TableView {
     const contentBottom=landscape||!navigationBox.height?height:Math.min(height,navigationBox.top-box.top);
     this.layout.resize(width, landscape ? height : box.height, landscape, contentBottom);
     const l = this.layout;
+    const fixedBoardSlots = l.id === 'classic' && !landscape;
+    if (this.board instanceof PublicCardsView) this.board.setFixedSlots(fixedBoardSlots);
+    this.secondBoard.setFixedSlots(fixedBoardSlots);
     const bubbleWidth = landscape ? Math.min(width, box.height) : width;
     const bubbleDesignWidth = landscape || l.id === 'original' ? 1242 : 440;
     this.root.style.setProperty('--mx-side-bubble-unit', `${bubbleWidth / bubbleDesignWidth}px`);

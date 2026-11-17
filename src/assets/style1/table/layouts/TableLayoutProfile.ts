@@ -7,6 +7,7 @@ export interface TableLayoutProfile {
   heroCardWidth: number; heroCardHeight: number; heroHandSpread: number;
   heroInfoY: number; heroDealer: Point; heroOperationY: number; heroRaiseLift: number;
   otherDealerX: number; otherDealerY: number;
+  backHandSpread?: number;
 }
 // CC 0eb440c TableLayoutProfile: classic 440 × 782, ordered from the local bottom seat.
 const hero:Point=[220,683],top:Point=[220,98],tl:Point=[169,98],tr:Point=[271,98];
@@ -21,6 +22,6 @@ const ringY:Record<number,number>={683:596,98:154,163:214,238:214,340:324,517:43
 const ringAnchors=Object.fromEntries(Object.entries(classic.anchors).map(([count,points])=>[count,points.map(([x,y])=>[x,ringY[y]!] as Point)]));
 export const tableLayouts: Record<Exclude<TableLayoutId,'original'>,TableLayoutProfile>={
  classic,
- balanced:{...classic,id:'balanced',avatar:60,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:45,otherDealerY:40,anchors:ringAnchors},
+ balanced:{...classic,id:'balanced',avatar:60,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:45,otherDealerY:40,backHandSpread:56,anchors:ringAnchors},
  oval:{...classic,id:'oval',avatar:50,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:45,otherDealerY:40,anchors:ringAnchors},
 };

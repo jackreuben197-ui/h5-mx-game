@@ -25,12 +25,13 @@ export class PotView {
   private onPools(pools: readonly number[]): void {
     this.pool.hidden = !pools.length;
     const items = pools.slice(0, 9).map((amount, index) => {
-      const item = element('span', index === 0 ? 'mx-pool-item mx-pool-main' : 'mx-pool-item mx-pool-side', ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
-      chipLabel(item,ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
+      const item = element('span', index === 0 ? 'mx-pool-item mx-pool-main' : 'mx-pool-item mx-pool-side');
+      const value = element('span', 'mx-pool-value');
+      chipLabel(value, ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
       SpriteAtlas.paint(item, config.paths.pool);
       const chip = element('i', 'mx-pot-chip');
       SpriteAtlas.paint(chip, config.paths.chip);
-      item.prepend(chip);
+      item.append(chip, value);
       return item;
     });
     const sides = element('div', 'mx-side-pools');

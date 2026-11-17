@@ -39,10 +39,40 @@ test('QA action rows follow the adjusted hero rather than an absolute screen hei
   }
 });
 
+test('balanced anchors the local seat to the navigation even on a tall viewport',()=>{
+  const layout=defaultTableUi.createLayout('balanced');
+  layout.resize(440,956,false,899);
+  const before=layout.positions(state);
+  layout.resize(440,956,false,879);
+  const after=layout.positions(state);
+  assert.ok(Math.abs((before.get(state.mySeat).y-after.get(state.mySeat).y)*layout.unit-20)<.001);
+  assert.deepEqual(after.get(1),before.get(1));
+});
+
 test('modern layouts keep public card width at the same setting for single and dual boards',()=>{
  for(const id of ['classic','balanced','oval'])for(const dual of [false,true])for(const size of [.9,1,1.1]){
   const layout=defaultTableUi.createLayout(id);layout.resize(440,782,false);
   const content=layout.content({dual,boardSize:size,jackpotHeight:0});
   assert.ok(Math.abs(content.board.scale*120*layout.unit-50.59*size)<.001);
  }
+});
+
+test('balanced uses the avatar bottom-right corner for opponents’ card backs',()=>{
+  const snapshot={...state,players:[{seat:1,cards:[0,0]},{seat:2,cards:[0,0,0,0,0,0]},{seat:3,cards:[1,2]}]};
+  const layout=defaultTableUi.createLayout('balanced');
+  for(const [width,height] of [[440,782],[375,500]]){
+    layout.resize(width,height,false);
+    const placements=layout.positions(snapshot);
+    for(const seat of [1,2]){
+      const p=placements.get(seat);
+      assert.equal(p.cardsX,99.5);
+      assert.equal(p.cardsY,99.5);
+      assert.equal(p.backHandSpread,56);
+    }
+    assert.equal(placements.get(3).cardsX,0);
+    assert.equal(placements.get(3).cardsY,0);
+    assert.equal(placements.get(state.mySeat).backHandSpread,undefined);
+  }
+  layout.resize(782,440,true);
+  assert.equal(layout.positions(snapshot).get(1).backHandSpread,undefined);
 });

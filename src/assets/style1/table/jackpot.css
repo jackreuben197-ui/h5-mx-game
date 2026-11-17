@@ -1,6 +1,14 @@
 .mx-jackpot{position:absolute;inset:var(--mx-JackpotView-mx-jackpot-inset);pointer-events:none;z-index:4}
-.mx-jackpot-pool{position:absolute;width:var(--mx-JackpotView-mx-jackpot-pool-width);height:var(--mx-JackpotView-mx-jackpot-pool-height);border:0;padding:var(--mx-JackpotView-mx-jackpot-pool-padding);background-color:transparent;background-size:var(--mx-JackpotView-mx-jackpot-pool-background-size) var(--mx-JackpotView-mx-jackpot-pool-background-size-2);color:white;pointer-events:auto;font-size:var(--mx-JackpotView-mx-jackpot-pool-font-size)!important;font-weight:bold!important;line-height:var(--mx-JackpotView-mx-jackpot-pool-line-height)}
+.mx-jackpot-pool{position:absolute;width:var(--mx-JackpotView-mx-jackpot-pool-width);height:var(--mx-JackpotView-mx-jackpot-pool-height);border:0;padding:var(--mx-JackpotView-mx-jackpot-pool-padding);background-color:transparent;background-image:var(--mx-jackpot-pool-image);background-size:var(--mx-JackpotView-mx-jackpot-pool-background-size) var(--mx-JackpotView-mx-jackpot-pool-background-size-2);color:white;pointer-events:auto;font-size:var(--mx-JackpotView-mx-jackpot-pool-font-size)!important;font-weight:bold!important;line-height:var(--mx-JackpotView-mx-jackpot-pool-line-height)}
 .mx-jackpot-pool span{display:block;transform:scaleX(var(--mx-JackpotView-mx-jackpot-pool-transform))}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=classic],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-jackpot-pool{
+  display:flex;align-items:center;justify-content:center;background-image:none;color:#ebd198;
+}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=classic],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-jackpot-pool span{
+  /* Layout units already account for the stage scale. Divide out the button scale. */
+  font-size:calc(var(--mx-JackpotView-mx-jackpot-pool-profile-font-size) * var(--mx-layout-unit) * var(--mx-table-text-scale) / var(--mx-jackpot-base-scale));
+  line-height:normal;transform:none;
+}
 .mx-calltime{position:absolute;display:flex;align-items:center;gap:var(--mx-JackpotView-mx-calltime-gap);height:var(--mx-JackpotView-mx-calltime-height);white-space:nowrap;font-size:var(--mx-JackpotView-mx-calltime-font-size);line-height:var(--mx-JackpotView-mx-calltime-line-height)}
 .mx-calltime img{width:var(--mx-JackpotView-mx-calltime-width);height:var(--mx-JackpotView-mx-calltime-height-2)}
 .mx-jackpot-start{position:absolute;background-size:var(--mx-JackpotView-mx-jackpot-start-background-size) var(--mx-JackpotView-mx-jackpot-start-background-size-2);background-position:var(--mx-JackpotView-mx-jackpot-start-background-position) var(--mx-JackpotView-mx-jackpot-start-background-position-2);background-repeat:no-repeat;transform:translate(var(--mx-JackpotView-mx-jackpot-start-transform),var(--mx-JackpotView-mx-jackpot-start-transform-2));pointer-events:none}

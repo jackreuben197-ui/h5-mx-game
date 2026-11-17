@@ -25,32 +25,46 @@ export class LayoutProfile extends LayoutOriginal {
         const local=199/profile.avatar;
         p.x=Math.max(34*unit,Math.min(this.width-34*unit,x/profile.width*this.width));
         p.y=y/profile.height*height;
-        if(profile.id==='classic'&&slot===0)p.y=Math.min(p.y,this.viewportBottom/this.unit-40*unit);
+        if(profile.id==='classic'&&slot===0){
+          const bottomInset=mine?40:56;
+          p.y=Math.min(p.y,this.viewportBottom/this.unit-bottomInset*unit);
+        }
         p.scale=profile.avatar*unit/199;
-        // Reserve the complete local player group above navigation, then anchor every
+        // Reserve space for the settlement popup and dealer above navigation, then anchor every
         // child to this adjusted avatar. Design distances scale with the existing seat unit.
         if(mine){
-          const bottom=Math.min(height-50/this.unit,(this.viewportBottom-2)/this.unit);
-          const groupBottom=Math.max(profile.heroInfoY*local+54,profile.heroDealer[1]*local+38.5);
-          p.y=Math.min(p.y,bottom-groupBottom*p.scale);
+          const menuTop=(this.viewportBottom-2)/this.unit;
+          const groupBottom=Math.max(profile.heroInfoY*local+76,profile.heroDealer[1]*local+38.5)*p.scale;
+          p.y=profile.id==='balanced'
+            ? menuTop-groupBottom
+            : Math.min(p.y,Math.min(height-50/this.unit,menuTop)-groupBottom);
         }
         p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
         p.cardsX=face?0:14*local;
         p.cardsY=(mine?profile.heroCardsY:face?0:14)*local;
         p.cardScale=mine?profile.heroCardWidth*local/120:face?58*local/(390-270/Math.max(2,player?.cards.length??2)):18*local/65;
         p.handSpread=mine?profile.heroHandSpread:270;
+        if(profile.backHandSpread!==undefined&&!mine){
+          p.backHandSpread=profile.backHandSpread;
+          if(!face){
+            const avatarEdge=profile.avatar*local/2;
+            p.cardsX=avatarEdge;
+            p.cardsY=avatarEdge;
+          }
+        }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
         p.betX=(mine?68:topSeat?0:x<220?65:x>220?-65:0)*local;
         p.betY=(mine?6:topSeat?60:profile.id==='classic'?24:-10)*local;
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
-        if(!mine&&((state.community?.length??0)||state.secondCommunity?.length)){
+        const revealedCards=Math.max(state.community?.length??0,state.secondCommunity?.length??0);
+        if(!mine&&revealedCards){
           const dual=!!state.secondCommunity?.length;
           const cardWidth=this.metrics.boardWidth*unit*publicCardScale;
           const cardHeight=cardWidth*71.02/50.59;
           const center=profile.boardY/profile.height*height;
           const gap=profile.id==='classic'?176/120*cardWidth+.01*unit:cardHeight+10*unit;
-          const halfWidth=cardWidth*Math.max((state.community?.length??0),state.secondCommunity?.length??0)/2;
+          const halfWidth=cardWidth*(profile.id==='classic'?5:revealedCards)/2;
           const top=center-cardHeight/2-(dual?gap/2:0),bottom=center+cardHeight/2+(dual?gap/2:0);
           const bx=p.x+p.betX*p.scale,by=p.y+p.betY*p.scale,halfBet=35*p.scale;
           if(bx+120*p.scale>this.width/2-halfWidth&&bx-120*p.scale<this.width/2+halfWidth&&by+halfBet>top-6*unit&&by-halfBet<bottom+6*unit){
@@ -60,8 +74,6 @@ export class LayoutProfile extends LayoutOriginal {
         }
         p.dealerX=(mine?profile.heroDealer[0]:(x<220?1:-1)*profile.otherDealerX)*local;
         p.dealerY=(mine?profile.heroDealer[1]:profile.otherDealerY)*local;
-        p.winX=mine?-100*local:p.betX;
-        p.winY=mine?(profile.id==='classic'?0:profile.heroCardsY)*local:p.betY;
       }
       this.origin={x:this.width/2,y:profile.boardY/profile.height*height};
     return result;
@@ -80,8 +92,6 @@ export class LayoutProfile extends LayoutOriginal {
       styles:{'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
         '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`,
-        '--mx-ring-win-x':`${-120*199/profile.avatar}px`,
-        '--mx-ring-win-y':`${profile.heroCardsY*199/profile.avatar-56.5}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
     };
   }
@@ -96,7 +106,9 @@ export class LayoutProfile extends LayoutOriginal {
     if(profile.id==='classic'){
       const handTop=(own.y+own.cardsY*own.scale)*this.unit-35.5*u;
       upperY=Math.max(65*u,rowY-handTop+(6+41.25*buttonSize/2)*u);
-      styles['--mx-classic-quick-lift']=`${upperY-65*u}px`;
+      styles['--mx-quick-lift']=`${upperY-65*u}px`;
+    }else if(profile.id==='balanced'){
+      styles['--mx-quick-lift']=`${16*u}px`;
     }
     return {scale:41.25/137*u*buttonSize,styles:{...styles,
       left:`calc(${own.x*this.unit}px - 35%)`,right:`calc(65% - ${own.x*this.unit}px)`,

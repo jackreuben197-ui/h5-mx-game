@@ -7,6 +7,7 @@ import { CardView } from '../CardView/CardView.js';
 import { CardMotion } from '../../CardMotion.js';
 import { MotionScope, motion, easing } from '../../motion.js';
 const showCardEye = resourceURL(config.paths.showEye);
+const backCardWidth = Number.parseFloat(config.layout.css['mx-card-slot-width-2']);
 export class HandCardsView {
   readonly root = element('div', 'mx-hole-cards');
   private readonly resourceStyle=this.root.style.setProperty('--mx-show-card-eye',`url("${resourceURL(config.paths.showEye)}")`);
@@ -14,10 +15,23 @@ export class HandCardsView {
   private motion = new MotionScope();
   private flip = new CardMotion();
   private spread = config.layout.faceStripWidth;
-  setSpread(spread=config.layout.faceStripWidth):void {
+  private backSpread?: number;
+  setSpread(spread=config.layout.faceStripWidth,backSpread?:number):void {
+    if(this.spread===spread&&this.backSpread===backSpread)return;
     this.spread=spread;
-    if(this.root.classList.contains('mx-small-cards'))return;
-    Array.from(this.root.children).forEach((slot,i)=>place(slot as HTMLElement,(i+.5)*spread/this.root.children.length-spread/2+this.frame.width/2,this.frame.height/2));
+    this.backSpread=backSpread;
+    const face=!this.root.classList.contains('mx-small-cards');
+    Array.from(this.root.children).forEach((slot,i,slots)=>this.placeSlot(slot as HTMLElement,i,slots.length,face));
+  }
+  private placeSlot(slot:HTMLElement,index:number,count:number,face:boolean):void {
+    if(!face&&this.backSpread!==undefined){
+      const lastCardCenter=(this.frame.width-backCardWidth)/2;
+      place(slot,lastCardCenter-(count-1-index)*this.backSpread/count,0);
+      return;
+    }
+    const spread=face?this.spread:config.layout.backStripWidth;
+    const center=face?spread/2:config.layout.backCenter;
+    place(slot,this.frame.width/2+(index+.5)*spread/count-center,this.frame.height/2);
   }
   constructor(private originDelta: (group: HTMLElement) => { x: number; y: number }) {}
   render(state: SeatState, old?: SeatState): void {
@@ -39,12 +53,7 @@ export class HandCardsView {
         wrapper.dataset.cardIndex=String(i);
         wrapper.style.setProperty('--mx-show-card-eye', `url("${showCardEye}")`);
         wrapper.append(new CardView(value, !face).root);
-        place(
-          wrapper,
-          // CC Cards/l2r Layout resizes slots inside a fixed 270-wide strip.
-          face ? ((i + 0.5) * this.spread / shown.length - this.spread/2 + this.frame.width/2) : ((i + 0.5) * config.layout.backStripWidth / shown.length - config.layout.backCenter + this.frame.width/2),
-          this.frame.height/2,
-        );
+        this.placeSlot(wrapper,i,shown.length,face);
         return wrapper;
       }),
     );

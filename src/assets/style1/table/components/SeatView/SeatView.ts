@@ -68,10 +68,8 @@ export class SeatView implements SeatComponent {
     this.position.place(p, mode);
     this.root.dataset.scale = String(p.scale);
     this.root.dataset.edge = p.edge;
-    this.root.style.setProperty('--mx-seat-win-x',`${(p.winX??p.betX)-96}px`);
-    this.root.style.setProperty('--mx-seat-win-y',`${(p.winY??p.betY)-56.5}px`);
     place(this.cards.root, config.identity.x+p.cardsX, config.identity.y+p.cardsY);
-    this.cards.setSpread(p.handSpread);
+    this.cards.setSpread(p.handSpread,p.backHandSpread);
     this.cards.root.style.setProperty('--card-scale', String(p.cardScale));
     place(this.dealer, config.identity.x+p.dealerX, config.identity.y+p.dealerY);
     this.bet.place(config.identity.x+p.betX, config.identity.y+p.betY, p.betIconX);

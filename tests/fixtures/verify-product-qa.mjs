@@ -19,7 +19,23 @@ try{
    if(!scene.endsWith('-ev')){assert.equal(await p.locator('.mx-insurance-rules tbody tr').count(),60);await p.locator('.mx-insurance-rules .mx-record-body').evaluate(e=>e.scrollTop=e.scrollHeight);}
    await save(layout,scene);await p.locator('.mx-insurance-rules .mx-record-close').click();assert.equal(await p.locator('.mx-insurance-rules').isVisible(),false);
   }
-  await load(layout,'settlement-bets');assert.equal(await p.locator('.mx-seat-bet:visible').count(),0);assert.ok(await p.locator('.mx-seat-mine .mx-stack').isVisible());assert.ok(await p.locator('.mx-seat-mine .mx-seat-win').isVisible());const win=await p.locator('.mx-seat-mine .mx-seat-win').boundingBox(),stack=await p.locator('.mx-seat-mine .mx-stack').boundingBox();assert.ok(Math.min(win.x+win.width,stack.x+stack.width)<=Math.max(win.x,stack.x)||Math.min(win.y+win.height,stack.y+stack.height)<=Math.max(win.y,stack.y),'winnings must not cover stack');await save(layout,'winner-stack');
+  await load(layout,'settlement-bets',{hero:3,actor:5});
+  assert.equal(await p.locator('.mx-seat-bet:visible').count(),0);
+  assert.ok(await p.locator('.mx-seat-mine .mx-seat-win').isVisible());
+  const winners=p.locator('.mx-seat').filter({has:p.locator('.mx-seat-win:visible')});
+  assert.equal(await winners.count(),3);
+  const nav=await p.locator('.mx-navigation').boundingBox();
+  for(const seat of await winners.all()){
+   assert.equal(await seat.locator('.mx-stack').isVisible(),false);
+   const [win,chip]=await seat.evaluate(el=>{
+    return ['.mx-seat-win','.mx-stack'].map(selector=>el.querySelector(selector).getBoundingClientRect().toJSON());
+   });
+   assert.ok(Math.abs(win.x+win.width/2-chip.x-chip.width/2)<0.5);
+   assert.ok(Math.abs(win.y+win.height/2-chip.y-chip.height/2)<0.5);
+   assert.ok(win.bottom<=nav.y+0.5,`${layout} winner must stay above navigation`);
+  }
+  assert.equal(await p.locator('.mx-stack:visible').count(),6);
+  await save(layout,'winner-stack');
   await load(layout,'acting-self');const fold=await p.locator('.mx-operation-fold').boundingBox(),timer=await p.locator('.mx-operation-fold .mx-seat-timer').boundingBox();assert.ok(timer&&timer.width<=fold.width+4);await save(layout,'self-countdown');
   await load(layout,'acting-other');if(layout!=='original')assert.ok(Number(await p.locator('.mx-seat .mx-seat-timer[data-kind=action]:visible').getAttribute('data-remaining'))>0);await save(layout,'opponent-countdown');
   for(const [scene,count]of [['actions',3],['media-voice',4],['media-video',6]]){await load(layout,scene);assert.equal(await p.locator('.mx-nav-button').count(),count);assert.ok(await p.locator('.mx-nav-logo').isVisible());assert.ok(await p.locator('.mx-nav-logo').evaluate(e=>e.complete&&e.naturalWidth>0));await save(layout,scene+'-navigation');}

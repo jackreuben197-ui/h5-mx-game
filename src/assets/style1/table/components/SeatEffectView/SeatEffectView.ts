@@ -4,13 +4,15 @@ import type { SeatState } from '../../../../../data/SeatData.js';
 import type { SeatEffect, SeatEffects, EffectAnchor } from '../../../effects/SeatEffects.js';
 
 export function seatEffectAnchor(seat: HTMLElement, effect: SeatEffect): EffectAnchor {
-  const {x:left,y:top}=viewportAnchor(seat);
+  const {x,y}=viewportAnchor(seat);
   // 头像的实测宽度包含牌桌缩放和座位移动时的缩放。
   const avatar=seat.querySelector<HTMLElement>('.mx-avatar-fallback');
   const scale=(avatar?.getBoundingClientRect().width??config.layout.avatarSize)/config.layout.avatarSize;
-  const layout=seat.closest<HTMLElement>('.mx-table')?.dataset.tableLayout;
-  const allInLift=effect!=='win'&&layout&&layout!=='original'?config.layout.allInLift*scale:0;
-  return {x:left,y:top-allInLift,scale,opacity:Number(getComputedStyle(seat).opacity)};
+  const table=seat.closest<HTMLElement>('.mx-table');
+  const anchor:EffectAnchor={x,y,scale,opacity:Number(getComputedStyle(seat).opacity)};
+  if(effect==='allin-self'&&table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape')
+    anchor.lift=config.layout.balancedSelfAllInLift*scale;
+  return anchor;
 }
 /** CC SeatPlayer action / WINNER lifecycle, isolated to this seat's subscription. */
 export class SeatEffectView {

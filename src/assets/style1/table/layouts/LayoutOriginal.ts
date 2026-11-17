@@ -75,7 +75,6 @@ export class LayoutOriginal implements TableLayout {
       }
       result.set(id, {
         betX, betY, betIconX,
-        winX:mine?-320:betX,winY:mine?-50:betY,
         x: landscapeSeat?.x ?? this.width / 2 + p.position.x,
         y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
@@ -120,13 +119,14 @@ export class LayoutOriginal implements TableLayout {
             const above=top-half-12,below=bottom+half+12;
             p.betY=((Math.abs(y-above)<Math.abs(y-below)?above:below)-p.y)/p.scale;
           }
-          p.winY=p.betY;
         }
       }
     }
-    if(!this.landscape&&state.mySeat){
-      const own=result.get(state.mySeat);
-      if(own)own.y=Math.min(own.y,(this.viewportBottom-2)/this.unit-160*own.scale);
+    if(!this.landscape){
+      const bottomSeat=result.get(state.mySeat||1);
+      // The spectator's bottom seat also shows the nickname above the balance.
+      const popupBottom=state.mySeat?170:198;
+      if(bottomSeat)bottomSeat.y=Math.min(bottomSeat.y,(this.viewportBottom-2)/this.unit-popupBottom*bottomSeat.scale);
     }
     return result;
   }

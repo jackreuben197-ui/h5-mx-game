@@ -97,9 +97,10 @@ export class SpineRenderer {
         // Design units: multiply by anchor.scale below so this follows table/seat resizing.
         const winOffsetY = 96.776 + 10;
         const offsetY = item.kind === 'win' ? winOffsetY : item.kind === 'allin-self' ? 400.678 : 142.776;
+        const lift = anchor.lift ?? offsetY * anchor.scale;
         const scale = anchor.scale * (item.kind === 'win' ? 0.5 : 1);
         item.skeleton.x = anchor.x - rect.left;
-        item.skeleton.y = rect.height - (anchor.y - rect.top) + offsetY * anchor.scale;
+        item.skeleton.y = rect.height - (anchor.y - rect.top) + lift;
         item.skeleton.scaleX = item.skeleton.scaleY = scale;
         item.skeleton.color.a = anchor.opacity;
         // ALLIN keeps its final pose until the seat action clears, just like CC.

@@ -21,11 +21,13 @@ test('wallet popup closes when its anchor scrolls outside the dialog body',()=>{
  const anchor=node({left:50,top:460,right:250,bottom:500,width:200,height:40}),list=node({width:200,height:80});list.hidden=false;
  const popup=new AnchoredPopup(overlay,clip);let closed=0;popup.mount(list,anchor,()=>closed++);clip.listeners.get('scroll')();assert.equal(closed,1);popup.destroy();
 });
-test('WIN and ALLIN use the explicit seat anchor and keep ALLIN anchored to the avatar',()=>{
+test('WIN and ALLIN share the avatar anchor, with a closer lift for balanced portrait self ALLIN',()=>{
  const previous=globalThis.getComputedStyle;globalThis.getComputedStyle=()=>({opacity:'0.8'});
- try{for(const scale of [.2,.6,1])for(const layout of ['original','classic','balanced','oval']){
-  const seat={dataset:{anchorX:'.5',anchorY:String(2/3)},getBoundingClientRect:()=>({left:300-400*scale,top:500-600*scale,width:800*scale,height:900*scale}),querySelector:()=>({getBoundingClientRect:()=>({width:199*scale})}),closest:()=>({dataset:{tableLayout:layout}})};
-  assert.deepEqual(seatEffectAnchor(seat,'win'),{x:300,y:500,scale,opacity:.8});
-  for(const effect of ['allin-self','allin-other'])assert.deepEqual(seatEffectAnchor(seat,effect),{x:300,y:500,scale,opacity:.8});
+ try{for(const scale of [.2,.6,1])for(const layout of ['original','classic','balanced','oval'])for(const orientation of ['portrait','landscape']){
+  const seat={dataset:{anchorX:'.5',anchorY:String(2/3)},getBoundingClientRect:()=>({left:300-400*scale,top:500-600*scale,width:800*scale,height:900*scale}),querySelector:()=>({getBoundingClientRect:()=>({width:199*scale})}),closest:()=>({dataset:{tableLayout:layout,orientation}})};
+  const anchor={x:300,y:500,scale,opacity:.8};
+  assert.deepEqual(seatEffectAnchor(seat,'win'),anchor);
+  assert.deepEqual(seatEffectAnchor(seat,'allin-other'),anchor);
+  assert.deepEqual(seatEffectAnchor(seat,'allin-self'),layout==='balanced'&&orientation==='portrait'?{...anchor,lift:176*scale}:anchor);
  }}finally{globalThis.getComputedStyle=previous;}
 });

@@ -16,9 +16,15 @@ export class PublicCardsView implements PublicCardsComponent {
   private motion = new MotionScope();
   private flip = new CardMotion();
   private previous?: PublicCardsState;
+  private fixedSlots = false;
   constructor(data: PublicCardsData) {
     this.root.style.setProperty('--mx-board-box-height',`${config.h}px`);
     this.bindings.bind({ board: data });
+  }
+  setFixedSlots(enabled: boolean): void {
+    if (this.fixedSlots === enabled) return;
+    this.fixedSlots = enabled;
+    if (this.previous) this.onCards({ ...this.previous, presentation: 'sync' });
   }
   @bindEvent(PublicCardsData.CHANGE, 'board')
   private onCards(state: PublicCardsState): void {
@@ -28,19 +34,32 @@ export class PublicCardsView implements PublicCardsComponent {
     if (!staticFrame && old.cards.join() === state.cards.join()) { this.emphasize(state); return; }
     this.motion.cancel();
     this.root.replaceChildren();
-    state.cards.forEach((value, i) => {
+    let revealedCount = state.cards.length;
+    if (this.fixedSlots) {
+      while (revealedCount > 0 && state.cards[revealedCount - 1] === 0) revealedCount--;
+    }
+    const layoutCount = this.fixedSlots ? config.slots.length : revealedCount;
+    const showFlopPlaceholders = this.fixedSlots && revealedCount === 3;
+    const visibleCount = showFlopPlaceholders ? layoutCount : revealedCount;
+    for (let i = 0; i < visibleCount; i++) {
+      const value = state.cards[i];
       const slot = element('span', 'mx-public-slot');
       const x=config.slots[i]??0;
-      const centeredX=config.w/2-config.layout.cardWidth/2+(i-(state.cards.length-1)/2)*config.layout.cardWidth;
+      const centeredX=config.w/2+(i-layoutCount/2)*config.layout.cardWidth;
       slot.style.setProperty('--mx-card-centered-x',`${centeredX}px`);
       slot.style.setProperty('--mx-public-original-spread',`${config.slots[0]!-x}px`);
-      slot.style.setProperty('--mx-public-centered-spread',`${config.w/2-state.cards.length*config.layout.cardWidth/2-centeredX}px`);
+      slot.style.setProperty('--mx-public-centered-spread',`${-i*config.layout.cardWidth}px`);
       place(slot,x,0);slot.style.margin='0';
+      this.root.append(slot);
+      if (value === undefined || i >= revealedCount) {
+        slot.classList.add('mx-public-slot-empty');
+        slot.setAttribute('aria-hidden', 'true');
+        continue;
+      }
       const node = new CardView(value).root;
       slot.append(node);
-      this.root.append(slot);
-      if (!staticFrame && i >= (old?.cards.length ?? 0)) {
-        if (!old?.cards.length) {
+      if (!staticFrame && (this.fixedSlots ? !old.cards[i] : i >= old.cards.length)) {
+        if (!this.fixedSlots && !old.cards.length) {
           const offset = 'var(--mx-public-spread-x, var(--mx-public-original-spread))';
           CardView.paint(node, 0);
           const clean = this.motion.cleanup(() => CardView.paint(node, value));
@@ -55,7 +74,7 @@ export class PublicCardsView implements PublicCardsComponent {
             });
         } else void this.flip.flip(node, value, this.motion);
       }
-    });
+    }
     this.emphasize(state);
   }
   private emphasize(state: PublicCardsState): void {
