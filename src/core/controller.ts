@@ -149,9 +149,6 @@ export class GameController<T> {
     if(this.state.phase !== 'table' || !this.state.target || !this.session || !this.host.standup) throw new Error('房间已离开');
     return this.host.standup(this.state.target, this.session.signal);
   }
-  showRules(insurance: boolean): void {
-    if(this.state.phase==='table' && this.state.target)this.host.showRules?.(this.state.target,insurance);
-  }
   async storeChips(amount: number): Promise<void> {
     if(this.state.phase!=='table'||!this.state.target||!this.session||!this.host.storeChips)throw new Error('房间已离开');
     return this.host.storeChips(this.state.target,amount,this.session.signal);

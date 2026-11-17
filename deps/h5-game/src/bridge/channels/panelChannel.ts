@@ -72,6 +72,11 @@ function shouldClosePanel(payload: unknown): boolean {
 }
 
 function showBridgePanel(payload: CocosPanelPayload, requestId: string): void {
+  // 规则已迁入牌桌。忽略旧请求，避免弹出未注册面板的提示。
+  if (payload.panelType === 'gameRule') {
+    return
+  }
+
   if (payload.ensureVisible === true) {
     setH5Visible(true)
   }

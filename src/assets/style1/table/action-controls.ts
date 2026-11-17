@@ -230,7 +230,7 @@ export class ActionControls {
     css.setProperty('--mx-raise-bubble-width', `${530*scale}px`);
     css.setProperty('--mx-raise-bubble-height', `${154*scale}px`);
     css.setProperty('--mx-raise-info-offset', `${502.108*scale}px`);
-    css.setProperty('--mx-raise-font-size', `${50*scale}px`);
+    css.setProperty('--mx-raise-font-size', `${60*scale}px`);
     css.setProperty('--mx-raise-chip-size', `${58*scale}px`);
     css.setProperty('--mx-raise-thumb-height', `${50*scale}px`);
     css.setProperty('--mx-raise-confirm-offset', `${521*scale}px`);

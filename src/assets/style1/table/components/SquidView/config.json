@@ -164,6 +164,8 @@
       "mx-squid-count-width-4": "34px",
       "mx-squid-count-height-4": "34px",
       "mx-squid-count-line-height-2": "34px",
+      "mx-squid-count-original-size": "42px",
+      "mx-squid-count-original-font-size": "30px",
       "mx-squid-join-background-size-3": "100%",
       "mx-squid-join-background-size-4": "100%",
       "mx-squid-pages-border-radius": "999px",

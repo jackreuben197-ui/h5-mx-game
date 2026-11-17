@@ -1,0 +1,37 @@
+.mx-record-overlay.mx-rules-overlay { --record-unit: var(--mx-GameRulesView-dialog-unit); }
+.mx-rules-overlay > .mx-record-panel {
+  width: min(var(--mx-GameRulesView-panel-width), var(--mx-GameRulesView-panel-max-width));
+  height: var(--mx-GameRulesView-panel-height);
+}
+.mx-rules-overlay .mx-record-body {
+  padding: 0 var(--mx-GameRulesView-content-padding) var(--mx-GameRulesView-content-padding);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.mx-rules-copy :is(h3, p), .mx-insurance-rules .mx-record-body > p {
+  margin: 0 0 var(--mx-GameRulesView-content-spacing);
+  white-space: pre-line;
+}
+.mx-rules-copy h3 { font-size: 1.05em; color: #5ce4c4; }
+.mx-insurance-rules .mx-record-table + .mx-record-table { margin-top: var(--mx-InsuranceRulesView-odds-spacing); }
+.mx-game-rules-tabs { display: flex; justify-content: center; gap: var(--mx-GameRulesView-tab-gap); }
+.mx-game-rules-tabs button {
+  background: none;
+  border-radius: 0;
+  padding: var(--mx-GameRulesView-tab-padding);
+  border-bottom: var(--mx-GameRulesView-tab-underline) solid transparent;
+  color: #ffffffb3;
+}
+.mx-game-rules-tabs button[aria-pressed=true] { border-bottom-color: #05e7ae; color: #fff; }
+.mx-game-rules-hands { list-style: none; margin: 0; padding: 0; }
+.mx-game-rules-hand {
+  display: flex;
+  align-items: center;
+  gap: var(--mx-GameRulesView-content-spacing);
+  padding: var(--mx-GameRulesView-row-padding);
+  margin-bottom: var(--mx-GameRulesView-row-padding);
+  border-radius: var(--mx-GameRulesView-row-radius);
+  background: #0003;
+}
+.mx-game-rules-cards { display: flex; flex: none; gap: var(--mx-GameRulesView-card-gap); }
+.mx-game-rules-cards .mx-card { width: var(--mx-GameRulesView-card-width); height: auto; }

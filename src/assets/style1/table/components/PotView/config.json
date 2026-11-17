@@ -13,6 +13,8 @@
     "css": {
       "mx-pot-font-size": "60px",
       "mx-pool-item-font-size": "43px",
+      "mx-pool-main-original-font-size": "56px",
+      "mx-pool-side-original-font-size": "48px",
       "mx-pool-item-border-radius": "30px",
       "mx-pool-item-min-width": "140px",
       "mx-pool-item-max-width": "900px",
@@ -50,6 +52,7 @@
       "mx-pot-chip-top-2": "3px",
       "mx-pot-chip-width-2": "50px",
       "mx-pot-chip-height-2": "50px",
+      "mx-pot-chip-original-scale": "1.3",
       "mx-side-pools-margin-top": "61px"
     }
   },

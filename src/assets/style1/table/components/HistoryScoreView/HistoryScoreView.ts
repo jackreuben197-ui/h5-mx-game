@@ -7,7 +7,7 @@ import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { HistoryCardsView } from '../HistoryCardsView/HistoryCardsView.js';
 import { HistorySectionHeaderView } from '../HistorySectionHeaderView/HistorySectionHeaderView.js';
-import { element, profitClass } from '../../dom.js';
+import { element, profitAmount } from '../../dom.js';
 /** CC HistoryScoreSection: Score / Showdown / Showdown2 share the same row layout. */
 export class HistoryScoreView {
     readonly root = componentBox(element('section', 'mx-history-score'),config);
@@ -37,12 +37,16 @@ export class HistoryScoreView {
             const amounts = dual ? [player.winAnte2[0] ?? 0, player.winAnte2[1] ?? 0] : [second ? player.winAnte2[1] : player.winAnte];
             for (const amount of amounts) {
                 const text = amount === undefined ? '' : dual ? StringHelper.GetDecimalN(amount / 100) : StringHelper.GetLongString(amount);
-                profits.append(element('span', profitClass(amount ?? 0), text));
+                profits.append(profitAmount('span', amount ?? 0, text));
             }
-            if (player.insuranceGain) profits.append(element('small', '', StringHelper.GetSignedLongString(player.insuranceGain)));
+            if (player.insuranceGain) profits.append(profitAmount('small', player.insuranceGain));
             row.append(position, hands, boards, profits);
             this.root.append(row);
         }
-        if (model.insurancePool) this.root.append(element('p', 'mx-history-insurance', `${i18nMgr.Get('UITexasHistory_insurance', [], '保险')} ${StringHelper.GetSignedLongString(model.insurancePool)}`));
+        if (model.insurancePool) {
+            const insurance = element('p', 'mx-history-insurance');
+            insurance.append(`${i18nMgr.Get('UITexasHistory_insurance', [], '保险')} `, profitAmount('span', model.insurancePool));
+            this.root.append(insurance);
+        }
     }
 }

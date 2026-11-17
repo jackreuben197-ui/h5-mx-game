@@ -6,7 +6,7 @@ import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { HistoryCardsView } from '../HistoryCardsView/HistoryCardsView.js';
-import { element, profitClass } from '../../dom.js';
+import { element, profitAmount } from '../../dom.js';
 export class HistoryPlayerView {
     readonly root = componentBox(element('article', 'mx-history-player'),config);
     constructor(player: HistoryPlayerInfo, model: HistoryHandModel) {
@@ -43,7 +43,7 @@ export class HistoryPlayerView {
         boards.append(streetActions);
         const profits = element('div', 'mx-history-overview-profits');
         const values = model.haveSecondCard ? player.winAnte2 : [player.winAnte];
-        for (const value of values) profits.append(element('span', profitClass(value), StringHelper.GetSignedLongString(value)));
+        for (const value of values) profits.append(profitAmount('span', value));
         this.root.append(identity, hands, boards, profits);
     }
     private action(row: import('../../../../../logic/HistoryReplayModel.js').HistoryActionInfo): HTMLElement {

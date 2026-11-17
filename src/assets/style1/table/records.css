@@ -89,8 +89,8 @@
 .mx-record-icon{display:inline-block;flex:none;width:calc(var(--mx-HistorySectionHeaderView-mx-record-icon-width) * var(--record-unit));height:calc(var(--mx-HistorySectionHeaderView-mx-record-icon-height) * var(--record-unit));vertical-align:middle;background-repeat:no-repeat}
 .mx-record-empty{text-align:center;margin:var(--mx-HistoryView-mx-record-empty-margin) var(--mx-HistoryView-mx-record-empty-margin-2);color:#e0e4ee}
 .mx-record-own{color:#dcba82}
-.mx-profit-positive{color:#fa2b4b}
-.mx-profit-negative{color:#05e7ae}
+.mx-profit-positive{color:#05e7ae}
+.mx-profit-negative{color:#fa2b4b}
 /* Report: left sheet, fixed heading/tabs, observer carousel. */
 .mx-report-overlay{--report-width-unit:var(--record-unit)}
 .mx-report-overlay>.mx-record-panel{
@@ -249,4 +249,4 @@
 .mx-report-overlay .mx-record-own{color:white}
 .mx-report-overlay .mx-record-own .mx-report-player-link::before{content:'● ';color:#ff5050}
 .mx-record-offline .mx-report-player-link{opacity:.55;text-decoration:line-through}
-.mx-history-overlay .mx-record-own{color:var(--mx-accent,#00cfa5)}
+.mx-history-overlay .mx-record-own{color:#fff3d6}

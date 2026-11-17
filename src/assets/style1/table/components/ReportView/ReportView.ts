@@ -10,7 +10,7 @@ import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
-import { element, profitClass } from '../../dom.js';
+import { element, profitAmount } from '../../dom.js';
 const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
 export class ReportView {
     readonly dialog: RecordDialogView;
@@ -94,36 +94,74 @@ export class ReportView {
             if (mode !== 'none')
                 headers.splice(3, 0, t('UIFantasy_dairuyajin', '押金'), t(mode === 'mush' ? 'UIMush' : 'UISquid', mode === 'mush' ? '蘑菇' : '鱿鱼'));
             this.table(headers, players.map(p => {
-                const cells = [StringHelper.LengthNick(p.name), `${p.handNum}
-(${(p.poolRate / 10).toFixed(1)}%)`, StringHelper.GetLongString(p.bringInTotal) + (p.storeChips ? `
-${StringHelper.GetLongString(p.storeChips)}` : ''), StringHelper.GetSignedLongString(TexasReportPresentation.getPlayerScore(p))];
-                if (mode !== 'none')
-                    cells.splice(3, 0, StringHelper.GetLongString(p.deposit), mode === 'mush' ? (p.mushroomAmount > 0 ? `+${p.mushroomCount}\n(+${StringHelper.GetLongString(p.mushroomAmount)})` : '-') : StringHelper.GetSignedLongString(p.squidInTotal - p.squidOutTotal - p.squidPunishTotal));
-                return { cells, own: p.userRid === records.userRID, offline: !p.isOnline || !tableUsers.has(p.userRid), score: TexasReportPresentation.getPlayerScore(p), player: p };
+                const cells = [
+                    StringHelper.LengthNick(p.name),
+                    `${p.handNum}\n(${(p.poolRate / 10).toFixed(1)}%)`,
+                    StringHelper.GetLongString(p.bringInTotal) + (p.storeChips ? `\n${StringHelper.GetLongString(p.storeChips)}` : ''),
+                    profitAmount('span', TexasReportPresentation.getPlayerScore(p)),
+                ];
+                if (mode === 'mush') {
+                    const mushroom = p.mushroomAmount > 0
+                        ? profitAmount('span', p.mushroomAmount, `+${p.mushroomCount}\n(+${StringHelper.GetLongString(p.mushroomAmount)})`)
+                        : '-';
+                    cells.splice(3, 0, StringHelper.GetLongString(p.deposit), mushroom);
+                } else if (mode === 'squid') {
+                    const squid = profitAmount('span', p.squidInTotal - p.squidOutTotal - p.squidPunishTotal);
+                    cells.splice(3, 0, StringHelper.GetLongString(p.deposit), squid);
+                }
+                return { cells, own: p.userRid === records.userRID, offline: !p.isOnline || !tableUsers.has(p.userRid), player: p };
             }));
         }
         else if (state.tab === 'insurance')
-            this.table([t('UITexasReport_player', '玩家'), t('UITexasRecord_baoxianTime', '时间'), t('UITexasRecord_toubaoCount', '投保'), t('UITexasReport_pl', '盈亏')], report.insuranceRecords.map(p => ({ cells: [p.name, p.createTime > 0 ? new Date(p.createTime * 1000).toLocaleString(i18nMgr.getCurrentLocale(), { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--', StringHelper.GetLongString(p.insurBet), StringHelper.GetSignedLongString(-p.insurWin)], own: p.userRid === records.userRID, score: -p.insurWin })));
+            this.table([t('UITexasReport_player', '玩家'), t('UITexasRecord_baoxianTime', '时间'), t('UITexasRecord_toubaoCount', '投保'), t('UITexasReport_pl', '盈亏')], report.insuranceRecords.map(p => ({
+                cells: [
+                    p.name,
+                    p.createTime > 0 ? new Date(p.createTime * 1000).toLocaleString(i18nMgr.getCurrentLocale(), { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--',
+                    StringHelper.GetLongString(p.insurBet),
+                    profitAmount('span', -p.insurWin),
+                ],
+                own: p.userRid === records.userRID,
+            })));
         else if (state.tab === 'jackpot')
-            this.table([t('UITexasReport_player', '玩家'), t('UIClubJackpotRecordDetail_ContributionTip', '贡献'), t('UIClubJackpotRecordDetail_AwardsTip', '奖励'), t('MX_HandType', '牌型')], report.jackpotRecords.map(p => ({ cells: [p.name, StringHelper.GetLongString(p.contributeTotal), StringHelper.GetSignedLongString(p.awardTotal), [[p.royalFlushCount, 'UIJackPotInfo_huangjia'], [p.straightFlushCount, 'UIJackPotInfo_tonghuashun'], [p.fourOfaKindCount, 'UIJackPotInfo_shitiao']].filter(([count]) => Number(count) > 0).map(([, key]) => t(String(key), '')).join('\n')], own: p.userRid === records.userRID, score: p.awardTotal })));
+            this.table([t('UITexasReport_player', '玩家'), t('UIClubJackpotRecordDetail_ContributionTip', '贡献'), t('UIClubJackpotRecordDetail_AwardsTip', '奖励'), t('MX_HandType', '牌型')], report.jackpotRecords.map(p => ({
+                cells: [
+                    p.name,
+                    StringHelper.GetLongString(p.contributeTotal),
+                    profitAmount('span', p.awardTotal),
+                    [[p.royalFlushCount, 'UIJackPotInfo_huangjia'], [p.straightFlushCount, 'UIJackPotInfo_tonghuashun'], [p.fourOfaKindCount, 'UIJackPotInfo_shitiao']]
+                        .filter(([count]) => Number(count) > 0).map(([, key]) => t(String(key), '')).join('\n'),
+                ],
+                own: p.userRid === records.userRID,
+            })));
         else {
             const snapshot = report.squidRounds.get(state.round);
             const rows = snapshot?.records ?? [];
             if (mode === 'mush')
-                this.table([t('UITexasReport_player', '玩家'), t('UITexasReport_InMushRoom', '投蘑菇'), t('Uimine_ptcz_paygold', '筹码'), t('UITexasReport_OutMushRoom', '抓蘑菇'), t('Uimine_ptcz_paygold', '筹码')], rows.map(p => ({ cells: [p.name, p.in_num ? String(p.in_num) : '-', p.in_amount ? StringHelper.GetSignedLongString(p.in_amount) : '-', String(p.out_num), StringHelper.GetSignedLongString(p.out_amount)], own: p.user_random_id === records.userRID, score: p.out_amount })));
+                this.table([t('UITexasReport_player', '玩家'), t('UITexasReport_InMushRoom', '投蘑菇'), t('Uimine_ptcz_paygold', '筹码'), t('UITexasReport_OutMushRoom', '抓蘑菇'), t('Uimine_ptcz_paygold', '筹码')], rows.map(p => ({
+                    cells: [p.name, p.in_num ? String(p.in_num) : '-', p.in_amount ? profitAmount('span', p.in_amount) : '-', String(p.out_num), profitAmount('span', p.out_amount)],
+                    own: p.user_random_id === records.userRID,
+                })));
             else
-                this.table([t('UITexasReport_player', '玩家'), t('UISquid', '鱿鱼'), t('Uimine_ptcz_paygold', '筹码')], rows.map(p => ({ cells: [p.name, String(p.in_num), StringHelper.GetSignedLongString(p.in_amount || -Math.abs(p.out_amount))], own: p.user_random_id === records.userRID, score: p.in_amount || -Math.abs(p.out_amount) })));
+                this.table([t('UITexasReport_player', '玩家'), t('UISquid', '鱿鱼'), t('Uimine_ptcz_paygold', '筹码')], rows.map(p => ({
+                    cells: [p.name, String(p.in_num), profitAmount('span', p.in_amount || -Math.abs(p.out_amount))],
+                    own: p.user_random_id === records.userRID,
+                })));
         }
         const s = report.summary;
         const avg = s.totalHand ? s.totalPot / s.totalHand / 100 : 0;
-        this.summary.replaceChildren(...[
+        const summary = [
             [t('UISituationTotalPot', '总底池'), StringHelper.GetLongString(s.totalPot)],
             [t('UISituationTotalBringIn', '总带入'), StringHelper.GetLongString(s.totalBringin)],
             [t('UISituationCurHandNum', '总手数'), String(s.totalHand)],
             [t('UISituationVerBottom', '场均底池'), Number.isInteger(avg) ? String(avg) : avg.toFixed(2)],
             [t('UISituationCurTime', '已用时间'), this.duration(s.startTime ? Date.now() / 1000 - s.startTime : 0)],
-            [t('UITexasHistory_insurance', '保险池'), StringHelper.GetLongString(s.insurance)],
-        ].map(([label, value]) => { const cell = element('div', ''); cell.append(element('span', '', label!), element('strong', '', value!)); return cell; }));
+            [t('UITexasHistory_insurance', '保险池'), profitAmount('strong', s.insurance, StringHelper.GetLongString(s.insurance))],
+        ] as const;
+        this.summary.replaceChildren(...summary.map(([label, value]) => {
+            const cell = element('div', '');
+            cell.append(element('span', '', label), typeof value === 'string' ? element('strong', '', value) : value);
+            return cell;
+        }));
         const rail = element('div', 'mx-report-observer-rail');
         rail.append(...report.observers.map(p => {
             const item = element('button', 'mx-record-person');
@@ -141,10 +179,9 @@ ${StringHelper.GetLongString(p.storeChips)}` : ''), StringHelper.GetSignedLongSt
         this.pagination.labels(t('MX_ReportRound', '轮次'), t('MX_PreviousRound', '上一轮'), t('MX_NextRound', '下一轮'));
     }
     private table(headers: string[], rows: {
-        cells: string[];
+        cells: (string | HTMLElement)[];
         own?: boolean;
         offline?: boolean;
-        score: number;
         player?: TexasReportPlayerInfo;
     }[]): void {
         const table = element('table', 'mx-record-table'), head = element('thead', ''), tr = element('tr', '');
@@ -155,14 +192,20 @@ ${StringHelper.GetLongString(p.storeChips)}` : ''), StringHelper.GetSignedLongSt
         rows.forEach(row => {
             const tr = element('tr', row.own ? 'mx-record-own' : '');
             tr.classList.toggle('mx-record-offline', !!row.offline);
-            row.cells.forEach((value, index) => { const td = element('td', '', value); if (index === 0 && row.player) {
-                const player = row.player;
-                const b = element('button', 'mx-report-player-link', value);
-                b.type = 'button';
-                b.onclick = () => void this.playerInfo.open(player);
-                td.replaceChildren(b);
-            } if (index === row.cells.length - 1)
-                td.className = profitClass(row.score); tr.append(td); });
+            row.cells.forEach((value, index) => {
+                const td = element('td', '');
+                if (index === 0 && row.player) {
+                    const player = row.player;
+                    const button = element('button', 'mx-report-player-link');
+                    button.type = 'button';
+                    button.onclick = () => void this.playerInfo.open(player);
+                    button.append(value);
+                    td.append(button);
+                } else {
+                    td.append(value);
+                }
+                tr.append(td);
+            });
             body.append(tr);
         });
         table.append(body);

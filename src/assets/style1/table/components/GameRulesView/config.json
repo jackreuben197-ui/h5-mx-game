@@ -1,0 +1,24 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": {"x": 0, "y": 0},
+  "paths": {},
+  "layout": {
+    "css": {
+      "dialog-unit": ".3px",
+      "panel-width": "92%",
+      "panel-max-width": "440px",
+      "panel-height": "510px",
+      "content-padding": "16px",
+      "content-spacing": "12px",
+      "tab-gap": "12px",
+      "tab-padding": "8px",
+      "tab-underline": "2px",
+      "row-padding": "8px",
+      "row-radius": "12px",
+      "card-gap": "3px",
+      "card-width": "22px"
+    }
+  },
+  "sizing": {"mode": "composite", "root": null}
+}

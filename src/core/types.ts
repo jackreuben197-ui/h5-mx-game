@@ -108,7 +108,6 @@ export interface RoomHost {
   getSpecialOperations?(): import('./RoomRecords.js').SpecialOperations;
   getEmojis?(): RoomEmojis | undefined;
   getRecords?(): RoomRecords | undefined;
-  showRules?(target: RoomTarget, insurance: boolean): void;
   storeChips?(target: RoomTarget, amount: number, signal: AbortSignal): Promise<void>;
   keepSeat?(target: RoomTarget, keep: boolean, signal: AbortSignal): Promise<void>;
   addTime?(target: RoomTarget, signal: AbortSignal): Promise<void>;

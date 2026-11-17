@@ -18,7 +18,6 @@ export interface SeatingActions {
   prepare(seat: number): Promise<BuyInQuote>;
   submit(selection: BuyInSelection): Promise<void>;
   standup(): Promise<boolean>;
-  rules?(insurance: boolean): void;
   storeChips?(amount: number): Promise<void>;
   keepSeat?(keep: boolean): Promise<void>;
   addTime?(): Promise<void>;

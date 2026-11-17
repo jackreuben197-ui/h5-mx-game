@@ -218,4 +218,13 @@
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{padding:0;min-height:0}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-stack{line-height:calc(14 * var(--mx-classic-seat-unit))}
 .mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-room-info{font-size:calc(var(--mx-original-info-font,38px) * var(--mx-table-text-scale))}
+.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-pool-main {
+  font-size: calc(var(--mx-PotView-mx-pool-main-original-font-size) * var(--mx-table-text-scale));
+}
+.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-pool-side {
+  font-size: calc(var(--mx-PotView-mx-pool-side-original-font-size) * var(--mx-table-text-scale));
+}
+.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-pot-chip {
+  transform: scale(var(--mx-PotView-mx-pot-chip-original-scale));
+}
 .mx-table[data-table-layout=original] .mx-side-pools{justify-content:flex-start}

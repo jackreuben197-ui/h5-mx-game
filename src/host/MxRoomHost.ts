@@ -703,10 +703,6 @@ export class MxRoomHost implements RoomHost {
       security:{ip:info.limitIp,gps:info.limitGps,delay:info.delaySeeCard,media:info.antiCheatType>=2}};
     c.quote=q;return structuredClone(q);
   }
-  showRules(target:RoomTarget,insurance:boolean):void {
-    this.seatContext(target);const info=this.roomData.snapshot!.roomInfo!,room=this.roomData.record!;
-    this.transport.send('showPanel',{panelType:'gameRule',props:{ruleType:insurance?2:1,gameInfo:insurance?{insurance_mode:info.insuranceMode}:{game_type:room.gameType,poker_type:room.pokerType,room_critical_hit:!!info.criticalHit}}});
-  }
   async storeChips(target:RoomTarget,amount:number,signal:AbortSignal):Promise<void> {
     const c=this.seatContext(target),s=this.roomData.snapshot!,info=s.roomInfo!,player=s.playersList.find(p=>p.seatId===s.myInfo?.seatId);
     if(c.seatingBusy||!player||info.retainType!==2)throw new Error('当前不能带出筹码');

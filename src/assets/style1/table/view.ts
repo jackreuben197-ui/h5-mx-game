@@ -1,4 +1,5 @@
 import { InsuranceRulesView } from './components/InsuranceRulesView/InsuranceRulesView.js';
+import { GameRulesView } from './components/GameRulesView/GameRulesView.js';
 import { TableEffectAnchors } from '../effects/TableEffectAnchors.js';
 import { bindTableAppearance } from './appearance/TableAppearanceContext.js';
 import { classicFelt, purpleFelt, cardBacks } from './appearance/TableSkin.js';
@@ -32,6 +33,7 @@ import { ReportView } from './components/ReportView/ReportView.js';
 import { HistoryView } from './components/HistoryView/HistoryView.js';
 import { PlayerInfoView } from './components/PlayerInfoView/PlayerInfoView.js';
 import './records.css';
+import './components/GameRulesView/layout.css';
 import './player-info.css';
 import { DeskBackgroundView } from './components/DeskBackgroundView/DeskBackgroundView.js';
 import { AllInTestView } from './components/AllInTestView/AllInTestView.js';
@@ -96,7 +98,8 @@ export class TableView {
   private allInTest?: AllInTestView;
   private report?: ReportView;
   private history?: HistoryView;
-  private insuranceRules?:InsuranceRulesView;
+  private gameRules = new GameRulesView();
+  private insuranceRules: InsuranceRulesView;
   private playerInfo: PlayerInfoView;
   private emoji?: EmojiView;
   private seatEmoji?: SeatEmojiView;
@@ -208,11 +211,11 @@ export class TableView {
     this.controls = components.actions?.(command) ?? new ActionControls(command, SpriteAtlas.paint, this.confirmDialog, options.seating?.addTime,this.settings);
     this.settlementWatch=new SettlementWatchView(kind=>options.seating?.watchSettlement?.(kind)??Promise.reject(new Error('当前入口不支持看牌')),
       error=>this.toast.show(error));
+    const ruleData = (options.records ?? options.specialOperations)?.data;
+    this.insuranceRules = new InsuranceRulesView(ruleData);
     if (options.records) {
       this.report = new ReportView(new ReportController(options.records));
       this.history = new HistoryView(new HistoryController(options.records));
-      this.insuranceRules=new InsuranceRulesView(options.records.data);
-      this.root.append(this.insuranceRules.root);
     }
     if (options.emojis) {
       this.emoji = new EmojiView(new EmojiController(options.emojis));
@@ -245,7 +248,17 @@ export class TableView {
         return this.showBB;
       }, options.seating ? async () => { if(this.squid)this.squid.standup();else await options.seating!.standup(); } : undefined, {
         settings:()=>this.personalSettings.open(),
-        rules:(insurance)=>{if(insurance&&this.insuranceRules)this.insuranceRules.open();else options.seating?.rules?.(insurance);},
+        rules: insurance => {
+          if (insurance) this.insuranceRules.open();
+          else {
+            const state = this.data.info.snapshot;
+            this.gameRules.open({
+              gameType: state?.gameType,
+              pokerType: state?.pokerType,
+              criticalHit: !!ruleData?.snapshot?.roomInfo?.criticalHit,
+            });
+          }
+        },
         bringIn:()=>this.buyIn.open(0),
         bringOut:()=>{const state=this.data.info.snapshot;if(state)this.bringOut.open(state);},
         keepSeat:async keep=>{if(options.records?.data.mtt){await options.records.mttAutoOp?.(true);return;}if(!options.seating?.keepSeat)throw new Error('当前入口不支持留座');await options.seating.keepSeat(keep);},
@@ -298,6 +311,7 @@ export class TableView {
     this.viewport.append(this.stage);
     this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.settlementWatch.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.toast.root, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
     if (this.report && this.history) this.root.append(this.report.root, this.history.root);
+    this.root.append(this.gameRules.root, this.insuranceRules.root);
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
     this.root.append(this.playerInfo.root);
     this.root.append(this.confirmDialog.root);
@@ -377,7 +391,6 @@ export class TableView {
     this.personalSettings.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
-    this.insuranceRules?.onFrameResize(box.width,box.height);
     this.playerInfo.onFrameResize(box.width,box.height);
     this.emoji?.onFrameResize(box.width,box.height);
     this.bringOut.onFrameResize(box.width,box.height);
@@ -466,7 +479,8 @@ export class TableView {
     this.personalSettings.destroy();
     this.report?.destroy();
     this.history?.destroy();
-    this.insuranceRules?.destroy();
+    this.gameRules.destroy();
+    this.insuranceRules.destroy();
     this.playerInfo.destroy();
     this.emoji?.destroy(); this.seatEmoji?.destroy();
     this.bringOut.destroy();

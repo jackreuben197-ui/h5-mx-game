@@ -4,7 +4,7 @@ import type { TexasReportPlayerInfo } from '../../../../../data/TexasGameRoomDat
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
-import { element } from '../../dom.js';
+import { element, profitAmount } from '../../dom.js';
 export class ReportPlayerInfoView {
     readonly dialog = new RecordDialogView(() => i18nMgr.Get('MX_PlayerStats', [], '玩家资料'), () => this.close());
     readonly root = this.dialog.root;
@@ -50,10 +50,18 @@ export class ReportPlayerInfoView {
         const s = this.stats;
         if (s) {
             const grid = element('div', 'mx-report-summary');
-            for (const [label, value] of [[i18nMgr.Get('UISituationCurHandNum', [], '总手数'), String(s.total_hand || 0)], ['VPIP', `${s.vpip || 0}%`], ['PFR', `${s.prf || 0}%`],
-                [i18nMgr.Get('MX_TotalGames', [], '总局数'), String(s.total_game_cnt || 0)], [i18nMgr.Get('MX_WinRate', [], '胜率'), `${s.wins || 0}%`], [i18nMgr.Get('MX_AverageProfit', [], '场均盈亏'), StringHelper.GetLongString(s.aveage_earn_hundred || 0)]]) {
+            const averageProfit = s.aveage_earn_hundred || 0;
+            const stats = [
+                [i18nMgr.Get('UISituationCurHandNum', [], '总手数'), String(s.total_hand || 0)],
+                ['VPIP', `${s.vpip || 0}%`],
+                ['PFR', `${s.prf || 0}%`],
+                [i18nMgr.Get('MX_TotalGames', [], '总局数'), String(s.total_game_cnt || 0)],
+                [i18nMgr.Get('MX_WinRate', [], '胜率'), `${s.wins || 0}%`],
+                [i18nMgr.Get('MX_AverageProfit', [], '场均盈亏'), profitAmount('strong', averageProfit, StringHelper.GetLongString(averageProfit))],
+            ] as const;
+            for (const [label, value] of stats) {
                 const item = element('div', '');
-                item.append(element('span', '', label!), element('strong', '', value!));
+                item.append(element('span', '', label), typeof value === 'string' ? element('strong', '', value) : value);
                 grid.append(item);
             }
             body.append(grid);
