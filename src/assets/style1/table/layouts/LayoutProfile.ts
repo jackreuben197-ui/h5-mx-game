@@ -1,5 +1,6 @@
 import { LayoutOriginal } from './LayoutOriginal.js';
 import { portraitSideButtons } from './side-buttons-layout.js';
+import roomInfoConfig from '../components/RoomInfoView/config.json' with { type: 'json' };
 import type { TableLayoutProfile } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
@@ -7,7 +8,7 @@ const classicSideBetY=40.2;
 /** Shared geometry for the default profile-based skins. */
 export class LayoutProfile extends LayoutOriginal {
   override readonly id: string;
-  override get compactRoomInfo(): boolean { return !this.landscape; }
+  override get compactRoomInfo(): boolean { return true; }
   constructor(protected readonly profile: TableLayoutProfile, private readonly metrics: {
     boardWidth: number; separateDualPot: boolean;
   }) { super(); this.id=profile.id; }
@@ -43,6 +44,7 @@ export class LayoutProfile extends LayoutOriginal {
             : Math.min(p.y,Math.min(height-50/this.unit,menuTop)-groupBottom);
         }
         p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
+        p.microphoneSide=x<220?'left':'right';
         p.cardsX=face?0:14*local;
         p.cardsY=(mine?profile.heroCardsY:face?0:14)*local;
         p.cardScale=mine?profile.heroCardWidth*local/120:face?58*local/(390-270/Math.max(2,player?.cards.length??2)):18*local/65;
@@ -116,7 +118,11 @@ export class LayoutProfile extends LayoutOriginal {
       infoY:(infoTop-y)/scale,typeY:(typeTop+30*scale-y)/scale};
   }
   override content(options: LayoutContentOptions): LayoutContent {
-    if(this.landscape)return super.content(options);
+    if(this.landscape){
+      const content=super.content(options);
+      content.styles['--mx-room-info-width']=`${roomInfoConfig.layout.landscapeWidth}px`;
+      return content;
+    }
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
     const scale=m.boardWidth/120*u*boardSize;
@@ -131,7 +137,7 @@ export class LayoutProfile extends LayoutOriginal {
     return {
       board:{x:l.width/2,y:y-(dual?gap/2:0),scale}, secondBoard:{x:l.width/2,y:y+gap/2,scale},
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
-      styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
+      styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),'--mx-room-info-width':`${roomInfoConfig.layout.portraitWidth*u}px`,'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
     };

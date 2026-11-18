@@ -1,0 +1,29 @@
+.mx-room-info.mx-room-info-compact {
+  width: var(--mx-room-info-width);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mx-room-info-compact > span {
+  display: block;
+  height: var(--mx-RoomInfoView-line-height);
+  line-height: var(--mx-RoomInfoView-line-height);
+}
+.mx-room-info-compact .mx-room-info-heading {
+  display: flex;
+  justify-content: center;
+  gap: var(--mx-RoomInfoView-game-gap);
+}
+.mx-room-info-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mx-room-info-game { flex-shrink: 0; }
+.mx-room-info-details { overflow: hidden; }
+.mx-room-info-track {
+  display: inline-flex;
+  min-width: 100%;
+  justify-content: center;
+  gap: var(--mx-RoomInfoView-scroll-gap);
+}
+.mx-room-info-track > span { flex-shrink: 0; }

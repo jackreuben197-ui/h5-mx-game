@@ -17,6 +17,8 @@ export interface SeatPlacement {
   betIconX: number;
   dealerX: number;
   dealerY: number;
+  /** Table half, independent of whether this seat belongs to the top/bottom edge. */
+  microphoneSide?: 'left' | 'right';
 }
 export interface LayoutPoint { x: number; y: number; scale?: number; }
 export interface LayoutContentOptions { dual: boolean; boardSize: number; jackpotHeight: number; }

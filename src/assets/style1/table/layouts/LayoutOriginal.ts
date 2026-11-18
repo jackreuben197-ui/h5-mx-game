@@ -87,6 +87,7 @@ export class LayoutOriginal implements TableLayout {
         y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
         edge: landscapeSeat?.edge ?? (mine?'bottom':left?'left':p.position.x>0?'right':'top'),
+        microphoneSide: (landscapeSeat?landscapeSeat.x<this.width/2:p.position.x<0)?'left':'right',
         cardsX: face ? 0 : centeredBack ? 55 : left ? 160 : -160,
         cardsY: face
           ? mine
@@ -170,8 +171,8 @@ export class LayoutOriginal implements TableLayout {
     return {
       board:{x:l.width/2,y:center-(dual?gap/2:0),scale:scale*boardSize},
       secondBoard:{x:l.width/2,y:center+gap/2,scale:scale*boardSize},
-      total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:originalMiddle?l.height*.339:(697.8+jackpotHeight)*l.suggest},
-      pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:originalMiddle?l.height*.301:(775.6+jackpotHeight)*l.suggest},
+      total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:originalMiddle?l.height*.301:(697.8+jackpotHeight)*l.suggest},
+      pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:originalMiddle?l.height*.339:(775.6+jackpotHeight)*l.suggest},
       info:l.landscape?{x:l.width/2-650*scale,y:l.height*.44}:{x:l.width/2,y:dual?center+gap/2+88*scale*boardSize+infoClearance:Math.min(l.height*.426,center-88*scale*boardSize-infoClearance)},
       styles:originalMiddle?{'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{},
     };

@@ -1,0 +1,18 @@
+{
+  "w": "auto",
+  "h": "auto",
+  "anchor": { "x": 0.5, "y": 0.5 },
+  "paths": {},
+  "layout": {
+    "portraitWidth": 180,
+    "landscapeWidth": 360,
+    "scrollSpeed": 90,
+    "scrollDelayMs": 1200,
+    "css": {
+      "line-height": "1.15em",
+      "game-gap": "0.5em",
+      "scroll-gap": "2em"
+    }
+  },
+  "sizing": { "mode": "responsive", "root": ".mx-room-info" }
+}

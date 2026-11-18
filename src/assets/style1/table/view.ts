@@ -46,7 +46,6 @@ import { AppearanceResources } from './AppearanceResources.js';
 import { BringOutView } from './components/BringOutView/BringOutView.js';
 import { PersonalSettingsView } from './components/PersonalSettingsView/PersonalSettingsView.js';
 import { CardView } from './components/CardView/CardView.js';
-import { i18nLabel } from '../../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../../i18n/i18nMgr.js';
 import type { SeatingActions } from '../../../core/Seating.js';
 import { BuyInController } from '../../../logic/BuyInController.js';
@@ -71,6 +70,7 @@ import { NavigationView } from './components/NavigationView/NavigationView.js';
 import { SettlementWatchView } from './components/SettlementWatchView/SettlementWatchView.js';
 import { TableMenuView } from './components/TableMenuView/TableMenuView.js';
 import { TableToastView } from './components/TableToastView/TableToastView.js';
+import { RoomInfoView } from './components/RoomInfoView/RoomInfoView.js';
 import { TableConfirmDialog } from './components/TableConfirmDialog/TableConfirmDialog.js';
 import { ActionControls } from './action-controls.js';
 import { SpriteAtlas } from './SpriteAtlas.js';
@@ -93,7 +93,8 @@ export class TableView {
   private viewport = element('div', 'mx-viewport');
   private stage = element('div', 'mx-stage');
   private seats = element('div', 'mx-seats');
-  private info = element('button', 'mx-room-info');
+  private roomInfo = new RoomInfoView();
+  private info = this.roomInfo.root;
   private roomSettings?:GameplayTableSettingView;
   private roomSettingsDialog?:RecordDialogView;
   private previousTable?: TableSnapshot;
@@ -454,18 +455,24 @@ export class TableView {
   private refreshRoomInfo(): void {
     const state = this.data.info.snapshot;
     if (!state) return;
-    i18nLabel.bind(this.info, () => {
+    this.roomInfo.render(() => {
       const m = this.options.records?.data.mtt;
       const blind = (sb: number, ante = 0) => `${StringHelper.GetLongString(sb)}/${StringHelper.GetLongString(sb * 2)}${ante > 0 ? `(${StringHelper.GetLongString(ante)})` : ''}`;
       const lines = [state.name, [i18nMgr.Get(`GameType_${state.gameType ?? 0}`), i18nMgr.Get(`PokerType_${state.pokerType ?? 0}`), i18nMgr.Get(`BetType_${state.limitBetType ?? 0}`)].join('-'), `${state.roomID}-${state.handNum}`,
         `${i18nMgr.Get(m ? 'UITexasReport_Text_MatchCurrBlindTip' : 'adaptation20006')} ${blind(state.smallBlind ?? 0, this.options.records?.data.snapshot?.roomInfo?.ante ?? 0)}`];
-      if(this.layout.compactRoomInfo){lines[0]+=` · ${lines[2]}`;lines.splice(2,1);}
       if (m?.nextSmallBlind) {
         lines.push(`${i18nMgr.Get('UITexasReport_Text_MatchNextBlindTip')} ${blind(m.nextSmallBlind, m.nextAnte)}`);
         const seconds = m.getUpBlindRemainingSeconds();
         if (seconds > 0) lines.push(`${i18nMgr.Get('UITexasReport_Text_MatchZmsysjTip')} ${seconds}s`);
       }
-      return lines.concat(this.squid?.infoLines() ?? [], this.mushroomBoom?.infoLines() ?? [], this.jackpot?.infoLines() ?? []).join('\n');
+      const extra = [...(this.squid?.infoLines() ?? []), ...(this.mushroomBoom?.infoLines() ?? []), ...(this.jackpot?.infoLines() ?? [])];
+      const room = this.options.records?.data;
+      const details = lines.slice(3);
+      if ((room?.record?.insuranceOn ?? 0) > 0) details.push(i18nMgr.Get('UITexas_InsuranceMode'));
+      if (room?.snapshot?.roomInfo?.delaySeeCard) details.push(i18nMgr.Get('adaptation20088'));
+      return { compact: this.layout.compactRoomInfo, name: state.name,
+        game: i18nMgr.Get((state.pokerType ?? 0) === 2 ? 'PokerType_2' : (state.gameType ?? 0) > 0 ? 'UITexasInfo_Omaha' : 'GameType_0'),
+        id: lines[2]!, details: details.concat(extra), legacy: lines.concat(extra) };
     });
   }
   private deltaToOrigin(group: HTMLElement): { x: number; y: number } {
@@ -479,6 +486,7 @@ export class TableView {
     };
   }
   destroy(): void {
+    this.roomInfo.destroy();
     this.media?.destroy();
     this.secondPcs?.destroy();
     this.insurance?.destroy();

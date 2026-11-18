@@ -41,6 +41,7 @@ export class SeatView implements SeatComponent {
     const old = this.previous;
     this.root.classList.toggle('mx-seat-mine', state.mine);
     this.root.classList.toggle('mx-seat-acting', !!state.acting);
+    this.root.classList.toggle('mx-seat-has-cards', !!state.player?.cards.length);
     this.root.classList.toggle('mx-empty-seat', !state.player);
     this.root.classList.toggle('mx-seat-revealed',!state.mine&&!!state.player?.cards.some(card=>card>0));
     this.root.setAttribute('role',state.player?'group':'button');
@@ -69,6 +70,7 @@ export class SeatView implements SeatComponent {
     this.position.place(p, mode);
     this.root.dataset.scale = String(p.scale);
     this.root.dataset.edge = p.edge;
+    this.root.dataset.microphoneSide = p.microphoneSide ?? (p.edge==='left'?'left':'right');
     this.root.style.setProperty('--mx-hero-avatar-drop',`${(p.y-(p.controlsY??p.y))/p.scale}px`);
     place(this.cards.root, config.identity.x+p.cardsX, config.identity.y+p.cardsY);
     this.cards.setSpread(p.handSpread,p.backHandSpread);

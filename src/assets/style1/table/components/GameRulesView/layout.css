@@ -14,6 +14,21 @@
 }
 .mx-rules-copy h3 { font-size: 1.05em; color: #5ce4c4; }
 .mx-insurance-rules .mx-record-table + .mx-record-table { margin-top: var(--mx-InsuranceRulesView-odds-spacing); }
+.mx-insurance-rules .mx-record-table caption { text-align: left; }
+.mx-insurance-rules .mx-record-table th {
+  height: calc(var(--mx-InsuranceRulesView-odds-header-height) * var(--record-unit));
+  background: rgba(255, 255, 255, .34);
+}
+.mx-insurance-rules .mx-record-table th:first-child {
+  border-radius: calc(var(--mx-InsuranceRulesView-odds-header-height) * var(--record-unit) / 2) 0 0 calc(var(--mx-InsuranceRulesView-odds-header-height) * var(--record-unit) / 2);
+}
+.mx-insurance-rules .mx-record-table th:last-child {
+  border-radius: 0 calc(var(--mx-InsuranceRulesView-odds-header-height) * var(--record-unit) / 2) calc(var(--mx-InsuranceRulesView-odds-header-height) * var(--record-unit) / 2) 0;
+}
+.mx-insurance-rules .mx-record-table td { border: 0; background: none; }
+.mx-insurance-rules .mx-record-table tbody tr + tr td {
+  border-top: var(--mx-InsuranceRulesView-odds-row-line-width) solid #ffffff30;
+}
 .mx-game-rules-tabs { display: flex; justify-content: center; gap: var(--mx-GameRulesView-tab-gap); }
 .mx-game-rules-tabs button {
   background: none;

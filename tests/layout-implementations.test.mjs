@@ -12,6 +12,7 @@ test('layout content preserves classic overlapping dual boards and finite coordi
       assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y));
       assert.ok(point.x>=0&&point.x<=layout.width&&point.y>=0&&point.y<=layout.height);
     }
+    assert.ok(content.total.y<content.pool.y,`${id}: total pot must appear above the main pot`);
     const pitch=content.secondBoard.y-content.board.y;
     if(id==='classic'&&w<=h)assert.ok(Math.abs(pitch-88*content.board.scale)<1e-6,'classic second board overlaps half the first card');
     else assert.ok(pitch>=176*content.board.scale);
