@@ -1,3 +1,5 @@
+import { GameplayTableSettingView } from './components/GameplayTableSettingView/GameplayTableSettingView.js';
+import { RecordDialogView } from './components/RecordDialogView/RecordDialogView.js';
 import { InsuranceRulesView } from './components/InsuranceRulesView/InsuranceRulesView.js';
 import { GameRulesView } from './components/GameRulesView/GameRulesView.js';
 import { TableEffectAnchors } from '../effects/TableEffectAnchors.js';
@@ -91,7 +93,9 @@ export class TableView {
   private viewport = element('div', 'mx-viewport');
   private stage = element('div', 'mx-stage');
   private seats = element('div', 'mx-seats');
-  private info = element('div', 'mx-room-info');
+  private info = element('button', 'mx-room-info');
+  private roomSettings?:GameplayTableSettingView;
+  private roomSettingsDialog?:RecordDialogView;
   private previousTable?: TableSnapshot;
   private seatViews = new Map<number, SeatComponent>();
   private remarkNames = new Map<number,string>();
@@ -168,6 +172,12 @@ export class TableView {
     const components = options.components ?? {};
     this.bringOut=new BringOutView(async amount=>{if(!options.seating?.storeChips)throw new Error('当前入口不支持带出');await options.seating.storeChips(amount);});
     this.buyIn = new BuyInController(options.seating); this.buyInView = new BuyInView(this.buyIn,options.records,this.confirmDialog);
+    const roomSettings=this.roomSettings=new GameplayTableSettingView(this.buyIn.settings);
+    const roomDialog=this.roomSettingsDialog=new RecordDialogView(()=>i18nMgr.Get('UITableSetting_title'),()=>{roomSettings.show(null);roomDialog.show(false);});
+    roomDialog.root.classList.add('mx-room-details');roomDialog.footer.hidden=true;roomDialog.body.append(roomSettings.root);
+    this.info.type='button';this.info.onclick=()=>{roomSettings.show('rules');roomDialog.show(true);};
+    this.root.append(roomDialog.root);
+
     this.playerInfo = new PlayerInfoView(options.records, options.emojis, (userRID, remark, nickname) => {
       if (remark) this.remarkNames.set(userRID, remark); else this.remarkNames.delete(userRID);
       for (const seat of this.seatViews.values()) {
@@ -389,6 +399,7 @@ export class TableView {
     this.chat?.resize(box.width,box.height);
     this.root.style.setProperty('--mx-chat-unit',`${box.width/1440}px`);
     this.personalSettings.onFrameResize(box.width,box.height);
+    this.roomSettingsDialog?.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
     this.playerInfo.onFrameResize(box.width,box.height);
@@ -483,6 +494,7 @@ export class TableView {
     this.report?.destroy();
     this.history?.destroy();
     this.gameRules.destroy();
+    this.roomSettings?.destroy();this.roomSettingsDialog?.destroy();
     this.insuranceRules.destroy();
     this.playerInfo.destroy();
     this.emoji?.destroy(); this.seatEmoji?.destroy();

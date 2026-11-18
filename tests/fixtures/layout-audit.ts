@@ -41,6 +41,7 @@ if(game.getState().phase==='table'){
  if(scene==='menu'||scene.startsWith('insurance-rules'))click('.mx-menu');
  if(scene.startsWith('insurance-rules'))click('.mx-menu-item[data-menu-action=UITexas_InsureRules]');
  if(scene==='chat')click('.mx-chat-button');
+ if(scene==='room-details')click('.mx-room-info');
  if(scene.startsWith('bring-')&&scene!=='bring-out')click(`.mx-seat[data-seat="${options.hero}"] .mx-avatar-fallback`);
  if(scene==='rules')click('.mx-table-add-chips');
  if(scene==='bring-out'){click('.mx-menu');const item=[...stage.querySelectorAll<HTMLButtonElement>('.mx-menu-item')].find(b=>b.textContent?.includes('带出'));item?.click();}

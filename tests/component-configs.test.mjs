@@ -64,4 +64,14 @@ test('automatic fold and call keep their own configured selected/unselected icon
  const view=new AutoOperationView(async()=>{}),[fold,check,call]=view.root.children;
  view.paint();assert.equal(fold.icon,'raw/ui/autoFoldOff.png');assert.equal(call.icon,'raw/ui/autoCallOff.png');assert.equal(check.icon,'raw/ui/autoOff.png');
  fold.onclick();assert.equal(fold.icon,'raw/ui/autoFoldOn.png');call.onclick();assert.equal(call.icon,'raw/ui/autoCallOn.png');assert.equal(fold.icon,'raw/ui/autoFoldOff.png');
+ const sent=[];const v=new AutoOperationView(async(...args)=>{sent.push(args)});
+ const state={roomID:1,matchID:0,mySeat:1,handNum:1,community:[],players:[{seat:1,userRid:10,chips:100,cards:[1,2],roundBet:0}],roundBet:10,actions:[],presentation:'live'};
+ const choose=()=>v.root.children[2].onclick();
+ const turn=(s,id='turn')=>({...s,actions:['call','fold'],betting:{id,call:s.roundBet}});
+ v.render(state);choose();v.render(turn({...state,roundBet:20}));assert.equal(sent.length,0,'changed call amount cancels');
+ v.render(state);choose();v.render(turn(state));v.render(turn(state));assert.equal(sent.length,1,'unchanged call submits once');
+ for(const changes of [{handNum:2},{community:[1,2,3]},{mySeat:2},{matchID:2},{presentation:'sync'},{handEnded:true},{willStandup:true},{players:[{...state.players[0],userRid:11}]},{players:[{...state.players[0],isAutoop:true}]}]){
+  v.render(state);choose();v.render({...state,...changes});v.render(turn(state,'later'));assert.equal(sent.length,1,JSON.stringify(changes));
+ }
+
 });

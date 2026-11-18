@@ -25,7 +25,7 @@
 .mx-settings-body{min-height:var(--mx-PersonalSettingsView-mx-settings-body-min-height);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff70 transparent;touch-action:pan-y}
 .mx-settings-page{min-height:0}
 .mx-settings-appearance{padding-top:calc(15 * var(--settings-unit))}
-.mx-personal-settings .mx-settings-appearance>h3{width:var(--mx-PersonalSettingsView-mx-personal-settings-width-2);height:calc(var(--mx-PersonalSettingsView-mx-personal-settings-height-3) * var(--settings-unit));margin:var(--mx-PersonalSettingsView-mx-personal-settings-margin-7) auto calc(var(--mx-PersonalSettingsView-mx-personal-settings-margin-8) * var(--settings-unit));display:flex;align-items:center;font-size:calc(var(--mx-PersonalSettingsView-mx-personal-settings-font-size-5) * var(--settings-unit));line-height:var(--mx-PersonalSettingsView-mx-personal-settings-line-height-2)}
+.mx-personal-settings .mx-settings-appearance h3{width:var(--mx-PersonalSettingsView-mx-personal-settings-width-2);height:calc(var(--mx-PersonalSettingsView-mx-personal-settings-height-3) * var(--settings-unit));margin:var(--mx-PersonalSettingsView-mx-personal-settings-margin-7) auto calc(var(--mx-PersonalSettingsView-mx-personal-settings-margin-8) * var(--settings-unit));display:flex;align-items:center;font-size:calc(var(--mx-PersonalSettingsView-mx-personal-settings-font-size-5) * var(--settings-unit));line-height:var(--mx-PersonalSettingsView-mx-personal-settings-line-height-2)}
 /* PokerCardTypeItem: option 310×130; each of the four cards is 62×91. */
 .mx-settings-decks{display:flex;gap:var(--mx-PersonalSettingsView-mx-settings-decks-gap-2);align-items:center;padding-left:calc(var(--mx-PersonalSettingsView-mx-settings-decks-padding-left) * var(--settings-unit));margin-bottom:calc(var(--mx-PersonalSettingsView-mx-settings-decks-margin-bottom) * var(--settings-unit))}
 .mx-personal-settings .mx-settings-deck{position:relative;display:flex;align-items:center;justify-content:center;flex:none;width:calc(var(--mx-PersonalSettingsView-mx-settings-deck-width-2) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-mx-settings-deck-height) * var(--settings-unit));padding:var(--mx-PersonalSettingsView-mx-settings-deck-padding);gap:var(--mx-PersonalSettingsView-mx-settings-deck-gap);border:0;border-radius:var(--mx-PersonalSettingsView-mx-settings-deck-border-radius);background-color:transparent;background-repeat:no-repeat}
@@ -101,3 +101,14 @@
 .mx-buyin-overlay[data-short=true]>.mx-buyin-panel{height:var(--mx-BuyInView-mx-buyin-panel-height-3)}
 .mx-buyin-title,.mx-buyin-confirm{flex-shrink:0}.mx-buyin-confirm{align-self:center}
 .mx-buyin-body{min-height:var(--mx-BuyInView-mx-buyin-body-min-height-2);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff70 transparent;padding-inline:var(--mx-BuyInView-mx-buyin-body-padding-inline);margin-inline:var(--mx-BuyInView-mx-buyin-body-margin-inline)}
+
+/* #43: fixed amount/layout controls; only the layout-specific options scroll. */
+.mx-settings-body:has(.mx-settings-appearance:not([hidden])){overflow:hidden;display:flex;flex-direction:column}
+.mx-settings-appearance:not([hidden]){display:flex;flex-direction:column;min-height:var(--mx-PersonalSettingsView-options-min-height);height:100%}
+.mx-settings-fixed{flex:none;z-index:var(--mx-PersonalSettingsView-fixed-z);background:#254d46}
+.mx-settings-appearance-options{overflow-y:auto;min-height:var(--mx-PersonalSettingsView-options-min-height);overscroll-behavior:contain}
+.mx-settings-appearance .mx-settings-desks{grid-template-columns:repeat(var(--mx-PersonalSettingsView-desks-columns),minmax(0,1fr))}
+.mx-settings-appearance[data-modern=true] .mx-settings-desks{display:flex;overflow-x:auto;touch-action:pan-x}
+.mx-settings-appearance[data-modern=true] .mx-settings-desk{flex:0 0 var(--mx-PersonalSettingsView-modern-desk-width)}
+.mx-settings-appearance[data-modern=false] .mx-settings-desks{max-height:calc(var(--mx-PersonalSettingsView-original-desk-max-height) * var(--settings-unit));overflow-y:auto}
+.mx-settings-solid{background:linear-gradient(#00a48b,#006751)!important;color:white}

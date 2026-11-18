@@ -27,7 +27,7 @@ test('WIN and ALLIN share the avatar anchor, with a closer lift for balanced por
   const seat={dataset:{anchorX:'.5',anchorY:String(2/3)},getBoundingClientRect:()=>({left:300-400*scale,top:500-600*scale,width:800*scale,height:900*scale}),querySelector:()=>({getBoundingClientRect:()=>({width:199*scale})}),closest:()=>({dataset:{tableLayout:layout,orientation}})};
   const anchor={x:300,y:500,scale,opacity:.8};
   assert.deepEqual(seatEffectAnchor(seat,'win'),anchor);
-  assert.deepEqual(seatEffectAnchor(seat,'allin-other'),anchor);
+  assert.deepEqual(seatEffectAnchor(seat,'allin-other'),layout==='oval'&&orientation==='portrait'?{...anchor,lift:110*scale}:anchor);
   assert.deepEqual(seatEffectAnchor(seat,'allin-self'),layout==='balanced'&&orientation==='portrait'?{...anchor,lift:176*scale}:anchor);
  }}finally{globalThis.getComputedStyle=previous;}
 });

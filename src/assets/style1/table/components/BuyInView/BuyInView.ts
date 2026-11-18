@@ -97,7 +97,7 @@ export class BuyInView {
     this.panel.dataset.step=s.step;
     const settingsStep=s.step==='security'||s.step==='rules';
     this.settings.show(settingsStep?s.step as 'security'|'rules':null);
-    this.details.hidden=settingsStep;this.cancel.hidden=!settingsStep;this.close.hidden=settingsStep;
+    this.details.hidden=settingsStep;this.cancel.hidden=!settingsStep;this.close.hidden=true;
     if(this.lastStep!==s.step){this.body.scrollTop=0;this.lastStep=s.step;}
     i18nLabel.bind(this.title, () => ({closed:'',loading:i18nMgr.Get("MX_LoadingBuyInDetails", [], "正在获取带入信息"),security:i18nMgr.Get("UISecuritySetting_title", [], "安全提示"),rules:i18nMgr.Get("UITableSetting_title", [], "牌局配置"),amount:s.quote?.mode==='add'?i18nMgr.Get('UITexas_AddChipsMenu'):s.quote?.returnAmount!==undefined?i18nMgr.Get("MX_ReturnBuyIn", [], "返场带入"):i18nMgr.Get("UIClub_RoomSitApplyRecords_title", [], "带入申请")}[s.step]));
     const q=s.quote;

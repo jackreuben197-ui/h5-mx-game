@@ -264,7 +264,12 @@
       "mx-settings-switch-left": "4",
       "mx-settings-switch-top": "4",
       "mx-settings-switch-border-radius": "50%",
-      "mx-settings-switch-transform": "78"
+      "mx-settings-switch-transform": "78",
+      "fixed-z": "2",
+      "options-min-height": "0",
+      "desks-columns": "5",
+      "modern-desk-width": "19%",
+      "original-desk-max-height": "1050"
     },
     "thumbWidth": 75,
     "widthGap": 16,

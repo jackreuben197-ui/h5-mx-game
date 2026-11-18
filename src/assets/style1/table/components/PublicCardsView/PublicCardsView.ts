@@ -39,16 +39,17 @@ export class PublicCardsView implements PublicCardsComponent {
       while (revealedCount > 0 && state.cards[revealedCount - 1] === 0) revealedCount--;
     }
     const layoutCount = this.fixedSlots ? config.slots.length : revealedCount;
-    const showFlopPlaceholders = this.fixedSlots && revealedCount === 3;
+    const showFlopPlaceholders = this.fixedSlots && revealedCount < config.slots.length;
     const visibleCount = showFlopPlaceholders ? layoutCount : revealedCount;
     for (let i = 0; i < visibleCount; i++) {
       const value = state.cards[i];
       const slot = element('span', 'mx-public-slot');
       const x=config.slots[i]??0;
-      const centeredX=config.w/2+(i-layoutCount/2)*config.layout.cardWidth;
+      const pitch=config.slots[1]!-config.slots[0]!;
+      const centeredX=config.w/2+(i-(layoutCount-1)/2)*pitch-config.layout.cardWidth/2;
       slot.style.setProperty('--mx-card-centered-x',`${centeredX}px`);
       slot.style.setProperty('--mx-public-original-spread',`${config.slots[0]!-x}px`);
-      slot.style.setProperty('--mx-public-centered-spread',`${-i*config.layout.cardWidth}px`);
+      slot.style.setProperty('--mx-public-centered-spread',`${-i*pitch}px`);
       place(slot,x,0);slot.style.margin='0';
       this.root.append(slot);
       if (value === undefined || i >= revealedCount) {

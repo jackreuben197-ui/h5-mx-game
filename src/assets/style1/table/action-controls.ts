@@ -17,6 +17,7 @@ export class ActionControls {
   readonly root = node('section', 'mx-operation');
   private foldCountdown=new SeatCountdownView(true);
   private quick = node('div','mx-operation-quick');
+  private quickSignature='';
   private offSettings: () => void;
   private row = node('div', 'mx-operation-row');
   private editor = node('div', 'mx-raise-editor');
@@ -249,13 +250,15 @@ export class ActionControls {
   }
   private refresh() {
     this.root.dataset.mode = this.mode;
-    this.quick.replaceChildren();
     const items = this.state ? ShortcutBet.calculate(this.settings.tableShortcuts,this.state) : [];
     const layout: Record<number, readonly [number, number][]> = {
       1:[[-190,370]],2:[[-190,370],[190,370]],3:[[-250,300],[0,395],[250,300]],
       4:[[-300,240],[-120,370],[120,370],[300,240]],
       5:[[-350,240],[-190,370],[0,395],[190,370],[350,240]],
     };
+    const signature=JSON.stringify([items,this.opScale,this.state?.smallBlind,this.state?.showBB]);
+    if(signature!==this.quickSignature){
+    this.quickSignature=signature;this.quick.replaceChildren();
     for(const [index,item] of items.entries()){
       const button=node('button','mx-quick-bet');button.type='button';
       const bg=node('span','mx-quick-bg');SpriteAtlas.paint(bg,'betPercent');
@@ -270,7 +273,8 @@ export class ActionControls {
       if(point){button.style.left=`calc(50% + ${point[0]*this.opScale}px)`;button.style.top=`calc(50% - ${point[1]*this.opScale}px)`;}
       button.onclick=()=>void this.submit(item.action,item.amount);this.quick.append(button);
     }
-    this.quick.hidden=!this.quick.childElementCount;
+    }
+    this.quick.hidden=!this.quick.childElementCount||this.busy||this.submittedKey===this.key;
     const s = this.state,
       b = s?.betting,
       actions = s?.actions ?? [];

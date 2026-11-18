@@ -36,6 +36,7 @@ export class SquidView {
   this.join.style.backgroundImage=`url("${url('table_bg_jkp_pool')}")`;
   this.stand.style.backgroundImage=`url("${url('table_bg_stand_up')}")`;
   this.join.onclick=()=>{if(this.pending)return;this.pending=true;this.join.disabled=true;void this.actions.joinSquid?.().catch(this.failed).finally(()=>{this.pending=false;this.join.disabled=false;});};
+  this.result.root.onclick=(event)=>{if(event.target===this.result.root){clearTimeout(this.closeTimer);this.result.show(false);}};
   this.count.onclick=()=>this.showIntro();this.stand.onclick=()=>this.standup();
   this.root.append(this.count,this.join,this.stand,this.start);
   this.bindings.bind({squid:records.data.squid});
@@ -49,7 +50,7 @@ export class SquidView {
   if(s.notice&&s.noticeSerial!==this.noticeSerial)this.failed(i18nMgr.Get(s.notice));this.noticeSerial=s.noticeSerial;
   if(s.start!==this.started){this.started=s.start;if(s.start){this.animation?.cancel();this.start.hidden=false;this.animation=this.start.animate(viewConfig.layout.startAnimation.frames,{duration:viewConfig.layout.startAnimation.duration});this.animation.onfinish=()=>{this.start.hidden=true;};}}
   if(s.resultSerial!==this.resultSerial){this.resultSerial=s.resultSerial;clearTimeout(this.closeTimer);this.result.content.replaceChildren();
-   if(s.results.length){const title=element('img','mx-squid-over');title.src=url('squid_over');this.result.content.append(title);
+   if(s.results.length){this.result.content.append(element('h2','mx-squid-result-title',()=>i18nMgr.Get('MX_SquidSettlement',[],'鱿鱼结算')));const title=element('img','mx-squid-over');title.src=url('squid_over');this.result.content.append(title);
     s.results.forEach((v,index)=>{const row=element('div','mx-squid-result-row'),avatar=element('img',''),identity=element('div',''),score=element('strong','');
      avatar.src=v.avatar;identity.append(element('div','',()=>StringHelper.LengthNick(v.nick||'-')),element('small','',()=>`ID:${v.userID}`));score.textContent=StringHelper.GetSignedLongString(v.money);score.style.color=v.money>0?'#B0FFAE':v.money<0?'#FF7C7C':'#EEF5FF';row.append(avatar,identity,score);
      if(v.money<0){const lose=element('img','mx-squid-lose');lose.src=url('squid_lose');row.append(lose);}

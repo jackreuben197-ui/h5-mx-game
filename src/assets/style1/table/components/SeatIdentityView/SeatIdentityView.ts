@@ -77,8 +77,10 @@ export class SeatIdentityView {
   destroy(): void { this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   render(state: SeatState): void {
     const p = state.player;
-    this.squid.hidden=!(p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
-    this.squidMask.hidden=!(p?.squidIn && p.squidCount===0);
+    this.squid.hidden=!(p?.squidIn||p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
+    // Product feedback #53 replaces the tied overlay with an explicit zero badge.
+    this.squidMask.hidden=true;
+    this.squid.dataset.zero=String(!!p?.squidIn&&!p.squidCount);
     const keepDeadline=p?.keepSeatDeadline??0;
     const keeping=!!p?.keepSeatReason;
     this.countdown.render(p ? keeping && keepDeadline>Date.now()/1000 ? {seat:this.seatID,deadline:keepDeadline,totalTime:state.keepSeatDuration||Math.ceil(keepDeadline-Date.now()/1000)} : keeping || state.foldCountdown ? undefined : state.countdown : undefined,keeping,p?.keepSeatReason===4);

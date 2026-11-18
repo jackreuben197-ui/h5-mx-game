@@ -41,3 +41,15 @@
 
 /* Keep the tied squid above avatars, including the classic avatar layer. */
 .mx-seat-squid-mask{z-index:2}
+
+.mx-squid-count{background-size:contain!important;background-repeat:no-repeat}
+
+.mx-seat .mx-seat-squid[data-zero=true]{left:70px;transform:none}
+.mx-seat .mx-seat-squid[data-zero=true] span{transform:none}
+.mx-squid-result .mx-special-panel{background:linear-gradient(135deg,#829c9c66,#174e4566);border:1px solid #ffffffa3;border-radius:36px;backdrop-filter:blur(8px)}
+.mx-squid-result .mx-confirm-frame{display:none}
+
+.mx-squid-result .mx-special-panel{align-self:center;margin:0;max-height:90%;overflow:auto}
+.mx-squid-result .mx-special-content{padding:20px 24px}
+.mx-squid-result-title{font-size:22px;margin:0 0 8px;font-weight:600}
+.mx-squid-result .mx-squid-over{position:relative;left:auto;top:auto;transform:none;width:150px;height:130px;margin:0 auto 12px}

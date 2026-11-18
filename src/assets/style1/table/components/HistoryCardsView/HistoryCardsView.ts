@@ -7,6 +7,7 @@ export class HistoryCardsView {
     readonly root = componentBox(element('div', 'mx-history-cards'),config);
     constructor(values: number[], indexes?: number[], offset = 0) {
         this.root.style.setProperty('--card-count', String(values.length));
+        this.root.classList.toggle('mx-history-public-cards',offset===0);
         values.forEach((value, index) => {
             if (offset === 0 && !value) return;
             const card = new CardView(value).root;

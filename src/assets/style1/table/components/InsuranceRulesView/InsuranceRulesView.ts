@@ -23,9 +23,15 @@ export class InsuranceRulesView {
     for(const group of this.data?.record?.insuranceOddsList??[]){
       const table=element('table','mx-record-table');
       const caption=element('caption','',`${group.potUserCount} ${i18nMgr.Get('MX_InsurancePlayers',[],'人底池')}`);
-      const head=element('tr','');head.append(element('th','','Outs'),element('th','',i18nMgr.Get('MX_InsuranceOdds',[],'赔率')));
+      const head=element('tr','');for(let column=0;column<2;column++)head.append(element('th','','Outs'),element('th','',i18nMgr.Get('MX_InsuranceOdds',[],'赔率')));
       const thead=element('thead','');thead.append(head);const body=element('tbody','');
-      for(const odd of group.oddsList){const row=element('tr','');row.append(element('td','',String(odd.outs)),element('td','',String(odd.odds)));body.append(row);}
+      const odds=[...group.oddsList].sort((a,b)=>a.outs-b.outs);
+      const left=odds.filter(odd=>odd.outs<=10),right=odds.filter(odd=>odd.outs>10);
+      for(let index=0;index<Math.max(left.length,right.length);index++){
+        const row=element('tr','');
+        for(const odd of [left[index],right[index]])row.append(element('td','',odd?String(odd.outs):''),element('td','',odd?String(odd.odds):''));
+        body.append(row);
+      }
       table.append(caption,thead,body);this.dialog.body.append(table);
     }
   }

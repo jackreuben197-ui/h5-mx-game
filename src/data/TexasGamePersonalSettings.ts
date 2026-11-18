@@ -17,7 +17,7 @@ export interface TableAppearance {
     tableTextSize: number;
     betButtonSize: number;
 }
-const defaultAppearance = (): TableAppearance => ({layout:'original',style:'legacy',feltColor:TABLE_FELT_COLORS[0],cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
+const defaultAppearance = (): TableAppearance => ({layout:'original',style:'solid',feltColor:TABLE_FELT_COLORS[0],cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
 export interface ShortCut {
     name: string;
     percent: number;
@@ -72,7 +72,6 @@ const TexasGameDfaultShortCutsList: ShortCut[] = [
 ] as const;
 
 const defaultShortcuts3 = [3, 6, 7];
-const originalShortcuts = defaultShortcuts3.map(index => TexasGameDfaultShortCutsList[index]!);
 
 export class TexasGamePersonalSettings extends EventSource {
     static readonly APPEARANCE_CHANGE = 'APPEARANCE_CHANGE';
@@ -85,9 +84,9 @@ export class TexasGamePersonalSettings extends EventSource {
         if (this.supportsLayoutCustomization) return this.appearance;
         return {...this.appearance, style:'legacy', cardBack:'original', publicCardSize:100, tableTextSize:100, betButtonSize:100};
     }
-    get tableCardType(): PokerCardType { return this.supportsLayoutCustomization ? this.pokerCardType : AssetCollectionType.SpriteFrameCard0; }
+    get tableCardType(): PokerCardType { return this.pokerCardType; }
     get tableSliderSubmit(): 'release' | 'confirm' { return this.supportsLayoutCustomization ? this.sliderSubmit : 'confirm'; }
-    get tableShortcuts(): readonly ShortCut[] { return this.supportsLayoutCustomization ? this.shortCuts : originalShortcuts; }
+    get tableShortcuts(): readonly ShortCut[] { return this.shortCuts; }
     private accountID = 0;
     private saved: Record<string, unknown> = {};
     get revision(): number { return this.accountRevision; }

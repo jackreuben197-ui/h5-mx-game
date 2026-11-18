@@ -42,6 +42,7 @@ export class SeatView implements SeatComponent {
     this.root.classList.toggle('mx-seat-mine', state.mine);
     this.root.classList.toggle('mx-seat-acting', !!state.acting);
     this.root.classList.toggle('mx-empty-seat', !state.player);
+    this.root.classList.toggle('mx-seat-revealed',!state.mine&&!!state.player?.cards.some(card=>card>0));
     this.root.setAttribute('role',state.player?'group':'button');
     this.root.setAttribute('aria-label',state.player?`座位 ${this.root.dataset.seat}`:`空座 ${this.root.dataset.seat}`);
     this.root.tabIndex=state.player?-1:0;

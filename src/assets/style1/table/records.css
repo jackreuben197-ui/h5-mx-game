@@ -8,7 +8,7 @@
 .mx-record-overlay[data-dock]>.mx-record-panel{top:var(--record-top);height:calc(var(--mx-RecordDialogView-mx-record-panel-height-4) - var(--record-top));max-height:calc(var(--mx-RecordDialogView-mx-record-panel-max-height-9) - var(--record-top))}
 .mx-record-overlay[data-dock=left]{justify-content:flex-start}
 .mx-record-overlay[data-dock=right]{justify-content:flex-end}
-.mx-record-overlay[data-dock=left]>.mx-record-panel{border-left:0;border-top-left-radius:calc(120 * var(--record-unit));border-bottom-left-radius:0}
+.mx-record-overlay[data-dock=left]>.mx-record-panel{border-left:0;border-top-left-radius:0;border-top-right-radius:calc(120 * var(--record-unit));border-bottom-left-radius:0;border-bottom-right-radius:0}
 .mx-record-overlay[data-dock=right]>.mx-record-panel{border-right:0;border-top-right-radius:0;border-bottom-right-radius:0;border-bottom-left-radius:0}
 .mx-record-header,.mx-record-footer,.mx-record-status{flex-shrink:0}
 .mx-record-header{position:relative;padding:calc(var(--mx-RecordDialogView-mx-record-header-padding-4) * var(--record-unit)) calc(var(--mx-RecordDialogView-mx-record-header-padding-5) * var(--record-unit)) calc(var(--mx-RecordDialogView-mx-record-header-padding-6) * var(--record-unit));text-align:center}
@@ -110,7 +110,7 @@
 .mx-report-filter input:checked{background:#00d2a1;box-shadow:inset 0 0 0 calc(7 * var(--record-unit)) #eeeeee}
 .mx-report-remaining{grid-column:1/-1;text-align:right}
 .mx-report-list{
-  height:calc(var(--mx-ReportView-mx-report-list-height) * var(--record-unit));
+  height:auto;
   min-height:0;
   overflow:auto;
   overscroll-behavior:contain;
@@ -250,3 +250,7 @@
 .mx-report-overlay .mx-record-own .mx-report-player-link::before{content:'● ';color:#ff5050}
 .mx-record-offline .mx-report-player-link{opacity:.55;text-decoration:line-through}
 .mx-history-overlay .mx-record-own{color:#fff3d6}
+
+.mx-report-overlay .mx-record-table{font-weight:600}
+
+.mx-history-public-cards>.mx-card:nth-child(n+4){margin-left:calc(var(--mx-HistoryCardsView-mx-history-cards-gap) * var(--record-unit))}

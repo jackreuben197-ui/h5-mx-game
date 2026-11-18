@@ -84,6 +84,8 @@ export class ReportView {
             mode: t(mode === 'mush' ? 'UITexasReport_MushRoomRecord' : 'UITexasReport_SquidRecord', mode === 'mush' ? '蘑菇记录' : '鱿鱼记录'),
         };
         const tabs = this.controller.tabs.map(key => [key, labels[key]] as const);
+        this.tabs.hidden=tabs.length<=1;
+        this.dialog.footer.hidden=tabs.length<=1&&state.tab==='battle';
         this.tabs.replaceChildren(...tabs.map(([key, label]) => { const b = element('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.tab === key)); b.onclick = () => void this.controller.select(key); return b; }));
         const report = records.data.report;
         const tableUsers = new Set(records.data.snapshot?.playersList.map(p => p.userRid) ?? []);

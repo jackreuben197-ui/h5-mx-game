@@ -78,7 +78,7 @@ export class LayoutOriginal implements TableLayout {
         x: landscapeSeat?.x ?? this.width / 2 + p.position.x,
         y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
-        edge: landscapeSeat?.edge ?? 'portrait',
+        edge: landscapeSeat?.edge ?? (mine?'bottom':left?'left':p.position.x>0?'right':'top'),
         cardsX: face ? 0 : centeredBack ? 55 : left ? 160 : -160,
         cardsY: face
           ? mine
@@ -103,7 +103,9 @@ export class LayoutOriginal implements TableLayout {
         const position=positions[slot];
         const top=[SeatPosition.TopMiddle,SeatPosition.TopMiddleLeft,SeatPosition.TopMiddleRight].includes(position!);
         const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
-        p.y+=(top?topClearance:id===state.mySeat?-80:-60)*this.suggest;
+        p.y+=(top?topClearance:id===state.mySeat?-40:-60)*this.suggest;
+        if(id!==state.mySeat&&!top){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
+        p.dealerX=-145;p.dealerY=120;
         if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-200;}
       }
       if(state.community?.length){

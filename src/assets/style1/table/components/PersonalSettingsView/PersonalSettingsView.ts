@@ -58,15 +58,16 @@ export class PersonalSettingsView {
       const page=element('div',`mx-settings-page mx-settings-${['appearance','quick','system'][i]}`);page.setAttribute('role','tabpanel');this.pages.push(page);
     });
     const appearance=this.pages[0]!;
-    const professional=this.button('MX_ProfessionalPending',()=>{});professional.className='mx-settings-professional';professional.disabled=true;appearance.append(professional);
+    const fixed=element('div','mx-settings-fixed');
+    const options=element('div','mx-settings-appearance-options');
     const amountModes=element('div','mx-settings-modes mx-settings-option-pair');
     for(const [bb,key] of [[false,'MX_NumberAmount'],[true,'UITexas_ShowBB']] as const){const b=this.button(key,()=>this.settings.setShowBBToStorage(bb));amountModes.append(b);this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.showBB===bb)));}
     const backHeading=this.heading('MX_CardBacks');
-    appearance.append(this.heading('MX_AmountDisplay'),amountModes,backHeading);
+    fixed.append(this.heading('MX_AmountDisplay'),amountModes);
     const backs=element('div','mx-settings-backs');
     for(const color of TABLE_CARD_BACKS){const b=element('button','mx-settings-back');b.type='button';b.setAttribute('aria-label',color);const img=element('img','');img.src=cardBacks[color]!;img.alt='';b.append(img);b.onclick=()=>this.settings.updateAppearance({cardBack:color});this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.appearance.cardBack===color)));backs.append(b);}
     const deckHeading=this.heading('UITexasSetting_qAONskmY');
-    appearance.append(backs,deckHeading);
+
     const decks=element('div','mx-settings-decks');
     for(const type of [1,2] as const){
       const b=element('button','mx-settings-deck');b.type='button';b.setAttribute('aria-label',String(type));
@@ -76,7 +77,7 @@ export class PersonalSettingsView {
       this.cards.push(b);decks.append(b);
     }
     const sizeHeading=this.heading('MX_DisplaySize');
-    appearance.append(decks,sizeHeading);
+
     const sizes=element('div','mx-settings-sizes');
     for(const [field,key] of [['publicCardSize','MX_PublicCardSize'],['tableTextSize','MX_TableTextSize'],['betButtonSize','MX_BetButtonSize']] as const){
       const group=element('label','mx-settings-size');const label=element('span','',()=>i18nMgr.Get(key));const output=element('output','');const input=element('input','');input.type='range';input.min='0';input.max='4';input.step='1';i18nLabel.bind(input,()=>i18nMgr.Get(key),'aria-label');
@@ -85,18 +86,14 @@ export class PersonalSettingsView {
     }
     const layouts=element('div','mx-settings-layouts');
     for(const id of (['original','balanced','oval','classic'] as TableLayoutId[]).filter(id=>this.settings.availableLayouts.includes(id))){const b=element('button','');b.type='button';b.onclick=()=>this.settings.updateAppearance({layout:id});b.dataset.layout=id;b.append(new LayoutPreview(id).root,element('span','',()=>i18nMgr.Get(`MX_Layout_${id}`)));this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.appearance.layout===id)));layouts.append(b);}
-    appearance.append(sizes,this.heading('MX_TableLayout'),layouts,this.heading('MX_TableStyle'));
+    fixed.append(this.heading('MX_TableLayout'),layouts);
+    options.append(deckHeading,decks,backHeading,backs,sizeHeading,sizes,this.heading('MX_TableStyle'));
+    appearance.append(fixed,options);
     // 这组控件只出现在经典、均衡环形和竞技椭圆，初代仍可切换布局与编号桌布。
     this.appearanceRefresh.push(()=>{
-      for(const node of [professional,backHeading,backs,deckHeading,decks,sizeHeading,sizes])node.hidden=!this.settings.supportsLayoutCustomization;
+      for(const node of [backHeading,backs,sizeHeading,sizes])node.hidden=!this.settings.supportsLayoutCustomization;
     });
     // 桌布类型和图片共用同一选择序号，切换类型后忽略在途图片的旧选择。
-    const feltModes=element('div','mx-settings-modes mx-settings-option-pair');
-    for(const [style,key] of [['legacy','MX_ImageFelt'],['solid','MX_SolidFelt']] as const){
-      const mode=this.button(key,()=>{void this.choose(async()=>()=>this.settings.updateAppearance({style}));});
-      feltModes.append(mode);
-      this.appearanceRefresh.push(()=>mode.setAttribute('aria-pressed',String(this.settings.tableAppearance.style===style)));
-    }
     const colors=element('div','mx-settings-colors');
     for(const color of TABLE_FELT_COLORS){const b=element('button','');b.type='button';b.style.backgroundColor=color;b.setAttribute('aria-label',color);b.onclick=()=>this.settings.updateAppearance({feltColor:color});this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.appearance.feltColor===color)));colors.append(b);}
     const pictures=element('div','mx-settings-pictures');
@@ -120,12 +117,17 @@ export class PersonalSettingsView {
     expand.onclick=()=>{const open=expand.getAttribute('aria-expanded')!=='true';expand.setAttribute('aria-expanded',String(open));this.desks.forEach((b,i)=>b.hidden=i>=4&&!open);this.fitHeight();};
     this.desks.forEach((b,i)=>b.hidden=i>=4&&this.settings.deskType<=4);
     pictures.append(desks,expand);
-    appearance.append(feltModes,pictures,colors);
+    const colorHeading=element('h3','',()=>i18nMgr.Get('MX_FeltColor',[],'颜色选择'));
+    options.append(pictures,colorHeading,colors);
+    const solidChoice=this.button('MX_SolidFelt',()=>{void this.choose(async()=>()=>this.settings.updateAppearance({style:'solid'}));});
+    solidChoice.className='mx-settings-desk mx-settings-solid';desks.prepend(solidChoice);
     this.appearanceRefresh.push(()=>{
       const solid=this.settings.tableAppearance.style==='solid';
-      feltModes.hidden=!this.settings.supportsLayoutCustomization;
-      pictures.hidden=solid;
-      colors.hidden=!solid;
+      const modern=this.settings.supportsLayoutCustomization;
+      appearance.dataset.modern=String(modern);
+      solidChoice.hidden=!modern;solidChoice.setAttribute('aria-pressed',String(solid));
+      pictures.hidden=false;expand.hidden=true;this.desks.forEach(b=>b.hidden=false);
+      colors.hidden=colorHeading.hidden=!modern||!solid;
     });
     const quick=this.pages[1]!;
     const submitHeading=this.heading('MX_SliderSubmit');
@@ -222,7 +224,7 @@ export class PersonalSettingsView {
   }
   private fitHeight():void {
     if(!this.frameHeight||this.root.hidden)return;
-    const compact=!this.settings.supportsLayoutCustomization&&!this.pages[0]!.hidden&&this.deskExpand.getAttribute('aria-expanded')==='false';
+    const compact=false;
     this.panel.dataset.compact=String(compact);
     this.panel.style.height=compact?'auto':`${this.panelHeight}px`;
     this.root.dataset.short='false';

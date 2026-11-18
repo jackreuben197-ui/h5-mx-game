@@ -52,10 +52,17 @@ export class LayoutProfile extends LayoutOriginal {
             p.cardsY=avatarEdge;
           }
         }
+        if(!mine&&!face&&profile.id!=='balanced'){
+          p.backHandSpread=56;
+          const count=Math.max(2,player?.cards.length??2);
+          const backWidth=(65+(count-1)*56/count)*18/65;
+          p.cardsX=(profile.id==='classic'?backWidth-profile.avatar/2+2:x<220?profile.avatar/2:-profile.avatar/2)*local;
+          p.cardsY=profile.avatar/2*local;
+        }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
-        p.betX=(mine?68:topSeat?0:x<220?65:x>220?-65:0)*local;
-        p.betY=(mine?6:topSeat?60:profile.id==='classic'?24:-10)*local;
+        p.betX=(mine?(profile.id==='classic'?(state.actions?.length?-56:0):68):topSeat?0:x<220?56:x>220?-56:0)*local;
+        p.betY=(mine?(profile.id==='classic'?-120:6):topSeat?60:profile.id==='classic'?40:0)*local;
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
         const revealedCards=Math.max(state.community?.length??0,state.secondCommunity?.length??0);
         if(!mine&&revealedCards){
@@ -72,7 +79,7 @@ export class LayoutProfile extends LayoutOriginal {
             p.betY=((Math.abs(by-above)<Math.abs(by-below)?above:below)-p.y)/p.scale;
           }
         }
-        p.dealerX=(mine?profile.heroDealer[0]:(x<220?1:-1)*profile.otherDealerX)*local;
+        p.dealerX=(mine?profile.heroDealer[0]:profile.id==='classic'?profile.otherDealerX:(x<220?1:-1)*profile.otherDealerX)*local;
         p.dealerY=(mine?profile.heroDealer[1]:profile.otherDealerY)*local;
       }
       this.origin={x:this.width/2,y:profile.boardY/profile.height*height};
@@ -91,7 +98,7 @@ export class LayoutProfile extends LayoutOriginal {
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
       styles:{'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
-        '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+8)*199/profile.avatar}px`,
+        '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+12)*199/profile.avatar}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
     };
   }

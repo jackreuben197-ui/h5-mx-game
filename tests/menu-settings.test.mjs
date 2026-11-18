@@ -14,7 +14,7 @@ import { BringOutRules } from '../.test-build/logic/BringOutRules.js';
 import { ShortcutBet } from '../.test-build/logic/ShortcutBet.js';
 import { TexasGamePersonalSettings } from '../.test-build/data/TexasGamePersonalSettings.js';
 const target={roomID:1001,matchID:0,roomType:0};
-test('original uses its preset cards and betting controls while modern layouts restore saved choices',()=>{
+test('original keeps fixed sizes but shares card faces and the chosen quick-bet mode',()=>{
   const settings=new TexasGamePersonalSettings('layout-test');
   settings.updateAppearance({layout:'classic',cardBack:'gold',publicCardSize:110,tableTextSize:90,betButtonSize:105});
   settings.setPokerCardTypeToStorage(2);
@@ -23,9 +23,10 @@ test('original uses its preset cards and betting controls while modern layouts r
   settings.setCustomPotRatio(1,79);
   settings.updateAppearance({layout:'original'});
   assert.equal(settings.supportsLayoutCustomization,false);
-  assert.equal(settings.tableCardType,1);
+  assert.equal(settings.tableCardType,2);
   assert.equal(settings.tableSliderSubmit,'confirm');
-  assert.deepEqual(settings.tableShortcuts.map(x=>x.name),['1/2','1.0','1.2']);
+  assert.equal(settings.tableShortcuts.length,5);
+  assert.equal(settings.tableShortcuts[1].name,'79%');
   assert.deepEqual([settings.tableAppearance.cardBack,settings.tableAppearance.publicCardSize,settings.tableAppearance.tableTextSize,settings.tableAppearance.betButtonSize],['original',100,100,100]);
   for(const layout of ['classic','balanced','oval']){
     settings.updateAppearance({layout});
@@ -153,7 +154,7 @@ test('appearance rejects corrupt choices and duplicate changes do not notify',()
   settings.updateAppearance({layout:'classic',publicCardSize:110,tableTextSize:90,betButtonSize:105});
   settings.updateAppearance({layout:'classic',publicCardSize:110});assert.equal(changes,1);
   settings.updateAppearance({layout:'broken',publicCardSize:NaN,tableTextSize:200,betButtonSize:0,feltColor:'url(secret)',cardBack:'missing'});
-  assert.deepEqual(settings.appearance,{layout:'original',style:'legacy',feltColor:'#079d80',cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
+  assert.deepEqual(settings.appearance,{layout:'original',style:'solid',feltColor:'#079d80',cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
 });
 
 

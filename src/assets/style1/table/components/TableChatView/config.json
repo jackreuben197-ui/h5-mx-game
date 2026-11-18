@@ -19,7 +19,7 @@
     "css": {
       "mx-support-button-padding": "0",
       "mx-chat-button-left": "5.5%",
-      "mx-chat-button-bottom": "6.9%",
+      "mx-chat-button-bottom": "7.8%",
       "mx-chat-button-width": "120",
       "mx-chat-button-height": "146",
       "mx-chat-button-bottom-2": "0",
@@ -32,7 +32,7 @@
       "mx-chat-unread-height": "9px",
       "mx-chat-unread-border-radius": "50%",
       "mx-support-button-right": "3.5%",
-      "mx-support-button-top": "2.5%",
+      "mx-support-button-top": "1.4%",
       "mx-support-button-min-width": "200",
       "mx-support-button-height": "100",
       "mx-support-button-gap": "16",

@@ -58,9 +58,9 @@
       "mx-player-name-width": "68",
       "mx-player-name-font-size-2": "11",
       "mx-player-name-line-height-2": "13",
-      "mx-player-action-top-2": "-27",
+      "mx-player-action-top-2": "-29",
       "mx-player-action-transform": "-50%",
-      "mx-player-action-font-size-2": "11",
+      "mx-player-action-font-size-2": "12",
       "mx-player-action-line-height": "13",
       "mx-player-action-padding": "1.5",
       "mx-player-action-padding-2": "5",
@@ -186,12 +186,18 @@
       "mx-seat-win-width": "192px",
       "mx-seat-win-min-height": "92px",
       "mx-seat-win-border-radius": "16px",
-      "mx-seat-win-font-size": "31px",
+      "mx-seat-win-font-size": "40px",
       "mx-seat-win-hand-type-font-size": "26px",
-      "mx-seat-win-line-height": "34px",
+      "mx-seat-win-line-height": "44px",
       "mx-seat-win-row-gap": "8px",
       "mx-seat-win-padding": "8px",
-      "mx-seat-win-padding-2": "4px"
+      "mx-seat-win-padding-2": "4px",
+      "qa-name-clearance": "32",
+      "qa-chip-top": "35",
+      "qa-win-weight": "700",
+      "qa-wait-font": "44px",
+      "qa-glass-blur": "6px",
+      "qa-squid-reveal-y": "35px"
     }
   },
   "images": {

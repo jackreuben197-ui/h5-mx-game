@@ -12,6 +12,7 @@ export function seatEffectAnchor(seat: HTMLElement, effect: SeatEffect): EffectA
   const anchor:EffectAnchor={x,y,scale,opacity:Number(getComputedStyle(seat).opacity)};
   if(effect==='allin-self'&&table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape')
     anchor.lift=config.layout.balancedSelfAllInLift*scale;
+  if(effect==='allin-other'&&table?.dataset.tableLayout==='oval'&&table.dataset.orientation!=='landscape')anchor.lift=config.layout.ovalOtherAllInLift*scale;
   return anchor;
 }
 /** CC SeatPlayer action / WINNER lifecycle, isolated to this seat's subscription. */
