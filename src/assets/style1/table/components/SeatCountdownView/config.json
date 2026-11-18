@@ -52,7 +52,7 @@
     "balancedRadius": 51.72,
     "actionColor": "#14fd00",
     "keepColor": "#0ee3fe",
-    "balancedStroke": 3,
+    "balancedStroke": 5,
     "roundedStroke": 5,
     "cornerRatio": 0.28
   },

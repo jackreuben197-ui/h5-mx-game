@@ -10,7 +10,7 @@
 .mx-table :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status){border-radius:var(--mx-avatar-radius)}
 .mx-table[data-table-layout=balanced] .mx-seat:not(.mx-empty-seat) .mx-avatar-fallback{background-color:#345c59}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:var(--mx-seat-chip-top,102px);min-height:var(--mx-SeatIdentityView-mx-player-info-min-height);padding:var(--mx-SeatIdentityView-mx-player-info-padding) var(--mx-SeatIdentityView-mx-player-info-padding-2);background-image:none!important;background-color:#ffffff18;border:1px solid #ffffff60;border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:var(--mx-seat-chip-top,102px);min-height:var(--mx-SeatIdentityView-mx-player-info-min-height);padding:var(--mx-SeatIdentityView-mx-player-info-padding) var(--mx-SeatIdentityView-mx-player-info-padding-2);border:1px solid transparent;border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{
   position:absolute;top:calc(var(--mx-SeatIdentityView-mx-player-name-top) * (var(--mx-seat-chip-top,102px) + var(--mx-seat-name-clearance,116.5px)));bottom:auto;left:var(--mx-SeatIdentityView-mx-player-name-left);transform:translate(var(--mx-SeatIdentityView-mx-player-name-transform),var(--mx-SeatIdentityView-mx-player-name-transform-2));overflow:hidden;
 }
@@ -106,7 +106,7 @@
 .mx-table[data-table-layout=balanced] .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action]{--mx-action-countdown-color:#81f18d}
 .mx-table:is([data-table-layout=original],[data-table-layout=balanced]) .mx-seat .mx-seat-timer[data-kind=action]::before{content:none}
-.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-width:6px;box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
+.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-width:10px;box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
 .mx-table .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius)}
 /* Keep confirmation on the raise entry; the track ends above that button. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
@@ -260,7 +260,13 @@
 .mx-player-info:has(.mx-seat-win:not([hidden])){z-index:10}
 .mx-seat-win-amount{font-weight:var(--mx-SeatIdentityView-qa-win-weight)}
 .mx-table .mx-seat-play-status{font-size:calc(var(--mx-SeatIdentityView-qa-wait-font) * var(--mx-table-text-scale))}
-.mx-table:not([data-table-layout=original]) .mx-player-info{backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));-webkit-backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur))}
+/* Keep the original frame with a faint dark tint and a gentle backdrop blur. */
+.mx-table .mx-player-info{
+ background-color:rgb(0 0 0 / .08);
+ border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius);
+ backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));
+ -webkit-backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));
+}
 .mx-seat .mx-seat-timer[data-kind=action]{z-index:7}
 .mx-seat .mx-avatar-mic{left:calc(-99.5px - var(--mx-TableMediaView-mx-avatar-mic-width-2));top:var(--mx-TableMediaView-mx-avatar-mic-top-2)}
 .mx-seat[data-edge=right] .mx-avatar-mic{left:99.5px}

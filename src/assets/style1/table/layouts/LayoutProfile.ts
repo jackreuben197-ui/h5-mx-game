@@ -66,7 +66,10 @@ export class LayoutProfile extends LayoutOriginal {
         }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
-        const sideBetX=profile.id==='classic'?60:56;
+        // Balanced chips extend 80 + 33 - 8 - 1 local units toward the avatar.
+        // Keep one screen pixel clear after the seat and stage have both scaled.
+        const sideBetX=profile.id==='classic'?60:profile.id==='balanced'
+          ? profile.avatar/2+104/local+1/(unit*this.unit):56;
         p.betX=(mine?68:topSeat?0:x<220?sideBetX:x>220?-sideBetX:0)*local;
         // Classic side bets share the balance card's center: 30 + 20.4 / 2.
         p.betY=(mine?(profile.id==='classic'?-120:-8):topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?classicSideBetY:0)*local;
