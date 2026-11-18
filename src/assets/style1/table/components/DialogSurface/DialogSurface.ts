@@ -16,7 +16,7 @@ export class DialogSurface {
   readonly panel = element('section', 'mx-special-panel');
   readonly content = element('div', 'mx-special-content');
   private observer: ResizeObserver;
-  constructor(name: string, width: number) {
+  constructor(name: string, width: number, private referenceWidth: number = config.layout.referenceWidth) {
     this.root.classList.add(name);
     this.panel.style.width = `${width}px`;
     this.panel.setAttribute('role', 'dialog');
@@ -31,7 +31,7 @@ export class DialogSurface {
   fit(): void {
     const style=getComputedStyle(this.panel);
     const verticalMargin=(parseFloat(style.marginTop)||0)+(parseFloat(style.marginBottom)||0);
-    const scale = Math.min(1, this.root.clientWidth / config.layout.referenceWidth, (this.root.clientWidth - config.layout.edgeGap) / this.panel.offsetWidth, (this.root.clientHeight - config.layout.edgeGap - verticalMargin) / this.panel.offsetHeight);
+    const scale = Math.min(1, this.root.clientWidth / this.referenceWidth, (this.root.clientWidth - config.layout.edgeGap) / this.panel.offsetWidth, (this.root.clientHeight - config.layout.edgeGap - verticalMargin) / this.panel.offsetHeight);
     if (scale > 0) this.panel.style.transform = `scale(${scale})`;
   }
   show(visible: boolean): void { this.root.hidden = !visible; if (visible) this.fit(); }

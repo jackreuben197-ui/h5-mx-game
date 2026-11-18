@@ -59,11 +59,6 @@
 .mx-settings-size{font-size:calc(var(--mx-PersonalSettingsView-mx-settings-size-font-size-2) * var(--settings-unit));padding:calc(var(--mx-PersonalSettingsView-mx-settings-size-padding-2) * var(--settings-unit))}
 .mx-personal-settings .mx-settings-layouts{gap:calc(var(--mx-PersonalSettingsView-mx-settings-layouts-gap) * var(--settings-unit));margin:var(--mx-PersonalSettingsView-mx-settings-layouts-margin)}
 .mx-personal-settings .mx-settings-layouts button{display:flex;flex-direction:column;align-items:center;gap:calc(var(--mx-PersonalSettingsView-mx-settings-layouts-gap-2) * var(--settings-unit));border-radius:calc(var(--mx-PersonalSettingsView-mx-settings-layouts-border-radius-2) * var(--settings-unit));font-size:calc(var(--mx-PersonalSettingsView-mx-settings-layouts-font-size-2) * var(--settings-unit));line-height:var(--mx-PersonalSettingsView-mx-settings-layouts-line-height);padding:calc(var(--mx-PersonalSettingsView-mx-settings-layouts-padding-3) * var(--settings-unit)) calc(var(--mx-PersonalSettingsView-mx-settings-layouts-padding-4) * var(--settings-unit))}
-.mx-layout-preview{display:block;position:relative;width:calc(90 * var(--settings-unit));height:calc(126 * var(--settings-unit));background:#079d80;border-radius:calc(16 * var(--settings-unit))}
-.mx-layout-preview[data-layout=original]{background:#8799c7}
-.mx-layout-preview i{position:absolute;width:calc(9 * var(--settings-unit));height:calc(9 * var(--settings-unit));border-radius:50%;background:#d9c987;transform:translate(-50%,-50%)}
-.mx-layout-preview[data-layout=balanced] i{border-radius:28%}
-.mx-layout-preview-board{position:absolute;left:30%;width:40%;height:calc(6 * var(--settings-unit));background:#e2e6d7}
 .mx-personal-settings .mx-settings-submit-modes{flex-direction:column;gap:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-gap) * var(--settings-unit))}
 .mx-personal-settings .mx-settings-submit-modes button{position:relative;width:var(--mx-PersonalSettingsView-mx-settings-submit-modes-width);height:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-height) * var(--settings-unit));border-radius:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-border-radius) * var(--settings-unit));border:1px solid #ffffff40;padding:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-padding) * var(--settings-unit));text-align:left;font-size:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-font-size) * var(--settings-unit));background:#ffffff12;color:white}
 .mx-settings-submit-modes button::after{content:'';position:absolute;right:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-right) * var(--settings-unit));top:var(--mx-PersonalSettingsView-mx-settings-submit-modes-top);translate:0 -50%;width:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-width-2) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-mx-settings-submit-modes-height-2) * var(--settings-unit));border:1px solid #a7b4b0;border-radius:var(--mx-PersonalSettingsView-mx-settings-submit-modes-border-radius-2)}
@@ -265,7 +260,5 @@
 .mx-table:not([data-orientation=landscape]) .mx-seat[data-edge=left] .mx-avatar-mic{left:calc(-99.5px - var(--mx-TableMediaView-mx-avatar-mic-width-2))}
 .mx-table:not([data-orientation=landscape]) .mx-seat[data-edge=right] .mx-avatar-mic{left:99.5px}
 
-.mx-layout-preview-board,.mx-layout-preview-hand{display:flex;justify-content:center;gap:calc(1 * var(--settings-unit));background:none;height:auto}
-.mx-layout-preview-board b,.mx-layout-preview-hand b{display:block;background:white;color:#222;font-size:calc(4 * var(--settings-unit));width:calc(7 * var(--settings-unit));height:calc(10 * var(--settings-unit));border-radius:calc(1 * var(--settings-unit))}
-.mx-layout-preview-hand{position:absolute;bottom:5%;left:40%}
-.mx-layout-preview i{background:radial-gradient(circle at 50% 40%,#e9c799 25%,#575d53 28%,#8c8669 55%,#e4e3dc 60%);border:calc(1 * var(--settings-unit)) solid #ddd}
+
+.mx-layout-preview{display:block;flex:none;width:calc(var(--mx-PersonalSettingsView-preview-width) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-preview-height) * var(--settings-unit));object-fit:contain}
