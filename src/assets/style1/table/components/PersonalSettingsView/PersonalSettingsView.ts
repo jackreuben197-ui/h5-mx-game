@@ -61,7 +61,7 @@ export class PersonalSettingsView {
     const fixed=element('div','mx-settings-fixed');
     const options=element('div','mx-settings-appearance-options');
     const amountModes=element('div','mx-settings-modes mx-settings-option-pair');
-    for(const [bb,key] of [[false,'MX_NumberAmount'],[true,'UITexas_ShowBB']] as const){const b=this.button(key,()=>this.settings.setShowBBToStorage(bb));amountModes.append(b);this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.showBB===bb)));}
+    for(const [bb,key] of [[false,'MX_NumberAmount'],[true,'MX_BBAmount']] as const){const b=this.button(key,()=>this.settings.setShowBBToStorage(bb));amountModes.append(b);this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.showBB===bb)));}
     const backHeading=this.heading('MX_CardBacks');
     fixed.append(this.heading('MX_AmountDisplay'),amountModes);
     const backs=element('div','mx-settings-backs');
@@ -72,7 +72,7 @@ export class PersonalSettingsView {
     for(const type of [1,2] as const){
       const b=element('button','mx-settings-deck');b.type='button';b.setAttribute('aria-label',String(type));
       SpriteAtlas.paint(b,config.paths.settingsCardOption);const selected=element('span','mx-settings-card-selected');SpriteAtlas.paint(selected,config.paths.settingsCardSelected);b.append(selected);
-      for(const value of [10,26,43,58]){const card=element('span','mx-card');CardView.paint(card,value,false,type);b.append(card);}
+      for(const value of (type===1?[10,56,42,28]:[57,41,22,13])){const card=element('span','mx-card');CardView.paint(card,value,false,type);b.append(card);}
       b.onclick=()=>{void this.choose(async()=>{await AppearanceResources.cards(type);return()=>this.settings.setPokerCardTypeToStorage(type);});};
       this.cards.push(b);decks.append(b);
     }
@@ -85,7 +85,7 @@ export class PersonalSettingsView {
       this.appearanceRefresh.push(()=>{input.value=String(TABLE_SIZE_STEPS.indexOf(this.settings.appearance[field] as 100));output.textContent=`${this.settings.appearance[field]}%`;});group.append(label,output,input);sizes.append(group);
     }
     const layouts=element('div','mx-settings-layouts');
-    for(const id of (['original','balanced','oval','classic'] as TableLayoutId[]).filter(id=>this.settings.availableLayouts.includes(id))){const b=element('button','');b.type='button';b.onclick=()=>this.settings.updateAppearance({layout:id});b.dataset.layout=id;b.append(new LayoutPreview(id).root,element('span','',()=>i18nMgr.Get(`MX_Layout_${id}`)));this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.appearance.layout===id)));layouts.append(b);}
+    for(const id of (['original','classic','balanced','oval'] as TableLayoutId[]).filter(id=>this.settings.availableLayouts.includes(id))){const b=element('button','');b.type='button';b.onclick=()=>this.settings.updateAppearance({layout:id});b.dataset.layout=id;b.append(new LayoutPreview(id,config.paths[`layout_${id}`]).root,element('span','',()=>i18nMgr.Get(`MX_Layout_${id}`)));this.appearanceRefresh.push(()=>b.setAttribute('aria-pressed',String(this.settings.appearance.layout===id)));layouts.append(b);}
     fixed.append(this.heading('MX_TableLayout'),layouts);
     options.append(deckHeading,decks,backHeading,backs,sizeHeading,sizes,this.heading('MX_TableStyle'));
     appearance.append(fixed,options);
@@ -106,7 +106,7 @@ export class PersonalSettingsView {
       b.onclick=()=>{
         void this.choose(async()=>{
           await AppearanceResources.desk(i);
-          return()=>this.settings.setDeskTypeToStorage(i);
+          return()=>{this.settings.setDeskTypeToStorage(i);this.settings.updateAppearance({style:'legacy'});};
         });
       };
       this.desks.push(b);desks.append(b);
@@ -120,7 +120,7 @@ export class PersonalSettingsView {
     const colorHeading=element('h3','',()=>i18nMgr.Get('MX_FeltColor',[],'颜色选择'));
     options.append(pictures,colorHeading,colors);
     const solidChoice=this.button('MX_SolidFelt',()=>{void this.choose(async()=>()=>this.settings.updateAppearance({style:'solid'}));});
-    solidChoice.className='mx-settings-desk mx-settings-solid';desks.prepend(solidChoice);
+    solidChoice.replaceChildren(element('span','mx-settings-desk-name',()=>i18nMgr.Get('MX_SolidFelt')));solidChoice.className='mx-settings-desk mx-settings-solid';this.desks[0]!.after(solidChoice);
     this.appearanceRefresh.push(()=>{
       const solid=this.settings.tableAppearance.style==='solid';
       const modern=this.settings.supportsLayoutCustomization;

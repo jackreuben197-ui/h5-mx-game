@@ -11,7 +11,11 @@
     "settingsCardSelected": "raw/ui/settingsCardSelected.png",
     "settingsDeskOption": "raw/ui/settingsDeskOption.png",
     "settingsDeskSelected": "raw/ui/settingsDeskSelected.png",
-    "sliderHandle": "raw/ui/sliderHandle.png"
+    "sliderHandle": "raw/ui/sliderHandle.png",
+    "layout_original": "raw/ui/layout-original.png",
+    "layout_classic": "raw/ui/layout-classic.png",
+    "layout_balanced": "raw/ui/layout-balanced.png",
+    "layout_oval": "raw/ui/layout-oval.png"
   },
   "layout": {
     "css": {
@@ -269,7 +273,38 @@
       "options-min-height": "0",
       "desks-columns": "5",
       "modern-desk-width": "19%",
-      "original-desk-max-height": "1050"
+      "original-desk-max-height": "1050",
+      "preview-width": "75.34",
+      "preview-height": "125",
+      "figma-349_61": "1100.0",
+      "figma-15": "47.19544635450931",
+      "figma-12": "37.75635708360745",
+      "figma-22": "69.21998798661365",
+      "figma-16": "50.34180944480993",
+      "figma-18": "56.63453562541117",
+      "figma-20": "62.92726180601241",
+      "figma-6": "18.878178541803724",
+      "figma-1": "3.146363090300621",
+      "figma-8": "25.170904722404966",
+      "figma-14": "44.04908326420869",
+      "figma-4": "12.585452361202483",
+      "figma-10": "31.463630903006205",
+      "figma-25": "78.65907725751552",
+      "figma-61_4": "193.1866937444581",
+      "figma-2": "6.292726180601242",
+      "figma-103": "324.0753983009639",
+      "figma-40": "125.85452361202482",
+      "figma-5": "15.731815451503103",
+      "figma-47": "147.87906524412918",
+      "figma-23": "72.36635107691427",
+      "figma-43": "135.29361288292668",
+      "figma-64": "201.36723777923973",
+      "figma-45": "141.58633906352793",
+      "figma-3": "9.439089270901862",
+      "figma-7": "22.024541632104345",
+      "figma-11": "34.60999399330682",
+      "figma-94": "295.75813048825836",
+      "figma-57": "179.34269614713537"
     },
     "thumbWidth": 75,
     "widthGap": 16,
@@ -283,5 +318,19 @@
   "sizing": {
     "mode": "responsive",
     "root": ".mx-settings-overlay"
+  },
+  "images": {
+    "layout_original": {
+      "pack": false
+    },
+    "layout_classic": {
+      "pack": false
+    },
+    "layout_balanced": {
+      "pack": false
+    },
+    "layout_oval": {
+      "pack": false
+    }
   }
 }

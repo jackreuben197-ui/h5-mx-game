@@ -17,7 +17,7 @@ import { TableConfirmDialog } from '../TableConfirmDialog/TableConfirmDialog.js'
 const url=(name:string)=>resourceURL((viewConfig.paths as Record<string,string>)[name]!);
 export class SquidView {
  readonly root=componentBox(element('div','mx-squid'),viewConfig);
- readonly result=new DialogSurface('mx-squid-result',430);
+ readonly result=new DialogSurface('mx-squid-result',viewConfig.layout.resultWidth,viewConfig.layout.resultReferenceWidth);
  readonly intro=new DialogSurface('mx-squid-intro',390);
  private bindings=new BindingScope(this);
  private count=element('button','mx-squid-count');
@@ -29,6 +29,7 @@ export class SquidView {
  private animation?:Animation;private pending=false;
  constructor(private records:SpecialOperations,private actions:SeatingActions,private confirm:TableConfirmDialog,private failed:(error:unknown)=>void){
   for(const name of ['squid_bg_red','squid_end_bg','squid_reward_bg']){this.root.style.setProperty(`--${name}`,`url("${url(name)}")`);this.result.root.style.setProperty(`--${name}`,`url("${url(name)}")`);}
+  this.result.panel.classList.add('mx-dialog-glass');
   this.count.style.backgroundImage=`url("${url('table_icon_squid')}")`;
   this.start.src=url('squid_start');this.start.hidden=true;
   i18nLabel.bind(this.join,()=>i18nMgr.Get('UICowboy_JoinGame'));
@@ -50,12 +51,11 @@ export class SquidView {
   if(s.notice&&s.noticeSerial!==this.noticeSerial)this.failed(i18nMgr.Get(s.notice));this.noticeSerial=s.noticeSerial;
   if(s.start!==this.started){this.started=s.start;if(s.start){this.animation?.cancel();this.start.hidden=false;this.animation=this.start.animate(viewConfig.layout.startAnimation.frames,{duration:viewConfig.layout.startAnimation.duration});this.animation.onfinish=()=>{this.start.hidden=true;};}}
   if(s.resultSerial!==this.resultSerial){this.resultSerial=s.resultSerial;clearTimeout(this.closeTimer);this.result.content.replaceChildren();
-   if(s.results.length){this.result.content.append(element('h2','mx-squid-result-title',()=>i18nMgr.Get('MX_SquidSettlement',[],'鱿鱼结算')));const title=element('img','mx-squid-over');title.src=url('squid_over');this.result.content.append(title);
+   if(s.results.length){this.result.content.append(element('h2','mx-squid-result-title',()=>i18nMgr.Get('MX_SquidRoundEnded')));const title=element('img','mx-squid-over');title.src=url('resultSquid');this.result.content.append(title);const list=element('div','mx-squid-result-list');this.result.content.append(list);
     s.results.forEach((v,index)=>{const row=element('div','mx-squid-result-row'),avatar=element('img',''),identity=element('div',''),score=element('strong','');
-     avatar.src=v.avatar;identity.append(element('div','',()=>StringHelper.LengthNick(v.nick||'-')),element('small','',()=>`ID:${v.userID}`));score.textContent=StringHelper.GetSignedLongString(v.money);score.style.color=v.money>0?'#B0FFAE':v.money<0?'#FF7C7C':'#EEF5FF';row.append(avatar,identity,score);
-     if(v.money<0){const lose=element('img','mx-squid-lose');lose.src=url('squid_lose');row.append(lose);}
-     if(!v.isPunish&&v.rate>0)row.append(element('span','mx-squid-reward',()=>`${v.rate}x ${i18nMgr.Get('UISquidEndReward')}`));
-     row.animate([{opacity:0},{opacity:1}],{duration:66,delay:index*66,fill:'both'});this.result.content.append(row);});
+     avatar.src=v.avatar;const id=element('small','');id.append(element('span','mx-squid-id-label','ID'),document.createTextNode(String(v.userID)));identity.append(element('div','',()=>StringHelper.LengthNick(v.nick||'-')),id);score.textContent=StringHelper.GetSignedLongString(v.money);score.dataset.sign=v.money>0?'positive':v.money<0?'negative':'zero';row.append(avatar,identity,score);
+     if(!v.isPunish&&v.rate>0)row.append(element('span','mx-squid-reward',()=>`${v.rate}X ${i18nMgr.Get('UISquidEndReward')}`));
+     row.animate([{opacity:0},{opacity:1}],{duration:66,delay:index*66,fill:'both'});list.append(row);});
     this.result.show(true);this.closeTimer=setTimeout(()=>this.result.show(false),5000);
    }else this.result.show(false);
   }

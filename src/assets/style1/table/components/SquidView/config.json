@@ -23,7 +23,8 @@
     "icon_right_arrow": "raw/squid/icon_right_arrow.png",
     "squid_lose": "raw/squid/squid_lose.png",
     "table_bg_stand_up": "raw/squid/table_bg_stand_up.png",
-    "squid_start": "raw/squid/squid_start.png"
+    "squid_start": "raw/squid/squid_start.png",
+    "resultSquid": "raw/squid/result-squid.png"
   },
   "layout": {
     "css": {
@@ -62,23 +63,6 @@
       "mx-squid-start-height": "278px",
       "mx-squid-start-transform": "-50%",
       "mx-squid-start-transform-2": "-50%",
-      "mx-squid-over-width": "180px",
-      "mx-squid-over-max-height": "90px",
-      "mx-squid-over-margin": "15px",
-      "mx-squid-result-row-gap": "12px",
-      "mx-squid-result-row-min-height": "70px",
-      "mx-squid-result-row-padding": "10px",
-      "mx-squid-result-row-width": "45px",
-      "mx-squid-result-row-height": "45px",
-      "mx-squid-result-row-border-radius": "50%",
-      "mx-squid-result-row-font-size": "11px",
-      "mx-squid-result-row-font-size-2": "18px",
-      "mx-squid-lose-right": "2px",
-      "mx-squid-lose-top": "-4px",
-      "mx-squid-lose-width": "50px",
-      "mx-squid-reward-right": "0",
-      "mx-squid-reward-bottom": "-5px",
-      "mx-squid-reward-font-size": "12px",
       "mx-squid-intro-width": "100%",
       "mx-squid-intro-font-size": "22px",
       "mx-squid-intro-margin": "0",
@@ -119,23 +103,6 @@
       "mx-squid-next-background-size-2": "100%",
       "mx-squid-prev-left": "-25px",
       "mx-squid-next-right": "-25px",
-      "mx-squid-over-left": "50%",
-      "mx-squid-over-top": "-80px",
-      "mx-squid-over-transform": "-50%",
-      "mx-squid-over-width-2": "165px",
-      "mx-squid-over-height": "170px",
-      "mx-squid-result-row-border-radius-2": "40px",
-      "mx-squid-result-row-min-height-2": "60px",
-      "mx-squid-result-row-margin-bottom": "4px",
-      "mx-squid-result-row-padding-2": "8px",
-      "mx-squid-result-row-padding-3": "12px",
-      "mx-squid-result-row-font-size-3": "14px",
-      "mx-squid-lose-right-2": "75px",
-      "mx-squid-lose-width-2": "66px",
-      "mx-squid-lose-top-2": "5px",
-      "mx-squid-reward-top": "-4px",
-      "mx-squid-reward-padding": "3px",
-      "mx-squid-reward-padding-2": "8px",
       "mx-squid-join-font-size-2": "46px",
       "mx-squid-stand-font-size-2": "40px",
       "mx-squid-page-height-3": "240px",
@@ -143,7 +110,6 @@
       "mx-squid-pages-margin-4": "10px",
       "mx-squid-pages-margin-5": "0",
       "mx-squid-count-font-size-2": "23.45px",
-      "mx-squid-over-top-2": "-80px",
       "mx-squid-count-left-2": "2.4px",
       "mx-squid-count-top-3": "190.6px",
       "mx-squid-count-width-3": "125px",
@@ -169,13 +135,24 @@
       "mx-squid-join-background-size-3": "100%",
       "mx-squid-join-background-size-4": "100%",
       "mx-squid-pages-border-radius": "999px",
-      "mx-squid-lose-left": "50%",
-      "mx-squid-lose-left-2": "17px",
-      "mx-squid-lose-top-3": "50%",
-      "mx-squid-lose-width-3": "85.37px",
-      "mx-squid-lose-height": "65.43px",
-      "mx-squid-lose-transform": "-50%",
-      "mx-squid-lose-transform-2": "-5deg"
+      "result-padding": "22px",
+      "result-radius": "36.39px",
+      "result-gap": "8px",
+      "result-title-font": "16px",
+      "result-title-height": "19px",
+      "result-image-width": "44px",
+      "result-image-height": "49.09px",
+      "result-list-padding": "16px",
+      "result-row-height": "47px",
+      "result-avatar": "35px",
+      "result-row-gap": "5px",
+      "result-name-font": "14px",
+      "result-id-font": "10px",
+      "result-score-font": "14px",
+      "result-reward-font": "8px",
+      "result-reward-top": "-10px",
+      "result-padding-x": "14.514px",
+      "result-list-top": "12px"
     },
     "countY": 190.6,
     "standY": 285,
@@ -201,7 +178,9 @@
         }
       ],
       "duration": 2000
-    }
+    },
+    "resultWidth": 317.03,
+    "resultReferenceWidth": 375
   },
   "sizing": {
     "mode": "responsive",
@@ -260,6 +239,9 @@
       "pack": false
     },
     "squid_start": {
+      "pack": false
+    },
+    "resultSquid": {
       "pack": false
     }
   }
