@@ -9,7 +9,7 @@
   "layout": {
     "css": {},
     "avatarSize": 199,
-    "balancedSelfAllInLift": 176,
+    "ringSelfAllInLift": 176,
     "ovalOtherAllInLift": 110
   },
   "sizing": {

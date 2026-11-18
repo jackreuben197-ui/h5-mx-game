@@ -11,7 +11,10 @@
     "raise": "raw/ui/raise.png"
   },
   "layout": {
-    "css": {}
+    "css": {
+      "mx-fold-timer-center": "47.9591837%",
+      "mx-fold-timer-face-ratio": "0.9319727891"
+    }
   },
   "sizing": {
     "mode": "fixed",

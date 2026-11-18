@@ -54,7 +54,13 @@ export class LayoutOriginal implements TableLayout {
             );
       const face = mine || state.players.find((v) => v.seat === id)?.cards.some((v) => v > 0),
         centeredBack = landscapeSeat && !mine && ['top', 'bottom'].includes(landscapeSeat.edge);
-      const dealer = mine
+      // Top display slots bet to the lower left, leaving the dealer at lower right.
+      // Only the bottom-center slot keeps the dealer beside its nameplate.
+      const dealer = this.id === 'original'
+        ? slot === 0 ? [-145, 120]
+          : !this.landscape&&[SeatPosition.TopMiddleLeft,SeatPosition.TopMiddle,SeatPosition.TopMiddleRight].includes(position)
+            ? [140, 170] : [0, 230.55]
+        : mine
         ? [-320, 30]
         : landscapeSeat
           ? ['top', 'bottom'].includes(landscapeSeat.edge)
@@ -96,6 +102,11 @@ export class LayoutOriginal implements TableLayout {
         dealerY: dealer[1]!,
       });
     }
+    if(this.landscape&&this.id==='original'){
+      // Nine-seat wide tables also have two opponents on the bottom edge.
+      // Reserve the dealer's full height below their nameplates.
+      for(const p of result.values())p.y=Math.min(p.y,this.height-(p.dealerY+44)*p.scale-10);
+    }
     if(!this.landscape&&this.id==='original'){
       for(const [id,p] of result){
         p.scale*=1.1;
@@ -107,7 +118,6 @@ export class LayoutOriginal implements TableLayout {
         const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
         p.y+=(top?topClearance:id===state.mySeat?-40:-60)*this.suggest;
         if(id!==state.mySeat&&!top&&position!==SeatPosition.BottomMiddle){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
-        p.dealerX=-145;p.dealerY=120;
         if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-200;}
       }
       if(state.community?.length){

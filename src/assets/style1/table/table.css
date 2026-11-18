@@ -61,11 +61,11 @@
 .mx-pot-chip{flex:none;width:var(--mx-PotView-mx-pot-chip-main-size);height:var(--mx-PotView-mx-pot-chip-main-size);background-repeat:no-repeat}
 .mx-pool-side .mx-pot-chip{width:var(--mx-PotView-mx-pot-chip-side-size);height:var(--mx-PotView-mx-pot-chip-side-size)}
 
-/* UITexasTableSeat: Bubble at y=98; Nick_Coin renders above the fold cover. */
+/* Action bubbles overlap the avatar top and render above its countdown ring. */
 .mx-fold-cover{z-index:1;background:rgb(0 0 0 / .588);font-weight:bold;pointer-events:none}
 .mx-seat-hand-type{position:absolute;left:var(--mx-SeatIdentityView-mx-seat-hand-type-left-2);top:var(--mx-SeatIdentityView-mx-seat-hand-type-top);width:var(--mx-SeatIdentityView-mx-seat-hand-type-width);height:var(--mx-SeatIdentityView-mx-seat-hand-type-height);transform:translate(var(--mx-SeatIdentityView-mx-seat-hand-type-transform),var(--mx-SeatIdentityView-mx-seat-hand-type-transform-2));display:flex;align-items:center;justify-content:center;z-index:6;color:white;font-size:var(--mx-SeatIdentityView-mx-seat-hand-type-font-size);white-space:nowrap;pointer-events:none}
-.mx-player-info{z-index:3}
-.mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top-4);z-index:2;font-size:var(--mx-SeatIdentityView-mx-player-action-font-size-4);line-height:var(--mx-SeatIdentityView-mx-player-action-line-height-2);color:white;border-radius:var(--mx-SeatIdentityView-mx-player-action-border-radius);padding:var(--mx-SeatIdentityView-mx-player-action-padding-3) var(--mx-SeatIdentityView-mx-player-action-padding-4);background-repeat:no-repeat;background-blend-mode:multiply}
+.mx-player-info{z-index:9}
+.mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top-4);z-index:8;font-size:var(--mx-SeatIdentityView-mx-player-action-font-size-4);line-height:var(--mx-SeatIdentityView-mx-player-action-line-height-2);color:white;border-radius:var(--mx-SeatIdentityView-mx-player-action-border-radius);padding:var(--mx-SeatIdentityView-mx-player-action-padding-3) var(--mx-SeatIdentityView-mx-player-action-padding-4);background-repeat:no-repeat;background-blend-mode:multiply}
 .mx-seat-timer{position:absolute;left:var(--mx-SeatCountdownView-mx-seat-timer-left-2);top:var(--mx-SeatCountdownView-mx-seat-timer-top-2);width:var(--mx-SeatCountdownView-mx-seat-timer-width);height:var(--mx-SeatCountdownView-mx-seat-timer-height);pointer-events:none}
 .mx-seat-timer[data-kind=action]{z-index:2}
 .mx-seat-timer[data-kind=action]::before{content:'';position:absolute;inset:var(--mx-SeatCountdownView-mx-seat-timer-inset-3);border:4px solid #d4f0e4b3;border-radius:var(--mx-SeatCountdownView-mx-seat-timer-border-radius)}

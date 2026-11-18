@@ -9,6 +9,6 @@ for(const layout of ['original','balanced','oval','classic']){
  await p.getByRole('button',{name:'轮到该玩家',exact:true}).click();await ring.waitFor({state:'visible'});
  await p.locator('[data-audit-field="handEnded"]').check();await ring.waitFor({state:'hidden'});results.push({layout,test:'clear/restart/end',pass:true});
  await load('countdown-expire');await ring.waitFor({state:'hidden',timeout:8000});results.push({layout,test:'timeout',pass:true});
- await load('acting-self',{orientation:'auto',width:'900',height:'500'});await ring.waitFor({state:'visible'});const a=await ring.boundingBox(),c=await p.locator('.mx-operation-fold').boundingBox();assert.ok(Math.abs(a.width-c.width)<.3);results.push({layout,test:'auto landscape bounds',pass:true});
+ await load('acting-self',{orientation:'auto',width:'900',height:'500'});await ring.waitFor({state:'visible'});const a=await ring.boundingBox(),c=await p.locator('.mx-operation-fold').boundingBox();assert.ok(Math.abs(a.width-c.width*137/147)<.3);assert.ok(Math.abs(a.x-c.x-c.width*2/147)<.3);assert.ok(Math.abs(a.y-c.y-c.height*2/147)<.3);results.push({layout,test:'auto landscape painted bounds',pass:true});
 }
 }finally{await b.close();await writeFile('docs/qa/layout-audit-2026-11-16/round2/countdown-results.json',JSON.stringify(results,null,2));}console.log(results.length+' countdown cases passed');

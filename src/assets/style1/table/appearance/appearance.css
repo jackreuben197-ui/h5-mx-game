@@ -16,7 +16,12 @@
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:var(--mx-hero-card-height);margin-top:calc(var(--mx-hero-card-height) / var(--mx-HandCardsView-mx-card-slot-margin-top))}
-.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-seat-hand-type{left:var(--mx-ring-hand-type-x,var(--mx-SeatIdentityView-mx-seat-hand-type-left));top:var(--mx-ring-hand-type-y)}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-seat-hand-type{left:var(--mx-SeatIdentityView-mx-seat-hand-type-left);top:var(--mx-ring-hand-type-y)}
+/* Results share the balance card's top edge rather than growing over the avatar. */
+.mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]) .mx-stack-slot{position:static}
+.mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]) .mx-seat .mx-seat-win{top:0;bottom:auto;transform:translateX(-50%);margin-top:0}
+/* The hero's taller result uses the hidden hand-type row, above the menu. */
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-player-info:has(.mx-seat-win:not([hidden])){translate:var(--identity-origin-x) calc(var(--identity-origin-y) - var(--mx-ring-result-rise))}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-line{display:none}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:2px solid #ffffff50}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:var(--mx-SeatIdentityView-mx-avatar-fallback-inset);display:grid;place-items:center;font-size:var(--mx-SeatIdentityView-mx-avatar-fallback-font-size);color:#ffffff90}
@@ -115,11 +120,12 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{top:calc((var(--mx-board-box-height,176px) - var(--mx-PublicCardsView-mx-public-slot-top))/var(--mx-PublicCardsView-mx-public-slot-top-2))}
 /* Original Figma purple art is 1x (classic shading is 2x). */
 .mx-table[data-felt=solid][data-felt-tone=flat-purple]::before{border-image-slice:0 0 208 0 fill}
-.mx-operation-fold>.mx-seat-timer{left:var(--mx-SeatCountdownView-mx-seat-timer-left);top:var(--mx-SeatCountdownView-mx-seat-timer-top);transform:translate(var(--mx-SeatCountdownView-mx-seat-timer-transform),var(--mx-SeatCountdownView-mx-seat-timer-transform-2)) scale(var(--mx-fold-timer-scale,.2));z-index:2}
+/* The 147px fold sprite includes a shadow: its 137px face is centred at 70.5px. */
+.mx-operation-fold>.mx-seat-timer{left:var(--mx-ActionButton-mx-fold-timer-center);top:var(--mx-ActionButton-mx-fold-timer-center);transform:translate(var(--mx-SeatCountdownView-mx-seat-timer-transform),var(--mx-SeatCountdownView-mx-seat-timer-transform-2)) scale(calc(var(--mx-fold-timer-scale,.2) * var(--mx-ActionButton-mx-fold-timer-face-ratio)));z-index:2}
 /* Button countdown owns its rounded perimeter; the avatar halo must not leak in. */
 .mx-operation-fold>.mx-seat-timer[data-kind=action]::before{content:none}
 .mx-seat-timer-rounded .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-SeatCountdownView-mx-seat-timer-texture-border-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
-.mx-table[data-orientation=landscape] .mx-operation-fold>.mx-seat-timer{transform:translate(var(--mx-SeatCountdownView-mx-seat-timer-transform-3),var(--mx-SeatCountdownView-mx-seat-timer-transform-4)) scale(calc(var(--mx-op-scale) * var(--mx-SeatCountdownView-mx-seat-timer-transform-5) / var(--mx-SeatCountdownView-mx-seat-timer-transform-6)))}
+.mx-table[data-orientation=landscape] .mx-operation-row .mx-operation-fold{position:relative;--mx-fold-timer-scale:calc(var(--mx-op-scale) * var(--mx-SeatCountdownView-mx-seat-timer-transform-5) / var(--mx-SeatCountdownView-mx-seat-timer-transform-6))}
 
 /* Layout-specific card rhythm; initial table keeps CC/Figma fixed five-slot spacing. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{left:var(--mx-card-centered-x)!important;--mx-public-spread-x:var(--mx-public-centered-spread)}
@@ -244,12 +250,14 @@
  --mx-seat-chip-top:calc(var(--mx-SeatIdentityView-qa-chip-top) * var(--mx-classic-seat-unit));
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine{--mx-seat-chip-top:var(--mx-hero-info-y)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{transform:translate(-50%,-50%)}
-.mx-player-info:has(.mx-seat-win:not([hidden])){z-index:9}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-classic-chip-top) * var(--mx-classic-seat-unit))}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-oval-chip-top) * var(--mx-classic-seat-unit))}
+/* Keep 20% of the action bubble above the avatar in every layout. */
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top-4);transform:translate(-50%,var(--mx-SeatIdentityView-mx-player-action-transform-3))}
+.mx-player-info:has(.mx-seat-win:not([hidden])){z-index:10}
 .mx-seat-win-amount{font-weight:var(--mx-SeatIdentityView-qa-win-weight)}
 .mx-table .mx-seat-play-status{font-size:calc(var(--mx-SeatIdentityView-qa-wait-font) * var(--mx-table-text-scale))}
 .mx-table:not([data-table-layout=original]) .mx-player-info{backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));-webkit-backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur))}
-.mx-seat-revealed .mx-seat-squid{top:calc(var(--mx-SeatIdentityView-mx-seat-squid-top-2) + var(--mx-SeatIdentityView-qa-squid-reveal-y));z-index:1}
 .mx-seat .mx-seat-timer[data-kind=action]{z-index:7}
 .mx-seat .mx-avatar-mic{left:calc(-99.5px - var(--mx-TableMediaView-mx-avatar-mic-width-2));top:var(--mx-TableMediaView-mx-avatar-mic-top-2)}
 .mx-seat[data-edge=right] .mx-avatar-mic{left:99.5px}

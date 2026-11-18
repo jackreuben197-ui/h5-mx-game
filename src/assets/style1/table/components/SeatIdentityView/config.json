@@ -123,7 +123,7 @@
       "mx-player-action-left": "0",
       "mx-player-action-top-3": "-130px",
       "mx-player-action-transform-2": "-50%",
-      "mx-player-action-transform-3": "-50%",
+      "mx-player-action-transform-3": "-20%",
       "mx-player-action-font-size-3": "28px",
       "mx-fold-cover-font-size": "36px",
       "mx-seat-hand-type-left-2": "-191.104px",
@@ -133,7 +133,7 @@
       "mx-seat-hand-type-transform": "-50%",
       "mx-seat-hand-type-transform-2": "-50%",
       "mx-seat-hand-type-font-size": "29px",
-      "mx-player-action-top-4": "-98px",
+      "mx-player-action-top-4": "-99.5px",
       "mx-player-action-font-size-4": "28px",
       "mx-player-action-line-height-2": "40.32px",
       "mx-player-action-border-radius": "40px",
@@ -194,10 +194,11 @@
       "mx-seat-win-padding-2": "4px",
       "qa-name-clearance": "32",
       "qa-chip-top": "35",
+      "classic-chip-top": "30",
+      "oval-chip-top": "27",
       "qa-win-weight": "700",
       "qa-wait-font": "44px",
-      "qa-glass-blur": "6px",
-      "qa-squid-reveal-y": "35px"
+      "qa-glass-blur": "6px"
     }
   },
   "images": {

@@ -23,5 +23,5 @@ const ringAnchors=Object.fromEntries(Object.entries(classic.anchors).map(([count
 export const tableLayouts: Record<Exclude<TableLayoutId,'original'>,TableLayoutProfile>={
  classic,
  balanced:{...classic,id:'balanced',avatar:60,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:44,otherDealerY:40,backHandSpread:56,anchors:ringAnchors},
- oval:{...classic,id:'oval',avatar:50,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:44,otherDealerY:40,anchors:ringAnchors},
+ oval:{...classic,id:'oval',avatar:50,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:18,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:44,otherDealerY:40,anchors:ringAnchors},
 };

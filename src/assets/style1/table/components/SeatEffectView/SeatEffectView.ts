@@ -10,8 +10,8 @@ export function seatEffectAnchor(seat: HTMLElement, effect: SeatEffect): EffectA
   const scale=(avatar?.getBoundingClientRect().width??config.layout.avatarSize)/config.layout.avatarSize;
   const table=seat.closest<HTMLElement>('.mx-table');
   const anchor:EffectAnchor={x,y,scale,opacity:Number(getComputedStyle(seat).opacity)};
-  if(effect==='allin-self'&&table?.dataset.tableLayout==='balanced'&&table.dataset.orientation!=='landscape')
-    anchor.lift=config.layout.balancedSelfAllInLift*scale;
+  if(effect==='allin-self'&&['balanced','oval'].includes(table?.dataset.tableLayout??'')&&table?.dataset.orientation!=='landscape')
+    anchor.lift=config.layout.ringSelfAllInLift*scale;
   if(effect==='allin-other'&&table?.dataset.tableLayout==='oval'&&table.dataset.orientation!=='landscape')anchor.lift=config.layout.ovalOtherAllInLift*scale;
   return anchor;
 }

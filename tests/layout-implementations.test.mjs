@@ -41,13 +41,14 @@ test('QA action rows follow the adjusted hero rather than an absolute screen hei
   }
 });
 
-test('balanced overlaps the felt arc while keeping the balance anchored to navigation',()=>{
+test('balanced reserves the hand/result rows while keeping the balance anchored to navigation',()=>{
   const layout=defaultTableUi.createLayout('balanced');
   layout.resize(440,956,false,899);
   const before=layout.positions(state);
   const beforeInfo=Number.parseFloat(layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles['--mx-hero-info-y']);
   const beforeOwn=before.get(state.mySeat);
-  assert.ok(Math.abs(beforeOwn.y*layout.unit+30-(956-169)-15)<.001,'a quarter of the avatar crosses the arc');
+  const arcOverlap=beforeOwn.y*layout.unit+30-(956-169);
+  assert.ok(arcOverlap>=-25&&arcOverlap<=15,'the avatar leaves room for the hand-type row and the full result below the balance top');
   layout.resize(440,956,false,879);
   const after=layout.positions(state);
   const afterInfo=Number.parseFloat(layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles['--mx-hero-info-y']);

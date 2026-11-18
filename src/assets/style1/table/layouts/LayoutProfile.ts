@@ -35,7 +35,8 @@ export class LayoutProfile extends LayoutOriginal {
         // child to this adjusted avatar. Design distances scale with the existing seat unit.
         if(mine){
           const menuTop=(this.viewportBottom-2)/this.unit;
-          const groupBottom=Math.max(profile.heroInfoY*local+76,profile.heroDealer[1]*local+38.5)*p.scale;
+          const resultHeight=profile.id==='classic'?113.1+8*local:76;
+          const groupBottom=Math.max(profile.heroInfoY*local+resultHeight,profile.heroDealer[1]*local+38.5)*p.scale;
           p.y=profile.id==='balanced'
             ? menuTop-groupBottom
             : Math.min(p.y,Math.min(height-50/this.unit,menuTop)-groupBottom);
@@ -64,8 +65,10 @@ export class LayoutProfile extends LayoutOriginal {
         }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
-        p.betX=(mine?(profile.id==='classic'?(state.actions?.length?-56:0):68):topSeat?0:x<220?56:x>220?-56:0)*local;
-        p.betY=(mine?(profile.id==='classic'?-120:6):topSeat?60:profile.id==='classic'?40:0)*local;
+        const sideBetX=profile.id==='classic'?60:56;
+        p.betX=(mine?68:topSeat?0:x<220?sideBetX:x>220?-sideBetX:0)*local;
+        p.betY=(mine?(profile.id==='classic'?-120:-8):topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?46:0)*local;
+        if(profile.id==='oval'&&!mine)p.betY-=4*local;
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
         const revealedCards=Math.max(state.community?.length??0,state.secondCommunity?.length??0);
         if(!mine&&revealedCards){
@@ -84,9 +87,23 @@ export class LayoutProfile extends LayoutOriginal {
         }
         p.dealerX=(mine?profile.heroDealer[0]:profile.id==='classic'?profile.otherDealerX:(x<220?1:-1)*profile.otherDealerX)*local;
         p.dealerY=(mine?profile.heroDealer[1]:profile.otherDealerY)*local;
+        if(profile.id==='classic'&&!mine&&!topSeat){p.dealerX=0;p.dealerY=(player?.settlement?.win?80:66)*local;}
       }
       this.origin={x:this.width/2,y:profile.boardY/profile.height*height};
     return result;
+  }
+  protected ringHeroArea(avatarBottomInset: number) {
+    const profile=this.profile,unit=Math.min(this.width/profile.width,this.height/profile.height);
+    const local=199/profile.avatar,scale=profile.avatar*unit/199;
+    // 440px design: hand -> 2.8 -> type -> 1.5 -> balance -> 3.6 -> menu.
+    const infoHeight=14*local+2;
+    const infoTop=this.viewportBottom/this.unit-3.6*unit-infoHeight*scale;
+    const typeTop=infoTop-1.5*unit-60*scale;
+    const handBottom=typeTop-2.8*unit;
+    const emptyY=this.height-(169+avatarBottomInset)*unit;
+    const y=Math.min(emptyY,handBottom-(profile.heroCardsY+profile.heroCardHeight/2)*unit);
+    return {y,emptyY,resultRise:Math.max(0,113.1-infoHeight),cardsY:(handBottom-profile.heroCardHeight/2*unit-y)/scale,
+      infoY:(infoTop-y)/scale,typeY:(typeTop+30*scale-y)/scale};
   }
   override content(options: LayoutContentOptions): LayoutContent {
     if(this.landscape)return super.content(options);
@@ -101,7 +118,6 @@ export class LayoutProfile extends LayoutOriginal {
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
       styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
-        '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+12)*199/profile.avatar}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
     };
   }

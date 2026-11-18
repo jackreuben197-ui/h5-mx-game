@@ -154,7 +154,7 @@
       "result-id-font": "10px",
       "result-score-font": "14px",
       "result-reward-font": "8px",
-      "result-reward-top": "-10px",
+      "result-reward-overlap": "3px",
       "result-padding-x": "14.514px",
       "result-list-top": "12px"
     },

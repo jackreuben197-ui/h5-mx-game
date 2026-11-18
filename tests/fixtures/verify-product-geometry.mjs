@@ -6,7 +6,7 @@ for(const layout of['original','balanced','oval','classic'])for(const[width,heig
  const failures=[];const near=(a,b)=>Math.abs(a-b)<.3;for(const board of check.boards){if(!board.length)continue;if(layout!=='original'&&!near(board[0].x+board.at(-1).x+board.at(-1).w,width))failures.push('board not centered');for(let i=1;i<board.length;i++)if(layout!=='original'&&!(board[i].x-board[i-1].x-board[i-1].w>0&&board[i].x-board[i-1].x-board[i-1].w<board[i].w*.1))failures.push('card gap');}
  const hit=(a,b)=>Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>.3&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>.3;
  if(check.bets.some(a=>check.boards.flat().some(c=>hit(a,c))))failures.push('bet/card overlap');
- if(scene==='acting-self'&&(!check.timer||check.ownTimer||!check.fold||!near(check.timer.x,check.fold.x)||!near(check.timer.y,check.fold.y)||!near(check.timer.w,check.fold.w)))failures.push('own countdown location');
+ if(scene==='acting-self'&&(!check.timer||check.ownTimer||!check.fold||!near(check.timer.x,check.fold.x+check.fold.w*2/147)||!near(check.timer.y,check.fold.y+check.fold.h*2/147)||!near(check.timer.w,check.fold.w*137/147)))failures.push('own countdown painted bounds');
  if(scene==='acting-other'&&!check.otherTimers)failures.push('other countdown missing');
  if(check.wait.some(v=>v.mask!==v.avatar))failures.push('waiting silhouette');
  const id=`${layout}-${width}-${scene}`;await p.locator('#audit-stage').screenshot({path:`${out}/${id}.png`});results.push({id,layout,width,height,scale,scene,failures,check});console.log(id,failures.join(';')||'PASS');
