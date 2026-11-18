@@ -1,4 +1,5 @@
 import { LayoutOriginal } from './LayoutOriginal.js';
+import { portraitSideButtons } from './side-buttons-layout.js';
 import type { TableLayoutProfile } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
@@ -96,7 +97,7 @@ export class LayoutProfile extends LayoutOriginal {
     return {
       board:{x:l.width/2,y:y-(dual?gap/2:0),scale}, secondBoard:{x:l.width/2,y:y+gap/2,scale},
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
-      styles:{'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
+      styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
         '--mx-ring-hand-type-y':`${(profile.heroCardsY+profile.heroCardHeight/2+12)*199/profile.avatar}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
@@ -107,7 +108,7 @@ export class LayoutProfile extends LayoutOriginal {
     const own=this.positions(state).get(state.mySeat);
     if(!own)return super.controls(state,buttonSize);
     const u=Math.min(this.width/440,this.height/782)*this.unit,profile=this.profile;
-    const rowY=own.y*this.unit+profile.heroOperationY*u;
+    const rowY=(own.controlsY??own.y)*this.unit+profile.heroOperationY*u;
     let upperY=profile.heroRaiseLift*u;
     const styles:Record<string,string>={};
     if(profile.id==='classic'){

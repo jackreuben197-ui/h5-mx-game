@@ -27,11 +27,18 @@ try{
   const nav=await p.locator('.mx-navigation').boundingBox();
   for(const seat of await winners.all()){
    assert.equal(await seat.locator('.mx-stack').isVisible(),false);
-   const [win,chip]=await seat.evaluate(el=>{
-    return ['.mx-seat-win','.mx-stack'].map(selector=>el.querySelector(selector).getBoundingClientRect().toJSON());
+   const [win,chip,info]=await seat.evaluate(el=>{
+    return ['.mx-seat-win','.mx-stack','.mx-player-info'].map(selector=>el.querySelector(selector).getBoundingClientRect().toJSON());
    });
-   assert.ok(Math.abs(win.x+win.width/2-chip.x-chip.width/2)<0.5);
-   assert.ok(Math.abs(win.y+win.height/2-chip.y-chip.height/2)<0.5);
+   if(await seat.evaluate(el=>el.classList.contains('mx-seat-mine'))){
+    assert.ok(Math.abs(win.x+win.width/2-chip.x-chip.width/2)<0.5);
+    assert.ok(Math.abs(win.y+win.height/2-chip.y-chip.height/2)<0.5);
+   }else{
+    assert.equal(await seat.locator('.mx-player-name').isVisible(),false);
+    assert.ok(win.top<=info.top+1.1);
+    assert.ok(Math.abs(win.bottom-info.bottom)<1.1);
+    assert.ok(Math.abs(win.width-info.width)<2.1);
+   }
    assert.ok(win.bottom<=nav.y+0.5,`${layout} winner must stay above navigation`);
   }
   assert.equal(await p.locator('.mx-stack:visible').count(),6);

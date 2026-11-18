@@ -80,7 +80,7 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
   const avatar=profile==='balanced'?60:profile==='oval'?50:58;
   const ratio=p.scale*layout.unit*199/avatar;
-  assert.ok(Math.abs(p.cardsY*p.scale*layout.unit/ratio-(profile==='classic'?-65:65))<.001);
+  assert.ok(Math.abs(p.cardsY*p.scale*layout.unit/ratio-(profile==='classic'?-73:65))<.001);
   assert.ok(Math.abs(p.dealerX*p.scale*layout.unit/ratio-(profile==='classic'?-44:-54))<.001);
   if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-(profile==='balanced'?30:25)*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
  }

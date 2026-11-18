@@ -33,6 +33,8 @@
       "mx-history-name-font-size": "39",
       "mx-history-boards-gap": "20",
       "mx-history-boards-min-width": "0",
+      "mx-history-board-card-gap": "5.4032889585",
+      "mx-history-board-street-gap": "44.3069694597",
       "mx-history-caption-gap": "15",
       "mx-history-caption-margin-top": "14",
       "mx-history-caption-font-size": "30",
@@ -45,10 +47,6 @@
       "mx-history-name-font-size-2": "29",
       "mx-history-name-margin-bottom": "5",
       "mx-history-boards-padding-top": "42",
-      "mx-history-overview-actions-grid-template-columns": "3fr",
-      "mx-history-overview-actions-grid-template-columns-2": "1fr",
-      "mx-history-overview-actions-grid-template-columns-3": "1fr",
-      "mx-history-overview-actions-gap": "4",
       "mx-history-overview-actions-font-size": "28",
       "mx-history-last-action-line-height": "1.15"
     }

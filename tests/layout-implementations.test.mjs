@@ -35,19 +35,26 @@ test('QA action rows follow the adjusted hero rather than an absolute screen hei
     const layout=defaultTableUi.createLayout(id);layout.resize(w,h,false);
     const own=layout.positions(state).get(state.mySeat),u=Math.min(layout.width/440,layout.height/782)*layout.unit;
     const controls=layout.controls(state,1);
-    assert.equal(controls.styles.top,`${own.y*layout.unit+offset*u-28}px`);
+    assert.equal(controls.styles.top,`${(own.controlsY??own.y)*layout.unit+offset*u-28}px`);
     assert.equal(controls.styles['--mx-operation-row-y'],controls.styles.top);
     assert.ok(controls.styles.left.includes(`${own.x*layout.unit}px`));
   }
 });
 
-test('balanced anchors the local seat to the navigation even on a tall viewport',()=>{
+test('balanced overlaps the felt arc while keeping the balance anchored to navigation',()=>{
   const layout=defaultTableUi.createLayout('balanced');
   layout.resize(440,956,false,899);
   const before=layout.positions(state);
+  const beforeInfo=Number.parseFloat(layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles['--mx-hero-info-y']);
+  const beforeOwn=before.get(state.mySeat);
+  assert.ok(Math.abs(beforeOwn.y*layout.unit+30-(956-169)-15)<.001,'a quarter of the avatar crosses the arc');
   layout.resize(440,956,false,879);
   const after=layout.positions(state);
-  assert.ok(Math.abs((before.get(state.mySeat).y-after.get(state.mySeat).y)*layout.unit-20)<.001);
+  const afterInfo=Number.parseFloat(layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles['--mx-hero-info-y']);
+  const afterOwn=after.get(state.mySeat);
+  const beforeBalance=beforeOwn.y+beforeInfo*beforeOwn.scale;
+  const afterBalance=afterOwn.y+afterInfo*afterOwn.scale;
+  assert.ok(Math.abs((beforeBalance-afterBalance)*layout.unit-20)<.001,'the balance follows the navigation inset');
   assert.deepEqual(after.get(1),before.get(1));
 });
 

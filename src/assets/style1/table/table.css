@@ -252,7 +252,7 @@
 .mx-add-time-diamond,.mx-settlement-watch-diamond{aspect-ratio:53 / 43}
 .mx-add-time-duration{font-size:var(--mx-op-add-title)}
 .mx-add-time-cost{font-size:var(--mx-op-add-cost)}
-.mx-settlement-watch{position:absolute;right:var(--mx-SettlementWatchView-mx-settlement-watch-right);bottom:var(--mx-watch-bottom,72px);z-index:5;display:flex;flex-direction:column;gap:var(--mx-watch-gap);width:var(--mx-watch-width)}
+.mx-settlement-watch{position:absolute;right:var(--mx-SettlementWatchView-mx-settlement-watch-right);bottom:var(--mx-side-watch-bottom,var(--mx-watch-bottom,72px));z-index:5;display:flex;flex-direction:column;gap:var(--mx-watch-gap);width:var(--mx-watch-width)}
 .mx-table[data-orientation=landscape] .mx-settlement-watch{grid-column:1 / 2}
 .mx-settlement-watch-button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--mx-SettlementWatchView-mx-settlement-watch-button-gap);width:var(--mx-watch-width);height:var(--mx-watch-height);padding:var(--mx-SettlementWatchView-mx-settlement-watch-button-padding) var(--mx-SettlementWatchView-mx-settlement-watch-button-padding-2) var(--mx-SettlementWatchView-mx-settlement-watch-button-padding-3);border:0;background-color:transparent;color:#fff}
 .mx-settlement-watch-bg{position:absolute;inset:var(--mx-SettlementWatchView-mx-settlement-watch-bg-inset);transform:scaleX(var(--mx-SettlementWatchView-mx-settlement-watch-bg-transform));pointer-events:none}
@@ -265,6 +265,9 @@
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-operation-row,.mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-operation-quick{position:absolute;inset:auto 15% auto 15%;top:var(--mx-operation-row-y,calc(100% - 110px));width:auto;height:56px;opacity:.882;pointer-events:none}
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-operation-row button,.mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-quick-bet{pointer-events:none}
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-add-time{top:calc(var(--mx-operation-row-y,calc(100% - 110px)) + 28px + var(--mx-op-add-y));opacity:.882;pointer-events:none}
+/* Edge buttons use the shared table anchor while the main action row follows the hero. */
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=actions] .mx-add-time{top:calc(var(--mx-side-add-center-y) - var(--mx-operation-row-y))}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-add-time{top:var(--mx-side-add-center-y)}
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-editor{position:absolute;inset:0;display:block;width:100%;max-width:none;min-width:0;padding:0;border-radius:0;background:transparent}
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{position:absolute;left:50%;top:var(--mx-raise-center-y,50%);width:var(--mx-raise-width,29px);height:var(--mx-raise-height,167px);transform:translate(-50%,-50%);display:block;background-repeat:no-repeat}
 .mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track::after{content:"";position:absolute;left:2px;right:2px;bottom:2px;height:calc(var(--mx-raise-progress,0%) - 4px);max-height:calc(100% - 4px);background:#fff;border-radius:100px;pointer-events:none}
@@ -312,8 +315,7 @@
 .mx-card-dimmed::after{opacity:.502}
 .mx-card-popped{translate:0 var(--card-lift);transition:translate .3s}
 .mx-stack-slot{position:relative;align-self:stretch;display:flex;justify-content:center}
-.mx-stack-slot:has(.mx-seat-win:not([hidden])) .mx-stack{visibility:hidden}
-.mx-player-info:has(.mx-seat-win:not([hidden])) .mx-player-name{z-index:4}
+.mx-player-info:has(.mx-seat-win:not([hidden])) :is(.mx-player-name,.mx-player-line,.mx-stack){visibility:hidden}
 .mx-seat-win{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:var(--mx-SeatIdentityView-mx-seat-win-width);min-height:var(--mx-SeatIdentityView-mx-seat-win-min-height);
@@ -322,6 +324,12 @@
   row-gap:var(--mx-SeatIdentityView-mx-seat-win-row-gap);
   font-size:var(--mx-SeatIdentityView-mx-seat-win-font-size);line-height:var(--mx-SeatIdentityView-mx-seat-win-line-height);
   padding:var(--mx-SeatIdentityView-mx-seat-win-padding) var(--mx-SeatIdentityView-mx-seat-win-padding-2);z-index:3
+}
+/* Opponent results cover the nameplate and use its full two-row height. */
+.mx-seat:not(.mx-seat-mine) .mx-stack-slot{position:static}
+.mx-seat:not(.mx-seat-mine) .mx-seat-win{
+  top:auto;bottom:0;transform:translateX(-50%);width:100%;height:100%;
+  min-height:var(--mx-SeatIdentityView-mx-player-info-min-height-3)
 }
 .mx-seat-win-hand-type{font-size:var(--mx-SeatIdentityView-mx-seat-win-hand-type-font-size)}
 

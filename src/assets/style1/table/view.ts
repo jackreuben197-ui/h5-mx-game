@@ -412,6 +412,7 @@ export class TableView {
     if (width <= 0 || height <= 0) return;
     const navigationBox=this.navigation.root.getBoundingClientRect();
     const contentBottom=landscape||!navigationBox.height?height:Math.min(height,navigationBox.top-box.top);
+    this.root.style.setProperty('--mx-navigation-inset',`${box.height-contentBottom}px`);
     this.layout.resize(width, landscape ? height : box.height, landscape, contentBottom);
     const l = this.layout;
     const fixedBoardSlots = l.id === 'classic' && !landscape;

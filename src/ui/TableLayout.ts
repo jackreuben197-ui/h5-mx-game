@@ -2,6 +2,8 @@ import type { TableSnapshot } from '../core/types.js';
 export interface SeatPlacement {
   x: number;
   y: number;
+  /** Operation anchor retained when the avatar moves relative to its hand. */
+  controlsY?: number;
   scale: number;
   edge: string;
   cardsX: number;

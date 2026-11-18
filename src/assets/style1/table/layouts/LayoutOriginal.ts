@@ -10,6 +10,7 @@ export class LayoutOriginal implements TableLayout {
   unit = 1;
   menuScale = 1;
   protected viewportBottom = 0;
+  protected viewportHeight = 0;
   width = 1440;
   height = 2688;
   suggest = 1;
@@ -19,6 +20,7 @@ export class LayoutOriginal implements TableLayout {
   resize(width: number, height: number, landscape: boolean, viewportBottom=height-57): void {
     this.landscape = landscape;
     this.viewportBottom=viewportBottom;
+    this.viewportHeight=height;
     this.menuScale=1;
     this.unit = landscape ? height / 1440 : width / height > 0.75 ? height / 2688 : width / 1440;
     this.width = width / this.unit;
@@ -104,7 +106,7 @@ export class LayoutOriginal implements TableLayout {
         const top=[SeatPosition.TopMiddle,SeatPosition.TopMiddleLeft,SeatPosition.TopMiddleRight].includes(position!);
         const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
         p.y+=(top?topClearance:id===state.mySeat?-40:-60)*this.suggest;
-        if(id!==state.mySeat&&!top){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
+        if(id!==state.mySeat&&!top&&position!==SeatPosition.BottomMiddle){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
         p.dealerX=-145;p.dealerY=120;
         if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-200;}
       }
@@ -129,8 +131,19 @@ export class LayoutOriginal implements TableLayout {
       // The spectator's bottom seat also shows the nickname above the balance.
       const popupBottom=state.mySeat?170:198;
       if(bottomSeat)bottomSeat.y=Math.min(bottomSeat.y,(this.viewportBottom-2)/this.unit-popupBottom*bottomSeat.scale);
+      if(bottomSeat&&state.mySeat&&this.id==='original'){
+        const room=(this.viewportBottom-2)/this.unit-bottomSeat.y-152.5*bottomSeat.scale;
+        this.lowerHeroAvatar(bottomSeat,Math.max(0,Math.min(32*bottomSeat.scale,room)),16);
+      }
     }
     return result;
+  }
+
+  protected lowerHeroAvatar(seat:SeatPlacement,drop:number,handLift=0):void {
+    seat.controlsY=seat.y;
+    seat.y+=drop;
+    seat.cardsY-=drop/seat.scale+handLift;
+    seat.betY-=drop/seat.scale;
   }
 
   content({dual, boardSize, jackpotHeight}: LayoutContentOptions): LayoutContent {
@@ -156,10 +169,13 @@ export class LayoutOriginal implements TableLayout {
     if(this.landscape)return {scale:.24*buttonSize,styles:{}};
     const own=this.positions(state).get(state.mySeat);
     if(!own)return {styles:{}};
-    const top=(own.y-180*own.scale)*this.unit-28;
-    return {scale:own.scale*this.unit*buttonSize,styles:{
+    const controlsY=own.controlsY??own.y;
+    const top=(controlsY-180*own.scale)*this.unit-28;
+    // Original buttons are 145px on a 1242px-wide design, independent of avatar scaling.
+    const scale=this.id==='original'?145/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
+    return {scale,styles:{
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
-      '--mx-raise-center-y':`${(own.y-910*own.scale)*this.unit}px`,
+      '--mx-raise-center-y':`${(controlsY-910*own.scale)*this.unit}px`,
     }};
   }
 }

@@ -7,6 +7,7 @@ import Chat, { type TexasChatMessage } from '../../../../../data/TexasGameRoomDa
 import { BindingScope } from '../../../../../binding/BindingScope.js';
 import { bindEvent } from '../../../../../binding/bindEvent.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
+import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { element } from '../../dom.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
@@ -32,7 +33,7 @@ export class TableChatView {
     const data=records.data;
     window.visualViewport?.addEventListener('resize',this.fitKeyboard);
     window.visualViewport?.addEventListener('scroll',this.fitKeyboard);
-    const assets = {send:resourceURL(config.paths.send),quick:resourceURL(config.paths.quick),input:resourceURL(config.paths.input),panel:resourceURL(config.paths.panel)};
+    const assets = {send:resourceURL(config.paths.send),quick:resourceURL(config.paths.quick),panel:resourceURL(config.paths.panel)};
     this.dialog=new RecordDialogView(()=>`${data.record?.name??''}\n#${records.target.roomID}`,()=>this.close(),'left',config.layout.dockTop);
     this.dialog.root.classList.add('mx-chat-dialog');
     this.emoji=new ChatEmojiView(this.dialog.body);this.dialog.panel.append(this.emoji.root);
@@ -46,14 +47,17 @@ export class TableChatView {
     supportIcon.src=resourceURL(config.paths.support);
     this.support.append(supportBackground,element('span','mx-support-label',()=>i18nMgr.Get('MX_Support')),supportIcon);
     this.support.onclick=()=>void records.supportChat?.().catch(error);
-    this.input.maxLength=80;this.input.placeholder='Enter text here...';this.input.setAttribute('aria-label',i18nMgr.Get('MX_Chat'));
+    this.input.maxLength=80;
+    i18nLabel.bind(this.input,()=>i18nMgr.Get('UIWallet_Text10'),'placeholder');
+    i18nLabel.bind(this.input,()=>i18nMgr.Get('MX_Chat'),'aria-label');
     this.send.setAttribute('aria-label',i18nMgr.Get('MX_ChatSend'));
     this.send.onclick=()=>void this.submit();this.input.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();void this.submit();}};
     const quickButton=element('button','mx-chat-quick-button');quickButton.setAttribute('aria-label',i18nMgr.Get('MX_ChatQuick'));
     this.quick.hidden=true;quickButton.onclick=()=>{this.renderQuick();this.quick.hidden=!this.quick.hidden;};
     const modes=element('div','mx-chat-modes');
     for(const [value,key] of [[false,'MX_Chat'],[true,'MX_ChatAndDanmu']] as const){const label=element('label',''),radio=element('input','');radio.type='radio';radio.name=`chat-mode-${records.target.roomID}`;radio.checked=!value;radio.onchange=()=>{this.bullet.checked=value;};label.append(radio,element('span','',()=>i18nMgr.Get(key)));modes.append(label);}
-    const composer=element('div','mx-chat-composer');composer.append(this.input,quickButton,this.send);
+    const inputField=element('div','mx-chat-input-field');inputField.append(this.input);
+    const composer=element('div','mx-chat-composer');composer.append(inputField,quickButton,this.send);
     this.dialog.body.append(this.welcome,this.list);this.dialog.footer.append(this.quick,modes,composer);
     this.dialog.body.onscroll=()=>{if(this.dialog.body.scrollTop<20&&data.chat.hasMoreHistory)void records.chatHistory?.(true).catch(error);};
     this.bindings.bind({chat:data.chat});

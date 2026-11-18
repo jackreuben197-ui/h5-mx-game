@@ -18,6 +18,7 @@ export class ReportView {
     private bindings = new BindingScope(this);
     private filter = element('input', '');
     private room = element('div', 'mx-record-room');
+    private deposit = element('div', 'mx-report-deposit');
     private remaining = element('div', 'mx-report-remaining');
     private filterLabel = element('span', '');
     private tabs = element('div', 'mx-record-tabs');
@@ -37,7 +38,7 @@ export class ReportView {
         this.filter.onchange = () => controller.filter(this.filter.checked);
         const label = element('label', 'mx-report-filter');
         label.append(this.filter, this.filterLabel);
-        this.dialog.header.append(this.room, label, this.remaining);
+        this.dialog.header.append(this.room, label, this.deposit, this.remaining);
         this.dialog.body.append(this.list, this.summary, this.observers);
         this.pagination = new RecordPaginationView(round => void controller.select('mode', round));
         this.dialog.footer.append(this.pagination.root, this.tabs);
@@ -76,6 +77,12 @@ export class ReportView {
         this.dialog.status.textContent = state.error || (state.loading ? t('MX_Loading', '加载中…') : '');
         this.filter.closest('label')!.hidden = state.tab !== 'battle';
         const mode = this.controller.mode;
+        const basic = records.data.tableSettings.basicInfo;
+        const depositBase = mode === 'mush' ? basic?.mushroomBase ?? records.data.record?.mushroomBase ?? 0 : basic?.squidBase ?? records.data.record?.squidBase ?? 0;
+        this.deposit.hidden = state.tab !== 'battle' || mode === 'none';
+        this.deposit.textContent = mode === 'mush'
+            ? StringHelper.Format(t('UIMushYaJinDir', '蘑菇押金 {0}'), [StringHelper.GetLongString(depositBase)])
+            : `${t('UISquidYaJin', '鱿鱼押金')}　${StringHelper.GetLongString(depositBase)}`;
         if (!this.controller.tabs.includes(state.tab)) { void this.controller.select('battle'); return; }
         const labels: Record<ReportTab, string> = {
             battle: t('UITexasReport_title', '实时战况'),
@@ -92,24 +99,27 @@ export class ReportView {
         this.list.replaceChildren();
         if (state.tab === 'battle') {
             const players = TexasReportPresentation.filterAndSortPlayers(report.players, tableUsers, state.onlyTable);
-            const headers = [t('UITexasReport_player', '玩家'), `${t('UITexasReport_hand', '手数')}\n${t('MX_TablePoolRate', '本桌入池率')}`, t('UITexasReport_bring', '总带入'), t('UITexasReport_pl', '盈亏')];
+            const headers = [t('UITexasReport_player', '玩家'), `${t('UITexasReport_hand', '手数')}/${t('MX_TablePoolRate', '本桌入池率')}`, t('UITexasReport_bring', '总带入'), t('UITexasReport_pl', '盈亏')];
             if (mode !== 'none')
-                headers.splice(3, 0, t('UIFantasy_dairuyajin', '押金'), t(mode === 'mush' ? 'UIMush' : 'UISquid', mode === 'mush' ? '蘑菇' : '鱿鱼'));
+                headers.splice(3, 0, t(mode === 'mush' ? 'UIMush' : 'UISquid', mode === 'mush' ? '蘑菇' : '鱿鱼'));
             this.table(headers, players.map(p => {
+                const bringIn = element('span', 'mx-report-bringin', StringHelper.GetLongString(p.bringInTotal));
+                if (p.storeChips)
+                    bringIn.append(element('small', 'mx-report-stored-chips', StringHelper.GetLongString(p.storeChips)));
                 const cells = [
                     StringHelper.LengthNick(p.name),
-                    `${p.handNum}\n(${(p.poolRate / 10).toFixed(1)}%)`,
-                    StringHelper.GetLongString(p.bringInTotal) + (p.storeChips ? `\n${StringHelper.GetLongString(p.storeChips)}` : ''),
+                    `${p.handNum} (${(p.poolRate / 10).toFixed(1)}%)`,
+                    bringIn,
                     profitAmount('span', TexasReportPresentation.getPlayerScore(p)),
                 ];
                 if (mode === 'mush') {
                     const mushroom = p.mushroomAmount > 0
                         ? profitAmount('span', p.mushroomAmount, `+${p.mushroomCount}\n(+${StringHelper.GetLongString(p.mushroomAmount)})`)
                         : '-';
-                    cells.splice(3, 0, StringHelper.GetLongString(p.deposit), mushroom);
+                    cells.splice(3, 0, mushroom);
                 } else if (mode === 'squid') {
                     const squid = profitAmount('span', p.squidInTotal - p.squidOutTotal - p.squidPunishTotal);
-                    cells.splice(3, 0, StringHelper.GetLongString(p.deposit), squid);
+                    cells.splice(3, 0, squid);
                 }
                 return { cells, own: p.userRid === records.userRID, offline: !p.isOnline || !tableUsers.has(p.userRid), player: p };
             }));
@@ -187,6 +197,9 @@ export class ReportView {
         player?: TexasReportPlayerInfo;
     }[]): void {
         const table = element('table', 'mx-record-table'), head = element('thead', ''), tr = element('tr', '');
+        table.lang = i18nMgr.getCurrentLocale().replace('_', '-');
+        table.dataset.columns = String(headers.length);
+        table.dataset.tab = this.controller.state.tab;
         headers.forEach(label => tr.append(element('th', '', label)));
         head.append(tr);
         table.append(head);
@@ -223,6 +236,12 @@ export class ReportView {
     }
     private duration(value: number): string { const seconds = Math.max(0, Math.floor(value)); return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map(v => String(v).padStart(2, '0')).join(':'); }
     open(): void { this.controller.open(); }
-    onFrameResize(w: number, h: number): void { this.dialog.onFrameResize(w, h); this.playerInfo.onFrameResize(w, h); }
+    onFrameResize(w: number, h: number): void {
+        this.dialog.onFrameResize(w, h);
+        // The report uses the full 1252-wide design canvas, independent of screen height.
+        const designWidth = Math.min(w, config.layout.maxPanelWidth / config.layout.panelWidthRatio);
+        this.root.style.setProperty('--record-unit', `${designWidth / config.layout.designWidth}px`);
+        this.playerInfo.onFrameResize(w, h);
+    }
     destroy(): void { clearInterval(this.tick); this.bindings.destroy(); this.controller.destroy(); this.playerInfo.destroy(); this.dialog.destroy(); }
 }
