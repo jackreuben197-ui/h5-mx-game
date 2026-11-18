@@ -32,6 +32,7 @@ export const auditScenarios:AuditScenario[]=[
  s('empty','入座','全部空座',['2–9人空座','加号','坐下']),s('observer','入座','观众／点击空座带入',['观战','带入','钱包'],'点击空座；调整带入金额；提交后坐下；菜单站起。'),
  s('bring-wallet','入座','钱包带入／押金',['带入金额','钱包选择','自动补充','押金']),s('bring-score','入座','记分牌带入',['记分牌','免钱包']),s('bring-diamond','入座','钻石带入',['钻石余额','充值入口']),s('bring-insufficient','入座','余额不足',['余额不足','带入错误']),
  s('post-blind','入座','坐下后等待补盲',['补盲确认','等待']),s('bring-out','入座','带出筹码',['带出滑杆','存筹码']),
+ ...['preflop','flop','turn','river','dual-flop','dual-turn','dual-river'].map(phase=>s('board-'+phase,'公共牌','公共牌占位／'+phase,['第一排占位','第二排不补占位','经典半牌高重叠'])),
  s('flow','流程','完整一手／单步与自动播放',['发牌','翻前','翻牌','转牌','河牌','结算','清桌','下一手'],'用下一步或播放控制推进；每步保存日志；暂停后可切换布局。'),
  s('reconnect','流程','重连快照／不重播发牌',['sync','静态恢复']),s('entry-fail','流程','入桌失败／重试',['错误页','重试']),s('switch-room','流程','切桌／旧回调隔离',['切桌','清理旧状态']),s('exit','流程','离桌／重新进入',['离桌','解绑','重进']),
  s('insurance-single','玩法','单池保险',['保险金额','outs','排序','购买','放弃','加时']),s('insurance-multi','玩法','多池保险',['切池','保存选项','联合购买']),s('insurance-force','玩法','强制最低保险',['最低投保','超时']),
@@ -91,5 +92,6 @@ export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  if(scene==='empty'||scene==='observer'||(scene.startsWith('bring-')&&scene!=='bring-out')){state.mySeat=0;state.actions=[];state.players=scene==='empty'?[]:players.filter(p=>p.seat!==hero);}
  if(scene.startsWith('handtype-')){state.handEnded=true;update(p=>({...p,cards:[14,29],action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[]},win:{handValueType:Number(scene.split('-')[1])+1,collectedChips:12345}}}));}
  if(scene==='figma'){if(o.layout==='classic')state.secondCommunity=[10,57,45,38,29];state.showBB=true;state.dealerSeat=hero;state.community=[8,2,57,38,11];state.pot=400;state.pots=[400];state.roundBet=240;state.betting={id:'figma',call:240,min:480,max:1999,step:1,allIn:2000};update(p=>({...p,cards:p.seat===hero?[29,10]:[0,0],action:p.seat===count?'下注':'',roundBet:p.seat===hero?460:p.seat%3?40:240}));}
+ if(scene.startsWith('board-')){const phase=scene.replace('board-',''),n=phase.endsWith('preflop')?0:phase.endsWith('flop')?3:phase.endsWith('turn')?4:5;state.community=[2,24,43,38,11].slice(0,n);state.secondCommunity=phase.startsWith('dual-')?[10,57,45,38,29].slice(0,n):[];}
  return state;
 }

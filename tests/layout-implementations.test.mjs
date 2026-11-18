@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {defaultTableUi} from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
 import {LayoutClassic} from '../.test-build/assets/style1/table/layouts/LayoutClassic.js';
 const state={seatCount:9,mySeat:4,players:[]};
-test('layout content keeps dual boards separate and all coordinates finite across viewports and size settings',()=>{
+test('layout content preserves classic overlapping dual boards and finite coordinates across sizes',()=>{
   for(const id of ['original','classic','balanced','oval'])for(const [w,h] of [[320,400],[375,500],[390,844],[768,1024],[568,320],[844,390]])for(const size of [.9,1,1.1]){
     const layout=defaultTableUi.createLayout(id);layout.resize(w,h,w>h);
     const original=JSON.stringify(state);layout.positions(state);
@@ -12,7 +12,9 @@ test('layout content keeps dual boards separate and all coordinates finite acros
       assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y));
       assert.ok(point.x>=0&&point.x<=layout.width&&point.y>=0&&point.y<=layout.height);
     }
-    assert.ok(content.secondBoard.y-content.board.y>=176*content.board.scale);
+    const pitch=content.secondBoard.y-content.board.y;
+    if(id==='classic'&&w<=h)assert.ok(Math.abs(pitch-88*content.board.scale)<1e-6,'classic second board overlaps half the first card');
+    else assert.ok(pitch>=176*content.board.scale);
     const controls=layout.controls(state,size);
     assert.ok(controls.scale>0);
     assert.ok(Object.values(controls.styles).every(value=>!value.includes('NaN')&&!value.includes('Infinity')));

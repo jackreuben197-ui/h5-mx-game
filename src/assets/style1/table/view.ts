@@ -416,7 +416,8 @@ export class TableView {
     const l = this.layout;
     const fixedBoardSlots = l.id === 'classic' && !landscape;
     if (this.board instanceof PublicCardsView) this.board.setFixedSlots(fixedBoardSlots);
-    this.secondBoard.setFixedSlots(fixedBoardSlots);
+    // Only the first board has placeholder slots; the optional second run renders actual cards.
+    this.secondBoard.setFixedSlots(false);
     const bubbleWidth = landscape ? Math.min(width, box.height) : width;
     const bubbleDesignWidth = landscape || l.id === 'original' ? 1242 : 440;
     this.root.style.setProperty('--mx-side-bubble-unit', `${bubbleWidth / bubbleDesignWidth}px`);

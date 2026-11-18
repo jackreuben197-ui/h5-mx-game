@@ -39,8 +39,8 @@ export class PublicCardsView implements PublicCardsComponent {
       while (revealedCount > 0 && state.cards[revealedCount - 1] === 0) revealedCount--;
     }
     const layoutCount = this.fixedSlots ? config.slots.length : revealedCount;
-    const showFlopPlaceholders = this.fixedSlots && revealedCount < config.slots.length;
-    const visibleCount = showFlopPlaceholders ? layoutCount : revealedCount;
+    const showPlaceholders = this.fixedSlots && revealedCount < config.slots.length;
+    const visibleCount = showPlaceholders ? layoutCount : revealedCount;
     for (let i = 0; i < visibleCount; i++) {
       const value = state.cards[i];
       const slot = element('span', 'mx-public-slot');

@@ -90,7 +90,7 @@ export class LayoutProfile extends LayoutOriginal {
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
     const scale=m.boardWidth/120*u*boardSize;
-    const y=profile.boardY/782*l.height, gap=profile.id==='classic'?176*scale+.01*u:(71.02/50.59*120)*scale+10*u;
+    const y=profile.boardY/782*l.height, gap=profile.id==='classic'?88*scale:(71.02/50.59*120)*scale+10*u;
     const infoY=Math.max(profile.infoY/782*l.height,dual?y+gap/2+88*scale+75:0);
     const potY=dual&&m.separateDualPot?Math.max(profile.potY/782*l.height,infoY+100):profile.potY/782*l.height;
     return {
