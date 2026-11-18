@@ -251,7 +251,10 @@
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine{--mx-seat-chip-top:var(--mx-hero-info-y)}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-classic-chip-top) * var(--mx-classic-seat-unit))}
-.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-oval-chip-top) * var(--mx-classic-seat-unit))}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){
+ --mx-seat-chip-top:calc(var(--mx-SeatIdentityView-oval-chip-top) * var(--mx-classic-seat-unit));
+ --mx-seat-name-clearance:calc(var(--mx-SeatIdentityView-oval-name-clearance) * var(--mx-classic-seat-unit));
+}
 /* Keep 20% of the action bubble above the avatar in every layout. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top-4);transform:translate(-50%,var(--mx-SeatIdentityView-mx-player-action-transform-3))}
 .mx-player-info:has(.mx-seat-win:not([hidden])){z-index:10}

@@ -74,4 +74,15 @@ test('automatic fold and call keep their own configured selected/unselected icon
   v.render(state);choose();v.render({...state,...changes});v.render(turn(state,'later'));assert.equal(sent.length,1,JSON.stringify(changes));
  }
 
+ const pendingSent=[],pending=new AutoOperationView(async(...args)=>{pendingSent.push(args)});
+ const raising={...state,roundBet:0,actions:['fold','check','raise'],betting:{id:'raising'}};
+ pending.render(raising,'raise');
+ assert.equal(pending.root.hidden,false);assert.equal(pending.root.children[1].hidden,true);assert.equal(pending.root.children[2].hidden,false);
+ pending.root.children[2].onclick();pending.render(raising,'raise');
+ assert.equal(pendingSent.length,0,'preselection after submitting cannot act on the submitted turn');
+ pending.render(turn(state,'next'));assert.equal(pendingSent.length,0,'a later nonzero call cancels the zero-amount preselection');
+ pending.render(raising,'raise');pending.root.children[0].onclick();pending.render(raising,'raise');
+ assert.equal(pendingSent.length,0);pending.render(turn(state,'next-fold'));assert.deepEqual(pendingSent,[['fold',undefined]]);
+ for(const action of ['fold','allin']){pending.render(raising,action);assert.equal(pending.root.hidden,true,action+' cannot show preselection');}
+
 });

@@ -34,7 +34,7 @@ export class ActionControls {
   private key = '';
   private gesture = new SliderBetGesture();
   private offAccount: () => void;
-  private submittedKey = '';
+  private submitted?: { key: string; action: Action };
   private offSubmit: () => void;
   private offAppearance: () => void;
   private busy = false;
@@ -49,7 +49,7 @@ export class ActionControls {
     private settings: TexasGamePersonalSettings = defaultSettings,
   ) {
     this.auto=new AutoOperationView(command);
-    this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submittedKey='';this.refresh();});
+    this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submitted=undefined;this.refresh();});
     const updateSubmitMode = () => {
       this.gesture.cancel();
       this.confirm.hidden = this.settings.tableSliderSubmit === 'release';
@@ -181,17 +181,17 @@ export class ActionControls {
   }
   private async submit(action: Action, amount?: number) {
     const deadline=this.state?.countdowns?.find(c=>c.seat===this.state?.mySeat)?.deadline;
-    if (this.disposed || this.busy || this.submittedKey===this.key || !this.state?.actions.includes(action) || (deadline && deadline<=Date.now()/1000)) return;
+    if (this.disposed || this.busy || this.submitted?.key===this.key || !this.state?.actions.includes(action) || (deadline && deadline<=Date.now()/1000)) return;
     this.gesture.cancel();
     const generation=this.accountGeneration;
-    this.submittedKey=this.key;
+    this.submitted={key:this.key,action};
     this.busy = true;
     this.mode = 'actions';
     this.refresh();
     try {
       await this.command(action, amount);
     } catch(error) {
-      if(generation===this.accountGeneration)this.submittedKey='';
+      if(generation===this.accountGeneration)this.submitted=undefined;
       throw error;
     } finally {
       if (!this.disposed && generation===this.accountGeneration) {
@@ -202,6 +202,7 @@ export class ActionControls {
   }
   render(state: TableSnapshot) {
     const key = `${state.roomID}:${state.matchID}:${state.handNum}:${state.betting?.id ?? state.actions.join(',')}`;
+    if(state.presentation==='sync'&&state.revision!==this.state?.revision)this.submitted=undefined;
     if (key !== this.key) {
       this.gesture.cancel();
       this.mode = 'actions';
@@ -216,7 +217,6 @@ export class ActionControls {
     )
       this.mode = 'actions';
     this.refresh();
-    this.auto.render(state);
   }
   setScale(scale: number): void {
     if(scale!==this.opScale)this.gesture.cancel();
@@ -250,6 +250,7 @@ export class ActionControls {
   }
   private refresh() {
     this.root.dataset.mode = this.mode;
+    const submittedAction=this.submitted?.key===this.key?this.submitted.action:undefined;
     const items = this.state ? ShortcutBet.calculate(this.settings.tableShortcuts,this.state) : [];
     const layout: Record<number, readonly [number, number][]> = {
       1:[[-190,370]],2:[[-190,370],[190,370]],3:[[-250,300],[0,395],[250,300]],
@@ -274,10 +275,10 @@ export class ActionControls {
       button.onclick=()=>void this.submit(item.action,item.amount);this.quick.append(button);
     }
     }
-    this.quick.hidden=!this.quick.childElementCount||this.busy||this.submittedKey===this.key;
+    this.quick.hidden=!this.quick.childElementCount||this.busy||!!submittedAction;
     const s = this.state,
       b = s?.betting,
-      actions = s?.actions ?? [];
+      actions = submittedAction ? [] : s?.actions ?? [];
     const canRaise = !!b && b.step > 0 && b.max >= b.min && actions.includes('raise');
     this.row.dataset.allinSecondary = String(actions.includes('allin') && (actions.includes('check') || actions.includes('call')) && !canRaise);
     this.buttons.forEach((button, action) => {
@@ -306,8 +307,11 @@ export class ActionControls {
     }
     this.root
       .querySelectorAll<HTMLButtonElement | HTMLInputElement>('button,input')
-      .forEach((e) => (e.disabled = this.busy));
-    this.foldCountdown.render(s&&actions.includes('fold')&&!s.handEnded&&!this.busy&&this.submittedKey!==this.key?s.countdowns?.find(c=>c.seat===s.mySeat):undefined);
+      .forEach((e) => (e.disabled = this.busy&&!this.auto.root.contains(e)));
+    this.foldCountdown.render(s&&actions.includes('fold')&&!s.handEnded&&!this.busy?s.countdowns?.find(c=>c.seat===s.mySeat):undefined);
+    // Close the current turn immediately, including before an acknowledgement or broadcast.
+    if(s)this.auto.render(s,submittedAction);
+    else this.auto.root.hidden=true;
     this.root.dataset.pending = String(this.busy);
   }
   destroy() {

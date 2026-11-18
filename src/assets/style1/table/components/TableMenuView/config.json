@@ -59,6 +59,7 @@
       "mx-menu-store-margin-4": "0",
       "mx-menu-label-left": "76px",
       "mx-menu-label-top": "179px",
+      "original-short-top-offset": "-40px",
       "mx-menu-label-font-size": "29px",
       "mx-menu-overlay-inset": "0",
       "mx-menu-shade-inset": "0",

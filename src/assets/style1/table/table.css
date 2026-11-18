@@ -140,6 +140,8 @@
 
 /* UIRoomTexas btn_menu icon is 70 below its top anchor. */
 .mx-table-menu{--mx-menu-left:61px;--mx-menu-top:70px;--mx-menu-size:108px}
+/* Short original stages lift settings clear of the squid without moving it into the seats. */
+.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-table-menu{translate:0 calc(var(--mx-menu-short-stage,0) * var(--mx-TableMenuView-original-short-top-offset))}
 .mx-menu{left:var(--mx-menu-left);top:var(--mx-menu-top);width:var(--mx-menu-size);height:var(--mx-menu-size)}
 
 /* UIBringIn / WalletItem: CC assets, measured against the 398x724 reference. */

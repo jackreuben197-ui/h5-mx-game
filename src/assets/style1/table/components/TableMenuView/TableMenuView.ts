@@ -135,6 +135,7 @@ export class TableMenuView {
     this.stand.hidden = state.matchID>0 || !state.mySeat || this.stand.dataset.available !== 'true';
   }
   resize(unit: number, height: number, suggest: number): void {
+    this.root.style.setProperty('--mx-menu-short-stage',suggest<1?'1':'0');
     // UITexasMenu.onFrameResize uses 2290 design units as its maximum menu height.
     this.overlay.style.setProperty('--menu-unit', `${unit * (height < config.layout.maxHeight ? height / config.layout.maxHeight : suggest)}px`);
   }

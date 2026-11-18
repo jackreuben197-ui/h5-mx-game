@@ -195,7 +195,8 @@
       "qa-name-clearance": "32",
       "qa-chip-top": "35",
       "classic-chip-top": "30",
-      "oval-chip-top": "27",
+      "oval-chip-top": "29",
+      "oval-name-clearance": "30",
       "qa-win-weight": "700",
       "qa-wait-font": "44px",
       "qa-glass-blur": "6px"

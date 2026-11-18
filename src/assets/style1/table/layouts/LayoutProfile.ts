@@ -3,6 +3,7 @@ import { portraitSideButtons } from './side-buttons-layout.js';
 import type { TableLayoutProfile } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
+const classicSideBetY=40.2;
 /** Shared geometry for the default profile-based skins. */
 export class LayoutProfile extends LayoutOriginal {
   override readonly id: string;
@@ -67,7 +68,8 @@ export class LayoutProfile extends LayoutOriginal {
         const topSeat=!mine && x>30 && x<410;
         const sideBetX=profile.id==='classic'?60:56;
         p.betX=(mine?68:topSeat?0:x<220?sideBetX:x>220?-sideBetX:0)*local;
-        p.betY=(mine?(profile.id==='classic'?-120:-8):topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?46:0)*local;
+        // Classic side bets share the balance card's center: 30 + 20.4 / 2.
+        p.betY=(mine?(profile.id==='classic'?-120:-8):topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?classicSideBetY:0)*local;
         if(profile.id==='oval'&&!mine)p.betY-=4*local;
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
         const revealedCards=Math.max(state.community?.length??0,state.secondCommunity?.length??0);
@@ -76,12 +78,17 @@ export class LayoutProfile extends LayoutOriginal {
           const cardWidth=this.metrics.boardWidth*unit*publicCardScale;
           const cardHeight=cardWidth*71.02/50.59;
           const center=profile.boardY/profile.height*height;
-          const gap=profile.id==='classic'?176/120*cardWidth+.01*unit:cardHeight+10*unit;
+          // Classic's second board overlaps half a card, matching content().
+          const gap=profile.id==='classic'?88/120*cardWidth:cardHeight+10*unit;
           const halfWidth=cardWidth*(profile.id==='classic'?5:revealedCards)/2;
           const top=center-cardHeight/2-(dual?gap/2:0),bottom=center+cardHeight/2+(dual?gap/2:0);
+          const classicContent=profile.id==='classic'?this.content({dual,boardSize:publicCardScale,jackpotHeight:0}):null;
+          const boardTop=classicContent?classicContent.board.y-88/120*cardWidth:top;
+          const boardBottom=classicContent?(dual?classicContent.secondBoard.y:classicContent.board.y)+88/120*cardWidth:bottom;
+          const clearance=(profile.id==='classic'&&!topSeat?2:6)*unit;
           const bx=p.x+p.betX*p.scale,by=p.y+p.betY*p.scale,halfBet=35*p.scale;
-          if(bx+120*p.scale>this.width/2-halfWidth&&bx-120*p.scale<this.width/2+halfWidth&&by+halfBet>top-6*unit&&by-halfBet<bottom+6*unit){
-            const above=top-halfBet-6*unit,below=bottom+halfBet+6*unit;
+          if(bx+120*p.scale>this.width/2-halfWidth&&bx-120*p.scale<this.width/2+halfWidth&&by+halfBet>boardTop-clearance&&by-halfBet<boardBottom+clearance){
+            const above=boardTop-halfBet-clearance,below=boardBottom+halfBet+clearance;
             p.betY=((Math.abs(by-above)<Math.abs(by-below)?above:below)-p.y)/p.scale;
           }
         }
@@ -110,7 +117,12 @@ export class LayoutProfile extends LayoutOriginal {
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
     const scale=m.boardWidth/120*u*boardSize;
-    const y=profile.boardY/782*l.height, gap=profile.id==='classic'?88*scale:(71.02/50.59*120)*scale+10*u;
+    const gap=profile.id==='classic'?88*scale:(71.02/50.59*120)*scale+10*u;
+    // Keep the dual board below the upper side-row bets instead of breaking their alignment.
+    const sideBetBottom=163/782*l.height+(classicSideBetY+35*profile.avatar/199+3)*u;
+    const y=profile.id==='classic'&&dual
+      ? Math.max(profile.boardY/782*l.height,sideBetBottom+gap/2+88*scale)
+      : profile.boardY/782*l.height;
     const infoY=Math.max(profile.infoY/782*l.height,dual?y+gap/2+88*scale+75:0);
     const potY=dual&&m.separateDualPot?Math.max(profile.potY/782*l.height,infoY+100):profile.potY/782*l.height;
     return {
