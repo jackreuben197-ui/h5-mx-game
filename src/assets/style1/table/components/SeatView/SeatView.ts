@@ -69,6 +69,7 @@ export class SeatView implements SeatComponent {
     this.position.place(p, mode);
     this.root.dataset.scale = String(p.scale);
     this.root.dataset.edge = p.edge;
+    this.root.style.setProperty('--mx-hero-avatar-drop',`${(p.y-(p.controlsY??p.y))/p.scale}px`);
     place(this.cards.root, config.identity.x+p.cardsX, config.identity.y+p.cardsY);
     this.cards.setSpread(p.handSpread,p.backHandSpread);
     this.cards.root.style.setProperty('--card-scale', String(p.cardScale));

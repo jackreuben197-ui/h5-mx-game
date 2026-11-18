@@ -35,8 +35,15 @@ try{
    if(scene==='squid-result-figma'){
     assert.ok((await page.locator('.mx-squid-reward').innerText()).startsWith('5X'));
     assert.equal(await page.locator('.mx-squid-result-row strong[data-sign=negative]').count(),2);
-    if(width===375){assert.ok(Math.abs(panel.width-317.03)<1);assert.ok(Math.abs(panel.height-457.13)<1);}
+    if(width===375)assert.ok(Math.abs(panel.width-317.03)<1);
    }
+   const designScale=panel.width/317.03*375/1242;
+   const header=await page.locator('.mx-squid-result-header').boundingBox();
+   assert.ok(Math.abs(header.height-125*designScale)<.1);
+   assert.equal(await page.locator('.mx-squid-result-header').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(5, 231, 174)');
+   assert.equal(await page.locator('.mx-squid-result-card').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(255, 255, 255, 0.13)');
+   const rowHeights=await page.locator('.mx-squid-result-row').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));
+   assert.ok(rowHeights.every(h=>Math.abs(h-177*designScale)<.1));
    await page.waitForTimeout(500);await page.locator('#audit-stage').screenshot({path:`${out}/${scene}-${layout}-${width}.png`});
    await page.locator('.mx-squid-result').click({position:{x:2,y:2}});assert.equal(await page.locator('.mx-squid-result').isVisible(),false);
    results.push({layout,width,height,check:scene+' geometry/rows/reward/sign/dismiss',result:'pass'});

@@ -315,6 +315,7 @@
 .mx-card-dimmed::after{opacity:.502}
 .mx-card-popped{translate:0 var(--card-lift);transition:translate .3s}
 .mx-stack-slot{position:relative;align-self:stretch;display:flex;justify-content:center}
+.mx-seat-mine .mx-seat-win{margin-top:calc(-1 * var(--mx-hero-avatar-drop,0px))}
 .mx-player-info:has(.mx-seat-win:not([hidden])) :is(.mx-player-name,.mx-player-line,.mx-stack){visibility:hidden}
 .mx-seat-win{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);

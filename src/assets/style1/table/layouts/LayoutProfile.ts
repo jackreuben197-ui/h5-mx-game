@@ -59,6 +59,8 @@ export class LayoutProfile extends LayoutOriginal {
           const backWidth=(65+(count-1)*56/count)*18/65;
           p.cardsX=(profile.id==='classic'?backWidth-profile.avatar/2+2:x<220?profile.avatar/2:-profile.avatar/2)*local;
           p.cardsY=profile.avatar/2*local;
+          // cardsX anchors the strip's right edge, so include its width on the right side.
+          if(profile.id==='oval'&&x>220)p.cardsX+=backWidth*local;
         }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
@@ -115,7 +117,7 @@ export class LayoutProfile extends LayoutOriginal {
       const handTop=(own.y+own.cardsY*own.scale)*this.unit-35.5*u;
       upperY=Math.max(65*u,rowY-handTop+(6+41.25*buttonSize/2)*u);
       styles['--mx-quick-lift']=`${upperY-65*u}px`;
-    }else if(profile.id==='balanced'){
+    }else if(profile.id==='balanced'||profile.id==='oval'){
       styles['--mx-quick-lift']=`${16*u}px`;
     }
     return {scale:41.25/137*u*buttonSize,styles:{...styles,

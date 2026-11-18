@@ -144,6 +144,7 @@ export class LayoutOriginal implements TableLayout {
     seat.y+=drop;
     seat.cardsY-=drop/seat.scale+handLift;
     seat.betY-=drop/seat.scale;
+    seat.dealerY-=drop/seat.scale;
   }
 
   content({dual, boardSize, jackpotHeight}: LayoutContentOptions): LayoutContent {
