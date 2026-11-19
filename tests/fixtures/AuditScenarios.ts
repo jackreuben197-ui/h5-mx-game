@@ -48,6 +48,11 @@ export const auditScenarios:AuditScenario[]=[
  s('mtt-wait','赛事','等待开赛',['赛事倒计时']),s('mtt-break','赛事','休息／决赛调整',['赛事休息']),s('mtt-bubble','赛事','泡沫同步',['泡沫提示']),s('mtt-transfer','赛事','拆合桌等待',['换桌提示']),s('mtt-addon','赛事','增购／托管',['ADD-ON','取消托管']),
 ];
 auditScenarios.push(
+ s('profile-admin','窗口','管理员资料／音视频／道具',['站起','踢出','禁言','音视频','三页签','12款道具']),
+ s('profile-video','窗口','他人资料／音视频',['音视频','三页签','12款道具']),
+ s('observer-bottom','玩家','旁观底部玩家下注',['底部非本人','头像上方下注','长金额']),
+ s('settlement-all','玩家','全座位结算面板',['相邻昵称避让','本人底栏层级']),
+ s('action-transition','流程','本人操作气泡与按钮切换',['大小盲','抓','操作按钮']),
  s('insurance-rules','窗口','保险说明与模拟房间赔率',['规则','Outs赔率表','毛玻璃']),
  s('insurance-rules-standard','窗口','经典保险说明／完整赔率表',['经典规则','多人赔率','内部滚动']),
  s('insurance-rules-ev','窗口','EV保险说明',['EV规则','无Outs表']),
@@ -69,6 +74,8 @@ export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  const names=['本人昵称','左下玩家','长昵称ABCDEFGHIJKLMN','左上玩家','顶部甲','顶部乙','右上玩家','右侧玩家','右下玩家'];
  const players:Player[]=Array.from({length:count},(_,i)=>({seat:i+1,userRid:100+i,name:o.long||scene==='long'?'Long nickname 玩家ABCDEFGHIJK':names[i]!,chips:o.long||scene==='long'?123456789:20000+i*137,avatar:scene==='zero'?'':new URL('../../src/assets/style1/resources/raw/ui/avatar.png',import.meta.url).href,cards:i+1===hero?[14,29,44,59,13,28].slice(0,n):Array(n).fill(0),roundBet:i===0?200:100+i*17,action:['跟注','下注','跟注','让牌','全下','小盲','大盲','补盲','抓'][i]!,canPlayStatus:1}));
  let state:TableSnapshot={roomID:909090,matchID:0,handNum:12,revision:1,presentation:'sync',name:'离线验收',mySeat:hero,seatCount:count,dealerSeat:o.dealer||hero,pot:2040,pots:[2040,1020],smallBlind:10,roundBet:200,community:[18,35,52,37,22],actions:[],betting:{id:'audit-1',call:200,min:400,max:19999,step:1,allIn:20000},players,menu:{insurance:true,retainType:1,retainMinRate:1,storeChips:1000,keepingSeat:false,keepSeatDuration:180},uniqueID:'AUDIT-LOCAL'};
+ if(scene==='observer-bottom'){state.mySeat=0;state.actions=[];}
+ if(scene==='action-transition'){state.actions=['fold','call','raise'];}
  if(scene==='bring-out')state.menu!.retainType=2;
  const actor=Math.min(count,Math.max(1,o.actor||hero));
  const update=(fn:(p:Player)=>Player)=>{state.players=state.players.map(fn);};
@@ -88,7 +95,7 @@ export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  if(scene==='allin'||scene==='insurance-buying')update(p=>({...p,action:'全下',chips:0,cards:[14,29],winPercent100:p.seat===hero?6789:undefined,insuranceDeadline:scene==='insurance-buying'&&p.seat===actor?Date.now()/1000+30:undefined}));
  if(scene==='sidepots-long'){state.pot=123456789;state.pots=Array.from({length:9},(_,i)=>123456789+i*1000);}
  if(scene==='zero')update(p=>({...p,chips:0,roundBet:0,action:''}));
- if(scene==='settlement'||scene==='split'||scene==='settlement-bets'){state.handEnded=true;update(p=>({...p,action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[14]},win:p.seat===hero||p.seat===actor||p.seat===count?{handValueType:7,collectedChips:12345}:undefined}}));}
+ if(scene==='settlement-all'||scene==='settlement'||scene==='split'||scene==='settlement-bets'){state.handEnded=true;update(p=>({...p,action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[14]},win:scene==='settlement-all'||p.seat===hero||p.seat===actor||p.seat===count?{handValueType:7,collectedChips:12345}:undefined}}));}
  if(scene==='settlement-bets')update(p=>({...p,roundBet:123456}));
  if(scene==='empty'||scene==='observer'||(scene.startsWith('bring-')&&scene!=='bring-out')){state.mySeat=0;state.actions=[];state.players=scene==='empty'?[]:players.filter(p=>p.seat!==hero);}
  if(scene.startsWith('handtype-')){state.handEnded=true;update(p=>({...p,cards:[14,29],action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[]},win:{handValueType:Number(scene.split('-')[1])+1,collectedChips:12345}}}));}

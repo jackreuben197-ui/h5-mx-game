@@ -21,6 +21,8 @@ export class AuditMedia extends TableMedia {
  override audioEnabled(uid:number){return uid===this.ownUID?this.microphone:uid%2===1;}
  override visibleMask(uid:number){return this.camera?(uid===this.ownUID?this.maskId:uid%5):0;}
  override async toggle(action:'camera'|'voice'|'effect'){if(action==='camera')this.camera=!this.camera;else if(action==='voice')this.microphone=!this.microphone;else this.maskId=(this.maskId+1)%5;this.sync();}
- override async toggleRemote(kind:'audio'|'video'){if(kind==='audio')this.remoteMicrophone=!this.remoteMicrophone;else this.remoteCamera=!this.remoteCamera;this.sync();}
+ private remoteBlocks=new Set<string>();
+ override remoteState(kind:'audio'|'video',uid:number){return {blocked:this.remoteBlocks.has(kind+uid),available:true};}
+ override async toggleRemote(kind:'audio'|'video',uid?:number){if(uid){const key=kind+uid;this.remoteBlocks.has(key)?this.remoteBlocks.delete(key):this.remoteBlocks.add(key);this.sync();return;}if(kind==='audio')this.remoteMicrophone=!this.remoteMicrophone;else this.remoteCamera=!this.remoteCamera;this.sync();}
  override destroy(){this.tracks.forEach(t=>t.stop());this.tracks.clear();super.destroy();}
 }

@@ -52,7 +52,7 @@ export class PlayerInfoView {
     this.tab = 'data';
     this.muted = false; this.balance = undefined;
     this.offBalance?.();
-    this.offBalance=this.records?.subscribeDiamondBalance?.(value=>{this.balanceRevision++;this.balance=value;this.renderBody();});
+    this.offBalance=this.records?.subscribeDiamondBalance?.(value=>{this.balanceRevision++;this.balance=value;this.renderBalance();});
     const balanceRevision=this.balanceRevision;
     this.dialog.show(true);
     this.render();
@@ -65,7 +65,7 @@ export class PlayerInfoView {
       if (profile?.basic?.remark_name !== undefined) this.onRemark?.(player.userRid!, profile.basic.remark_name, profile.basic.nick_name || player.name);
       this.dialog.status.textContent = profile ? '' : t('MX_NoData', '暂无数据');
       this.render();
-      if (this.canGift()) void this.records.diamondBalance().then(value => {if (generation === this.generation&&balanceRevision===this.balanceRevision) {this.balance = value; this.render();}}).catch(() => undefined);
+      if (!this.records.config.global.isChannelDiamondFreeMode) void this.records.diamondBalance().then(value => {if (generation === this.generation&&balanceRevision===this.balanceRevision) {this.balance = value; this.render();}}).catch(() => undefined);
       if (this.canManage()) void this.records.playerMuted(player.userRid!).then(value => {if (generation === this.generation) {this.muted = value; this.render();}}).catch(() => undefined);
       if (this.canUseProps()) void this.emojis?.refresh().then(() => {if (generation === this.generation) this.render();}).catch(() => undefined);
     } catch (error) {
@@ -163,6 +163,7 @@ export class PlayerInfoView {
     }
     this.renderBody();
     this.renderActions();
+    this.renderBalance();
   }
 
   private renderTabs(): void {
@@ -184,19 +185,16 @@ export class PlayerInfoView {
         button.onclick = () => void this.run(() => this.records!.giftDiamonds(this.player!.userRid!,amount), () => this.close());
         choices.append(button);
       }
-      const balance=element('div','mx-player-profile-balance');
-      const balanceIcon=element('span','mx-player-profile-balance-icon');SpriteAtlas.paint(balanceIcon,config.paths.recordDiamond);
-      balance.append(balanceIcon,element('span','',`${t('MX_DiamondBalance','钻石余额')}: ${this.balance === undefined ? '—' : this.balance.toLocaleString('en-US')}`));
-      gift.append(choices,balance); body.append(gift); return;
+      gift.append(choices); body.append(gift); return;
     }
     if (this.tab === 'data') {
       const room = stats?.room_data;
       const values: Array<[string, string]> = [
         [t('UITexasInfo_games', '总局数'), room ? String(room.total_game_cnt || 0) : '—'],
-        [t('UITexasInfo_poolrate', '入池率'), room ? `${room.vpip || 0}%` : '—'],
-        [t('UITexasInfo_flop', '翻牌前加注率'), room ? `${room.prf || 0}%` : '—'],
         [t('UITexasInfo_allhands', '总手数'), room ? String(room.total_hand || 0) : '—'],
         [t('UITexasInfo_poolwin', '入池胜率'), room ? `${room.wins || 0}%` : '—'],
+        ['VPIP', room ? `${room.vpip || 0}%` : '—'],
+        ['PFR', room ? `${room.prf || 0}%` : '—'],
         [t('UIPlayerInfo_TablePoolRate', '本桌入池率'), stats ? `${((Number(stats.pool_rate || 0) / 1000) * 100).toFixed(0)}%` : '—'],
       ];
       const grid = element('div', 'mx-player-profile-grid');
@@ -246,6 +244,16 @@ export class PlayerInfoView {
     body.append(chart);
   }
 
+  private renderBalance(): void {
+    this.dialog.panel.querySelector('.mx-player-profile-balance')?.remove();
+    if (this.root.hidden || this.records?.config.global.isChannelDiamondFreeMode) return;
+    const balance=element('div','mx-player-profile-balance');
+    const icon=element('span','mx-player-profile-balance-icon');
+    SpriteAtlas.paint(icon,config.paths.recordDiamond);
+    balance.append(element('span','',`${t('MX_DiamondBalance','钻石余额')}: ${this.balance === undefined ? '—' : this.balance.toLocaleString('en-US')}`),icon);
+    this.dialog.panel.append(balance);
+  }
+
   private renderActions(): void {
     this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove();
     if (!this.player || !this.isOther()) return;
@@ -259,15 +267,15 @@ export class PlayerInfoView {
         const cost = EmojiPropRules.isPropFree(prop) || price <= 0 ? '' : this.records?.config.global.isChannelDiamondFreeMode ? StringHelper.GetLongString(price) : String(price);
         const button = element('button','mx-player-profile-prop'); button.type = 'button'; button.setAttribute('aria-label',`${label}${cost}`);
         const icon = element('span','mx-player-profile-prop-icon');
-        // The CC prefab places sprites 4 and 2 in the money/touch button slots.
-        const spriteNumber = index === 1 ? 4 : index === 3 ? 2 : index + 1;
+        // Figma orders the hand (money) before the head (touch).
+        const spriteNumber = index + 1;
         SpriteAtlas.paint(icon, (config.paths as Record<string,string>)[`playerProp${spriteNumber}`]!);
         button.append(icon);
         if (cost) {
           const badge = element('span','mx-player-profile-prop-cost');
           const currency = element('span','mx-player-profile-prop-currency');
           SpriteAtlas.paint(currency, this.records?.config.global.isChannelDiamondFreeMode ? config.paths.emojiUc : config.paths.emojiDiamond);
-          badge.append(currency, document.createTextNode(cost)); button.append(badge);
+          badge.append(document.createTextNode(cost), currency); button.append(badge);
         }
         button.onclick = () => void this.run(() => this.emojis!.throwProp(this.player!.userRid!,prop,type));
         list.append(button);
@@ -304,7 +312,7 @@ export class PlayerInfoView {
   onFrameResize(width: number, height: number): void {
     // The admin controls and two rows of props share this frame with the stats.
     // Fit the complete CC-style dialog, rather than clipping its last row.
-    const scale = Math.min(width / config.layout.fitWidth, height / config.layout.fitHeight, 1);
+    const scale = Math.min(width / config.layout.fitWidth, (height - 16) / config.layout.fitHeight);
     this.root.style.setProperty('--player-profile-unit', `${scale}px`);
   }
   close(): void { this.offBalance?.();this.offBalance=undefined; ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.confirmDialog?.close('player-admin'); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }

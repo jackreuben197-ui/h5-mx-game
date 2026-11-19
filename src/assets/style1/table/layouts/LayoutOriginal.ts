@@ -6,7 +6,7 @@ import type { SeatPlacement } from '../../../../ui/TableLayout.js';
 import type { TableLayout, LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
 export class LayoutOriginal implements TableLayout {
   readonly id: string = 'original';
-  get compactRoomInfo(): boolean { return false; }
+  get compactRoomInfo(): boolean { return !this.landscape; }
   unit = 1;
   menuScale = 1;
   protected viewportBottom = 0;
@@ -110,16 +110,20 @@ export class LayoutOriginal implements TableLayout {
     }
     if(!this.landscape&&this.id==='original'){
       for(const [id,p] of result){
-        p.scale*=1.1;
+        // Original design uses the base avatar size.
         // Original Figma leaves room above the top avatar and below the middle
         // bets. Keep the CC seat arrangement, adjusting within its design unit.
         const slot=(id-(state.mySeat||1)+state.seatCount)%state.seatCount;
         const position=positions[slot];
         const top=[SeatPosition.TopMiddle,SeatPosition.TopMiddleLeft,SeatPosition.TopMiddleRight].includes(position!);
+        if(!top&&position!==SeatPosition.BottomMiddle){
+          if(p.edge==='left')p.betX=210+1/(p.scale*this.unit);
+          if(p.edge==='right')p.betX=-210-1/(p.scale*this.unit);
+        }
         const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
         p.y+=(top?topClearance:id===state.mySeat?-40:-60)*this.suggest;
         if(id!==state.mySeat&&!top&&position!==SeatPosition.BottomMiddle){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
-        if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-200;}
+        if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-184;}
       }
       if(state.community?.length){
         const content=this.content({dual:!!state.secondCommunity?.length,boardSize:publicCardScale,jackpotHeight:0});
@@ -144,7 +148,7 @@ export class LayoutOriginal implements TableLayout {
       if(bottomSeat)bottomSeat.y=Math.min(bottomSeat.y,(this.viewportBottom-2)/this.unit-popupBottom*bottomSeat.scale);
       if(bottomSeat&&state.mySeat&&this.id==='original'){
         const room=(this.viewportBottom-2)/this.unit-bottomSeat.y-152.5*bottomSeat.scale;
-        this.lowerHeroAvatar(bottomSeat,Math.max(0,Math.min(32*bottomSeat.scale,room)),16);
+        this.lowerHeroAvatar(bottomSeat,Math.max(0,Math.min(32*bottomSeat.scale,room)),0);
       }
     }
     return result;
@@ -174,7 +178,7 @@ export class LayoutOriginal implements TableLayout {
       total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:originalMiddle?l.height*.301:(697.8+jackpotHeight)*l.suggest},
       pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:originalMiddle?l.height*.339:(775.6+jackpotHeight)*l.suggest},
       info:l.landscape?{x:l.width/2-650*scale,y:l.height*.44}:{x:l.width/2,y:dual?center+gap/2+88*scale*boardSize+infoClearance:Math.min(l.height*.426,center-88*scale*boardSize-infoClearance)},
-      styles:originalMiddle?{'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{},
+      styles:originalMiddle?{'--mx-room-info-width':`${this.width*.6}px`,'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{},
     };
   }
   controls(state: TableSnapshot, buttonSize: number): LayoutControls {
@@ -182,11 +186,12 @@ export class LayoutOriginal implements TableLayout {
     const own=this.positions(state).get(state.mySeat);
     if(!own)return {styles:{}};
     const controlsY=own.controlsY??own.y;
-    const top=(controlsY-180*own.scale)*this.unit-28;
+    const top=(controlsY-164*own.scale)*this.unit-28;
     // Original buttons are 145px on a 1242px-wide design, independent of avatar scaling.
-    const scale=this.id==='original'?145/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
+    const scale=this.id==='original'?137/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
     return {scale,styles:{
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
+      '--mx-op-fold-x':`${-78*this.width*this.unit/440}px`,'--mx-op-main-x':`${78*this.width*this.unit/440}px`,
       '--mx-raise-center-y':`${(controlsY-910*own.scale)*this.unit}px`,
     }};
   }

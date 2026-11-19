@@ -441,3 +441,7 @@
 .mx-room-details{--su:var(--record-unit)}
 .mx-seat-bet[data-chip-side=left] .mx-seat-bet-chip{margin-left:calc(-.5 * var(--mx-SeatBetView-mx-seat-bet-chip-width))}
 .mx-seat-bet[data-chip-side=right] .mx-seat-bet-chip{margin-right:calc(-.5 * var(--mx-SeatBetView-mx-seat-bet-chip-width))}
+
+/* Long amounts grow toward the table center, never back over the avatar. */
+.mx-seat[data-edge=left] .mx-seat-bet{translate:0 0;margin-left:-80px}
+.mx-seat[data-edge=right] .mx-seat-bet{translate:-100% 0;margin-left:80px}

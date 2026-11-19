@@ -383,8 +383,9 @@ export class TableView {
       this.seatViews.get(id)?.place(position, positionMode);
     this.refreshRoomInfo();
     const controls=this.layout.controls(state,this.settings.tableAppearance.betButtonSize/100);
-    this.applyLayoutStyles(this.controls.root,controls.styles,this.controlStyles);
     if(controls.scale!==undefined)this.controls.setScale?.(controls.scale);
+    // Layout coordinates override the component's scaled default positions.
+    this.applyLayoutStyles(this.controls.root,controls.styles,this.controlStyles);
     this.sound.present(state);
     this.navigation.render?.(state);
     this.media?.render();

@@ -1,21 +1,18 @@
 /* Read-only PlayerInfo, measured against the live CC 7456 preview. */
 .mx-player-profile-overlay{z-index:30;--player-profile-unit:1px}
 .mx-player-profile-overlay>.mx-record-panel{
-  --mx-glass-unit:var(--player-profile-unit);box-sizing:border-box;
-  width:calc(var(--mx-RecordDialogView-mx-record-panel-width) * var(--player-profile-unit));height:calc(var(--mx-RecordDialogView-mx-record-panel-height) * var(--player-profile-unit));
-  max-width:calc(var(--mx-RecordDialogView-mx-record-panel-max-width) - var(--mx-RecordDialogView-mx-record-panel-max-width-2));max-height:calc(var(--mx-RecordDialogView-mx-record-panel-max-height) - var(--mx-RecordDialogView-mx-record-panel-max-height-2));
-  padding:calc(var(--mx-RecordDialogView-mx-record-panel-padding) * var(--player-profile-unit)) calc(var(--mx-RecordDialogView-mx-record-panel-padding-2) * var(--player-profile-unit)) calc(var(--mx-RecordDialogView-mx-record-panel-padding-3) * var(--player-profile-unit));
-  border-radius:calc(var(--mx-RecordDialogView-mx-record-panel-border-radius-3) * var(--player-profile-unit));
-  background:linear-gradient(125deg,#55565caa,#2c2d32dc 48%,#4b5058b8);
-  box-shadow:inset 0 0 28px #ffffff40,inset 0 2px 7px #ffffff80,0 10px 25px #0003;
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  overflow:hidden;font-size:calc(var(--mx-RecordDialogView-mx-record-panel-font-size) * var(--player-profile-unit));
+  --mx-glass-unit:calc(var(--mx-PlayerInfoView-figma-glass-scale) * var(--player-profile-unit));box-sizing:border-box;
+  width:calc(var(--mx-PlayerInfoView-figma-panel-width) * var(--player-profile-unit));height:auto;
+  max-width:calc(100% - 16px);max-height:calc(100% - 16px);
+  padding:calc(var(--mx-PlayerInfoView-figma-panel-padding) * var(--player-profile-unit));
+  border-radius:calc(var(--mx-PlayerInfoView-figma-panel-radius) * var(--player-profile-unit));
+  overflow:auto;font-size:calc(var(--mx-PlayerInfoView-figma-body-font) * var(--player-profile-unit));
 }
 .mx-player-profile-overlay .mx-record-header,
 .mx-player-profile-overlay .mx-record-footer,
 .mx-player-profile-overlay .mx-record-body,
 .mx-player-profile-overlay .mx-record-status{position:relative}
-.mx-player-profile-overlay .mx-record-header{order:1;box-sizing:border-box;height:calc(var(--mx-RecordDialogView-mx-record-header-height) * var(--player-profile-unit));padding:var(--mx-RecordDialogView-mx-record-header-padding-3);text-align:left}
+.mx-player-profile-overlay .mx-record-header{order:1;box-sizing:border-box;height:auto;min-height:calc(var(--mx-PlayerInfoView-figma-header-height) * var(--player-profile-unit));flex:none;padding:var(--mx-RecordDialogView-mx-record-header-padding-3);text-align:left}
 .mx-player-profile-overlay .mx-record-header h2{position:absolute;width:var(--mx-RecordDialogView-mx-record-header-width);height:var(--mx-RecordDialogView-mx-record-header-height-2);overflow:hidden;clip-path:inset(50%);margin:var(--mx-RecordDialogView-mx-record-header-margin-5)}
 .mx-player-profile-overlay .mx-record-panel .mx-record-close{
   right:calc(var(--mx-RecordDialogView-mx-record-close-right) * var(--player-profile-unit));top:calc(var(--mx-RecordDialogView-mx-record-close-top) * var(--player-profile-unit));
@@ -32,7 +29,7 @@
 .mx-player-profile-id-label{padding:var(--mx-PlayerInfoView-mx-player-profile-id-label-padding) var(--mx-PlayerInfoView-mx-player-profile-id-label-padding-2);background:#ffffff66;border-radius:var(--mx-PlayerInfoView-mx-player-profile-id-label-border-radius);font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-id-label-font-size) * var(--player-profile-unit));font-weight:600}
 .mx-player-profile-remark{max-width:calc(var(--mx-PlayerInfoView-mx-player-profile-remark-max-width) * var(--player-profile-unit));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-remark-font-size) * var(--player-profile-unit));line-height:var(--mx-PlayerInfoView-mx-player-profile-remark-line-height)}
 .mx-player-profile-overlay .mx-record-footer{
-  order:2;display:flex;justify-content:flex-start;align-items:center;gap:calc(var(--mx-RecordDialogView-mx-record-footer-gap) * var(--player-profile-unit));
+  order:3;display:flex;justify-content:space-around;align-items:center;gap:calc(var(--mx-PlayerInfoView-figma-panel-padding) * var(--player-profile-unit));
   flex:none;height:calc(var(--mx-RecordDialogView-mx-record-footer-height) * var(--player-profile-unit));padding:var(--mx-RecordDialogView-mx-record-footer-padding-7) var(--mx-RecordDialogView-mx-record-footer-padding-8) calc(var(--mx-RecordDialogView-mx-record-footer-padding-9) * var(--player-profile-unit)) calc(var(--mx-RecordDialogView-mx-record-footer-padding-10) * var(--player-profile-unit));
 }
 .mx-player-profile-overlay .mx-record-panel .mx-record-footer button{
@@ -40,11 +37,11 @@
   color:#fff;font-size:calc(var(--mx-RecordDialogView-mx-record-footer-font-size) * var(--player-profile-unit));line-height:var(--mx-RecordDialogView-mx-record-footer-line-height);font-weight:600
 }
 .mx-player-profile-overlay .mx-record-footer button[aria-pressed=true]{border-bottom:1.5px solid #fff}
-.mx-player-profile-overlay .mx-record-body{order:3;flex:1;min-height:var(--mx-RecordDialogView-mx-record-body-min-height);padding:var(--mx-RecordDialogView-mx-record-body-padding-4);overflow:hidden;scrollbar-width:none}
+.mx-player-profile-overlay .mx-record-body{order:4;flex:none;min-height:var(--mx-RecordDialogView-mx-record-body-min-height);padding:var(--mx-RecordDialogView-mx-record-body-padding-4);overflow:hidden;scrollbar-width:none}
 .mx-player-profile-overlay .mx-record-status{order:4;position:absolute;left:var(--mx-RecordDialogView-mx-record-status-left);right:var(--mx-RecordDialogView-mx-record-status-right);bottom:var(--mx-RecordDialogView-mx-record-status-bottom);margin:var(--mx-RecordDialogView-mx-record-status-margin);text-align:center;font-size:calc(var(--mx-RecordDialogView-mx-record-status-font-size) * var(--player-profile-unit))}
 .mx-player-profile-chart,.mx-player-profile-grid{
   box-sizing:border-box;width:var(--mx-PlayerInfoView-mx-player-profile-grid-width);height:calc(var(--mx-PlayerInfoView-mx-player-profile-grid-height) * var(--player-profile-unit));
-  border-radius:calc(var(--mx-PlayerInfoView-mx-player-profile-grid-border-radius) * var(--player-profile-unit));background:#1112178a;
+  border-radius:calc(var(--mx-PlayerInfoView-mx-player-profile-grid-border-radius) * var(--player-profile-unit));background:rgb(20 20 20 / .35);border:0.5px solid #ffffff20;
 }
 .mx-player-profile-chart{position:relative;overflow:hidden}
 .mx-player-profile-radar{
@@ -56,44 +53,54 @@
 .mx-player-profile-radar-value{fill:#c2b8ca66;stroke:#f9f9f9;stroke-width:1}
 .mx-player-profile-chart-label{
   position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-width:calc(48 * var(--player-profile-unit));height:calc(42 * var(--player-profile-unit));
+  min-width:calc(var(--mx-PlayerInfoView-figma-chart-label-width) * var(--player-profile-unit));height:calc(var(--mx-PlayerInfoView-figma-chart-label-height) * var(--player-profile-unit));
   padding:2px 5px;border:1px solid #f9f9f9;border-radius:calc(11 * var(--player-profile-unit));
-  color:#fff;text-align:center;font-size:calc(11 * var(--player-profile-unit));line-height:1.05
+  color:#fff;text-align:center;font-size:calc(var(--mx-PlayerInfoView-figma-chart-label-font) * var(--player-profile-unit));line-height:1.1
 }
 .mx-player-profile-chart-label strong{font-weight:500}
 .mx-player-profile-chart-label-1{left:50%;top:calc(13 * var(--player-profile-unit));transform:translateX(-50%);background:#50a7ec}
-.mx-player-profile-chart-label-2{left:calc(29 * var(--player-profile-unit));top:calc(82 * var(--player-profile-unit));background:#fa2b4b}
-.mx-player-profile-chart-label-3{right:calc(17 * var(--player-profile-unit));top:calc(91 * var(--player-profile-unit));background:#b519d8}
-.mx-player-profile-chart-label-4{left:50%;bottom:calc(14 * var(--player-profile-unit));transform:translateX(-50%);background:#109657}
+.mx-player-profile-chart-label-2{left:calc(29 * var(--player-profile-unit));top:calc(var(--mx-PlayerInfoView-figma-chart-passive-top) * var(--player-profile-unit));background:#fa2b4b}
+.mx-player-profile-chart-label-3{right:calc(17 * var(--player-profile-unit));top:calc(var(--mx-PlayerInfoView-figma-chart-behind-top) * var(--player-profile-unit));background:#b519d8}
+.mx-player-profile-chart-label-4{left:50%;bottom:calc(var(--mx-PlayerInfoView-figma-body-font) * var(--player-profile-unit));transform:translateX(-50%);background:#109657}
 .mx-player-profile-grid{display:grid;grid-template-columns:repeat(var(--mx-PlayerInfoView-mx-player-profile-grid-grid-template-columns),minmax(var(--mx-PlayerInfoView-mx-player-profile-grid-grid-template-columns-2),var(--mx-PlayerInfoView-mx-player-profile-grid-grid-template-columns-3)));grid-template-rows:repeat(var(--mx-PlayerInfoView-mx-player-profile-grid-grid-template-rows),var(--mx-PlayerInfoView-mx-player-profile-grid-grid-template-rows-2));padding:calc(var(--mx-PlayerInfoView-mx-player-profile-grid-padding) * var(--player-profile-unit))}
 .mx-player-profile-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--mx-PlayerInfoView-mx-player-profile-stat-gap) * var(--player-profile-unit));text-align:center}
 .mx-player-profile-stat span{color:#fff;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-stat-font-size) * var(--player-profile-unit));white-space:nowrap}
 .mx-player-profile-stat strong{color:#fff;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-stat-font-size-2) * var(--player-profile-unit));font-weight:500;font-variant-numeric:tabular-nums}
-.mx-player-profile-overlay[data-short=true]>.mx-record-panel{height:calc(var(--mx-RecordDialogView-mx-record-panel-height-2) * var(--player-profile-unit));max-height:calc(var(--mx-RecordDialogView-mx-record-panel-max-height-3) - var(--mx-RecordDialogView-mx-record-panel-max-height-4))}
 .mx-player-profile-overlay .mx-player-profile-remark{display:block;max-width:calc(var(--mx-PlayerInfoView-mx-player-profile-remark-max-width-2) * var(--player-profile-unit));padding:var(--mx-PlayerInfoView-mx-player-profile-remark-padding);border:0;border-radius:var(--mx-PlayerInfoView-mx-player-profile-remark-border-radius);background:none;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-remark-font-size-2) * var(--player-profile-unit));line-height:var(--mx-PlayerInfoView-mx-player-profile-remark-line-height-2)}
 .mx-player-profile-remark-input{box-sizing:border-box;width:calc(var(--mx-PlayerInfoView-mx-player-profile-remark-input-width) * var(--player-profile-unit));font:inherit;color:#fff;background:#20232a;border:1px solid #7fffd4;border-radius:var(--mx-PlayerInfoView-mx-player-profile-remark-input-border-radius)}
-.mx-player-profile-overlay:has(.mx-player-profile-actions)>.mx-record-panel{height:auto;max-height:calc(var(--mx-RecordDialogView-mx-record-panel-max-height-5) - var(--mx-RecordDialogView-mx-record-panel-max-height-6))}
-.mx-player-profile-overlay:has(.mx-player-profile-actions) .mx-record-body{flex:none;height:calc(var(--mx-RecordDialogView-mx-record-body-height) * var(--player-profile-unit))}
 .mx-player-profile-overlay:has(.mx-player-profile-actions) .mx-record-footer{order:3}
 .mx-player-profile-overlay:has(.mx-player-profile-actions) .mx-record-body{order:4}
 .mx-player-profile-overlay .mx-player-profile-actions{display:contents}
 .mx-player-profile-props{order:5;display:grid;grid-template-columns:repeat(var(--mx-PlayerInfoView-mx-player-profile-props-grid-template-columns),minmax(var(--mx-PlayerInfoView-mx-player-profile-props-grid-template-columns-2),var(--mx-PlayerInfoView-mx-player-profile-props-grid-template-columns-3)));gap:calc(var(--mx-PlayerInfoView-mx-player-profile-props-gap) * var(--player-profile-unit));margin-top:calc(var(--mx-PlayerInfoView-mx-player-profile-props-margin-top) * var(--player-profile-unit));min-height:var(--mx-PlayerInfoView-mx-player-profile-props-min-height);overflow:auto;scrollbar-width:thin}
-.mx-player-profile-overlay .mx-player-profile-prop{display:flex;flex-direction:column;align-items:center;gap:var(--mx-PlayerInfoView-mx-player-profile-prop-gap);min-width:var(--mx-PlayerInfoView-mx-player-profile-prop-min-width);padding:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-padding) * var(--player-profile-unit)) var(--mx-PlayerInfoView-mx-player-profile-prop-padding-2);border-radius:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-border-radius) * var(--player-profile-unit));background:#ffffff25;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-font-size) * var(--player-profile-unit));white-space:nowrap}
+.mx-player-profile-overlay .mx-player-profile-prop{display:flex;flex-direction:column;align-items:center;gap:var(--mx-PlayerInfoView-mx-player-profile-prop-gap);min-width:var(--mx-PlayerInfoView-mx-player-profile-prop-min-width);padding:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-padding) * var(--player-profile-unit)) var(--mx-PlayerInfoView-mx-player-profile-prop-padding-2);border-radius:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-border-radius) * var(--player-profile-unit));background:none;border:0;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-font-size) * var(--player-profile-unit));white-space:nowrap}
 .mx-player-profile-prop-icon{display:block;width:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-icon-width) * var(--player-profile-unit));height:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-icon-height) * var(--player-profile-unit));background-repeat:no-repeat}
-.mx-player-profile-prop-cost{display:flex;align-items:center;gap:var(--mx-PlayerInfoView-mx-player-profile-prop-cost-gap)}
+.mx-player-profile-prop-cost{padding:1px 5px;border-radius:20px;background:#0005;display:flex;align-items:center;gap:var(--mx-PlayerInfoView-mx-player-profile-prop-cost-gap)}
 .mx-player-profile-prop-currency{display:inline-block;width:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-currency-width) * var(--player-profile-unit));height:calc(var(--mx-PlayerInfoView-mx-player-profile-prop-currency-height) * var(--player-profile-unit));background-repeat:no-repeat}
 .mx-player-profile-controls{order:2;display:grid;grid-template-columns:repeat(var(--mx-PlayerInfoView-mx-player-profile-controls-grid-template-columns),minmax(var(--mx-PlayerInfoView-mx-player-profile-controls-grid-template-columns-2),var(--mx-PlayerInfoView-mx-player-profile-controls-grid-template-columns-3)));gap:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-gap) * var(--player-profile-unit));margin:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-margin) * var(--player-profile-unit)) var(--mx-PlayerInfoView-mx-player-profile-controls-margin-2) calc(var(--mx-PlayerInfoView-mx-player-profile-controls-margin-3) * var(--player-profile-unit))}
-.mx-player-profile-overlay .mx-player-profile-controls button{min-height:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-min-height) * var(--player-profile-unit));padding:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-padding) * var(--player-profile-unit)) calc(var(--mx-PlayerInfoView-mx-player-profile-controls-padding-2) * var(--player-profile-unit));border-radius:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-border-radius) * var(--player-profile-unit));background:#38ab8bd9;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-font-size) * var(--player-profile-unit))}
-.mx-player-profile-gift{height:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-height) * var(--player-profile-unit));padding:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-padding) * var(--player-profile-unit));box-sizing:border-box;background:var(--mx-profile-gift-background) center/100% 100% no-repeat}
+.mx-player-profile-overlay .mx-player-profile-controls button{min-height:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-min-height) * var(--player-profile-unit));padding:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-padding) * var(--player-profile-unit)) calc(var(--mx-PlayerInfoView-mx-player-profile-controls-padding-2) * var(--player-profile-unit));border-radius:calc(30 * var(--player-profile-unit));background:#38ab8bd9;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-controls-font-size) * var(--player-profile-unit))}
+.mx-player-profile-gift{height:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-height) * var(--player-profile-unit));padding:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-padding) * var(--player-profile-unit));box-sizing:border-box;border-radius:calc(24 * var(--player-profile-unit));background:rgb(20 20 20 / .35)}
 .mx-player-profile-gift-grid{display:grid;grid-template-columns:repeat(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-grid-template-columns),minmax(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-grid-template-columns-2),var(--mx-PlayerInfoView-mx-player-profile-gift-grid-grid-template-columns-3)));grid-template-rows:repeat(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-grid-template-rows),calc(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-grid-template-rows-2) * var(--player-profile-unit)));gap:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-gap) * var(--player-profile-unit));width:var(--mx-PlayerInfoView-mx-player-profile-gift-grid-width)}
 .mx-player-profile-overlay .mx-player-profile-gift-grid button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-gap-2) * var(--player-profile-unit));min-width:var(--mx-PlayerInfoView-mx-player-profile-gift-grid-min-width);padding:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-padding) * var(--player-profile-unit)) var(--mx-PlayerInfoView-mx-player-profile-gift-grid-padding-2);border:0;background:none;color:#fff;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-grid-font-size) * var(--player-profile-unit));line-height:var(--mx-PlayerInfoView-mx-player-profile-gift-grid-line-height)}
 .mx-player-profile-gift-icon{display:block;width:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-icon-width) * var(--player-profile-unit));height:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-icon-height) * var(--player-profile-unit));flex:none}
 .mx-player-profile-gift-amount{display:block;margin-top:calc(var(--mx-PlayerInfoView-mx-player-profile-gift-amount-margin-top) * var(--player-profile-unit))}
 .mx-player-profile-gift-choice:active .mx-player-profile-gift-icon{transform:scale(var(--mx-PlayerInfoView-mx-player-profile-gift-icon-transform))}
 .mx-player-profile-gift-choice:disabled{opacity:.55}
-.mx-player-profile-balance{display:flex;justify-content:center;align-items:center;gap:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-gap) * var(--player-profile-unit));min-height:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-min-height) * var(--player-profile-unit));margin-top:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-margin-top) * var(--player-profile-unit));font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-font-size) * var(--player-profile-unit))}
+.mx-player-profile-balance{order:6;flex:none;display:flex;justify-content:center;align-items:center;gap:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-gap) * var(--player-profile-unit));min-height:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-min-height) * var(--player-profile-unit));margin-top:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-margin-top) * var(--player-profile-unit));font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-font-size) * var(--player-profile-unit))}
 .mx-player-profile-balance-icon{display:inline-block;width:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-icon-width) * var(--player-profile-unit));height:calc(var(--mx-PlayerInfoView-mx-player-profile-balance-icon-height) * var(--player-profile-unit))}
 
 .mx-player-profile-period{margin:var(--mx-PlayerInfoView-mx-player-profile-period-margin);text-align:center;flex:none;font-size:calc(var(--mx-PlayerInfoView-mx-player-profile-period-font-size) * var(--player-profile-unit));line-height:var(--mx-PlayerInfoView-mx-player-profile-period-line-height);color:#ffffffb3}
 
 .mx-player-profile-grid:has(+.mx-player-profile-period){height:calc(var(--mx-PlayerInfoView-mx-player-profile-period-height) * var(--player-profile-unit))}
+
+.mx-player-profile-stat:nth-child(-n+3){border-bottom:1px solid #ffffff12}
+.mx-player-profile-stat:not(:nth-child(3n)){border-right:1px solid #ffffff08}
+.mx-player-profile-overlay .mx-record-footer{height:calc(var(--mx-PlayerInfoView-figma-tabs-height) * var(--player-profile-unit));padding:0}
+.mx-player-profile-overlay .mx-record-panel .mx-record-footer button{font-size:calc(var(--mx-PlayerInfoView-figma-tab-font) * var(--player-profile-unit));font-weight:400;opacity:.7}
+.mx-player-profile-overlay .mx-record-panel .mx-record-footer button[aria-pressed=true]{font-weight:600;opacity:1}
+.mx-player-profile-props{row-gap:calc(var(--mx-PlayerInfoView-figma-props-row-gap) * var(--player-profile-unit));margin-block:calc(var(--mx-PlayerInfoView-figma-props-row-gap) * var(--player-profile-unit))}
+.mx-player-profile-period{font-size:calc(var(--mx-PlayerInfoView-figma-period-font) * var(--player-profile-unit))}
+.mx-player-profile-controls{grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-auto-flow:column}
+.mx-player-profile-overlay .mx-record-status:empty{display:none}
+.mx-player-profile-overlay .mx-record-status:not(:empty){position:relative;order:7;inset:auto}
+
+.mx-player-profile-overlay .mx-record-panel .mx-record-close{right:0;top:0}
