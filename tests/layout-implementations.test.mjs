@@ -2,7 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultTableUi} from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
 import {LayoutClassic} from '../.test-build/assets/style1/table/layouts/LayoutClassic.js';
+import actionButtonConfig from '../.test-build/assets/style1/table/components/ActionButton/config.json' with {type:'json'};
 const state={seatCount:9,mySeat:4,players:[]};
+test('all three profile layouts consume one configurable button standard and proportional size setting',()=>{
+  const buttons=actionButtonConfig.layout.portrait,original={...buttons};
+  try{
+    for(const dimensions of [original,{...original,sideSize:46,raiseSize:52}]){
+      Object.assign(buttons,dimensions);
+      for(const id of ['classic','balanced','oval'])for(const [width,height]of [[440,782],[320,400]])for(const size of [.9,1,1.1]){
+        const layout=defaultTableUi.createLayout(id);layout.resize(width,height,false);
+        const before=layout.positions(state),controls=layout.controls(state,size);
+        const unit=Math.min(width/buttons.referenceWidth,height/buttons.referenceHeight)*size;
+        assert.ok(Math.abs(actionButtonConfig.w*controls.scale-buttons.sideSize*unit)<1e-9,`${id}: side size ignores shared config`);
+        assert.ok(Math.abs(parseFloat(controls.styles['--mx-op-raise-size'])-buttons.raiseSize*unit)<1e-9,`${id}: raise size ignores shared config`);
+        assert.deepEqual(layout.positions(state),before,'button size must not move avatars or hands');
+        assert.ok(!Object.keys(controls.styles).some(key=>/oval.*(?:size|scale)/.test(key)),'oval must not override shared button dimensions');
+      }
+    }
+  }finally{Object.assign(buttons,original);}
+});
 test('layout content preserves classic overlapping dual boards and finite coordinates across sizes',()=>{
   for(const id of ['original','classic','balanced','oval'])for(const [w,h] of [[320,400],[375,500],[390,844],[768,1024],[568,320],[844,390]])for(const size of [.9,1,1.1]){
     const layout=defaultTableUi.createLayout(id);layout.resize(w,h,w>h);

@@ -20,7 +20,11 @@ export class SeatEffectView {
   private previous?: SeatState;
   private generation = 0;
   private allin = false;
-  constructor(private id: number, private root: HTMLElement, private effects?: SeatEffects) {}
+  constructor(private id: number, private root: HTMLElement, private effects?: SeatEffects,private actionLayer?:HTMLElement) {}
+  private showAllIn(visible:boolean):void {
+    this.root.classList.toggle('mx-spine-allin',visible);
+    this.actionLayer?.classList.toggle('mx-spine-allin',visible);
+  }
   render(state: SeatState): void {
     const old = this.previous;
     this.previous = state;
@@ -34,12 +38,12 @@ export class SeatEffectView {
       const generation = ++this.generation;
       const effect = state.mine ? 'allin-self' : 'allin-other';
       void this.effects.play(`${this.id}:allin`, effect, () => seatEffectAnchor(this.root,effect)).then(played => {
-        if (generation === this.generation) this.root.classList.toggle('mx-spine-allin', played);
+        if (generation === this.generation) this.showAllIn(played);
       });
     } else if (!allin && this.allin) {
       this.allin = false; ++this.generation;
       this.effects.stop(`${this.id}:allin`);
-      this.root.classList.remove('mx-spine-allin');
+      this.showAllIn(false);
     }
     const win = state.player?.settlement?.win;
     if (!win) this.effects.stop(`${this.id}:win`);
@@ -50,7 +54,7 @@ export class SeatEffectView {
   cancel(): void {
     ++this.generation; this.allin = false;
     this.effects?.stop(`${this.id}:allin`); this.effects?.stop(`${this.id}:win`);
-    this.root.classList.remove('mx-spine-allin');
+    this.showAllIn(false);
   }
   destroy(): void { this.cancel(); }
 }

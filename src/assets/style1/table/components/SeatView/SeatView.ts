@@ -19,6 +19,9 @@ export class SeatView implements SeatComponent {
   readonly root = element('article', 'mx-seat');
   readonly frame=localFrame(this.root,config.w,config.h,config.anchor.x,config.anchor.y);
   private position = new SeatPositionMotion(this.root);
+  private actionRoot=element('div','mx-seat-action');
+  private actionPosition=new SeatPositionMotion(this.actionRoot);
+  private actionUnit=0;
   private identity: SeatIdentityView;
   private cards: HandCardsView;
   private bet = new SeatBetView();
@@ -28,12 +31,13 @@ export class SeatView implements SeatComponent {
   private effects: SeatEffectView;
   constructor(data: SeatData, originDelta: (group: HTMLElement) => { x: number; y: number }, effects?: SeatEffects) {
     this.root.dataset.seat = String(data.id);
+    this.actionRoot.dataset.seat=String(data.id);
     this.identity = new SeatIdentityView(data.id);
     place(this.identity.root,config.identity.x,config.identity.y);
     this.cards = new HandCardsView(originDelta);
     SpriteAtlas.paint(this.dealer, config.paths.dealer);
     this.root.append(this.identity.root, this.cards.root, this.bet.root, this.dealer);
-    this.effects = new SeatEffectView(data.id, this.root, effects);
+    this.effects = new SeatEffectView(data.id, this.root, effects,this.actionRoot);
     this.bindings.bind({ seat: data });
   }
   @bindEvent(SeatData.CHANGE, 'seat')
@@ -68,7 +72,15 @@ export class SeatView implements SeatComponent {
   }
   place(p: SeatPlacement, mode: SeatPositionMode = 'static'): void {
     this.position.place(p, mode);
+    if(this.actionUnit)this.actionPosition.place({
+      x:(p.x+(config.identity.x-config.w*config.anchor.x)*p.scale)*this.actionUnit,
+      y:(p.y+(config.identity.y-config.h*config.anchor.y)*p.scale)*this.actionUnit,
+      scale:p.scale*this.actionUnit,
+    },mode);
     this.root.dataset.scale = String(p.scale);
+    this.root.style.setProperty('--mx-seat-world-x',`${p.x}px`);
+    this.root.style.setProperty('--mx-seat-world-y',`${p.y}px`);
+    this.root.style.setProperty('--mx-seat-local-scale',String(p.scale));
     this.root.dataset.edge = p.edge;
     this.root.dataset.microphoneSide = p.microphoneSide ?? (p.edge==='left'?'left':'right');
     this.root.style.setProperty('--mx-hero-avatar-drop',`${(p.y-(p.controlsY??p.y))/p.scale}px`);
@@ -78,14 +90,30 @@ export class SeatView implements SeatComponent {
     place(this.dealer, config.identity.x+p.dealerX, config.identity.y+p.dealerY);
     this.bet.place(config.identity.x+p.betX, config.identity.y+p.betY, p.betIconX, p.betAnchor);
   }
+  entryActionsBounds():{avatarTop:number;returnVisible:boolean;scale:number} {
+    return {avatarTop:this.identity.getAvatarBounds().top,returnVisible:!this.identity.returnButton.hidden,scale:Number(this.root.dataset.scale??1)};
+  }
+  setActionLayer(layer:HTMLElement|null,unit:number):void {
+    this.actionUnit=layer?unit:0;
+    this.identity.setActionLayer(layer?this.actionRoot:null);
+    if(layer){
+      if(this.actionRoot.parentElement!==layer)layer.append(this.actionRoot);
+    }else{
+      this.actionPosition.cancel();
+      this.actionRoot.remove();
+    }
+  }
   cancel(): void {
     this.effects.cancel();
     this.position.cancel();
+    this.actionPosition.cancel();
     this.cards.cancel();
   }
   destroy(): void {
     this.effects.destroy();
     this.position.cancel();
+    this.actionPosition.cancel();
+    this.actionRoot.remove();
     this.bindings.destroy();
     this.cards.destroy();
     this.identity.destroy();

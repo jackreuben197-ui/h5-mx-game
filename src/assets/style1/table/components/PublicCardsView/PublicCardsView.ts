@@ -17,6 +17,7 @@ export class PublicCardsView implements PublicCardsComponent {
   private flip = new CardMotion();
   private previous?: PublicCardsState;
   private fixedSlots = false;
+  cardBounds():DOMRect[] { return [...this.root.children].map(node=>node.getBoundingClientRect()); }
   constructor(data: PublicCardsData) {
     this.root.style.setProperty('--mx-board-box-height',`${config.h}px`);
     this.bindings.bind({ board: data });

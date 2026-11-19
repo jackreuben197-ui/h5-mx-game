@@ -136,7 +136,11 @@ export class LayoutOriginal implements TableLayout {
         const topClearance=220*Math.min(1,Math.max(0,(this.height/this.width-1.5)/.66));
         p.y+=(top?topClearance:id===state.mySeat?-40:-60)*this.suggest;
         if(id!==state.mySeat&&!top&&position!==SeatPosition.BottomMiddle){const radius=99.5*p.scale;p.x=p.x<this.width/2?(p.x+radius)/2:this.width-(this.width-p.x+radius)/2;}
-        if(id===state.mySeat){p.cardScale*=1.1;p.cardsY=-184;}
+        if(id===state.mySeat){
+          p.cardScale*=1.1;p.cardsY=-184;
+          // Short screens scale the avatar below the independent action buttons.
+          p.betX+=this.width*this.unit>=this.viewportHeight*.75?64:32;p.betY-=32;
+        }
       }
       if(state.community?.length){
         const content=this.content({dual:!!state.secondCommunity?.length,boardSize:publicCardScale,jackpotHeight:0});
@@ -195,6 +199,13 @@ export class LayoutOriginal implements TableLayout {
       styles:{'--mx-room-info-width':`${this.roomInfoWidth}px`,...(originalMiddle?{'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{})},
     };
   }
+  protected handButtonOutset(state:TableSnapshot,own:SeatPlacement):number {
+    const count=Math.max(handCardCount(state.gameType??0),state.players.find(player=>player.seat===state.mySeat)?.cards.length??0);
+    const spread=own.handSpread??handCardsConfig.layout.faceStripWidth;
+    // Keep the two-card clearance as the overlapping strip grows for Omaha.
+    // Room rules reserve the same space before the cards arrive.
+    return spread*(.5-1/count)*own.cardScale*own.scale*this.unit/2;
+  }
   controls(state: TableSnapshot, buttonSize: number): LayoutControls {
     if(this.landscape)return {scale:.24*buttonSize,styles:{}};
     const own=this.positions(state).get(state.mySeat);
@@ -204,17 +215,12 @@ export class LayoutOriginal implements TableLayout {
     // Original buttons use a 137px face on a 1242px-wide design, independent of avatar scaling.
     const scale=this.id==='original'?137/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
     let sideOffset=78*this.width*this.unit/440;
-    if(this.id==='original'){
-      const count=Math.max(handCardCount(state.gameType??0),state.players.find(player=>player.seat===state.mySeat)?.cards.length??0);
-      const spread=own.handSpread??handCardsConfig.layout.faceStripWidth;
-      // Keep the two-card clearance as the overlapping strip grows for Omaha.
-      // Room rules reserve the same space before the cards arrive.
-      const extraHandWidth=spread*(.5-1/count)*own.cardScale*own.scale*this.unit;
-      sideOffset+=extraHandWidth/2;
-    }
+    if(this.id==='original')sideOffset+=this.handButtonOutset(state,own);
     return {scale,styles:{
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
       '--mx-op-fold-x':`${-sideOffset}px`,'--mx-op-main-x':`${sideOffset}px`,
+      '--mx-quick-5-0-x':`${-325*scale}px`,'--mx-quick-5-4-x':`${325*scale}px`,
+      '--mx-quick-5-2-y':`${380*scale}px`,
       '--mx-raise-center-y':`${(controlsY-910*own.scale)*this.unit}px`,
     }};
   }

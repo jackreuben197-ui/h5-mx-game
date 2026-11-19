@@ -109,8 +109,12 @@
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-width:10px;box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
 .mx-table .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius)}
 /* Keep confirmation on the raise entry; the track ends above that button. */
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-button-size)/2 - var(--mx-raise-height)/2 - var(--mx-op-button-size) * .35)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-raise-size,var(--mx-op-button-size));height:var(--mx-op-raise-size,var(--mx-op-button-size))}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-raise-size,var(--mx-op-button-size))/2 - var(--mx-raise-height)/2 - var(--mx-op-raise-size,var(--mx-op-button-size)) * .35)}
+.mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) :is(.mx-operation-raise,.mx-operation-row[data-allin-secondary=true] .mx-operation-allin){width:var(--mx-op-raise-size);height:var(--mx-op-raise-size);font-size:calc(40 / 137 * var(--mx-op-raise-size))!important}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) :is(.mx-operation-fold,.mx-operation-call,.mx-operation-check,.mx-operation-row:not([data-allin-secondary=true]) .mx-operation-allin){top:calc(50% + var(--mx-oval-op-side-drop))}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-operation-straddle{top:calc(50% + var(--mx-op-straddle-y,33px) + var(--mx-oval-op-side-drop))}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-auto-operation button{top:calc(var(--mx-AutoOperationView-mx-auto-operation-top) + var(--mx-oval-op-side-drop))}
 
 /* Same silhouette for avatar state layers, including waiting and leave timers. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-play-status,
@@ -221,7 +225,7 @@
   color:#fff;font-size:calc(var(--mx-SeatCountdownView-mx-seat-timer-font-size) * var(--mx-SeatCountdownView-mx-seat-timer-font-size-2) / var(--mx-SeatCountdownView-mx-seat-timer-font-size-3));font-weight:700;text-shadow:0 1px 4px #0009;
 }
 
-.mx-table:not([data-table-layout=original]) .mx-seat{--mx-classic-seat-unit:calc(199px / var(--mx-profile-avatar,58))}
+.mx-table:not([data-table-layout=original]) :is(.mx-seat,.mx-seat-action){--mx-classic-seat-unit:calc(199px / var(--mx-profile-avatar,58))}
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-stack{line-height:calc(14 * var(--mx-classic-seat-unit))}
 .mx-table[data-table-layout=original]:not([data-orientation=landscape]) :is(.mx-player-name,.mx-stack){font-size:calc(44px * var(--mx-table-text-scale))}
 .mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-player-action{font-size:calc(40px * var(--mx-table-text-scale))}
@@ -249,8 +253,10 @@
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine{--mx-seat-chip-top:var(--mx-hero-info-y)}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-classic-chip-top) * var(--mx-classic-seat-unit))}
-.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat-mine:not(.mx-seat-has-cards):not(:has(.mx-seat-win:not([hidden]))){
- --mx-seat-chip-top:var(--mx-balanced-empty-info-y);
+/* Empty hands share the avatar-bottom balance/result anchor in both ring layouts. */
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine:not(.mx-seat-has-cards){
+ --mx-seat-chip-top:var(--mx-ring-empty-info-y);
+ --mx-ring-result-rise:0px;
 }
 .mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){
  --mx-seat-chip-top:calc(var(--mx-SeatIdentityView-oval-chip-top) * var(--mx-classic-seat-unit));
@@ -259,6 +265,10 @@
 /* Keep 20% of the action bubble above the avatar in every layout. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top-4);transform:translate(-50%,var(--mx-SeatIdentityView-mx-player-action-transform-3))}
 .mx-player-info:has(.mx-seat-win:not([hidden])){z-index:10}
+/* A separate table layer lets oval bubbles clear the hero's raise button as well. */
+.mx-action-bubbles{position:absolute;inset:0;z-index:16;pointer-events:none}
+.mx-seat-action{position:absolute;width:0;height:0;transform-origin:0 0}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-player-action{z-index:11}
 .mx-seat-win-amount{font-weight:var(--mx-SeatIdentityView-qa-win-weight)}
 .mx-table .mx-seat-play-status{font-size:calc(var(--mx-SeatIdentityView-qa-wait-font) * var(--mx-table-text-scale))}
 /* Keep the original frame with a faint dark tint and a gentle backdrop blur. */
@@ -289,3 +299,26 @@
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{min-height:calc(18 * var(--mx-classic-seat-unit));padding:0}
 
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-room-info{font-size:min(calc(38px * var(--mx-table-text-scale)),var(--mx-room-info-max-font,100px))}
+
+/* Entry actions follow the measured information block, with room reserved above the bottom avatar. */
+.mx-table .mx-board{pointer-events:none}
+.mx-table[data-entry-actions] .mx-return-game{
+ left:calc((var(--mx-entry-center-x) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale));
+ top:calc((var(--mx-entry-return-top) - var(--mx-seat-world-y)) / var(--mx-seat-local-scale));
+ width:calc(var(--mx-SeatIdentityView-mx-return-game-width) * var(--mx-entry-fit));
+ height:calc(var(--mx-SeatIdentityView-mx-return-game-height) * var(--mx-entry-fit));
+ font-size:calc(var(--mx-SeatIdentityView-mx-return-game-font-size) * var(--mx-entry-fit))!important;
+ transform:translateX(-50%);
+}
+.mx-table[data-entry-actions] .mx-squid-join{
+ left:var(--mx-entry-center-x);top:var(--mx-entry-join-top);bottom:auto;
+ width:calc(var(--mx-SquidView-mx-squid-join-width) * var(--mx-entry-fit));
+ height:calc(var(--mx-SquidView-mx-squid-join-height) * var(--mx-entry-fit));
+ font-size:calc(var(--mx-SquidView-mx-squid-join-font-size-2) * var(--mx-entry-fit))!important;
+}
+.mx-table[data-entry-actions] .mx-mtt-cancel{
+ left:var(--mx-entry-center-x);top:var(--mx-entry-return-top);transform:translateX(-50%);
+ width:calc(var(--mx-MttTableStateView-mx-mtt-cancel-width) * var(--mx-entry-mtt-scale) * var(--mx-entry-fit));
+ height:calc(var(--mx-MttTableStateView-mx-mtt-cancel-height) * var(--mx-entry-mtt-scale) * var(--mx-entry-fit));
+ font-size:calc(var(--mx-MttTableStateView-mx-mtt-cancel-font-size) * var(--mx-entry-mtt-scale) * var(--mx-entry-fit));
+}

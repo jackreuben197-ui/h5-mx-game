@@ -28,6 +28,8 @@ export const auditScenarios:AuditScenario[]=[
  s('long','玩家','长昵称／大筹码／最大文字',['昵称省略','K/M金额','110%']),s('zero','玩家','零筹码／无头像',['零筹码','头像fallback']),
  ...['高牌','一对','两对','三条','顺子','同花','葫芦','四条','同花顺','皇家同花顺'].map((name,i)=>s(`handtype-${i}`,'结算',name,['牌型标签','WIN','高亮','获胜金额'])),
  s('settlement','结算','本人及他人赢家',['WIN','牌型','获胜金额','高亮','暗牌']),
+ ...['preflop','flop','turn'].map(phase=>s(`early-win-${phase}`,'结算',`${phase}直接获胜／无手牌`,['公共牌未发完','结算清手牌','获胜金额位置'])),
+ s('no-cards','玩家','本人无手牌／在桌筹码',['无手牌','头像下方余额']),
  s('split','结算','平分底池／边池赢家',['多人赢家','主池','边池']),s('watch','结算','偷偷看／发发看',['购买按钮','价格','补发公共牌'],'依次点偷偷看、发发看；本地回执更新牌面和按钮可用性。'),
  s('empty','入座','全部空座',['2–9人空座','加号','坐下']),s('observer','入座','观众／点击空座带入',['观战','带入','钱包'],'点击空座；调整带入金额；提交后坐下；菜单站起。'),
  s('bring-wallet','入座','钱包带入／押金',['带入金额','钱包选择','自动补充','押金']),s('bring-score','入座','记分牌带入',['记分牌','免钱包']),s('bring-diamond','入座','钻石带入',['钻石余额','充值入口']),s('bring-insufficient','入座','余额不足',['余额不足','带入错误']),
@@ -97,6 +99,12 @@ export function makeAuditSnapshot(o:AuditOptions):TableSnapshot {
  if(scene==='zero')update(p=>({...p,chips:0,roundBet:0,action:''}));
  if(scene==='settlement-all'||scene==='settlement'||scene==='split'||scene==='settlement-bets'){state.handEnded=true;update(p=>({...p,action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[14]},win:scene==='settlement-all'||p.seat===hero||p.seat===actor||p.seat===count?{handValueType:7,collectedChips:12345}:undefined}}));}
  if(scene==='settlement-bets')update(p=>({...p,roundBet:123456}));
+ if(scene.startsWith('early-win-')){
+  const count=scene.endsWith('preflop')?0:scene.endsWith('flop')?3:4;
+  state.community=[2,18,36,39].slice(0,count);state.handEnded=true;state.actions=[];
+  update(p=>({...p,cards:[],action:'',roundBet:0,settlement:p.seat===hero?{cards:{},win:{handValueType:0,collectedChips:12345}}:undefined}));
+ }
+ if(scene==='no-cards')update(p=>p.seat===hero?{...p,cards:[],action:''}:p);
  if(scene==='empty'||scene==='observer'||(scene.startsWith('bring-')&&scene!=='bring-out')){state.mySeat=0;state.actions=[];state.players=scene==='empty'?[]:players.filter(p=>p.seat!==hero);}
  if(scene.startsWith('handtype-')){state.handEnded=true;update(p=>({...p,cards:[14,29],action:'',roundBet:0,settlement:{cards:{highlight:[14],popup:[]},win:{handValueType:Number(scene.split('-')[1])+1,collectedChips:12345}}}));}
  if(scene==='figma'){if(o.layout==='classic')state.secondCommunity=[10,57,45,38,29];state.showBB=true;state.dealerSeat=hero;state.community=[8,2,57,38,11];state.pot=400;state.pots=[400];state.roundBet=240;state.betting={id:'figma',call:240,min:480,max:1999,step:1,allIn:2000};update(p=>({...p,cards:p.seat===hero?[29,10]:[0,0],action:p.seat===count?'下注':'',roundBet:p.seat===hero?460:p.seat%3?40:240}));}

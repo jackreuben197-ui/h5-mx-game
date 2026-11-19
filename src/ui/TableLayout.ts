@@ -35,6 +35,8 @@ export interface LayoutControls { scale?: number; styles: Record<string, string>
 export interface TableLayout {
   readonly id: string;
   readonly compactRoomInfo: boolean;
+  /** Render action bubbles above table controls while keeping their seat coordinates. */
+  readonly elevatedActionBubbles?: boolean;
   readonly unit: number;
   readonly width: number;
   readonly height: number;

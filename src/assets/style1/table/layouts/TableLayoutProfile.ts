@@ -24,5 +24,5 @@ export const tableLayouts: Record<Exclude<TableLayoutId,'original'>,TableLayoutP
  classic,
  balanced:{...classic,id:'balanced',avatar:60,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:115,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:44,otherDealerY:40,backHandSpread:56,anchors:ringAnchors},
  // Balance center: top 29 + half the 14-unit line and its two local-pixel borders.
- oval:{...classic,id:'oval',avatar:50,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:18,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:38,otherDealerY:36+50/199,anchors:ringAnchors},
+ oval:{...classic,id:'oval',avatar:54,boardY:367,infoY:464,potY:240,heroCardsY:65,heroCardWidth:40,heroCardHeight:56,heroHandSpread:246,heroInfoY:18,heroDealer:[-54,118],heroOperationY:60,heroRaiseLift:60,otherDealerX:38,otherDealerY:36+54/199,anchors:ringAnchors},
 };

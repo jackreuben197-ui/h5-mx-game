@@ -27,7 +27,7 @@ export class SquidView {
  private started=0;private resultSerial=0;private noticeSerial=0;
  private closeTimer?:ReturnType<typeof setTimeout>;private loop?:ReturnType<typeof setInterval>;
  private animation?:Animation;private pending=false;
- constructor(private records:SpecialOperations,private actions:SeatingActions,private confirm:TableConfirmDialog,private failed:(error:unknown)=>void){
+ constructor(private records:SpecialOperations,private actions:SeatingActions,private confirm:TableConfirmDialog,private failed:(error:unknown)=>void,private entryChanged:()=>void=()=>{}){
   for(const name of ['squid_bg_red','squid_end_bg','squid_reward_bg']){this.root.style.setProperty(`--${name}`,`url("${url(name)}")`);this.result.root.style.setProperty(`--${name}`,`url("${url(name)}")`);}
   this.result.panel.classList.add('mx-dialog-glass');
   this.count.style.backgroundImage=`url("${url('table_icon_squid')}")`;
@@ -48,6 +48,7 @@ export class SquidView {
   const s=this.records.data.squid.state;
   this.count.hidden=!s.enabled;this.count.textContent=String(s.remaining);this.count.dataset.count=String(s.remaining);this.count.setAttribute('aria-label',`${i18nMgr.Get('UISquid')} ${s.remaining}`);
   this.join.hidden=!s.showJoin;this.stand.hidden=!s.enabled||!s.seat;
+  this.entryChanged();
   if(s.notice&&s.noticeSerial!==this.noticeSerial)this.failed(i18nMgr.Get(s.notice));this.noticeSerial=s.noticeSerial;
   if(s.start!==this.started){this.started=s.start;if(s.start){this.animation?.cancel();this.start.hidden=false;this.animation=this.start.animate(viewConfig.layout.startAnimation.frames,{duration:viewConfig.layout.startAnimation.duration});this.animation.onfinish=()=>{this.start.hidden=true;};}}
   if(s.resultSerial!==this.resultSerial){this.resultSerial=s.resultSerial;clearTimeout(this.closeTimer);this.result.content.replaceChildren();
@@ -60,6 +61,7 @@ export class SquidView {
    }else this.result.show(false);
   }
  }
+ get joinVisible():boolean { return !this.join.hidden; }
  resize(suggest:number):void {
   // MorePlayTypeInfo.onFrameResize: bottom-anchored children in 390/450-high container.
   const offset=suggest<1?0:60;

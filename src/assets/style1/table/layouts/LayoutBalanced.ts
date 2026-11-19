@@ -26,7 +26,7 @@ export class LayoutBalanced extends LayoutProfile {
       content.styles['--mx-hero-info-y']=`${area.infoY}px`;
       content.styles['--mx-ring-hand-type-y']=`${area.typeY}px`;
       content.styles['--mx-ring-result-rise']=`${area.resultRise}px`;
-      content.styles['--mx-balanced-empty-info-y']=`${(this.profile.avatar/2+5)*199/this.profile.avatar}px`;
+      content.styles['--mx-ring-empty-info-y']=`${(this.profile.avatar/2+5)*199/this.profile.avatar}px`;
     }
     return content;
   }

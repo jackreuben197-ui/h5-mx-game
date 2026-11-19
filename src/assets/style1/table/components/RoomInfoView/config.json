@@ -8,6 +8,7 @@
     "landscapeWidth": 360,
     "scrollSpeed": 90,
     "scrollDelayMs": 1200,
+    "entryGap": 4,
     "css": {
       "line-height": "1.15em",
       "game-gap": "0.5em",

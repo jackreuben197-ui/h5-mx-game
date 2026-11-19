@@ -79,6 +79,12 @@ export class SeatIdentityView {
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
     this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
+  getAvatarBounds():DOMRect { return this.fallback.getBoundingClientRect(); }
+  setActionLayer(layer:HTMLElement|null):void {
+    const parent=layer??this.root;
+    if(layer)layer.classList.toggle('mx-insurance-buying',this.root.classList.contains('mx-insurance-buying'));
+    if(this.action.parentElement!==parent)parent.append(this.action);
+  }
   destroy(): void { this.winHandTypeResize.disconnect(); this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   private fitWinHandType(): void {
     const width = this.winHandType.clientWidth;
@@ -130,6 +136,7 @@ export class SeatIdentityView {
     const refreshInsurance = () => {
       const left = Math.max(0, Math.ceil(this.insuranceDeadline - Date.now() / 1000));
       this.root.classList.toggle('mx-insurance-buying', left > 0);
+      if(this.action.parentElement!==this.root)this.action.parentElement?.classList.toggle('mx-insurance-buying',left>0);
       this.action.style.backgroundColor = left ? '#00B88B' : p?.action === '全下' ? '#FA2B4B' : ['加注','下注'].includes(p?.action ?? '') ? '#78E4E4' : 'var(--mx-passive-action-color, #F9CA9F)';
       this.action.textContent = left ? i18nMgr.Get('adaptation20062').replace('##', String(left)) : this.actionText;
       this.action.hidden = !this.action.textContent;

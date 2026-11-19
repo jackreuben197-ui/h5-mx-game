@@ -6,6 +6,7 @@ import { Winner } from '../.test-build/net/messages/texas/Winner.js';
 import { MessageContext } from '../.test-build/net/messages/MessageContext.js';
 import { ProtocolRoomData } from '../.test-build/data/ProtocolRoomData.js';
 import { EnterRoomMapper } from '../.test-build/logic/EnterRoomMapper.js';
+import { SeatData } from '../.test-build/data/SeatData.js';
 const result=(seatId,values={})=>({...new pb.Result().toObject(),seatId,...values});
 test('CC settlement separates personal highlight from highest winning-type popup and gray',()=>{
  const mine=result(4,{win:50,handBet:100,handValueType:2,winCardsList:[{card:14,isPublic:false},{card:2,isPublic:true}]});
@@ -34,4 +35,18 @@ test('Winner emphasis reaches both UI projections and clears on next hand, stale
  const ui=mapper.map(data,target,1);assert.deepEqual(ui.communityEmphasis.popup,[2]);assert.deepEqual(ui.players.find(p=>p.seat===4).settlement.cards.highlight,[14]);
  const before=data.snapshot.settlement;assert.equal(handler({...payload,handNum:24},ctx),false);assert.equal(data.snapshot.settlement,before);
  ctx.clearHand();const cleared=mapper.map(data,target,2);assert.equal(cleared.communityEmphasis,undefined);assert.equal(cleared.players.find(p=>p.seat===4).settlement,undefined);
+});
+
+test('pre-river direct wins project the cleared hand and winning amount together',()=>{
+ for(const community of [[],[2,18,36],[2,18,36,39]]){
+  const data=new ProtocolRoomData();data.record=record().toObject();data.snapshot=snapshot().toObject();
+  data.snapshot.handInfo.publicCardsList=community;
+  const ctx=new MessageContext(data,pb),mapper=new EnterRoomMapper(pb),target={roomID:1001,matchID:0,roomType:0};
+  const seat=new SeatData(4);seat.replace(mapper.map(data,target,1));assert.equal(seat.state.player.cards.length,2);
+  const body={...new pb.ServerMessageWinner().toObject(),handNum:25,resultsList:[result(4,{win:200,handBet:100,chip:1104,handValueType:0,myCardsList:[]})]};
+  assert.equal(Winner(body,ctx),true);seat.replace(mapper.map(data,target,2));
+  assert.equal(seat.state.handEnded,true);assert.deepEqual(seat.state.player.cards,[]);
+  assert.deepEqual(seat.state.player.settlement.win,{handValueType:0,collectedChips:100});
+  ctx.clearHand();seat.replace(mapper.map(data,target,3));assert.equal(seat.state.player.settlement,undefined);
+ }
 });

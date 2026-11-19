@@ -5,22 +5,24 @@ const bundled=await build({entryPoints:['src/assets/style1/table/components/Seat
 const {SeatEffectView}=await import('data:text/javascript;base64,'+Buffer.from(bundled.outputFiles[0].text).toString('base64'));
 const base = { mine: false, handNum: 1, presentation: 'live', player: { action: '', cards: [], name: 'test' } };
 function create() {
-  const calls = [], classes = new Set();
+  const calls = [], classes = new Set(), actionClasses=new Set();
   const effects = { play: async (key, type) => { calls.push(['play', key, type]); return true; }, stop: key => calls.push(['stop', key]) };
-  const root = { classList: { remove: value => classes.delete(value), toggle: (value, on) => on ? classes.add(value) : classes.delete(value) } };
-  return { view: new SeatEffectView(3, root, effects), calls, classes, effects };
+  const target=values=>({classList:{remove:value=>values.delete(value),toggle:(value,on)=>on?values.add(value):values.delete(value)}});
+  return { view: new SeatEffectView(3, target(classes), effects,target(actionClasses)), calls, classes, actionClasses, effects };
 }
 const allin = state => ({...state, player: {...state.player, action: '全下'}});
 const win = state => ({...state, player: {...state.player, settlement: {win: {handValueType: 1, collectedChips: 100}}}});
 
 test('ALLIN selects own/other asset, does not restart on unrelated sync, clears on next hand', async () => {
-  const { view, calls, classes } = create();
+  const { view, calls, classes, actionClasses } = create();
   view.render(base); view.render(allin(base)); await Promise.resolve();
   view.render({...allin(base), presentation:'sync'});
   assert.deepEqual(calls.filter(c=>c[0]==='play'), [['play','3:allin','allin-other']]);
   assert.ok(classes.has('mx-spine-allin'));
+  assert.ok(actionClasses.has('mx-spine-allin'),'the elevated bubble follows the ALLIN replacement');
   view.render({...base, handNum: 2});
   assert.ok(!classes.has('mx-spine-allin'));
+  assert.ok(!actionClasses.has('mx-spine-allin'),'the next hand restores the elevated bubble');
   view.render(allin({...base, handNum: 2, mine: true}));
   assert.equal(calls.filter(c=>c[0]==='play').at(-1)[2], 'allin-self');
   view.destroy();
@@ -36,12 +38,13 @@ test('WIN plays only for a live settlement transition, never init/reconnect or B
   assert.equal(calls.at(-1)[1], '3:win');
 });
 test('late animation load cannot hide a cleared action or a destroyed seat', async () => {
-  const {view, effects, classes} = create();
+  const {view, effects, classes, actionClasses} = create();
   let resolve;
   effects.play = () => new Promise(done => resolve = done);
   view.render(base); view.render(allin(base)); view.destroy();
   resolve(true); await Promise.resolve();
   assert.ok(!classes.has('mx-spine-allin'));
+  assert.ok(!actionClasses.has('mx-spine-allin'));
 });
 
 test('ALLIN holds through action/BB/language refreshes and stops specifically at hand end', async () => {

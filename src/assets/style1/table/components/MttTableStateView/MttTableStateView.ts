@@ -43,10 +43,11 @@ export class MttTableStateView {
     this.bubble.textContent=i18nMgr.Get(`UIBathTip00${Math.floor(this.tick/4)%3+1}`);
     this.transfer.textContent=i18nMgr.Get(`MTTroomNum_00${Math.floor(this.tick/4)%7+1}`);
   }
+  get returnVisible():boolean { return !this.cancel.hidden; }
   resize(width:number,height:number,scale:number):void{
     this.root.style.setProperty('--mtt-scale',String(scale));
     for(const n of [this.countdown,this.bubble,this.transfer]){n.style.left=`${width/2}px`;n.style.top=`${config.layout.messageY*scale}px`;n.style.width=`${(width/scale)-(n===this.countdown?config.layout.messageWidthGap:0)}px`;}
-    this.cancel.style.left=`${width/2}px`;this.cancel.style.top=`${Math.min(config.layout.cancelY*scale,height-config.layout.cancelBottomGap*scale)}px`;
+    this.cancel.style.left=`var(--mx-entry-center-x,${width/2}px)`;this.cancel.style.top=`var(--mx-entry-return-top,${Math.min(config.layout.cancelY*scale,height-config.layout.cancelBottomGap*scale)}px)`;
     this.addOn.style.left=`${width-config.layout.addOnRight*scale}px`;this.addOn.style.top=`${config.layout.addOnY*scale}px`;
   }
   destroy():void{clearInterval(this.timer);this.bindings.destroy();this.root.remove();}

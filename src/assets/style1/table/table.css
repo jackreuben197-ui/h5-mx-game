@@ -95,7 +95,7 @@
 .mx-seat-play-status{top:var(--mx-SeatIdentityView-mx-seat-play-status-top);width:var(--mx-SeatIdentityView-mx-seat-play-status-width);height:var(--mx-SeatIdentityView-mx-seat-play-status-height);transform:translate(var(--mx-SeatIdentityView-mx-seat-play-status-transform),var(--mx-SeatIdentityView-mx-seat-play-status-transform-2));display:flex;align-items:center;justify-content:center;border-radius:var(--mx-SeatIdentityView-mx-seat-play-status-border-radius);background:#0008;padding:var(--mx-SeatIdentityView-mx-seat-play-status-padding);pointer-events:none}
 .mx-seat-auto-status{top:var(--mx-SeatIdentityView-mx-seat-auto-status-top-2);background:#161d42cc}
 .mx-return-game{position:absolute;left:var(--mx-SeatIdentityView-mx-return-game-left);top:var(--mx-SeatIdentityView-mx-return-game-top);transform:translate(var(--mx-SeatIdentityView-mx-return-game-transform),var(--mx-SeatIdentityView-mx-return-game-transform-2));z-index:6;pointer-events:auto;width:var(--mx-SeatIdentityView-mx-return-game-width);height:var(--mx-SeatIdentityView-mx-return-game-height);border:0;border-radius:var(--mx-SeatIdentityView-mx-return-game-border-radius);background-color:transparent;color:white;padding:var(--mx-SeatIdentityView-mx-return-game-padding);white-space:nowrap;font-size:var(--mx-SeatIdentityView-mx-return-game-font-size)!important;background-repeat:no-repeat}
-.mx-return-game:active{filter:brightness(.83);scale:1.2}
+.mx-return-game:active{filter:brightness(.83)}
 .mx-seat-mine .mx-card-slot{pointer-events:auto;cursor:pointer}
 .mx-card-selected::after{content:"";position:absolute;left:var(--mx-HandCardsView-mx-card-selected-left);top:calc(var(--mx-HandCardsView-mx-card-selected-top) + var(--mx-HandCardsView-mx-card-selected-top-2));width:var(--mx-HandCardsView-mx-card-selected-width);height:var(--mx-HandCardsView-mx-card-selected-height);transform:translate(var(--mx-HandCardsView-mx-card-selected-transform),var(--mx-HandCardsView-mx-card-selected-transform-2));background:var(--mx-show-card-eye) center/contain no-repeat;pointer-events:none;z-index:3}
 .mx-auto-operation{position:absolute;bottom:var(--mx-AutoOperationView-mx-auto-operation-bottom);left:var(--mx-AutoOperationView-mx-auto-operation-left);right:var(--mx-AutoOperationView-mx-auto-operation-right);display:flex;justify-content:center;gap:var(--mx-AutoOperationView-mx-auto-operation-gap);padding-bottom:var(--mx-AutoOperationView-mx-auto-operation-padding-bottom);pointer-events:auto}
@@ -383,7 +383,7 @@
 
 /* CC ALLIN Spine replaces its text bubble; folded / buy-ins remain DOM. */
 .mx-spine-allin .mx-player-action{visibility:hidden}
-.mx-spine-allin .mx-insurance-buying .mx-player-action{visibility:visible}
+.mx-spine-allin .mx-insurance-buying .mx-player-action,.mx-spine-allin.mx-insurance-buying .mx-player-action{visibility:visible}
 
 /* One floating DEV menu; its children stay in normal document flow. */
 .mx-test-menu{position:fixed;right:var(--mx-TestMenuView-mx-test-menu-right);top:var(--mx-TestMenuView-mx-test-menu-top-3);z-index:10000;pointer-events:auto;color:#fff;font:14px Arial,sans-serif}

@@ -48,7 +48,7 @@ export class ActionControls {
     private addTimeCommand?:()=>Promise<void>,
     private settings: TexasGamePersonalSettings = defaultSettings,
   ) {
-    this.auto=new AutoOperationView(command);
+    this.auto=new AutoOperationView((action,amount)=>this.submit(action,amount));
     this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submitted=undefined;this.refresh();});
     const updateSubmitMode = () => {
       this.gesture.cancel();
@@ -236,7 +236,7 @@ export class ActionControls {
     css.setProperty('--mx-raise-thumb-height', `${50*scale}px`);
     css.setProperty('--mx-raise-confirm-offset', `${521*scale}px`);
     css.setProperty('--mx-raise-confirm-font', `${40*scale}px`);
-    css.setProperty('--mx-op-fold-size', `${147 * scale}px`);
+    css.setProperty('--mx-op-fold-size', `${ActionButton.config.foldTimerSize * scale}px`);
     css.setProperty('--mx-op-fold-x', `${-267.53 * scale}px`);
     css.setProperty('--mx-op-main-x', `${275.647 * scale}px`);
     css.setProperty('--mx-op-upper-y', `${200 * scale}px`);
@@ -271,7 +271,10 @@ export class ActionControls {
       chipLabel(value,()=>ChipFormatter.format(item.amount,this.state?.smallBlind,this.state?.showBB));
       button.append(bg,title,ratio,valueBg,value);
       const point=layout[items.length]?.[index];
-      if(point){button.style.left=`calc(50% + ${point[0]*this.opScale}px)`;button.style.top=`calc(50% - ${point[1]*this.opScale}px)`;}
+      if(point){
+        button.style.left=`calc(50% + var(--mx-quick-${items.length}-${index}-x, ${point[0]*this.opScale}px))`;
+        button.style.top=`calc(50% - var(--mx-quick-${items.length}-${index}-y, ${point[1]*this.opScale}px))`;
+      }
       button.onclick=()=>void this.submit(item.action,item.amount);this.quick.append(button);
     }
     }

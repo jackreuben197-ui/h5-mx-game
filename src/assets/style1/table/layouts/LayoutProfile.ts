@@ -1,6 +1,8 @@
 import { LayoutOriginal } from './LayoutOriginal.js';
 import { portraitSideButtons } from './side-buttons-layout.js';
 import { sideBetAnchor, profileBalanceBottom, betHalfHeight, betGap, betEdges } from './seat-bet-layout.js';
+import handCardsConfig from '../components/HandCardsView/config.json' with { type: 'json' };
+import actionButtonConfig from '../components/ActionButton/config.json' with { type: 'json' };
 import type { TableLayoutProfile } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
@@ -156,23 +158,36 @@ export class LayoutProfile extends LayoutOriginal {
     const own=this.positions(state).get(state.mySeat);
     if(!own)return super.controls(state,buttonSize);
     const u=Math.min(this.width/440,this.height/782)*this.unit,profile=this.profile;
+    const buttons=actionButtonConfig.layout.portrait;
+    const buttonUnit=Math.min(this.width*this.unit/buttons.referenceWidth,this.viewportHeight/buttons.referenceHeight)*buttonSize;
+    const scale=buttons.sideSize/actionButtonConfig.w*buttonUnit;
+    const cardWidth=Number.parseFloat(handCardsConfig.layout.css['mx-card-slot-width']);
+    const spread=own.handSpread??handCardsConfig.layout.faceStripWidth;
+    const handHalf=(cardWidth+spread/2)*own.cardScale*own.scale*this.unit/2+this.handButtonOutset(state,own);
+    // Anchor the button edges near the hand, with the original layout's compact clearance.
+    const sideGap=Math.max(6,10*u);
+    const handEdge=handHalf+sideGap;
     const rowY=(own.controlsY??own.y)*this.unit+profile.heroOperationY*u;
-    // Oval's raise face starts below the avatar-top bubble, including the 110% size.
-    let upperY=(profile.id==='oval'?48:profile.heroRaiseLift)*u;
-    const styles:Record<string,string>={};
+    let upperY=profile.heroRaiseLift*u;
+    const styles:Record<string,string>={'--mx-op-raise-size':`${buttons.raiseSize*buttonUnit}px`};
     if(profile.id==='classic'){
       const handTop=(own.y+own.cardsY*own.scale)*this.unit-35.5*u;
       // Lower the raise button and its 3/5 quick buttons by the same design distance.
-      upperY=Math.max(65*u,rowY-handTop+(6+41.25*buttonSize/2)*u)-6*u;
+      upperY=Math.max(profile.heroRaiseLift*u,rowY-handTop+6*u+buttons.raiseSize*buttonUnit/2)-6*u;
       styles['--mx-quick-lift']=`${upperY-53*u}px`;
+      styles['--mx-quick-5-0-x']=`${-325*scale}px`;
+      styles['--mx-quick-5-4-x']=`${325*scale}px`;
+      styles['--mx-quick-5-2-y']=`${380*scale}px`;
     }else if(profile.id==='balanced'||profile.id==='oval'){
       styles['--mx-quick-lift']=`${16*u}px`;
     }
-    return {scale:41.25/137*u*buttonSize,styles:{...styles,
+    return {scale,styles:{...styles,
       left:`calc(${own.x*this.unit}px - 35%)`,right:`calc(65% - ${own.x*this.unit}px)`,
       top:`${rowY-28}px`,'--mx-operation-row-y':`${rowY-28}px`,
       '--mx-raise-center-y':`${Math.max(160*u,rowY-180*u)}px`,
-      '--mx-op-upper-y':`${upperY}px`,'--mx-op-fold-x':`${-103*u}px`,'--mx-op-main-x':`${103*u}px`,
+      '--mx-op-upper-y':`${upperY}px`,
+      '--mx-op-fold-x':`calc(-${handEdge}px - var(--mx-op-fold-size,34px) / 2)`,
+      '--mx-op-main-x':`calc(${handEdge}px + var(--mx-op-button-size,32px) / 2)`,
     }};
   }
 }

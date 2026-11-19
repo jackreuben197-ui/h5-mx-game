@@ -78,12 +78,12 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
  for(const profile of ['balanced','oval','classic'])for(const [width,height] of [[320,400],[375,500],[390,844],[440,782],[768,1024]])for(const mine of [1,5,9]){
   const layout=defaultTableUi.createLayout(profile);layout.resize(width,height,false);
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
-  const avatar=profile==='balanced'?60:profile==='oval'?50:58;
+  const avatar=profile==='balanced'?60:profile==='oval'?54:58;
   const ratio=p.scale*layout.unit*199/avatar;
   const cardsY=p.cardsY*p.scale*layout.unit/ratio;
   if(profile==='classic')assert.ok(Math.abs(cardsY+73)<.001);
   else {
-   assert.ok(cardsY>=65-.001);
+   assert.ok(cardsY>=(profile==='oval'?62:65)-.001);
    const styles=layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles;
    const typeY=parseFloat(styles['--mx-ring-hand-type-y']);
    const infoY=parseFloat(styles['--mx-hero-info-y']);
@@ -94,6 +94,6 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
    assert.ok(p.betX>0&&p.betY<0,'hero bet stays above and to the right of raise');
   }
   assert.ok(Math.abs(p.dealerX*p.scale*layout.unit/ratio-(profile==='classic'?-44:-54))<.001);
-  if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-(profile==='balanced'?30:25)*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
+  if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-avatar/2*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
  }
 });

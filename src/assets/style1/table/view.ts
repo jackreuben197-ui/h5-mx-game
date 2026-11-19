@@ -71,6 +71,7 @@ import { SettlementWatchView } from './components/SettlementWatchView/Settlement
 import { TableMenuView } from './components/TableMenuView/TableMenuView.js';
 import { TableToastView } from './components/TableToastView/TableToastView.js';
 import { RoomInfoView } from './components/RoomInfoView/RoomInfoView.js';
+import { entryButtonsLayout } from './layouts/entry-buttons-layout.js';
 import { TableConfirmDialog } from './components/TableConfirmDialog/TableConfirmDialog.js';
 import { ActionControls } from './action-controls.js';
 import { SpriteAtlas } from './SpriteAtlas.js';
@@ -93,6 +94,7 @@ export class TableView {
   private viewport = element('div', 'mx-viewport');
   private stage = element('div', 'mx-stage');
   private seats = element('div', 'mx-seats');
+  private actionBubbles=element('div','mx-action-bubbles');
   private roomInfo = new RoomInfoView();
   private info = this.roomInfo.root;
   private roomSettings?:GameplayTableSettingView;
@@ -143,6 +145,8 @@ export class TableView {
   private navigation: ReturnType<NonNullable<TableComponents['navigation']>>;
   private settlementWatch: SettlementWatchView;
   private resize: ResizeObserver;
+  private entryFrame=0;
+  private entryObserver=new ResizeObserver(()=>this.queueEntryButtons());
   private onVisible = () => {
     if (!document.hidden) this.presenter.restore();
   };
@@ -319,7 +323,7 @@ export class TableView {
       this.menu.root,
     );
     this.viewport.append(this.stage);
-    this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.settlementWatch.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.toast.root, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
+    this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.actionBubbles, this.settlementWatch.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.toast.root, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
     if (this.report && this.history) this.root.append(this.report.root, this.history.root);
     this.root.append(this.gameRules.root, this.insuranceRules.root);
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
@@ -330,7 +334,7 @@ export class TableView {
     if (specialOperations && options.seating) {
       this.secondPcs = new AgreeSecondPcsView(specialOperations, options.seating, error => this.toast.show(error));
       this.insurance = new InsuranceView(specialOperations, options.seating, error => this.toast.show(error));
-      this.squid=new SquidView(specialOperations,options.seating,this.confirmDialog,error=>this.toast.show(error));
+      this.squid=new SquidView(specialOperations,options.seating,this.confirmDialog,error=>this.toast.show(error),()=>this.queueEntryButtons());
       this.stage.append(this.squid.root);
       this.jackpot=new JackpotView(specialOperations.data,()=>options.records?.openJackpot?.(),()=>queueMicrotask(()=>{if(this.root.isConnected)this.resizeTable();}));
       this.stage.append(this.jackpot.root);
@@ -351,6 +355,7 @@ export class TableView {
     });
     this.resize.observe(this.root);
     this.resize.observe(this.viewport);
+    this.entryObserver.observe(this.info);
     document.addEventListener('visibilitychange', this.onVisible);
   }
   render(state: TableSnapshot): void {
@@ -378,8 +383,11 @@ export class TableView {
         this.seatViews.set(id, view);
         this.seats.append(view.root);
       }
-    for (const [id, position] of this.layout.positions(state,this.settings.tableAppearance.publicCardSize/100))
-      this.seatViews.get(id)?.place(position, positionMode);
+    for (const [id, position] of this.layout.positions(state,this.settings.tableAppearance.publicCardSize/100)){
+      const seat=this.seatViews.get(id);
+      seat?.setActionLayer?.(this.layout.elevatedActionBubbles?this.actionBubbles:null,this.layout.unit);
+      seat?.place(position, positionMode);
+    }
     this.refreshRoomInfo();
     const controls=this.layout.controls(state,this.settings.tableAppearance.betButtonSize/100);
     if(controls.scale!==undefined)this.controls.setScale?.(controls.scale);
@@ -393,6 +401,7 @@ export class TableView {
     this.menu.render(state);
     this.tableTools?.render(state);
     this.allInTest?.update(state);
+    this.queueEntryButtons();
   }
   private resizeTable(): void {
     const box = this.root.getBoundingClientRect();
@@ -446,6 +455,25 @@ export class TableView {
       node.style.transform=point.scale===undefined?'':`scale(${point.scale})`;
     }
     this.applyLayoutStyles(this.root,content.styles,this.layoutStyles);
+    this.queueEntryButtons();
+  }
+  private queueEntryButtons():void {
+    if(this.entryFrame)return;
+    this.entryFrame=requestAnimationFrame(()=>{
+      this.entryFrame=0;
+      const state=this.data.info.snapshot;
+      if(!state||!this.root.isConnected)return;
+      const bounds=this.seatViews.get(state.mySeat||1)?.entryActionsBounds?.();
+      const info=this.info.getBoundingClientRect(),stage=this.stage.getBoundingClientRect();
+      if(!bounds||!info.height||!this.layout.unit)return;
+      const mtt=!!this.mtt?.returnVisible;
+      const obstacles=[...(this.board instanceof PublicCardsView?this.board.cardBounds():[]),...this.secondBoard.cardBounds(),
+        this.pot.total.getBoundingClientRect(),this.pot.pool.getBoundingClientRect()];
+      const styles=entryButtonsLayout({info,stage,avatarTop:bounds.avatarTop,unit:this.layout.unit,seatScale:bounds.scale,
+        join:!!this.squid?.joinVisible,returning:mtt||bounds.returnVisible,mtt,mttScale:this.layout.suggest,obstacles});
+      for(const [name,value]of Object.entries(styles))this.root.style.setProperty(name,value);
+      this.root.dataset.entryActions='true';
+    });
   }
   private applyLayoutStyles(node: HTMLElement, values: Record<string,string>, previous: Set<string>): void {
     for(const name of previous)if(!(name in values))node.style.removeProperty(name);
@@ -474,6 +502,7 @@ export class TableView {
         game: i18nMgr.Get((state.pokerType ?? 0) === 2 ? 'PokerType_2' : (state.gameType ?? 0) > 0 ? 'UITexasInfo_Omaha' : 'GameType_0'),
         id: lines[2]!, details: details.concat(extra), legacy: lines.concat(extra) };
     });
+    this.queueEntryButtons();
   }
   private deltaToOrigin(group: HTMLElement): { x: number; y: number } {
     const rect = group.getBoundingClientRect(),
@@ -486,6 +515,8 @@ export class TableView {
     };
   }
   destroy(): void {
+    this.entryObserver.disconnect();
+    cancelAnimationFrame(this.entryFrame);
     this.roomInfo.destroy();
     this.media?.destroy();
     this.secondPcs?.destroy();

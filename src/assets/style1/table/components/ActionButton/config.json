@@ -11,6 +11,12 @@
     "raise": "raw/ui/raise.png"
   },
   "layout": {
+    "portrait": {
+      "referenceWidth": 440,
+      "referenceHeight": 782,
+      "sideSize": 41.31,
+      "raiseSize": 43.96
+    },
     "css": {
       "mx-fold-timer-center": "47.9591837%",
       "mx-fold-timer-face-ratio": "0.9319727891"
