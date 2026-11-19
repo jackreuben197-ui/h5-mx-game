@@ -12,5 +12,5 @@ test('original compact room details preserve original public card spacing and la
  const layout=defaultTableUi.createLayout('original');layout.resize(440,782,false);
  assert.equal(layout.compactRoomInfo,true);assert.equal(layout.id,'original');
  const info=layout.content({dual:false,boardSize:1,jackpotHeight:0});assert.ok(parseFloat(info.styles['--mx-room-info-width'])>0);
- layout.resize(900,440,true);assert.equal(layout.compactRoomInfo,false);
+ layout.resize(900,440,true);assert.equal(layout.compactRoomInfo,true);
 });

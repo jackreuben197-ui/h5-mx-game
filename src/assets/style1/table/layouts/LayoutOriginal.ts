@@ -3,17 +3,24 @@ import { landscapeLayout } from './landscape-layout.js';
 import { sideBetAnchor, legacyBalanceBottom, betHalfHeight, betGap, betEdges } from './seat-bet-layout.js';
 import { handCardCount } from '../../../../logic/HandCardCount.js';
 import handCardsConfig from '../components/HandCardsView/config.json' with { type: 'json' };
+import roomInfoConfig from '../components/RoomInfoView/config.json' with { type: 'json' };
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { SeatPlacement } from '../../../../ui/TableLayout.js';
 /** Display coordinates only. Changing this class never changes seat IDs or protocol data. */
 import type { TableLayout, LayoutContentOptions, LayoutContent, LayoutControls } from '../../../../ui/TableLayout.js';
 export class LayoutOriginal implements TableLayout {
   readonly id: string = 'original';
-  get compactRoomInfo(): boolean { return !this.landscape; }
+  get compactRoomInfo(): boolean { return true; }
   unit = 1;
   menuScale = 1;
   protected viewportBottom = 0;
   protected viewportHeight = 0;
+  protected get roomInfoWidth(): number {
+    if(this.landscape)return roomInfoConfig.layout.landscapeWidth;
+    // Use the visible frame so classic's shorter stage keeps the same screen width.
+    const scale=Math.min(this.width*this.unit/440,this.viewportHeight/782);
+    return roomInfoConfig.layout.portraitWidth*scale/this.unit;
+  }
   width = 1440;
   height = 2688;
   suggest = 1;
@@ -185,7 +192,7 @@ export class LayoutOriginal implements TableLayout {
       total:l.landscape?{x:l.width/2,y:l.height*(dual?.23:.385)}:{x:l.width/2,y:originalMiddle?l.height*.301:(697.8+jackpotHeight)*l.suggest},
       pool:l.landscape?{x:l.width/2,y:l.height*(dual?.29:.44)}:{x:l.width/2,y:originalMiddle?l.height*.339:(775.6+jackpotHeight)*l.suggest},
       info:l.landscape?{x:l.width/2-650*scale,y:l.height*.44}:{x:l.width/2,y:dual?center+gap/2+88*scale*boardSize+infoClearance:Math.min(l.height*.426,center-88*scale*boardSize-infoClearance)},
-      styles:originalMiddle?{'--mx-room-info-width':`${this.width*.6}px`,'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{},
+      styles:{'--mx-room-info-width':`${this.roomInfoWidth}px`,...(originalMiddle?{'--mx-jackpot-y':`${l.height*.272}px`,'--mx-jackpot-scale':String(Math.min(l.suggest,l.height/3115)),'--mx-calltime-y':`${l.height*.367}px`,'--mx-original-info-font':`${infoFont}px`}:{})},
     };
   }
   controls(state: TableSnapshot, buttonSize: number): LayoutControls {
