@@ -11,6 +11,8 @@ import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
 import { element, profitAmount } from '../../dom.js';
+import { ReportValueFitter } from './ReportValueFitter.js';
+import './layout.css';
 const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
 export class ReportView {
     readonly dialog: RecordDialogView;
@@ -27,6 +29,7 @@ export class ReportView {
     private observers = element('div', 'mx-report-observers');
     private pagination: RecordPaginationView;
     private playerInfo: ReportPlayerInfoView;
+    private values = new ReportValueFitter();
     private tick?: ReturnType<typeof setInterval>;
     constructor(readonly controller: ReportController) {
         this.dialog = new RecordDialogView(() => t('UIMine_RecordList', '战绩'), () => controller.close(), 'left', config.layout.dockTop);
@@ -62,6 +65,7 @@ export class ReportView {
     private onRounds(): void { this.render(); }
     private render(): void {
         const { state, records } = this.controller;
+        this.values.clear();
         this.dialog.show(state.open);
         if (!state.open) {
             this.playerInfo.close();
@@ -171,7 +175,7 @@ export class ReportView {
         ] as const;
         this.summary.replaceChildren(...summary.map(([label, value]) => {
             const cell = element('div', '');
-            cell.append(element('span', '', label), typeof value === 'string' ? element('strong', '', value) : value);
+            cell.append(element('span', '', label), this.values.wrap(typeof value === 'string' ? element('strong', '', value) : value));
             return cell;
         }));
         const rail = element('div', 'mx-report-observer-rail');
@@ -216,6 +220,8 @@ export class ReportView {
                     button.onclick = () => void this.playerInfo.open(player);
                     button.append(value);
                     td.append(button);
+                } else if (index > 0 && !(this.controller.state.tab === 'jackpot' && index === 3)) {
+                    td.append(this.values.wrap(value));
                 } else {
                     td.append(value);
                 }
@@ -243,5 +249,5 @@ export class ReportView {
         this.root.style.setProperty('--record-unit', `${designWidth / config.layout.designWidth}px`);
         this.playerInfo.onFrameResize(w, h);
     }
-    destroy(): void { clearInterval(this.tick); this.bindings.destroy(); this.controller.destroy(); this.playerInfo.destroy(); this.dialog.destroy(); }
+    destroy(): void { clearInterval(this.tick); this.bindings.destroy(); this.controller.destroy(); this.values.clear(); this.playerInfo.destroy(); this.dialog.destroy(); }
 }

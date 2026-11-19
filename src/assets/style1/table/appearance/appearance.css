@@ -80,26 +80,26 @@
 .mx-table[data-orientation=landscape] .mx-operation-quick{top:4px;bottom:auto}
 .mx-table[data-orientation=landscape] .mx-operation-row{justify-content:center;gap:24px}
 .mx-table[data-orientation=landscape] .mx-operation-row .mx-operation-button{position:static;transform:none;width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
-.mx-menu-back{display:none}
-/* The return button takes the original settings button's slot, even on a shortened classic stage. */
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-table-menu{
+/* All layouts share the leave button and original gear artwork. */
+.mx-table-menu{
   position:absolute;top:var(--mx-TableMenuView-mx-table-menu-top);left:var(--mx-TableMenuView-mx-table-menu-left);display:flex;gap:var(--mx-TableMenuView-mx-table-menu-gap);z-index:5;pointer-events:none;
   transform-origin:var(--mx-TableMenuView-mx-table-menu-transform-origin) var(--mx-TableMenuView-mx-table-menu-transform-origin-2);transform:scale(var(--mx-menu-scale,1)) translate(var(--mx-menu-left),var(--mx-menu-top));
 }
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-back,
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu{
+.mx-menu-back,.mx-menu{
   position:relative;inset:auto;display:block;flex:none;width:var(--mx-menu-size);height:var(--mx-menu-size);padding:var(--mx-TableMenuView-mx-menu-padding);
-  border:1px solid #ffffff40;border-radius:var(--mx-TableMenuView-mx-menu-border-radius);background:linear-gradient(135deg,#ffffff12,#0003)!important;
-  box-shadow:inset 0 0 13px #ffffff25;color:white;pointer-events:auto;
+  border:0;background-color:transparent;color:white;pointer-events:auto;
+}
+.mx-menu-back{
+  border:1px solid #ffffff40;border-radius:var(--mx-TableMenuView-mx-menu-border-radius);background:linear-gradient(135deg,#ffffff12,#0003);
+  box-shadow:inset 0 0 13px #ffffff25;
 }
 .mx-menu-back::before{
   content:'';position:absolute;left:var(--mx-TableMenuView-mx-menu-back-left);top:var(--mx-TableMenuView-mx-menu-back-top);width:var(--mx-TableMenuView-mx-menu-back-width);height:var(--mx-TableMenuView-mx-menu-back-height);
   box-sizing:border-box;border:solid #fff;border-width:0 0 6px 6px;
   transform:translate(var(--mx-TableMenuView-mx-menu-back-transform),var(--mx-TableMenuView-mx-menu-back-transform-2)) rotate(var(--mx-TableMenuView-mx-menu-back-transform-3));pointer-events:none;
 }
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) :is(.mx-menu-back,.mx-menu):focus-visible{outline:2px solid #fff;outline-offset:2px}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:var(--mx-TableMenuView-mx-menu-inset) var(--mx-TableMenuView-mx-menu-inset-2);background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:var(--mx-TableMenuView-mx-menu-border-radius-2)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-label{display:none}
+:is(.mx-menu-back,.mx-menu):focus-visible{outline:2px solid #fff;outline-offset:2px}
+.mx-menu-label{display:none}
 .mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
 /* Keep the exported foreground in its original bottom slice; the source art removes the inner arc. */
 .mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
@@ -109,8 +109,9 @@
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-width:10px;box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
 .mx-table .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius)}
 /* Keep confirmation on the raise entry; the track ends above that button. */
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-raise-size,var(--mx-op-button-size));height:var(--mx-op-raise-size,var(--mx-op-button-size))}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-raise-size,var(--mx-op-button-size))/2 - var(--mx-raise-height)/2 - var(--mx-op-raise-size,var(--mx-op-button-size)) * .35)}
+.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{--mx-raise-height:var(--mx-original-raise-height);--mx-raise-info-offset:var(--mx-original-raise-info-offset)}
+.mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-confirm{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y));width:var(--mx-op-raise-size,var(--mx-op-button-size));height:var(--mx-op-raise-size,var(--mx-op-button-size))}
+.mx-table:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{top:calc(var(--mx-operation-row-y) + 28px - var(--mx-op-upper-y) - var(--mx-op-raise-size,var(--mx-op-button-size))/2 - var(--mx-raise-height)/2 - var(--mx-op-raise-size,var(--mx-op-button-size)) * .35)}
 .mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) :is(.mx-operation-raise,.mx-operation-row[data-allin-secondary=true] .mx-operation-allin){width:var(--mx-op-raise-size);height:var(--mx-op-raise-size);font-size:calc(40 / 137 * var(--mx-op-raise-size))!important}
 .mx-table[data-table-layout=oval]:not([data-orientation=landscape]) :is(.mx-operation-fold,.mx-operation-call,.mx-operation-check,.mx-operation-row:not([data-allin-secondary=true]) .mx-operation-allin){top:calc(50% + var(--mx-oval-op-side-drop))}
 .mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-operation-straddle{top:calc(50% + var(--mx-op-straddle-y,33px) + var(--mx-oval-op-side-drop))}
@@ -184,7 +185,7 @@
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-stack{
   width:var(--mx-SeatIdentityView-mx-stack-width);font-size:calc(var(--mx-SeatIdentityView-mx-stack-font-size-2) * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
-  line-height:calc(var(--mx-SeatIdentityView-mx-stack-line-height-2) * var(--mx-classic-seat-unit));overflow:hidden;text-overflow:ellipsis;
+  line-height:calc(var(--mx-SeatIdentityView-mx-stack-line-height-2) * var(--mx-classic-seat-unit));overflow:hidden;text-overflow:clip;
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{
   width:calc(var(--mx-SeatIdentityView-mx-player-name-width) * var(--mx-classic-seat-unit));font-weight:600;
@@ -268,6 +269,9 @@
 /* A separate table layer lets oval bubbles clear the hero's raise button as well. */
 .mx-action-bubbles{position:absolute;inset:0;z-index:16;pointer-events:none}
 .mx-seat-action{position:absolute;width:0;height:0;transform-origin:0 0}
+/* Classic bets must clear public-card placeholders and all other stage content. */
+.mx-bets{position:absolute;inset:0;z-index:9;pointer-events:none}
+.mx-seat-bets{position:absolute;pointer-events:none}
 .mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-player-action{z-index:11}
 .mx-seat-win-amount{font-weight:var(--mx-SeatIdentityView-qa-win-weight)}
 .mx-table .mx-seat-play-status{font-size:calc(var(--mx-SeatIdentityView-qa-wait-font) * var(--mx-table-text-scale))}

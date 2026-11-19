@@ -53,7 +53,7 @@ export class TableChatView {
     this.send.setAttribute('aria-label',i18nMgr.Get('MX_ChatSend'));
     this.send.onclick=()=>void this.submit();this.input.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();void this.submit();}};
     const quickButton=element('button','mx-chat-quick-button');quickButton.setAttribute('aria-label',i18nMgr.Get('MX_ChatQuick'));
-    this.quick.hidden=true;quickButton.onclick=()=>{this.renderQuick();this.quick.hidden=!this.quick.hidden;};
+    this.quick.hidden=true;quickButton.onclick=()=>{if(!this.quick.hidden){this.hideQuick();return;}this.renderQuick();this.quick.hidden=false;};
     const modes=element('div','mx-chat-modes');
     for(const [value,key] of [[false,'MX_Chat'],[true,'MX_ChatAndDanmu']] as const){const label=element('label',''),radio=element('input','');radio.type='radio';radio.name=`chat-mode-${records.target.roomID}`;radio.checked=!value;radio.onchange=()=>{this.bullet.checked=value;};label.append(radio,element('span','',()=>i18nMgr.Get(key)));modes.append(label);}
     const inputField=element('div','mx-chat-input-field');inputField.append(this.input);
@@ -69,10 +69,10 @@ export class TableChatView {
     this.scrollBottom();void this.records.chatHistory?.(false,this.records.data.chat.needsLatestHistorySync).catch(this.error);
     void this.records.chatQuickMessages?.().then(raw=>{if(!this.dead){this.quickData=raw;this.renderQuick();}}).catch(this.error);
   }
-  close():void{this.records.data.chat.setChatDialogOpen(false);this.dialog.show(false);this.quick.hidden=true;this.emoji.clear();}
-  private async submit():Promise<void>{
-    if(this.send.disabled||!this.input.value.trim())return;this.send.disabled=true;const text=this.input.value;
-    try{await this.records.sendChat?.(text,this.bullet.checked);if(!this.dead&&this.input.value===text)this.input.value='';}
+  close():void{this.records.data.chat.setChatDialogOpen(false);this.dialog.show(false);this.hideQuick();this.emoji.clear();}
+  private async submit(text=this.input.value,clearInput=true):Promise<void>{
+    if(this.dead||this.send.disabled||!text.trim())return;this.send.disabled=true;
+    try{await this.records.sendChat?.(text,this.bullet.checked);if(!this.dead&&clearInput&&this.input.value===text)this.input.value='';}
     catch(e){this.error(e);}finally{if(!this.dead)this.send.disabled=false;}
   }
   @bindEvent(Chat.NEW_MESSAGE_ALERT_CHANGED,'chat')
@@ -101,9 +101,21 @@ export class TableChatView {
   private scrollBottom():void{this.dialog.body.scrollTop=this.dialog.body.scrollHeight;}
   @bindEvent(Chat.DANMU_ADDED,{dataSource:'chat',initIgnore:true})
   private onDanmu(message:{name:string;content:string}):void{if(!this.records.data.mtt)this.danmu.play(`${message.name}: ${message.content}`);}
+  private hideQuick():void{this.quick.hidden=true;}
+  private sendQuick(text:string):void{
+    if(this.dead||this.send.disabled||this.quick.hidden||!text.trim())return;
+    this.hideQuick();
+    void this.submit(text,false);
+  }
   private renderQuick():void{
     const parse=(raw:unknown):string[]=>{if(typeof raw==='string'){try{return parse(JSON.parse(raw));}catch{return raw.trim()?[raw]:[];}}if(Array.isArray(raw))return raw.flatMap(v=>typeof v==='string'?[v]:parse(v));if(raw&&typeof raw==='object'){const v=raw as Record<string,any>;if(v.data||v.list)return parse(v.data??v.list);const item=v.multi_language??v;const locale=i18nMgr.language;return [String(item[locale==='en'?'us_name':locale==='pt'?'br_name':'cn_name']??item.us_name??'')].filter(Boolean);}return [];};
-    this.quick.replaceChildren(...parse(this.quickData).map(text=>{const b=element('button','',text);b.onclick=()=>{this.input.value=text;this.quick.hidden=true;this.input.focus();};return b;}));
+    this.quick.replaceChildren(...parse(this.quickData).map(text=>{
+      const b=element('button','',text);b.type='button';
+      b.onpointerdown=e=>{if(e.isPrimary&&e.button===0&&!this.send.disabled)b.classList.add('mx-chat-quick-pressed');};
+      const release=()=>b.classList.remove('mx-chat-quick-pressed');
+      b.onpointerup=release;b.onpointercancel=release;b.onpointerleave=release;
+      b.onclick=()=>this.sendQuick(text);return b;
+    }));
   }
   private fitKeyboard=():void=>{
     const viewport=window.visualViewport;if(!viewport||this.dialog.root.hidden)return;

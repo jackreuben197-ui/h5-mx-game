@@ -8,6 +8,9 @@
   "paths": {
     "infoTip": "raw/ui/infoTip.png"
   },
+  "images": {
+    "infoTip": { "pack": false }
+  },
   "layout": {
     "css": {
       "mx-room-settings-font-size": "46",

@@ -140,8 +140,6 @@
 
 /* UIRoomTexas btn_menu icon is 70 below its top anchor. */
 .mx-table-menu{--mx-menu-left:61px;--mx-menu-top:70px;--mx-menu-size:108px}
-/* Short original stages lift settings clear of the squid without moving it into the seats. */
-.mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-table-menu{translate:0 calc(var(--mx-menu-short-stage,0) * var(--mx-TableMenuView-original-short-top-offset))}
 .mx-menu{left:var(--mx-menu-left);top:var(--mx-menu-top);width:var(--mx-menu-size);height:var(--mx-menu-size)}
 
 /* UIBringIn / WalletItem: CC assets, measured against the 398x724 reference. */
@@ -360,7 +358,8 @@
 .mx-buyin-auto-description{overflow-wrap:anywhere}
 
 /* CC left side menu: 720-wide glass panel, 553×168 rows, padding 80 / gap 20. */
-.mx-menu-overlay{position:absolute;inset:var(--mx-TableMenuView-mx-menu-overlay-inset);z-index:15;--menu-unit:.277px;visibility:hidden;pointer-events:none;transition:visibility 0s .25s}
+/* Above table action bubbles (16), below modal panels (20+). */
+.mx-menu-overlay{position:absolute;inset:var(--mx-TableMenuView-mx-menu-overlay-inset);z-index:17;--menu-unit:.277px;visibility:hidden;pointer-events:none;transition:visibility 0s .25s}
 .mx-menu-overlay[data-open=true]{visibility:visible;pointer-events:auto;transition-delay:0s}
 .mx-menu-shade{position:absolute;inset:var(--mx-TableMenuView-mx-menu-shade-inset);width:var(--mx-TableMenuView-mx-menu-shade-width);height:var(--mx-TableMenuView-mx-menu-shade-height);border:0;opacity:0;transition:opacity .25s linear}
 .mx-menu-overlay[data-open=true] .mx-menu-shade{opacity:1}

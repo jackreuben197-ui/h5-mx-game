@@ -13,6 +13,8 @@ import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { element } from '../../dom.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
 import type { SeatState } from '../../../../../data/SeatData.js';
+import { SeatInfoTicker } from './SeatInfoTicker.js';
+import './layout.css';
 export class SeatIdentityView {
   readonly root = element('div', 'mx-seat-identity');
   readonly frame=localFrame(this.root,config.w,config.h,config.anchor.x,config.anchor.y);
@@ -33,6 +35,8 @@ export class SeatIdentityView {
   private name = element('span', 'mx-player-name');
   private line = element('span', 'mx-player-line');
   private chips = element('strong', 'mx-stack');
+  private nameTicker = new SeatInfoTicker(this.name, () => getComputedStyle(this.name).position !== 'absolute');
+  private chipsTicker = new SeatInfoTicker(this.chips);
   private fold = element('div', 'mx-fold-cover', () => i18nMgr.Get("UITexas_fold", [], "弃牌"));
   private win = element('div','mx-seat-win');
   private winHandType = element('span','mx-seat-win-hand-type');
@@ -85,7 +89,8 @@ export class SeatIdentityView {
     if(layer)layer.classList.toggle('mx-insurance-buying',this.root.classList.contains('mx-insurance-buying'));
     if(this.action.parentElement!==parent)parent.append(this.action);
   }
-  destroy(): void { this.winHandTypeResize.disconnect(); this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
+  refreshInfoLayout(): void { this.nameTicker.refresh(); this.chipsTicker.refresh(); }
+  destroy(): void { this.nameTicker.destroy(); this.chipsTicker.destroy(); this.winHandTypeResize.disconnect(); this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
   private fitWinHandType(): void {
     const width = this.winHandType.clientWidth;
     const textWidth = this.winHandTypeText.scrollWidth;
@@ -108,8 +113,9 @@ export class SeatIdentityView {
     this.avatarButton.setAttribute('aria-label', p ? `${i18nMgr.Get('MX_PlayerStats', [], '玩家资料')}: ${p.name}` : '');
     this.name.hidden = state.mine;
     this.line.hidden = state.mine;
-    this.name.textContent = p?.name ?? '';
-    chipLabel(this.chips,p ? new ChipFormatter(state.smallBlind, state.showBB,state.isMtt).showPlayerBalanceWithShowBB(p.chips) : '');
+    const owner = String(p?.userRid ?? '');
+    this.nameTicker.render(p?.name ?? '', owner);
+    this.chipsTicker.render(p ? new ChipFormatter(state.smallBlind, state.showBB,state.isMtt).showPlayerBalanceWithShowBB(p.chips) : '', owner, chipLabel);
     this.avatarImage.set(p?.avatar ?? '', String(p?.userRid ?? ''));
     const win = p?.settlement?.win;
     const winPercent100=p?.winPercent100;

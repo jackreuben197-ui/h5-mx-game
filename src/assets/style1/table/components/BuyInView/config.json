@@ -14,6 +14,9 @@
     "recordDiamond": "raw/ui/recordDiamond.png",
     "chip": "raw/ui/chip.png"
   },
+  "images": {
+    "infoTip": { "pack": false }
+  },
   "layout": {
     "css": {
       "mx-buyin-panel-padding": "65",

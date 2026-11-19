@@ -24,6 +24,8 @@
     "classicBorder": "raw/ui/classicAvatarBorder.svg"
   },
   "layout": {
+    "infoScrollSpeed": 90,
+    "infoScrollDelayMs": 1200,
     "css": {
       "mx-player-name-font-size": "35px",
       "mx-player-name-line-height": "44.1px",

@@ -10,6 +10,9 @@
     "switchTrack": "raw/ui/switchTrack.png",
     "switchKnob": "raw/ui/switchKnob.png"
   },
+  "images": {
+    "infoTip": { "pack": false }
+  },
   "layout": {
     "css": {
       "mx-room-setting-row-grid-template-columns": "0",

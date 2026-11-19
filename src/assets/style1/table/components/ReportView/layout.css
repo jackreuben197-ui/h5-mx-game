@@ -1,0 +1,26 @@
+.mx-report-value {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.mx-report-value > .mx-report-value-text {
+  display: block;
+  flex: none;
+  width: max-content;
+  white-space: pre;
+  overflow-wrap: normal;
+  transform-origin: center;
+  font-weight: inherit;
+}
+.mx-report-bringin > .mx-report-stored-chips {
+  white-space: nowrap;
+}
+.mx-report-overlay > .mx-record-panel > .mx-record-body > .mx-report-summary > div {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+.mx-report-overlay > .mx-record-panel > .mx-record-body > .mx-report-summary > div > span:first-child {
+  flex: none;
+}

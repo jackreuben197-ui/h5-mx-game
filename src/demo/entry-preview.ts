@@ -3,8 +3,8 @@ import { ProtocolRuntime } from '../net/ProtocolRuntime.js';
 import { ProtocolFixtureHost } from './ProtocolFixtureHost.js';
 import { mountMxGame } from '../host/mx-host.js';
 import './entry-preview.css';
-// Both dev and built preview start muted; do not overwrite the saved preference.
-settings.soundOn = false;
+// Both dev and built preview start muted until the user saves a sound choice.
+if (!settings.hasSavedSoundPreference) settings.soundOn = false;
 const status = document.querySelector<HTMLElement>('#entry-status')!;
 const pb = await new ProtocolRuntime().load();
 const fixture = new ProtocolFixtureHost(pb, (message) => {

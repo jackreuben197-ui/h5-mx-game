@@ -113,6 +113,37 @@ test('personal preferences preserve CC storage keys and notify synchronously',()
   }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
 });
 
+test('quick-bet count defaults to three and restores the saved account configuration',()=>{
+  const values=new Map();const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)}});
+  try{
+    const settings=new TexasGamePersonalSettings('quick-count');settings.setAccount(101);
+    assert.equal(settings.shortCutMode,1);assert.equal(settings.tableShortcuts.length,3);
+    settings.shortCutMode=2;
+    const reloaded=new TexasGamePersonalSettings('quick-count');reloaded.setAccount(101);
+    assert.equal(reloaded.shortCutMode,2);assert.equal(reloaded.tableShortcuts.length,5);
+    reloaded.setAccount(102);
+    assert.equal(reloaded.shortCutMode,1);assert.equal(reloaded.tableShortcuts.length,3);
+    reloaded.setAccount(101);
+    assert.equal(reloaded.shortCutMode,2);assert.equal(reloaded.tableShortcuts.length,5);
+  }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
+});
+
+test('updating inactive quick-bet presets keeps the configured button count and ratios',()=>{
+  const settings=new TexasGamePersonalSettings('quick-presets');
+  settings.setCustomPotRatio(0,79);
+  settings.shortCut5ActionsIndex=[0,1,3,6,9];
+  assert.equal(settings.tableShortcuts.length,3);
+  assert.deepEqual(settings.tableShortcuts.map(cut=>cut.name),['79%','1.0','1.2']);
+  settings.shortCutMode=2;
+  settings.setCustomPotRatio(1,60);
+  settings.shortCut3ActionsIndex=[0,1,2];
+  assert.equal(settings.tableShortcuts.length,5);
+  assert.deepEqual(settings.tableShortcuts.map(cut=>cut.name),['1/5','60%','1/2','1.0','2']);
+  settings.shortCutMode=1;
+  assert.deepEqual(settings.tableShortcuts.map(cut=>cut.name),['79%','1/4','1/3']);
+});
+
 test('quick bet reset preserves table appearance and original ratio presets',()=>{
   const preferences=new TexasGamePersonalSettings();
   preferences.setDeskTypeToStorage(4);

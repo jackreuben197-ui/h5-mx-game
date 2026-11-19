@@ -10,9 +10,9 @@ try{
  const save=async(layout,scene,width)=>{const name=`${layout}-${scene}-${width}`;await page.evaluate(()=>Promise.all(document.getAnimations().filter(a=>a.effect?.getComputedTiming().endTime<=5000).map(a=>a.finished.catch(()=>{}))));await page.locator('#audit-stage').screenshot({path:`${out}/${name}.png`});results.push({layout,scene,width,result:'通过',image:name+'.png'});};
  for(const layout of ['original','balanced','oval','classic'])for(const [width,height]of [[320,500],[375,812],[440,782]]){
   await load(layout,'observer-bottom',width,height,{long:1,bb:1});
-  const bottom=page.locator('.mx-seat[data-seat="1"]');const avatar=await bottom.locator('.mx-avatar-fallback').boundingBox(),bet=await bottom.locator('.mx-seat-bet').boundingBox();
+  const bottom=page.locator('.mx-seat[data-seat="1"]');const avatar=await bottom.locator('.mx-avatar-fallback').boundingBox(),bet=await page.locator(':is(.mx-seat,.mx-seat-bets)[data-seat="1"] .mx-seat-bet').boundingBox();
   assert.ok(bet&&avatar&&bet.y+bet.height<=avatar.y,`${layout} ${width}: 旁观底部下注应在头像上方`);
-  const collisions=await page.locator('.mx-seat[data-edge=left],.mx-seat[data-edge=right]').evaluateAll(seats=>seats.filter(s=>{const a=s.querySelector('.mx-avatar-fallback').getBoundingClientRect(),b=s.querySelector('.mx-seat-bet-chip').getBoundingClientRect();return b.right>a.left+1&&b.left<a.right-1&&b.bottom>a.top+1&&b.top<a.bottom-1;}).map(s=>s.dataset.seat));
+  const collisions=await page.locator('.mx-seat[data-edge=left],.mx-seat[data-edge=right]').evaluateAll(seats=>seats.filter(s=>{const a=s.querySelector('.mx-avatar-fallback').getBoundingClientRect(),b=(s.querySelector('.mx-seat-bet-chip')??document.querySelector(`.mx-seat-bets[data-seat="${s.dataset.seat}"] .mx-seat-bet-chip`)).getBoundingClientRect();return b.right>a.left+1&&b.left<a.right-1&&b.bottom>a.top+1&&b.top<a.bottom-1;}).map(s=>s.dataset.seat));
   assert.deepEqual(collisions,[],`${layout} ${width}: 长金额图标不能压头像`);await save(layout,'observer-bottom',width);
   await load(layout,'actions',width,height,{scale:110});
   assert.equal(await page.locator('.mx-room-info-compact').count(),1);

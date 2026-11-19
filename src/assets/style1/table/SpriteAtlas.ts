@@ -1,14 +1,15 @@
 import './button-sprites.css';
 import legacy from './sharedSprites/config.json';
 import { resources } from './resources.js';
+import { resourceURL } from './ResourcePath.js';
 export type Sprite = string;
 export class SpriteAtlas {
-  /** CC infowarn uses a cutout glyph. Back only its center with white, keeping the outer corners transparent. */
+  /** Keep the original icon round even when a device changes the host's aspect ratio. */
   static paintWarning(node: HTMLElement, path: string = legacy.paths.infoTip): void {
-    this.paint(node, path);
-    node.style.backgroundImage += ', radial-gradient(circle, #fff 55%, transparent 57%)';
-    node.style.backgroundSize += ', 100% 100%';
-    node.style.backgroundPosition += ', center';
+    // The glyph is a cutout: a white circle backs its center without filling the corners.
+    node.style.backgroundImage = `url("${resourceURL(this.sourcePath(path))}"), radial-gradient(circle closest-side, #fff 78%, transparent 80%)`;
+    node.style.backgroundSize = 'contain, 100% 100%';
+    node.style.backgroundPosition = 'center, center';
     node.style.backgroundRepeat = 'no-repeat';
     node.style.backgroundColor = 'transparent';
   }

@@ -94,6 +94,7 @@ export class TableView {
   private viewport = element('div', 'mx-viewport');
   private stage = element('div', 'mx-stage');
   private seats = element('div', 'mx-seats');
+  private bets = element('div', 'mx-bets');
   private actionBubbles=element('div','mx-action-bubbles');
   private roomInfo = new RoomInfoView();
   private info = this.roomInfo.root;
@@ -169,8 +170,8 @@ export class TableView {
     };
     this.appearanceObserver=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node instanceof HTMLElement)repaint(node);})));
     this.appearanceObserver.observe(this.root,{subtree:true,childList:true});
-    // Preview starts muted without overwriting the CC production preference.
-    if (import.meta.env.DEV) this.settings.soundOn = false;
+    // New previews start muted; an explicitly saved sound choice takes priority.
+    if (import.meta.env.DEV && !this.settings.hasSavedSoundPreference) this.settings.soundOn = false;
     this.soundControl = new SoundControlView(this.sound,this.settings);
     // CC keeps the sound switch in personal settings, not as a table overlay.
     this.soundControl.root.hidden = true;
@@ -319,6 +320,7 @@ export class TableView {
       this.info,
       this.board.root,
       this.secondBoard.root,
+      this.bets,
       this.above,
       this.menu.root,
     );
@@ -342,7 +344,9 @@ export class TableView {
       if(options.records?.data.mtt){this.mtt=new MttTableStateView(options.records,e=>this.toast.show(e),()=>this.refreshRoomInfo());this.stage.append(this.mtt.root);}
       this.mushroomBoom=new MushroomBoomView(specialOperations.data,this.stage);
       this.root.append(this.mushroomBoom.guide.surface.root);
-      this.root.append(this.secondPcs.root, this.insurance.root,this.squid.result.root,this.squid.intro.root);
+      // Match the lower settlement layer so the shared mask stays on the upper dialog.
+      this.root.prepend(this.squid.result.root);
+      this.root.append(this.secondPcs.root, this.insurance.root,this.squid.intro.root);
     }
     if (import.meta.env.DEV && options.testControls) {
       this.allInTest = new AllInTestView(this.effects, this.seatViews);
@@ -386,6 +390,7 @@ export class TableView {
     for (const [id, position] of this.layout.positions(state,this.settings.tableAppearance.publicCardSize/100)){
       const seat=this.seatViews.get(id);
       seat?.setActionLayer?.(this.layout.elevatedActionBubbles?this.actionBubbles:null,this.layout.unit);
+      seat?.setBetLayer?.(this.layout.elevatedBets?this.bets:null);
       seat?.place(position, positionMode);
     }
     this.refreshRoomInfo();

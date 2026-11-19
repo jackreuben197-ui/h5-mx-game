@@ -2,6 +2,7 @@ import { LayoutProfile } from './LayoutProfile.js';
 import { tableLayouts } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 export class LayoutClassic extends LayoutProfile {
+  readonly elevatedBets = true;
   constructor(){super(tableLayouts.classic,{boardWidth:50.59,separateDualPot:true});}
   override positions(state:TableSnapshot,publicCardScale=1) {
     const result=super.positions(state,publicCardScale);

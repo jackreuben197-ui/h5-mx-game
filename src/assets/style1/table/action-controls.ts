@@ -50,16 +50,12 @@ export class ActionControls {
   ) {
     this.auto=new AutoOperationView((action,amount)=>this.submit(action,amount));
     this.offAccount=this.settings.on(TexasGamePersonalSettings.ACCOUNT_CHANGE,()=>{this.accountGeneration++;this.gesture.cancel();this.mode='actions';this.state=undefined;this.busy=false;this.submitted=undefined;this.refresh();});
-    const updateSubmitMode = () => {
-      this.gesture.cancel();
-      this.confirm.hidden = this.settings.tableSliderSubmit === 'release';
-    };
-    this.offSubmit = this.settings.on(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE, updateSubmitMode);
+    const cancelSliderGesture = () => this.gesture.cancel();
+    this.offSubmit = this.settings.on(TexasGamePersonalSettings.SLIDER_SUBMIT_CHANGE, cancelSliderGesture);
     this.offAppearance = this.settings.on(TexasGamePersonalSettings.APPEARANCE_CHANGE, () => {
-      updateSubmitMode();
+      cancelSliderGesture();
       this.refresh();
     });
-    updateSubmitMode();
     this.offSettings=this.settings.on(TexasGamePersonalSettings.SHORTCUTS_CHANGGE,()=>this.refresh());
     i18nLabel.bind(this.root, () => i18nMgr.Get("MX_TableActions", [], "牌桌操作"), 'aria-label');
     for (const [action, label] of [
@@ -122,7 +118,6 @@ export class ActionControls {
       if (selection) void this.submit(selection.action, selection.amount);
     };
     this.range.onblur=()=>this.gesture.cancel();
-    this.range.onkeydown=e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'].includes(e.key))this.confirm.hidden=false;};
     this.range.oninput = () => { this.amount.hidden = false; this.updateAmount(); };
     const thumb=node('span','mx-raise-thumb');SpriteAtlas.paint(thumb,'raiseThumb');track.append(thumb);
     this.confirm.type = 'button';

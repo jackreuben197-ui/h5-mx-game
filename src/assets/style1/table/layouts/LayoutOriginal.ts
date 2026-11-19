@@ -216,7 +216,17 @@ export class LayoutOriginal implements TableLayout {
     const scale=this.id==='original'?137/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
     let sideOffset=78*this.width*this.unit/440;
     if(this.id==='original')sideOffset+=this.handButtonOutset(state,own);
+    const raiseStyles:Record<string,string>={};
+    if(this.id==='original'){
+      // Reserve the amount bubble above the track when confirmation stays on the raise entry.
+      const bubbleAboveTrack=(502.108-833/2)*scale;
+      const trackBottom=top+28-(200+137*.85)*scale;
+      const trackHeight=Math.min(833*scale,Math.max(1,trackBottom-bubbleAboveTrack-154*scale/2-8));
+      raiseStyles['--mx-original-raise-height']=`${trackHeight}px`;
+      raiseStyles['--mx-original-raise-info-offset']=`${trackHeight/2+bubbleAboveTrack}px`;
+    }
     return {scale,styles:{
+      ...raiseStyles,
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
       '--mx-op-fold-x':`${-sideOffset}px`,'--mx-op-main-x':`${sideOffset}px`,
       '--mx-quick-5-0-x':`${-325*scale}px`,'--mx-quick-5-4-x':`${325*scale}px`,

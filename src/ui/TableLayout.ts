@@ -37,6 +37,8 @@ export interface TableLayout {
   readonly compactRoomInfo: boolean;
   /** Render action bubbles above table controls while keeping their seat coordinates. */
   readonly elevatedActionBubbles?: boolean;
+  /** Render bets above the board without raising the rest of each seat. */
+  readonly elevatedBets?: boolean;
   readonly unit: number;
   readonly width: number;
   readonly height: number;

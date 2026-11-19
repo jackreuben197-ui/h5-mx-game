@@ -39,6 +39,8 @@
 /* Figma 748:52289 / 12206:61820. Scale 1242px design units to the 375px reference viewport. */
 .mx-squid-result .mx-special-panel{align-self:center;margin:0;--mx-glass-unit:.288px;border:0;border-radius:var(--mx-SquidView-result-radius);backdrop-filter:blur(8px);overflow:visible}
 .mx-squid-result .mx-confirm-frame{display:none;pointer-events:none}
+/* Automatic settlement stays below the existing table dialogs (25 and above). */
+.mx-special-dialog.mx-squid-result{z-index:20}
 .mx-squid-result .mx-special-content{padding:var(--mx-SquidView-result-padding) var(--mx-SquidView-result-padding-x);display:flex;flex-direction:column;align-items:center;gap:var(--mx-SquidView-result-gap);min-height:0}
 .mx-squid-result-title{font-size:var(--mx-SquidView-result-title-font);line-height:var(--mx-SquidView-result-title-height);margin:0;font-weight:600;text-align:center}
 .mx-squid-result-card{position:relative;width:100%;margin-top:var(--mx-SquidView-result-image-rise);border-radius:calc(var(--mx-SquidView-result-card-radius) * var(--mx-SquidView-result-design-unit));background:rgb(255 255 255 / 13%);box-shadow:inset 0 0 0 .3px #ffffff40}

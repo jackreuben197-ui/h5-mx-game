@@ -2,7 +2,18 @@
 import { EventSource } from '../binding/EventSource.js';
 import { observable } from '../binding/observable.js';
 import LocalStorage from './LocalStorage.js';
-const StorageKey = { SHOW_BB:'SHOW_BB', TEXAS_DESKTYPE:'TEXAS_DESKTYPE', TEXAS_POKERCARDTYPE:'TEXAS_POKERCARDTYPE', SOUND_IS_OPEN:'SOUND_IS_OPEN', TEXAS_SHORTCUTS_3:'TEXAS_SHORTCUTS_3', TEXAS_SHORTCUTS_5:'TEXAS_SHORTCUTS_5', TEXAS_SHORTCUTS_MODE:'TEXAS_SHORTCUTS_MODE' };
+const StorageKey = {
+    SHOW_BB:'SHOW_BB',
+    TEXAS_DESKTYPE:'TEXAS_DESKTYPE',
+    TEXAS_POKERCARDTYPE:'TEXAS_POKERCARDTYPE',
+    SOUND_IS_OPEN:'SOUND_IS_OPEN',
+    TEXAS_SHORTCUTS_3:'TEXAS_SHORTCUTS_3',
+    TEXAS_SHORTCUTS_5:'TEXAS_SHORTCUTS_5',
+    TEXAS_SHORTCUTS_MODE:'TEXAS_SHORTCUTS_MODE',
+    TABLE_APPEARANCE:'TABLE_APPEARANCE',
+    TEXAS_SLIDER_SUBMIT:'TEXAS_SLIDER_SUBMIT',
+    TEXAS_CUSTOM_POT_RATIOS:'TEXAS_CUSTOM_POT_RATIOS',
+};
 const AssetCollectionType = { SpriteFrameCard0:1, SpriteFrameCard1:2 } as const;
 type PokerCardType = 1 | 2;
 import { TABLE_SIZE_STEPS, TABLE_FELT_COLORS, TABLE_CARD_BACKS } from '../config/AppearanceConfig.js';
@@ -107,7 +118,7 @@ export class TexasGamePersonalSettings extends EventSource {
         const stored=id?LocalStorage.getItem<unknown>(this.scopeKey,{}):{};
         this.saved=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored as Record<string,unknown>:{};
         if(id && this.brandID==='mx' && !LocalStorage.getItem('TABLE_PREFERENCES_MIGRATED',false)) {
-            for(const key of [...Object.values(StorageKey),'TEXAS_SLIDER_SUBMIT']) {
+            for(const key of Object.values(StorageKey)) {
                 const value=LocalStorage.getItem<unknown>(key,undefined);
                 if(value!==undefined && !(key in this.saved))this.saved[key]=value;
             }
@@ -119,7 +130,7 @@ export class TexasGamePersonalSettings extends EventSource {
     updateAppearance(patch: Partial<TableAppearance>): void {
         const next=this.validateAppearance({...this.appearance,...patch});
         if(JSON.stringify(next)===JSON.stringify(this.appearance))return;
-        this.write('TABLE_APPEARANCE',next);this.appearance=next;
+        this.write(StorageKey.TABLE_APPEARANCE,next);this.appearance=next;
     }
     private validateAppearance(value: unknown): TableAppearance {
         let p=(value&&typeof value==='object'?value:{}) as Partial<TableAppearance>;
@@ -133,12 +144,12 @@ export class TexasGamePersonalSettings extends EventSource {
     public sliderSubmit: 'release' | 'confirm' = 'confirm';
     public setSliderSubmit(value: 'release' | 'confirm'): void {
         if (value === this.sliderSubmit) return;
-        this.write('TEXAS_SLIDER_SUBMIT', value);
+        this.write(StorageKey.TEXAS_SLIDER_SUBMIT, value);
         this.sliderSubmit = value;
     }
     public resetQuickSettings(): void {
         this.customRatios = {};
-        this.write('TEXAS_CUSTOM_POT_RATIOS', this.customRatios);
+        this.write(StorageKey.TEXAS_CUSTOM_POT_RATIOS, this.customRatios);
         this.setSliderSubmit('confirm');
         this.shortCut3ActionsIndex = [...defaultShortcuts3];
         this.shortCut5ActionsIndex = [2, 3, 4, 6, 7];
@@ -186,6 +197,9 @@ export class TexasGamePersonalSettings extends EventSource {
 
     @observable(TexasGamePersonalSettings.SOUND_ON_CHANGE)
     public soundOn: boolean = true;
+    public get hasSavedSoundPreference(): boolean {
+        return typeof this.read<unknown>(StorageKey.SOUND_IS_OPEN, undefined) === 'boolean';
+    }
     @observable(TexasGamePersonalSettings.SHORTCUTS_CHANGGE)
     public shortCuts: ShortCut[] = [];
     private customRatios: Record<string, (number | null)[]> = {};
@@ -196,7 +210,7 @@ export class TexasGamePersonalSettings extends EventSource {
         if (ratios[slot] === percentage) return;
         ratios[slot] = percentage;
         this.customRatios = {...this.customRatios, [this.shortCutMode]: ratios};
-        this.write('TEXAS_CUSTOM_POT_RATIOS', this.customRatios);
+        this.write(StorageKey.TEXAS_CUSTOM_POT_RATIOS, this.customRatios);
         this.shortCuts = this.applyCustomRatios(this.shortCuts, this.shortCutMode);
     }
     private applyCustomRatios(cuts: ShortCut[], mode: shortCutMode): ShortCut[] {
@@ -213,16 +227,14 @@ export class TexasGamePersonalSettings extends EventSource {
         return this._shortCutMode;
     }
     public set shortCutMode(s: shortCutMode) {
-        let shortCuts: ShortCut[] = [];
-        if (s == shortCutMode.Button3) {
-            this.shortCut3ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        } else {
-            this.shortCut5ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        }
         this.write(StorageKey.TEXAS_SHORTCUTS_MODE, s);
         this._shortCutMode = s;
         this.emit(TexasGamePersonalSettings.SHORTCUT_MODE_CHANGE, s);
-        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
+        this.refreshShortCuts();
+    }
+    private refreshShortCuts(): void {
+        const indices = this._shortCutMode === shortCutMode.Button5 ? this._shortCut5ActionsIndex : this._shortCut3ActionsIndex;
+        this.shortCuts = this.applyCustomRatios(indices.map(index => TexasGameDfaultShortCutsList[index]!), this._shortCutMode);
     }
     private _shortCut3ActionsIndex: number[] = [];
     public get shortCut3ActionsIndex() {
@@ -230,10 +242,8 @@ export class TexasGamePersonalSettings extends EventSource {
     }
     public set shortCut3ActionsIndex(nu: number[]) {
         this.write(StorageKey.TEXAS_SHORTCUTS_3, nu);
-        let shortCuts: ShortCut[] = [];
         this._shortCut3ActionsIndex = nu;
-        this._shortCut3ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
+        if (this._shortCutMode === shortCutMode.Button3) this.refreshShortCuts();
     }
     private _shortCut5ActionsIndex: number[] = [];
     public get shortCut5ActionsIndex() {
@@ -241,10 +251,8 @@ export class TexasGamePersonalSettings extends EventSource {
     }
     public set shortCut5ActionsIndex(nu: number[]) {
         this.write(StorageKey.TEXAS_SHORTCUTS_5, nu);
-        let shortCuts: ShortCut[] = [];
         this._shortCut5ActionsIndex = nu;
-        this._shortCut5ActionsIndex.forEach(v => shortCuts.push(TexasGameDfaultShortCutsList[v]!));
-        this.shortCuts = this.applyCustomRatios(shortCuts, this._shortCutMode);
+        if (this._shortCutMode === shortCutMode.Button5) this.refreshShortCuts();
     }
 
     constructor(readonly brandID?: string, private readonly defaultFelt: string = TABLE_FELT_COLORS[0], readonly availableLayouts: readonly TableLayoutId[] = ['original','classic','balanced','oval']) {
@@ -264,13 +272,14 @@ export class TexasGamePersonalSettings extends EventSource {
         return Array.isArray(value) && value.length === fallback.length && value.every(v => Number.isInteger(v) && v >= 0 && v < TexasGameDfaultShortCutsList.length) ? value : fallback;
     }
     private init() {
-        this.appearance=this.validateAppearance(this.read('TABLE_APPEARANCE',{...defaultAppearance(),feltColor:this.defaultFelt}));
-        this.sliderSubmit = this.read<string>('TEXAS_SLIDER_SUBMIT', 'confirm') === 'release' ? 'release' : 'confirm';
-        const custom = this.read<unknown>('TEXAS_CUSTOM_POT_RATIOS', {});
+        this.appearance=this.validateAppearance(this.read(StorageKey.TABLE_APPEARANCE,{...defaultAppearance(),feltColor:this.defaultFelt}));
+        this.sliderSubmit = this.read<string>(StorageKey.TEXAS_SLIDER_SUBMIT, 'confirm') === 'release' ? 'release' : 'confirm';
+        const custom = this.read<unknown>(StorageKey.TEXAS_CUSTOM_POT_RATIOS, {});
         this.customRatios = custom && typeof custom === 'object' && !Array.isArray(custom) ? custom as Record<string, (number | null)[]> : {};
         this._shortCut3ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_3, defaultShortcuts3), [...defaultShortcuts3]);
         this._shortCut5ActionsIndex = this.validIndices(this.read(StorageKey.TEXAS_SHORTCUTS_5, [2, 3, 4, 6, 7]), [2, 3, 4, 6, 7]);
-        this.shortCutMode = this.read<number>(StorageKey.TEXAS_SHORTCUTS_MODE, shortCutMode.Button3) === 2 ? shortCutMode.Button5 : shortCutMode.Button3;
+        // 按保存的配置恢复按钮数量，首次未配置时默认三按钮。
+        this.shortCutMode = this.read<number>(StorageKey.TEXAS_SHORTCUTS_MODE, shortCutMode.Button3) === shortCutMode.Button5 ? shortCutMode.Button5 : shortCutMode.Button3;
         this.showBB = this.read<unknown>(StorageKey.SHOW_BB, false) === true;
         //初始化DeskType
         const desk = +this.read(StorageKey.TEXAS_DESKTYPE, 1);
