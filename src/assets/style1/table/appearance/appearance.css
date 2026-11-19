@@ -101,8 +101,8 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:var(--mx-TableMenuView-mx-menu-inset) var(--mx-TableMenuView-mx-menu-inset-2);background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:var(--mx-TableMenuView-mx-menu-border-radius-2)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-label{display:none}
 .mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
-/* Exported foreground: preserve its 416px bottom slice from the 880×1564 source. */
-.mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
+/* 111: stretch only the original cloth center; exclude the baked-in curved rim. */
+.mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0;border-image-repeat:stretch}
 .mx-table[data-table-layout=balanced] .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action]{--mx-action-countdown-color:#81f18d}
 .mx-table:is([data-table-layout=original],[data-table-layout=balanced]) .mx-seat .mx-seat-timer[data-kind=action]::before{content:none}
@@ -135,7 +135,7 @@
   background:rgb(58 56 56 / .22);
   backdrop-filter:blur(var(--mx-PublicCardsView-mx-public-slot-empty-backdrop-filter));
   -webkit-backdrop-filter:blur(var(--mx-PublicCardsView-mx-public-slot-empty-backdrop-filter));
-  box-shadow:3.96px 4.94px 7.9px rgb(0 0 0 / .25),inset 1.4px 1.4px 2.78px rgb(242 242 242 / .2);
+  box-shadow:inset 1.4px 1.4px 2.78px rgb(242 242 242 / .2);
 }
 .mx-public-slot-empty::after{
   content:'';position:absolute;inset:0;border-radius:inherit;
@@ -279,3 +279,13 @@
 
 
 .mx-layout-preview{display:block;flex:none;width:calc(var(--mx-PersonalSettingsView-preview-width) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-preview-height) * var(--settings-unit));object-fit:contain}
+
+/* 108: settlement occupies two compact lines, not the original tall nameplate. */
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine) .mx-seat-win{min-height:113px;line-height:40px;row-gap:4px;padding:8px 4px}
+.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(32.5 * var(--mx-classic-seat-unit))}
+/* The result can cross the menu; normal seats retain their established stacking. */
+.mx-table[data-table-layout=classic] .mx-viewport:has(.mx-seat-mine .mx-seat-win:not([hidden])){z-index:8;overflow:visible;pointer-events:none}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{left:calc(-31 * var(--mx-classic-seat-unit));width:calc(62 * var(--mx-classic-seat-unit));min-height:calc(22 * var(--mx-classic-seat-unit));padding-block:calc(2 * var(--mx-classic-seat-unit))}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{min-height:calc(18 * var(--mx-classic-seat-unit));padding:0}
+
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-room-info{font-size:min(calc(38px * var(--mx-table-text-scale)),var(--mx-room-info-max-font,100px))}

@@ -1,0 +1,11 @@
+import {mkdir} from 'node:fs/promises';
+await mkdir('docs/qa/product-2026-11-19',{recursive:true});
+import assert from 'node:assert/strict';const {chromium}=await import(process.env.MX_PLAYWRIGHT_MODULE||'playwright-core');const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});let passed=0;
+try{const p=await browser.newPage({viewport:{width:900,height:1000}});for(const width of [320,375]){const open=async()=>{await p.goto(`http://127.0.0.1:5173/tests/fixtures/layout-audit.html?scene=profile-admin&layout=classic&actor=2&width=${width}&height=812`);await p.locator('#audit-stage[data-ready=true]').waitFor();await p.locator('.mx-player-profile-prop').first().waitFor();};await open();const panel=p.locator('.mx-player-profile-overlay');assert.equal(await panel.locator('.mx-player-profile-prop-cost').count(),12);passed++;
+const sound=panel.locator('.mx-player-media button').first();const before=await sound.innerText();await sound.click();await p.waitForFunction(before=>document.querySelector('.mx-player-media button')?.textContent!==before,before);passed++;
+await panel.locator('.mx-player-profile-remark').click();await panel.locator('input').fill('离线验收备注');await panel.locator('input').press('Enter');await p.waitForFunction(()=>document.querySelector('.mx-player-profile-remark')?.textContent?.includes('离线验收备注'));passed++;
+await panel.locator('.mx-record-footer button').nth(2).click();await panel.locator('.mx-player-profile-gift-choice').first().click();await p.waitForFunction(()=>document.querySelector('.mx-player-profile-overlay').hidden);assert.match(await p.locator('#audit-log').innerText(),/本地赠钻/);passed++;
+await open();await panel.getByRole('button',{name:'禁言',exact:true}).click();await panel.getByRole('button',{name:'取消禁言',exact:true}).waitFor();passed++;
+const frame=await panel.locator('.mx-record-panel').boundingBox(),stage=await p.locator('#audit-stage').boundingBox();assert.ok(frame.x>=stage.x&&frame.x+frame.width<=stage.x+stage.width&&frame.y>=stage.y&&frame.y+frame.height<=stage.y+stage.height);passed++;
+await p.locator('#audit-stage').screenshot({path:`docs/qa/product-2026-11-19/profile-interaction-${width}.png`});}}
+finally{await browser.close();}console.log(passed+' 项资料交互检查通过');

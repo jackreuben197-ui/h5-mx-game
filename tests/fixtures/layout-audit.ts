@@ -34,7 +34,7 @@ if(game.getState().phase==='table'){
  if(scene==='raise')click('.mx-operation-raise');
  if(scene.startsWith('report'))click('.mx-nav-button[data-action="report"]');
  if(scene==='history')click('.mx-nav-button[data-action="replay"]');
- if(scene==='profile')click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
+ if(scene.startsWith('profile'))click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
  if(scene.startsWith('settings')){click('.mx-menu');click('.mx-menu-item[data-menu-action="UITexas_Setting"]');}
  if(scene==='settings-quick')click('.mx-settings-tabs button:nth-child(2)');
  if(scene==='settings-system')click('.mx-settings-tabs button:nth-child(3)');
