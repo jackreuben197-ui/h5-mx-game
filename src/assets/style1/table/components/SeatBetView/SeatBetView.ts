@@ -5,7 +5,7 @@ import type { SeatState } from '../../../../../data/SeatData.js';
 import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import { element, place } from '../../dom.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
-/** Chip artwork is cropped to its visible bounds and centered on the frame edge. */
+/** Chip artwork is cropped to its visible bounds and offset outside the rounded frame. */
 export class SeatBetView {
   readonly root = componentBox(element('div', 'mx-seat-bet'),config);
   private chip = element('span', 'mx-seat-bet-chip');

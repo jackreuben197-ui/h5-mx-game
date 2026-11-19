@@ -10,9 +10,9 @@
 .mx-table :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status){border-radius:var(--mx-avatar-radius)}
 .mx-table[data-table-layout=balanced] .mx-seat:not(.mx-empty-seat) .mx-avatar-fallback{background-color:#345c59}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background-image:none!important;border:2px solid #ffffff35}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:var(--mx-seat-chip-top,102px);min-height:var(--mx-SeatIdentityView-mx-player-info-min-height);padding:var(--mx-SeatIdentityView-mx-player-info-padding) var(--mx-SeatIdentityView-mx-player-info-padding-2);border:1px solid transparent;border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius)}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-info{top:calc(var(--mx-seat-chip-top,102px) - var(--mx-seat-info-rise,0px));min-height:var(--mx-SeatIdentityView-mx-player-info-min-height);padding:var(--mx-SeatIdentityView-mx-player-info-padding) var(--mx-SeatIdentityView-mx-player-info-padding-2);border:1px solid transparent;border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name{
-  position:absolute;top:calc(var(--mx-SeatIdentityView-mx-player-name-top) * (var(--mx-seat-chip-top,102px) + var(--mx-seat-name-clearance,116.5px)));bottom:auto;left:var(--mx-SeatIdentityView-mx-player-name-left);transform:translate(var(--mx-SeatIdentityView-mx-player-name-transform),var(--mx-SeatIdentityView-mx-player-name-transform-2));overflow:hidden;
+  position:absolute;top:calc(var(--mx-SeatIdentityView-mx-player-name-top) * (var(--mx-seat-chip-top,102px) + var(--mx-seat-name-clearance,116.5px) - var(--mx-seat-info-rise,0px)));bottom:auto;left:var(--mx-SeatIdentityView-mx-player-name-left);transform:translate(var(--mx-SeatIdentityView-mx-player-name-transform),var(--mx-SeatIdentityView-mx-player-name-transform-2));overflow:hidden;
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:var(--mx-hero-card-height);margin-top:calc(var(--mx-hero-card-height) / var(--mx-HandCardsView-mx-card-slot-margin-top))}
@@ -101,8 +101,8 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu::before{content:'';position:absolute;inset:var(--mx-TableMenuView-mx-menu-inset) var(--mx-TableMenuView-mx-menu-inset-2);background:linear-gradient(to bottom,#eee 0 16%,transparent 16% 42%,#eee 42% 58%,transparent 58% 84%,#eee 84% 100%);border-radius:var(--mx-TableMenuView-mx-menu-border-radius-2)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-menu-label{display:none}
 .mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
-/* 111: stretch only the original cloth center; exclude the baked-in curved rim. */
-.mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0;border-image-repeat:stretch}
+/* Keep the exported foreground in its original bottom slice; the source art removes the inner arc. */
+.mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
 .mx-table[data-table-layout=balanced] .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action]{--mx-action-countdown-color:#81f18d}
 .mx-table:is([data-table-layout=original],[data-table-layout=balanced]) .mx-seat .mx-seat-timer[data-kind=action]::before{content:none}
@@ -118,8 +118,6 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot,
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot>.mx-card{height:var(--mx-CardView-mx-card-height)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{top:calc((var(--mx-board-box-height,176px) - var(--mx-PublicCardsView-mx-public-slot-top))/var(--mx-PublicCardsView-mx-public-slot-top-2))}
-/* Original Figma purple art is 1x (classic shading is 2x). */
-.mx-table[data-felt=solid][data-felt-tone=flat-purple]::before{border-image-slice:0 0 208 0 fill}
 /* The 147px fold sprite includes a shadow: its 137px face is centred at 70.5px. */
 .mx-operation-fold>.mx-seat-timer{left:var(--mx-ActionButton-mx-fold-timer-center);top:var(--mx-ActionButton-mx-fold-timer-center);transform:translate(var(--mx-SeatCountdownView-mx-seat-timer-transform),var(--mx-SeatCountdownView-mx-seat-timer-transform-2)) scale(calc(var(--mx-fold-timer-scale,.2) * var(--mx-ActionButton-mx-fold-timer-face-ratio)));z-index:2}
 /* Button countdown owns its rounded perimeter; the avatar halo must not leak in. */
@@ -283,6 +281,8 @@
 /* 108: settlement occupies two compact lines, not the original tall nameplate. */
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine) .mx-seat-win{min-height:113px;line-height:40px;row-gap:4px;padding:8px 4px}
 .mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(32.5 * var(--mx-classic-seat-unit))}
+/* Keep the extra rise only for visible win cards; ordinary balances use their original spacing. */
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:has(.mx-seat-win:not([hidden])){--mx-seat-info-rise:calc(var(--mx-SeatIdentityView-ring-info-rise) * var(--mx-classic-seat-unit))}
 /* The result can cross the menu; normal seats retain their established stacking. */
 .mx-table[data-table-layout=classic] .mx-viewport:has(.mx-seat-mine .mx-seat-win:not([hidden])){z-index:8;overflow:visible;pointer-events:none}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{left:calc(-31 * var(--mx-classic-seat-unit));width:calc(62 * var(--mx-classic-seat-unit));min-height:calc(22 * var(--mx-classic-seat-unit));padding-block:calc(2 * var(--mx-classic-seat-unit))}

@@ -4,7 +4,7 @@ import { InsuranceRulesView } from './components/InsuranceRulesView/InsuranceRul
 import { GameRulesView } from './components/GameRulesView/GameRulesView.js';
 import { TableEffectAnchors } from '../effects/TableEffectAnchors.js';
 import { bindTableAppearance } from './appearance/TableAppearanceContext.js';
-import { classicFelt, purpleFelt, cardBacks } from './appearance/TableSkin.js';
+import { classicFelt, cardBacks } from './appearance/TableSkin.js';
 import { imageReady } from './resources.js';
 import { getBrand } from './appearance/BrandManifest.js';
 import { TableMediaView } from './components/TableMediaView/TableMediaView.js';
@@ -283,11 +283,10 @@ export class TableView {
       try {
         const appearance=this.settings.tableAppearance;
         const solid=appearance.style==='solid';
-        const felt=appearance.feltColor==='#57427f'?purpleFelt:classicFelt;
+        const felt=classicFelt;
         const [url]=await Promise.all([solid?imageReady(felt).then(()=>felt):AppearanceResources.desk(this.settings.deskType),AppearanceResources.cards(this.settings.tableCardType),appearance.cardBack==='original'?Promise.resolve():imageReady(cardBacks[appearance.cardBack]!)]);
         if(generation!==this.appearanceGeneration)return;
         this.root.dataset.felt=solid?'solid':'legacy';
-        this.root.dataset.feltTone=solid&&appearance.feltColor==='#57427f'?'flat-purple':'shaded';
         this.root.style.backgroundColor=solid?appearance.feltColor:'';
         this.root.style.backgroundImage=solid?'none':`url("${url}")`;
         this.root.style.setProperty('--mx-felt-image',`url("${url}")`);

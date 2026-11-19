@@ -323,7 +323,7 @@
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:var(--mx-SeatIdentityView-mx-seat-win-width);min-height:var(--mx-SeatIdentityView-mx-seat-win-min-height);
   border-radius:var(--mx-SeatIdentityView-mx-seat-win-border-radius);background-color:transparent;color:white;
-  display:grid;align-content:center;white-space:nowrap;text-align:center;
+  display:grid;grid-template-columns:minmax(0,1fr);align-content:center;white-space:nowrap;text-align:center;
   row-gap:var(--mx-SeatIdentityView-mx-seat-win-row-gap);
   font-size:var(--mx-SeatIdentityView-mx-seat-win-font-size);line-height:var(--mx-SeatIdentityView-mx-seat-win-line-height);
   padding:var(--mx-SeatIdentityView-mx-seat-win-padding) var(--mx-SeatIdentityView-mx-seat-win-padding-2);z-index:3
@@ -334,7 +334,8 @@
   top:auto;bottom:0;transform:translateX(-50%);width:100%;height:100%;
   min-height:var(--mx-SeatIdentityView-mx-player-info-min-height-3)
 }
-.mx-seat-win-hand-type{font-size:var(--mx-SeatIdentityView-mx-seat-win-hand-type-font-size)}
+.mx-seat-win-hand-type{display:flex;justify-content:center;min-width:0;overflow:hidden;font-size:var(--mx-SeatIdentityView-mx-seat-win-hand-type-font-size);font-weight:var(--mx-SeatIdentityView-mx-seat-win-hand-type-font-weight)}
+.mx-seat-win-hand-type-text{flex:none}
 
 /* Clear glass: light background blur, transparent surfaces and rim highlights. */
 .mx-buyin-amount-section{background:rgba(208,208,208,.14);border-radius:var(--mx-BuyInView-mx-buyin-amount-section-border-radius-2)}
@@ -429,12 +430,13 @@
 .mx-operation[data-mode=actions] button:not(:disabled){pointer-events:auto}
 
 .mx-chip-unit{font-size:.65em;line-height:1;font-weight:400;margin-left:.12em}
-.mx-seat-bet{--mx-bet-stroke:0px;display:flex;align-items:center;width:max-content;min-width:var(--mx-SeatBetView-mx-seat-bet-width);padding-left:calc(var(--mx-SeatBetView-mx-seat-bet-chip-width) / 2 + var(--mx-SeatBetView-mx-seat-bet-chip-gap));padding-right:var(--mx-SeatBetView-mx-seat-bet-padding-end);margin-left:0;translate:-50% 0;overflow:visible}
+/* Reserve four digits plus the chip overlap, and let longer amounts grow naturally. */
+.mx-seat-bet{--mx-bet-stroke:0px;--mx-bet-chip-padding:calc(var(--mx-SeatBetView-mx-seat-bet-chip-width) / 2 - var(--mx-SeatBetView-mx-seat-bet-chip-outset) + var(--mx-SeatBetView-mx-seat-bet-chip-gap));display:flex;align-items:center;font-size:calc(var(--mx-SeatBetView-mx-seat-bet-value-font-size) * var(--mx-table-text-scale,1));width:max-content;min-width:calc(var(--mx-SeatBetView-mx-seat-bet-value-min-digits) * 1ch + var(--mx-bet-chip-padding) + var(--mx-SeatBetView-mx-seat-bet-padding-end) + 2 * var(--mx-bet-stroke));padding-left:var(--mx-bet-chip-padding);padding-right:var(--mx-SeatBetView-mx-seat-bet-padding-end);margin-left:0;translate:-50% 0;overflow:visible}
 .mx-seat-bet[data-anchor=left]{translate:0 0}
 .mx-seat-bet[data-anchor=right]{translate:-100% 0}
-.mx-seat-bet[data-chip-side=right]{padding-left:var(--mx-SeatBetView-mx-seat-bet-padding-end);padding-right:calc(var(--mx-SeatBetView-mx-seat-bet-chip-width) / 2 + var(--mx-SeatBetView-mx-seat-bet-chip-gap))}
-.mx-seat-bet-chip{position:absolute;left:calc(-1 * var(--mx-bet-stroke));top:50%;margin:0;transform:translate(-50%,-50%);overflow:hidden;z-index:1}
-.mx-seat-bet[data-chip-side=right] .mx-seat-bet-chip{left:auto;right:calc(-1 * var(--mx-bet-stroke));transform:translate(50%,-50%)}
+.mx-seat-bet[data-chip-side=right]{padding-left:var(--mx-SeatBetView-mx-seat-bet-padding-end);padding-right:var(--mx-bet-chip-padding)}
+.mx-seat-bet-chip{position:absolute;left:calc(-1 * (var(--mx-bet-stroke) + var(--mx-SeatBetView-mx-seat-bet-chip-outset)));top:50%;margin:0;transform:translate(-50%,-50%);overflow:hidden;z-index:1}
+.mx-seat-bet[data-chip-side=right] .mx-seat-bet-chip{left:auto;right:calc(-1 * (var(--mx-bet-stroke) + var(--mx-SeatBetView-mx-seat-bet-chip-outset)));transform:translate(50%,-50%)}
 .mx-seat-bet-chip-image{position:absolute;display:block;background-repeat:no-repeat;pointer-events:none}
 .mx-seat-bet-value{position:static;width:auto;flex:1;text-align:center;white-space:nowrap}
 /* The native range is an input hit target; the visible rail/thumb own its outline. */

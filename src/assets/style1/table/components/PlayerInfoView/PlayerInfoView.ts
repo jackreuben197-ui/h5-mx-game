@@ -286,8 +286,8 @@ export class PlayerInfoView {
       const controls = element('div','mx-player-profile-controls');
       const add = (label: string, click: () => void) => {const button = element('button','',label); button.type='button'; button.onclick=click; controls.append(button);};
       const admin = this.records!.data.record!.roomAdmin!;
-      if (admin.userStandUp === 1) add(t('MX_AdminStand','站起玩家'), () => this.confirm(() => t('UITexasRoomManagerOpTips7','确认让该玩家站起？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'stand'), () => this.close())));
-      if (admin.userLeave === 1) add(t('MX_AdminLeave','踢出玩家'), () => this.confirm(() => t('UITexasRoomManagerOpTips8','确认踢出该玩家？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'leave'), () => this.close())));
+      if (admin.userStandUp === 1) add(t('MX_AdminStand','站起玩家'), () => this.confirm(() => i18nMgr.Get('UITexasRoomManagerOpTips7',[this.profile?.basic?.nick_name || this.player!.name],'确定将{0}从当前牌桌站起吗？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'stand'), () => this.close())));
+      if (admin.userLeave === 1) add(t('MX_AdminLeave','踢出玩家'), () => this.confirm(() => i18nMgr.Get('UITexasRoomManagerOpTips8',[this.profile?.basic?.nick_name || this.player!.name],'确定将{0}踢出当前牌桌吗？'), () => void this.run(() => this.records!.managePlayer(this.player!.userRid!,'leave'), () => this.close())));
       add(this.muted ? t('MX_Unmute','取消禁言') : t('MX_Mute','禁言'), () => void this.run(() => this.records!.setPlayerMuted(this.player!.userRid!,!this.muted), () => {this.muted = !this.muted; this.renderActions();}));
       actions.append(controls);
     }

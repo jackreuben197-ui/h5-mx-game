@@ -1,6 +1,8 @@
 import { SeatPosition, SeatPositionCaculator } from './seat-layout.js';
 import { landscapeLayout } from './landscape-layout.js';
 import { sideBetAnchor, legacyBalanceBottom, betHalfHeight, betGap, betEdges } from './seat-bet-layout.js';
+import { handCardCount } from '../../../../logic/HandCardCount.js';
+import handCardsConfig from '../components/HandCardsView/config.json' with { type: 'json' };
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { SeatPlacement } from '../../../../ui/TableLayout.js';
 /** Display coordinates only. Changing this class never changes seat IDs or protocol data. */
@@ -192,11 +194,20 @@ export class LayoutOriginal implements TableLayout {
     if(!own)return {styles:{}};
     const controlsY=own.controlsY??own.y;
     const top=(controlsY-164*own.scale)*this.unit-28;
-    // Original buttons are 145px on a 1242px-wide design, independent of avatar scaling.
+    // Original buttons use a 137px face on a 1242px-wide design, independent of avatar scaling.
     const scale=this.id==='original'?137/137*(this.width*this.unit/1242)*buttonSize:own.scale*this.unit*buttonSize;
+    let sideOffset=78*this.width*this.unit/440;
+    if(this.id==='original'){
+      const count=Math.max(handCardCount(state.gameType??0),state.players.find(player=>player.seat===state.mySeat)?.cards.length??0);
+      const spread=own.handSpread??handCardsConfig.layout.faceStripWidth;
+      // Keep the two-card clearance as the overlapping strip grows for Omaha.
+      // Room rules reserve the same space before the cards arrive.
+      const extraHandWidth=spread*(.5-1/count)*own.cardScale*own.scale*this.unit;
+      sideOffset+=extraHandWidth/2;
+    }
     return {scale,styles:{
       top:`${top}px`, '--mx-operation-row-y':`${top}px`,
-      '--mx-op-fold-x':`${-78*this.width*this.unit/440}px`,'--mx-op-main-x':`${78*this.width*this.unit/440}px`,
+      '--mx-op-fold-x':`${-sideOffset}px`,'--mx-op-main-x':`${sideOffset}px`,
       '--mx-raise-center-y':`${(controlsY-910*own.scale)*this.unit}px`,
     }};
   }

@@ -36,6 +36,8 @@ export class SeatIdentityView {
   private fold = element('div', 'mx-fold-cover', () => i18nMgr.Get("UITexas_fold", [], "弃牌"));
   private win = element('div','mx-seat-win');
   private winHandType = element('span','mx-seat-win-hand-type');
+  private winHandTypeText = element('span','mx-seat-win-hand-type-text');
+  private winHandTypeResize = new ResizeObserver(() => this.fitWinHandType());
   private winAmount = element('span','mx-seat-win-amount');
   private winPercent = element('div','mx-seat-win-percent');
   private winPercentTitle = element('span','mx-seat-win-percent-title');
@@ -61,7 +63,10 @@ export class SeatIdentityView {
     SpriteAtlas.paint(this.action, config.paths.actionBubble);
     SpriteAtlas.paint(this.win, config.paths.winBoard);
     this.win.hidden = true;
+    this.winHandType.append(this.winHandTypeText);
     this.win.append(this.winHandType, this.winAmount);
+    this.winHandTypeResize.observe(this.winHandType);
+    this.winHandTypeResize.observe(this.winHandTypeText);
     SpriteAtlas.paint(this.winPercentTitle, config.paths.winPercentTitle);
     SpriteAtlas.paint(this.winPercentValue, config.paths.winPercentValue);
     this.winPercent.append(this.winPercentTitle, this.winPercentValue);
@@ -74,7 +79,13 @@ export class SeatIdentityView {
     // CC prefab order: Head/Bubble precedes Head/Nick_Coin.
     this.root.append(this.squid,this.squidMask,this.fallback, this.avatar, this.border, this.countdown.root, this.fold, this.avatarButton, this.action, this.info,this.winPercent,this.handType,this.playStatus,this.autoStatus,this.returnButton);
   }
-  destroy(): void { this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
+  destroy(): void { this.winHandTypeResize.disconnect(); this.avatarImage.destroy(); clearInterval(this.insuranceTimer); this.countdown.destroy(); }
+  private fitWinHandType(): void {
+    const width = this.winHandType.clientWidth;
+    const textWidth = this.winHandTypeText.scrollWidth;
+    // Measure in local units so every seat scale and live language change fits the same row.
+    if (width > 0 && textWidth > 0) this.winHandTypeText.style.transform = `scale(${Math.min(1, width / textWidth)})`;
+  }
   render(state: SeatState): void {
     const p = state.player;
     this.squid.hidden=!(p?.squidIn||p?.squidCount);this.squid.replaceChildren(element('span','',String(p?.squidCount??0)));
@@ -107,7 +118,7 @@ export class SeatIdentityView {
     if (win) {
       this.winHandType.hidden = !win.handValueType;
       if (!this.winHandType.hidden) {
-        i18nLabel.bind(this.winHandType, () => handValueTypeToString(win.handValueType as HandValueType) ?? '');
+        i18nLabel.bind(this.winHandTypeText, () => handValueTypeToString(win.handValueType as HandValueType) ?? '');
       }
       chipLabel(this.winAmount, `+${ChipFormatter.format(win.collectedChips, state.smallBlind, state.showBB)}`);
     }

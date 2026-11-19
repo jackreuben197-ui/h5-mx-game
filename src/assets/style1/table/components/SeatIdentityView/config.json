@@ -187,7 +187,8 @@
       "mx-seat-win-min-height": "92px",
       "mx-seat-win-border-radius": "16px",
       "mx-seat-win-font-size": "40px",
-      "mx-seat-win-hand-type-font-size": "26px",
+      "mx-seat-win-hand-type-font-size": "36px",
+      "mx-seat-win-hand-type-font-weight": "700",
       "mx-seat-win-line-height": "44px",
       "mx-seat-win-row-gap": "8px",
       "mx-seat-win-padding": "8px",
@@ -197,6 +198,7 @@
       "classic-chip-top": "30",
       "oval-chip-top": "29",
       "oval-name-clearance": "30",
+      "ring-info-rise": "2",
       "qa-win-weight": "700",
       "qa-wait-font": "44px",
       "qa-glass-blur": "10px"
