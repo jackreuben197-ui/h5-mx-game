@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultTableUi } from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
-test('9-player rotation preserves CC own and side bet coordinates independently of seat ID',()=>{
+test('9-player rotation preserves the own bet anchor and docks protruding side chips away from avatars',()=>{
  const layout=defaultTableUi.createLayout('original');layout.resize(398,724,false);
  const state={seatCount:9,mySeat:4,players:[]};const positions=layout.positions(state);
- const bet=id=>{const p=positions.get(id);return [p.betX,p.betY,p.betIconX]};
- assert.deepEqual(bet(4),[175,-360,-25]);
- assert.deepEqual(bet(5),[190,70,-25]);assert.deepEqual(bet(7),[190,70,-25]);
- assert.deepEqual(bet(8),[-65,215,-25]);assert.deepEqual(bet(9),[-85,215,133]);
- assert.deepEqual(bet(1),[-180,70,133]);assert.deepEqual(bet(3),[-180,70,133]);
+ const own=positions.get(4);
+ assert.deepEqual([own.betX,own.betIconX],[175,-25]);
+ assert.ok(Math.abs(own.y+own.betY*own.scale-((own.controlsY??own.y)-360*own.scale))<1e-9,'avatar lowering must not move the own bet');
+ for(const id of [5,6,7]){const p=positions.get(id);assert.deepEqual([p.betAnchor,p.betY,p.betIconX],['left',70,-25]);assert.ok(p.betX>199/2,'left-row frame starts beyond the avatar');}
+ for(const id of [1,2,3]){const p=positions.get(id);assert.deepEqual([p.betAnchor,p.betY,p.betIconX],['right',70,133]);assert.ok(p.betX< -199/2,'right-row frame ends before the avatar');}
+ for(const [id,x,icon] of [[8,-65,-25],[9,-85,133]]){const p=positions.get(id);assert.deepEqual([p.betAnchor,p.betX,p.betIconX],['center',x,icon]);assert.ok(p.betY>=215,'top bets clear the nameplate and the larger chip');}
 });
 
 test('2–9-player layouts keep every seat finite and distinct before and after seating in both orientations', () => {

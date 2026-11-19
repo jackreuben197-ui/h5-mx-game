@@ -429,15 +429,17 @@
 .mx-operation[data-mode=actions] button:not(:disabled){pointer-events:auto}
 
 .mx-chip-unit{font-size:.65em;line-height:1;font-weight:400;margin-left:.12em}
-.mx-seat-bet{display:flex;align-items:center;gap:8px;width:max-content;min-width:var(--mx-SeatBetView-mx-seat-bet-width);padding-inline:8px;margin-left:0;translate:-50% 0}
-.mx-seat-bet[data-chip-side=right]{flex-direction:row-reverse}
-.mx-seat-bet-chip{position:static;margin:0;flex-shrink:0}
-.mx-seat-bet-value{position:static;width:auto;flex:1;text-align:center}
+.mx-seat-bet{--mx-bet-stroke:0px;display:flex;align-items:center;width:max-content;min-width:var(--mx-SeatBetView-mx-seat-bet-width);padding-left:calc(var(--mx-SeatBetView-mx-seat-bet-chip-width) / 2 + var(--mx-SeatBetView-mx-seat-bet-chip-gap));padding-right:var(--mx-SeatBetView-mx-seat-bet-padding-end);margin-left:0;translate:-50% 0;overflow:visible}
+.mx-seat-bet[data-anchor=left]{translate:0 0}
+.mx-seat-bet[data-anchor=right]{translate:-100% 0}
+.mx-seat-bet[data-chip-side=right]{padding-left:var(--mx-SeatBetView-mx-seat-bet-padding-end);padding-right:calc(var(--mx-SeatBetView-mx-seat-bet-chip-width) / 2 + var(--mx-SeatBetView-mx-seat-bet-chip-gap))}
+.mx-seat-bet-chip{position:absolute;left:calc(-1 * var(--mx-bet-stroke));top:50%;margin:0;transform:translate(-50%,-50%);overflow:hidden;z-index:1}
+.mx-seat-bet[data-chip-side=right] .mx-seat-bet-chip{left:auto;right:calc(-1 * var(--mx-bet-stroke));transform:translate(50%,-50%)}
+.mx-seat-bet-chip-image{position:absolute;display:block;background-repeat:no-repeat;pointer-events:none}
+.mx-seat-bet-value{position:static;width:auto;flex:1;text-align:center;white-space:nowrap}
 /* The native range is an input hit target; the visible rail/thumb own its outline. */
 .mx-table:not([data-orientation=landscape]) .mx-raise-range{outline:none}
 .mx-table:not([data-orientation=landscape]) .mx-raise-track:has(.mx-raise-range:focus-visible){filter:drop-shadow(0 0 2px #ffffff80)}
 
 .mx-room-info{background:none;border:0;padding:0;cursor:pointer}
 .mx-room-details{--su:var(--record-unit)}
-.mx-seat-bet[data-chip-side=left] .mx-seat-bet-chip{margin-left:calc(-.5 * var(--mx-SeatBetView-mx-seat-bet-chip-width))}
-.mx-seat-bet[data-chip-side=right] .mx-seat-bet-chip{margin-right:calc(-.5 * var(--mx-SeatBetView-mx-seat-bet-chip-width))}

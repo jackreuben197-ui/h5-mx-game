@@ -16,8 +16,8 @@
       "mx-seat-bet-height": "70px",
       "mx-seat-bet-margin-left": "-80px",
       "mx-seat-bet-margin-top": "-35px",
-      "mx-seat-bet-chip-width": "66px",
-      "mx-seat-bet-chip-height": "66px",
+      "mx-seat-bet-chip-width": "70px",
+      "mx-seat-bet-chip-height": "70px",
       "mx-seat-bet-chip-margin-left": "-30px",
       "mx-seat-bet-chip-margin-top": "-30px",
       "mx-seat-bet-value-left": "30px",
@@ -25,11 +25,13 @@
       "mx-seat-bet-value-width": "100px",
       "mx-seat-bet-value-height": "50px",
       "mx-seat-bet-value-font-size-2": "40px",
-      "mx-seat-bet-value-line-height": "50px"
+      "mx-seat-bet-value-line-height": "50px",
+      "mx-seat-bet-chip-gap": "8px",
+      "mx-seat-bet-padding-end": "8px",
+      "mx-seat-bet-border-width": "1px"
     },
-    "chipOriginX": 80,
-    "chipInsetX": 50,
-    "chipY": 35
+    "chipCrop": { "sourceWidth": 77, "sourceHeight": 77, "x": 3, "y": 6, "width": 58, "height": 58 },
+    "avatarGap": 3
   },
   "sizing": {
     "mode": "responsive",

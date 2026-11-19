@@ -1,5 +1,6 @@
 import { LayoutOriginal } from './LayoutOriginal.js';
 import { portraitSideButtons } from './side-buttons-layout.js';
+import { sideBetAnchor, profileBalanceBottom, betHalfHeight, betGap, betEdges } from './seat-bet-layout.js';
 import roomInfoConfig from '../components/RoomInfoView/config.json' with { type: 'json' };
 import type { TableLayoutProfile } from './TableLayoutProfile.js';
 import type { TableSnapshot } from '../../../../core/types.js';
@@ -68,14 +69,17 @@ export class LayoutProfile extends LayoutOriginal {
         }
         // Both top seats bet below their own stack, rather than towards each other.
         const topSeat=!mine && x>30 && x<410;
-        // Balanced chips extend 80 + 33 - 8 - 1 local units toward the avatar.
-        // Keep one screen pixel clear after the seat and stage have both scaled.
-        const sideBetX=profile.id==='classic'?60:profile.id==='balanced'
-          ? profile.avatar/2+104/local+1/(unit*this.unit):56;
-        p.betX=(mine?68:topSeat?0:x<220?sideBetX:x>220?-sideBetX:0)*local;
+        const classicBottomSpectator=profile.id==='classic'&&!mine&&slot===0;
+        // Fix the avatar-facing edge; long amounts grow toward the felt.
+        p.betAnchor=mine&&profile.id!=='classic'?'left':!mine&&!topSeat?(x<220?'left':'right'):'center';
+        p.betX=p.betAnchor==='center'?(mine?68:0)*local:(p.betAnchor==='left'?1:-1)*sideBetAnchor(p.scale,this.unit);
+        // Center the full visible group, including the chip protruding from the frame.
+        if(classicBottomSpectator){const [left,right]=betEdges(p);p.betX-=(left+right)/2;}
         // Classic side bets share the balance card's center: 30 + 20.4 / 2.
-        p.betY=(mine?(profile.id==='classic'?-120:-8):topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?classicSideBetY:0)*local;
+        // The classic bottom spectator seat bets above its avatar and nickname, clear of navigation.
+        p.betY=(mine?(profile.id==='classic'?-120:-8):classicBottomSpectator?-60:topSeat?(profile.id==='classic'?66:60):profile.id==='classic'?classicSideBetY:0)*local;
         if(profile.id==='oval'&&!mine)p.betY-=4*local;
+        if(topSeat&&!classicBottomSpectator)p.betY=Math.max(p.betY,profileBalanceBottom(profile.id,local)+betHalfHeight+betGap(p.scale,this.unit));
         // Keep bets in the avatar coordinate system, outside either board's occupied band.
         const revealedCards=Math.max(state.community?.length??0,state.secondCommunity?.length??0);
         if(!mine&&revealedCards){
@@ -91,8 +95,9 @@ export class LayoutProfile extends LayoutOriginal {
           const boardTop=classicContent?classicContent.board.y-88/120*cardWidth:top;
           const boardBottom=classicContent?(dual?classicContent.secondBoard.y:classicContent.board.y)+88/120*cardWidth:bottom;
           const clearance=(profile.id==='classic'&&!topSeat?2:6)*unit;
-          const bx=p.x+p.betX*p.scale,by=p.y+p.betY*p.scale,halfBet=35*p.scale;
-          if(bx+120*p.scale>this.width/2-halfWidth&&bx-120*p.scale<this.width/2+halfWidth&&by+halfBet>boardTop-clearance&&by-halfBet<boardBottom+clearance){
+          const bx=p.x+p.betX*p.scale,by=p.y+p.betY*p.scale,halfBet=betHalfHeight*p.scale;
+          const [left,right]=betEdges(p);
+          if(bx+right*p.scale>this.width/2-halfWidth&&bx+left*p.scale<this.width/2+halfWidth&&by+halfBet>boardTop-clearance&&by-halfBet<boardBottom+clearance){
             const above=boardTop-halfBet-clearance,below=boardBottom+halfBet+clearance;
             p.betY=((Math.abs(by-above)<Math.abs(by-below)?above:below)-p.y)/p.scale;
           }
@@ -128,7 +133,7 @@ export class LayoutProfile extends LayoutOriginal {
     const scale=m.boardWidth/120*u*boardSize;
     const gap=profile.id==='classic'?88*scale:(71.02/50.59*120)*scale+10*u;
     // Keep the dual board below the upper side-row bets instead of breaking their alignment.
-    const sideBetBottom=163/782*l.height+(classicSideBetY+35*profile.avatar/199+3)*u;
+    const sideBetBottom=163/782*l.height+(classicSideBetY+betHalfHeight*profile.avatar/199+3)*u;
     const y=profile.id==='classic'&&dual
       ? Math.max(profile.boardY/782*l.height,sideBetBottom+gap/2+88*scale)
       : profile.boardY/782*l.height;

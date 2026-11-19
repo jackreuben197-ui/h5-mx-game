@@ -76,7 +76,7 @@ export class SeatView implements SeatComponent {
     this.cards.setSpread(p.handSpread,p.backHandSpread);
     this.cards.root.style.setProperty('--card-scale', String(p.cardScale));
     place(this.dealer, config.identity.x+p.dealerX, config.identity.y+p.dealerY);
-    this.bet.place(config.identity.x+p.betX, config.identity.y+p.betY, p.betIconX);
+    this.bet.place(config.identity.x+p.betX, config.identity.y+p.betY, p.betIconX, p.betAnchor);
   }
   cancel(): void {
     this.effects.cancel();

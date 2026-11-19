@@ -15,6 +15,8 @@ export interface SeatPlacement {
   betX: number;
   betY: number;
   betIconX: number;
+  /** Side rows grow toward the felt, keeping their avatar-facing edge fixed. */
+  betAnchor?: 'left' | 'right' | 'center';
   dealerX: number;
   dealerY: number;
   /** Table half, independent of whether this seat belongs to the top/bottom edge. */

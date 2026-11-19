@@ -1,5 +1,6 @@
 import { SeatPosition, SeatPositionCaculator } from './seat-layout.js';
 import { landscapeLayout } from './landscape-layout.js';
+import { sideBetAnchor, legacyBalanceBottom, betHalfHeight, betGap, betEdges } from './seat-bet-layout.js';
 import type { TableSnapshot } from '../../../../core/types.js';
 import type { SeatPlacement } from '../../../../ui/TableLayout.js';
 /** Display coordinates only. Changing this class never changes seat IDs or protocol data. */
@@ -81,8 +82,15 @@ export class LayoutOriginal implements TableLayout {
         else if (landscapeSeat.edge === 'right') { betX = -180; betY = 70; betIconX = 133; }
         else { betX = 0; betY = landscapeSeat.edge === 'top' ? 215 : -180; betIconX = -25; }
       }
+      const betAnchor=mine?'center':landscapeSeat
+        ? landscapeSeat.edge==='left'?'left':landscapeSeat.edge==='right'?'right':'center'
+        : left?'left':[SeatPosition.TopRight,SeatPosition.MiddleRight,SeatPosition.BottomRight].includes(position)?'right':'center';
+      const visualScale=(landscapeSeat?.scale??p.scale)*(!this.landscape&&this.id==='original'?1.1:1);
+      if(betAnchor!=='center')betX=(betAnchor==='left'?1:-1)*sideBetAnchor(visualScale,this.unit);
+      const topBet=landscapeSeat?landscapeSeat.edge==='top':[SeatPosition.TopMiddleLeft,SeatPosition.TopMiddle,SeatPosition.TopMiddleRight].includes(position);
+      if(!mine&&topBet)betY=Math.max(betY,legacyBalanceBottom+betHalfHeight+betGap(visualScale,this.unit));
       result.set(id, {
-        betX, betY, betIconX,
+        betX, betY, betIconX, betAnchor,
         x: landscapeSeat?.x ?? this.width / 2 + p.position.x,
         y: landscapeSeat?.y ?? -p.position.y + (position === SeatPosition.BottomMiddle ? 20 : 0),
         scale: landscapeSeat?.scale ?? p.scale,
@@ -129,8 +137,9 @@ export class LayoutOriginal implements TableLayout {
         const bottom=Math.max(...boards.map(board=>board.y+88*scale));
         for(const [id,p] of result){
           if(id===state.mySeat)continue;
-          const x=p.x+p.betX*p.scale,y=p.y+p.betY*p.scale,half=35*p.scale;
-          if(x+120*p.scale>content.board.x-365*scale&&x-120*p.scale<content.board.x+365*scale&&y+half>top-12&&y-half<bottom+12){
+          const x=p.x+p.betX*p.scale,y=p.y+p.betY*p.scale,half=betHalfHeight*p.scale;
+          const [left,right]=betEdges(p);
+          if(x+right*p.scale>content.board.x-365*scale&&x+left*p.scale<content.board.x+365*scale&&y+half>top-12&&y-half<bottom+12){
             const above=top-half-12,below=bottom+half+12;
             p.betY=((Math.abs(y-above)<Math.abs(y-below)?above:below)-p.y)/p.scale;
           }

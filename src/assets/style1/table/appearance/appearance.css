@@ -275,6 +275,7 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat :is(.mx-avatar-fallback,.mx-avatar,.mx-avatar-border){box-shadow:none;filter:none}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:1px solid #ffffff70}
 .mx-table:not([data-table-layout=original]) :is(.mx-seat-bet,.mx-pool-item){background-image:none!important;background-color:#ffffff20;border:1px solid #ffffff60;border-radius:20px;box-shadow:none;backdrop-filter:blur(4px)}
+.mx-table:not([data-table-layout=original]) .mx-seat-bet{--mx-bet-stroke:var(--mx-SeatBetView-mx-seat-bet-border-width)}
 
 
 .mx-layout-preview{display:block;flex:none;width:calc(var(--mx-PersonalSettingsView-preview-width) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-preview-height) * var(--settings-unit));object-fit:contain}
