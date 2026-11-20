@@ -326,3 +326,7 @@
  height:calc(var(--mx-MttTableStateView-mx-mtt-cancel-height) * var(--mx-entry-mtt-scale) * var(--mx-entry-fit));
  font-size:calc(var(--mx-MttTableStateView-mx-mtt-cancel-font-size) * var(--mx-entry-mtt-scale) * var(--mx-entry-fit));
 }
+
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status,.mx-seat-timer) {
+  scale: var(--mx-wide-avatar-scale, 1);
+}

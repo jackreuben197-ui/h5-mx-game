@@ -21,3 +21,10 @@ test('buy-in and wallet use their original CC methods, not abbreviated table for
   assert.equal(StringHelper.GetLongString(9469), '94.69');
   assert.equal(StringHelper.GetLongStringLocale(36274620), '362,746.20');
 });
+
+test('table chip labels preserve sub-chip and BB values', () => {
+  assert.equal(ChipFormatter.tableAmount(170), '1');
+  assert.equal(ChipFormatter.tableAmount(90), '0.9');
+  assert.equal(ChipFormatter.tableAmount(170, 50, true), '1.70BB');
+  assert.equal(ChipFormatter.tableAmount(5), '0.05');
+});

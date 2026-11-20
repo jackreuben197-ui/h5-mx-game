@@ -1,3 +1,4 @@
+import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import config from './config.json';
 import { ReportPlayerInfoView } from '../ReportPlayerInfoView/ReportPlayerInfoView.js';
 import { ReportController, type ReportTab } from '../../../../../logic/ReportController.js';
@@ -31,7 +32,7 @@ export class ReportView {
     private playerInfo: ReportPlayerInfoView;
     private values = new ReportValueFitter();
     private tick?: ReturnType<typeof setInterval>;
-    constructor(readonly controller: ReportController) {
+    constructor(readonly controller: ReportController, private readonly showBB = () => false) {
         this.dialog = new RecordDialogView(() => t('UIMine_RecordList', '战绩'), () => controller.close(), 'left', config.layout.dockTop);
         this.root = this.dialog.root;
         this.root.classList.add('mx-report-overlay');
@@ -99,6 +100,8 @@ export class ReportView {
         this.dialog.footer.hidden=tabs.length<=1&&state.tab==='battle';
         this.tabs.replaceChildren(...tabs.map(([key, label]) => { const b = element('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.tab === key)); b.onclick = () => void this.controller.select(key); return b; }));
         const report = records.data.report;
+        const blind = records.data.snapshot?.roomInfo?.smallBlind ?? 0;
+        const amount = (wire: number) => ChipFormatter.tableAmount(wire, blind, blind > 0 && this.showBB());
         const tableUsers = new Set(records.data.snapshot?.playersList.map(p => p.userRid) ?? []);
         this.list.replaceChildren();
         if (state.tab === 'battle') {
@@ -110,11 +113,12 @@ export class ReportView {
                 const bringIn = element('span', 'mx-report-bringin', StringHelper.GetLongString(p.bringInTotal));
                 if (p.storeChips)
                     bringIn.append(element('small', 'mx-report-stored-chips', StringHelper.GetLongString(p.storeChips)));
+                const score = TexasReportPresentation.getPlayerScore(p);
                 const cells = [
                     StringHelper.LengthNick(p.name),
-                    `${p.handNum} (${(p.poolRate / 10).toFixed(1)}%)`,
+                    `${p.handNum} (${p.poolRate < 10 ? p.poolRate / 10 : Math.trunc(p.poolRate / 10)}%)`,
                     bringIn,
-                    profitAmount('span', TexasReportPresentation.getPlayerScore(p)),
+                    profitAmount('span', score, (score > 0 ? '+' : '') + amount(score)),
                 ];
                 if (mode === 'mush') {
                     const mushroom = p.mushroomAmount > 0
@@ -164,12 +168,12 @@ export class ReportView {
                 })));
         }
         const s = report.summary;
-        const avg = s.totalHand ? s.totalPot / s.totalHand / 100 : 0;
+        const avg = s.totalHand ? Math.trunc(s.totalPot / s.totalHand) : 0;
         const summary = [
-            [t('UISituationTotalPot', '总底池'), StringHelper.GetLongString(s.totalPot)],
+            [t('UISituationTotalPot', '总底池'), amount(s.totalPot)],
             [t('UISituationTotalBringIn', '总带入'), StringHelper.GetLongString(s.totalBringin)],
             [t('UISituationCurHandNum', '总手数'), String(s.totalHand)],
-            [t('UISituationVerBottom', '场均底池'), Number.isInteger(avg) ? String(avg) : avg.toFixed(2)],
+            [t('UISituationVerBottom', '场均底池'), amount(avg)],
             [t('UISituationCurTime', '已用时间'), this.duration(s.startTime ? Date.now() / 1000 - s.startTime : 0)],
             [t('UITexasHistory_insurance', '保险池'), profitAmount('strong', s.insurance, StringHelper.GetLongString(s.insurance))],
         ] as const;

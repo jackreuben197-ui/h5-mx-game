@@ -1,3 +1,4 @@
+import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import config from './config.json';
 import type { ReplayHandData } from '../../../../../data/ReplayHandData.js';
 import { HistoryController } from '../../../../../logic/HistoryController.js';
@@ -33,7 +34,8 @@ export class HistoryView {
     private reveal = element('button', '');
     private balance = element('span', 'mx-history-balance');
     private retry = element('button', '');
-    constructor(readonly controller: HistoryController) {
+    private renderedBB?: boolean;
+    constructor(readonly controller: HistoryController, private readonly showBB = () => false) {
         this.dialog = new RecordDialogView(() => t('UITexas_History_paipu', '牌谱'), () => controller.close(), 'right', config.layout.dockTop);
         this.root = this.dialog.root;
         this.root.classList.add('mx-history-overlay');
@@ -132,7 +134,7 @@ export class HistoryView {
             return;
         }
         const language = i18nMgr.getCurrentLocale();
-        if (this.renderedData === data && this.renderedDetails === state.details && this.renderedLanguage === language) return;
+        if (this.renderedData === data && this.renderedDetails === state.details && this.renderedLanguage === language && this.renderedBB === this.showBB()) return;
         this.room.replaceChildren();
         {
             const name = element('span', 'mx-history-room-name', data.s.name);
@@ -141,27 +143,30 @@ export class HistoryView {
             const people = element('span', 'mx-record-icon'); SpriteAtlas.paint(people, config.paths.recordPeople); count.prepend(people);
             this.room.append(element('span', '', `${data.s.rid}-${data.s.hand}`), element('span', '', `${StringHelper.GetLongString(data.s.table.sb.bet)}/${StringHelper.GetLongString(data.s.table.bb.bet)}`), name, count);
         }
+        const blind = data.s.table.bb.bet / 2;
+        const amount = (wire: number) => ChipFormatter.tableAmount(wire, blind, blind > 0 && this.showBB());
         const content = this.dialog.body;
         const scroll = this.renderedHand === state.page ? content.scrollTop : 0;
         this.renderedHand = state.page;
         this.renderedData = data;
         this.renderedDetails = state.details;
         this.renderedLanguage = language;
+        this.renderedBB = this.showBB();
         content.replaceChildren();
         const cardCount = Math.max(2, data.d?.length ?? 0, ...model.players.map(player => player.handCards?.length ?? 0));
         const players = element('div', 'mx-history-players');
-        players.append(...model.players.map(player => new HistoryPlayerView(player, model).root));
+        players.append(...model.players.map(player => new HistoryPlayerView(player, model, amount).root));
         content.append(players, this.details);
         if (state.details) {
-            if (model.hasResult) content.append(new HistoryScoreView(t('UITexas_History_paipu', '牌谱'), model.players, model, cardCount, model.haveSecondCard ? 'dual' : 'first').root);
+            if (model.hasResult) content.append(new HistoryScoreView(t('UITexas_History_paipu', '牌谱'), model.players, model, cardCount, model.haveSecondCard ? 'dual' : 'first', amount).root);
             content.append(element('h3', 'mx-history-process-title', t('UITexas_History_xxgc', '详细过程')));
             for (const [title, street, count] of [['Preflop', model.preflop, 0], ['Flop', model.flop, 3], ['Turn', model.turn, 4], ['River', model.river, 5]] as const) {
                 if (street.rows.length)
-                    content.append(new HistoryStreetView(title, street, model.publicCards.slice(0, count)).root);
+                    content.append(new HistoryStreetView(title, street, model.publicCards.slice(0, count), amount).root);
             }
             if (model.hasResult) {
-                content.append(new HistoryScoreView('Showdown', model.winners, model, cardCount, 'first').root);
-                if (model.haveSecondCard) content.append(new HistoryScoreView('Showdown2', model.winners, model, cardCount, 'second').root);
+                content.append(new HistoryScoreView('Showdown', model.winners, model, cardCount, 'first', amount).root);
+                if (model.haveSecondCard) content.append(new HistoryScoreView('Showdown2', model.winners, model, cardCount, 'second', amount).root);
             }
         }
         content.scrollTop = scroll;

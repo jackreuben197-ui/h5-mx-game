@@ -132,7 +132,7 @@ export class SeatIdentityView {
       if (!this.winHandType.hidden) {
         i18nLabel.bind(this.winHandTypeText, () => handValueTypeToString(win.handValueType as HandValueType) ?? '');
       }
-      chipLabel(this.winAmount, `+${ChipFormatter.format(win.collectedChips, state.smallBlind, state.showBB)}`);
+      chipLabel(this.winAmount, `+${ChipFormatter.tableAmount(win.collectedChips, state.smallBlind, state.showBB)}`);
     }
     this.fold.hidden = !p?.folded;
     i18nLabel.bind(this.action, () => p?.folded ? '' : ccActionText(p?.action ?? ''));

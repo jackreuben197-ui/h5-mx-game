@@ -66,7 +66,7 @@ export class LayoutOriginal implements TableLayout {
         centeredBack = landscapeSeat && !mine && ['top', 'bottom'].includes(landscapeSeat.edge);
       // Top display slots bet to the lower left, leaving the dealer at lower right.
       // Only the bottom-center slot keeps the dealer beside its nameplate.
-      const dealer = this.id === 'original'
+      const dealer = this.landscape || this.id === 'original'
         ? slot === 0 ? [-145, 120]
           : !this.landscape&&[SeatPosition.TopMiddleLeft,SeatPosition.TopMiddle,SeatPosition.TopMiddleRight].includes(position)
             ? [140, 170] : [0, 230.55]
@@ -120,7 +120,7 @@ export class LayoutOriginal implements TableLayout {
         dealerY: dealer[1]!,
       });
     }
-    if(this.landscape&&this.id==='original'){
+    if(this.landscape){
       // Nine-seat wide tables also have two opponents on the bottom edge.
       // Reserve the dealer's full height below their nameplates.
       for(const p of result.values())p.y=Math.min(p.y,this.height-(p.dealerY+44)*p.scale-10);

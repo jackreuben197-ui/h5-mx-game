@@ -230,8 +230,8 @@ export class TableView {
     const ruleData = (options.records ?? options.specialOperations)?.data;
     this.insuranceRules = new InsuranceRulesView(ruleData);
     if (options.records) {
-      this.report = new ReportView(new ReportController(options.records));
-      this.history = new HistoryView(new HistoryController(options.records));
+      this.report = new ReportView(new ReportController(options.records), () => this.showBB);
+      this.history = new HistoryView(new HistoryController(options.records), () => this.showBB);
     }
     if (options.emojis) {
       this.emoji = new EmojiView(new EmojiController(options.emojis));

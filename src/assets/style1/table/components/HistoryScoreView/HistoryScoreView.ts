@@ -11,9 +11,9 @@ import { element, profitAmount } from '../../dom.js';
 /** CC HistoryScoreSection: Score / Showdown / Showdown2 share the same row layout. */
 export class HistoryScoreView {
     readonly root = componentBox(element('section', 'mx-history-score'),config);
-    constructor(title: string, players: HistoryPlayerInfo[], model: HistoryHandModel, cardCount: number, mode: 'first' | 'dual' | 'second') {
+    constructor(title: string, players: HistoryPlayerInfo[], model: HistoryHandModel, cardCount: number, mode: 'first' | 'dual' | 'second', formatAmount: (wire: number) => string) {
         const second = mode === 'second', dual = mode === 'dual';
-        this.root.append(new HistorySectionHeaderView(title, second ? model.secondPublicCards : model.publicCards, players.length, model.haveSecondCard ? model.showdownPot / 2 : model.showdownPot).root);
+        this.root.append(new HistorySectionHeaderView(title, second ? model.secondPublicCards : model.publicCards, players.length, model.haveSecondCard ? model.showdownPot / 2 : model.showdownPot, formatAmount).root);
         for (const player of players) {
             const row = element('article', 'mx-history-score-row');
             row.classList.toggle('mx-record-own', player.isMine);
@@ -36,7 +36,7 @@ export class HistoryScoreView {
             const profits = element('div', 'mx-history-score-profits');
             const amounts = dual ? [player.winAnte2[0] ?? 0, player.winAnte2[1] ?? 0] : [second ? player.winAnte2[1] : player.winAnte];
             for (const amount of amounts) {
-                const text = amount === undefined ? '' : dual ? StringHelper.GetDecimalN(amount / 100) : StringHelper.GetLongString(amount);
+                const text = amount === undefined ? '' : formatAmount(amount);
                 profits.append(profitAmount('span', amount ?? 0, text));
             }
             if (player.insuranceGain) profits.append(profitAmount('small', player.insuranceGain));

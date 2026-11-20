@@ -19,7 +19,7 @@ export class PotView {
   private onFormat(): void { this.onAmount(this.data.amount); this.onPools(this.data.pools); }
   @bindEvent(PotData.CHANGE, 'pot')
   private onAmount(amount: number): void {
-    chipLabel(this.total, () => `${i18nMgr.Get("adaptation20005")}: ${ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB)}`);
+    chipLabel(this.total, () => `${i18nMgr.Get("adaptation20005")}: ${ChipFormatter.tableAmount(amount, this.data.format.smallBlind, this.data.format.showBB)}`);
   }
   @bindEvent(PotData.POOLS, 'pot')
   private onPools(pools: readonly number[]): void {
@@ -27,7 +27,7 @@ export class PotView {
     const items = pools.slice(0, 9).map((amount, index) => {
       const item = element('span', index === 0 ? 'mx-pool-item mx-pool-main' : 'mx-pool-item mx-pool-side');
       const value = element('span', 'mx-pool-value');
-      chipLabel(value, ChipFormatter.format(amount, this.data.format.smallBlind, this.data.format.showBB));
+      chipLabel(value, ChipFormatter.tableAmount(amount, this.data.format.smallBlind, this.data.format.showBB));
       SpriteAtlas.paint(item, config.paths.pool);
       const chip = element('i', 'mx-pot-chip');
       SpriteAtlas.paint(chip, config.paths.chip);

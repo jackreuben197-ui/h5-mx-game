@@ -8,8 +8,8 @@ import { HistorySectionHeaderView } from '../HistorySectionHeaderView/HistorySec
 import { element } from '../../dom.js';
 export class HistoryStreetView {
     readonly root = componentBox(element('section', 'mx-history-street'),config);
-    constructor(title: string, street: HistoryStreetModel, cards: number[]) {
-        this.root.append(new HistorySectionHeaderView(title, cards, street.rows.length, street.pot).root);
+    constructor(title: string, street: HistoryStreetModel, cards: number[], formatAmount: (wire: number) => string) {
+        this.root.append(new HistorySectionHeaderView(title, cards, street.rows.length, street.pot, formatAmount).root);
         for (const row of street.rows) {
             const item = element('div', 'mx-history-action-row');
             item.classList.toggle('mx-record-own', row.isMine);
@@ -20,8 +20,8 @@ export class HistoryStreetView {
             const position = element('span', 'mx-history-position', PLAYER_POSITION_ABBR[row.playerPosition] ?? '');
             SpriteAtlas.paint(position, config.paths.recordPosition);
             const bet = element('span', 'mx-history-bet');
-            bet.append(action, element('span', '', StringHelper.GetLongString(row.actionChip)));
-            item.append(position, name, bet, element('span', 'mx-history-stack', `${title === 'Preflop' ? '' : 'P:'}${StringHelper.GetDecimalN(row.leftChips / 100)}`));
+            bet.append(action, element('span', '', formatAmount(row.actionChip)));
+            item.append(position, name, bet, element('span', 'mx-history-stack', `${title === 'Preflop' ? '' : 'P:'}${formatAmount(row.leftChips)}`));
             this.root.append(item);
         }
     }

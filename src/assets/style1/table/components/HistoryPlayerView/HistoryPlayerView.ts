@@ -9,7 +9,7 @@ import { HistoryCardsView } from '../HistoryCardsView/HistoryCardsView.js';
 import { element, profitAmount } from '../../dom.js';
 export class HistoryPlayerView {
     readonly root = componentBox(element('article', 'mx-history-player'),config);
-    constructor(player: HistoryPlayerInfo, model: HistoryHandModel) {
+    constructor(player: HistoryPlayerInfo, model: HistoryHandModel, private readonly formatAmount: (wire: number) => string) {
         this.root.classList.toggle('mx-record-own', player.isMine);
         const identity = element('div', 'mx-history-identity');
         const avatar = element('span', 'mx-record-avatar');
@@ -43,7 +43,7 @@ export class HistoryPlayerView {
         boards.append(streetActions);
         const profits = element('div', 'mx-history-overview-profits');
         const values = model.haveSecondCard ? player.winAnte2 : [player.winAnte];
-        for (const value of values) profits.append(profitAmount('span', value));
+        for (const value of values) profits.append(profitAmount('span', value, (value > 0 ? '+' : '') + this.formatAmount(value)));
         this.root.append(identity, hands, boards, profits);
     }
     private action(row: import('../../../../../logic/HistoryReplayModel.js').HistoryActionInfo): HTMLElement {
@@ -51,7 +51,7 @@ export class HistoryPlayerView {
         const keys = ['', 'UISB', 'UIBB', 'UITexas_call', 'adaptation10315', '', 'UITexas_Bet', 'adaptation10045', '', 'adaptation30074', 'UITexas_fold', 'adaptation10179'];
         const label=keys[row.action]?i18nMgr.Get(keys[row.action]!):PLAYER_ACTION_ABBR[row.action]??'';
         const action=row.action===6||row.action===7?formatRaiseTimes(row.raiseTimes,label,i18nMgr.Get('adaptation10045')):label;
-        node.append(element('span','',action),element('span','',StringHelper.GetLongString(row.actionChip)));
+        node.append(element('span','',action),element('span','',this.formatAmount(row.actionChip)));
         return node;
     }
 }

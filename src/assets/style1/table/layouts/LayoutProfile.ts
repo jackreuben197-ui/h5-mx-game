@@ -126,7 +126,10 @@ export class LayoutProfile extends LayoutOriginal {
       infoY:(infoTop-y)/scale,typeY:(typeTop+30*scale-y)/scale};
   }
   override content(options: LayoutContentOptions): LayoutContent {
-    if(this.landscape)return super.content(options);
+    if (this.landscape) {
+      const content = super.content(options);
+      return { ...content, styles: { ...content.styles, '--mx-wide-avatar-scale': String(this.profile.avatar / 60) } };
+    }
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
     const scale=m.boardWidth/120*u*boardSize;
