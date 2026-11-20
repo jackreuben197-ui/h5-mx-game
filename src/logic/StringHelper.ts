@@ -64,6 +64,9 @@ export class StringHelper {
             return this.formatToOneDecimalFloor(k) + 'K';
         }
         // 达不到 K/M 级别的小数，同样用我们自己的去尾算法输出
+        return this.GetDecimalNWithoutKM(num);
+    }
+    public static GetDecimalNWithoutKM(num: number): string {
         return this.formatToOneDecimalFloor(num, 2);
     }
     static GetSignedLongString(num: number): string {

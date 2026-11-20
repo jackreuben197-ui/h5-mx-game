@@ -122,6 +122,6 @@ export class TableChatView {
     const top=this.dialog.panel.getBoundingClientRect().top;
     this.dialog.panel.style.maxHeight=`${Math.max(0,viewport.offsetTop+viewport.height-top)}px`;
   };
-  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=width/config.layout.screenWidth;this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${config.layout.panelWidth*unit}px`);this.fitKeyboard();}
+  resize(width:number,height:number):void{this.dialog.onFrameResize(width,height);const unit=Math.min(width/config.layout.screenWidth,width>height?config.layout.desktopWidth/config.layout.panelWidth:Infinity);this.dialog.root.style.setProperty('--record-unit',`${unit}px`);this.dialog.root.style.setProperty('--chat-width',`${config.layout.panelWidth*unit}px`);this.fitKeyboard();}
   destroy():void{window.visualViewport?.removeEventListener('resize',this.fitKeyboard);window.visualViewport?.removeEventListener('scroll',this.fitKeyboard);this.dead=true;this.close();this.bindings.destroy();this.dialog.destroy();this.danmu.destroy();this.emoji.destroy();this.button.remove();this.support.remove();}
 }

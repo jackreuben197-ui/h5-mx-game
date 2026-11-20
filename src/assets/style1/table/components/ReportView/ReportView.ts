@@ -174,7 +174,7 @@ export class ReportView {
             [t('UISituationTotalBringIn', '总带入'), StringHelper.GetLongString(s.totalBringin)],
             [t('UISituationCurHandNum', '总手数'), String(s.totalHand)],
             [t('UISituationVerBottom', '场均底池'), amount(avg)],
-            [t('UISituationCurTime', '已用时间'), this.duration(s.startTime ? Date.now() / 1000 - s.startTime : 0)],
+            [t('UISituationCurTime', '已用时间'), this.durationInHours(s.startTime ? Date.now() / 1000 - s.startTime : 0)],
             [t('UITexasHistory_insurance', '保险池'), profitAmount('strong', s.insurance, StringHelper.GetLongString(s.insurance))],
         ] as const;
         this.summary.replaceChildren(...summary.map(([label, value]) => {
@@ -245,11 +245,17 @@ export class ReportView {
         this.remaining.textContent = `${t('UISituationRemainTime', '剩余时间')}　 ${remain}`;
     }
     private duration(value: number): string { const seconds = Math.max(0, Math.floor(value)); return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map(v => String(v).padStart(2, '0')).join(':'); }
+    private durationInHours(value: number): string {
+        const hours = Number((Math.max(0, value) / 3600).toFixed(2));
+        return `${hours}${t('UITimeHourTip', '小时')}`;
+    }
     open(): void { this.controller.open(); }
     onFrameResize(w: number, h: number): void {
         this.dialog.onFrameResize(w, h);
         // The report uses the full 1252-wide design canvas, independent of screen height.
-        const designWidth = Math.min(w, config.layout.maxPanelWidth / config.layout.panelWidthRatio);
+        const maxWidth=w>h?config.layout.desktopPanelWidth:config.layout.maxPanelWidth;
+        const designWidth = Math.min(w, maxWidth / config.layout.panelWidthRatio);
+        this.root.style.setProperty('--mx-report-panel-max-width', `${maxWidth}px`);
         this.root.style.setProperty('--record-unit', `${designWidth / config.layout.designWidth}px`);
         this.playerInfo.onFrameResize(w, h);
     }

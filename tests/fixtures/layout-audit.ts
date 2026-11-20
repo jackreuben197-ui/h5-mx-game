@@ -15,11 +15,21 @@ const bar=document.querySelector<HTMLElement>('#audit-controls')!,stage=document
 const info=document.createElement('div'),logNode=document.createElement('ol');info.id='audit-info';logNode.id='audit-log';stage.before(info);stage.after(logNode);
 const metadata=auditScenarios.find(s=>s.id===scene);info.textContent=`离线合成数据 · ${metadata?.label??scene}｜${metadata?.steps??''}｜覆盖：${metadata?.covers.join('、')??''}`;
 function log(text:string){const li=document.createElement('li');li.textContent=text;logNode.prepend(li);while(logNode.children.length>40)logNode.lastChild?.remove();}
-function select(key:string,label:string,values:readonly (string|number|{value:string;text:string})[],value:string){const wrap=document.createElement('label'),node=document.createElement('select');wrap.textContent=label;node.setAttribute('aria-label',key);for(const v of values){const option=document.createElement('option');option.value=typeof v==='object'?v.value:String(v);option.textContent=typeof v==='object'?v.text:String(v);node.append(option);}node.value=value;node.onchange=()=>{q.set(key,node.value);location.search=q.toString();};wrap.append(node);bar.append(wrap);}
+function select(key:string,label:string,values:readonly (string|number|{value:string;text:string})[],value:string){const wrap=document.createElement('label'),node=document.createElement('select');wrap.textContent=label;node.setAttribute('aria-label',key);for(const v of values){const option=document.createElement('option');option.value=typeof v==='object'?v.value:String(v);option.textContent=typeof v==='object'?v.text:String(v);node.append(option);}node.value=value;node.onchange=()=>{q.set(key,node.value);if(key==='locale')i18nMgr.setLanguage(node.value);else location.search=q.toString();};wrap.append(node);bar.append(wrap);}
 select('layout','布局',['original','balanced','oval','classic'],layout);select('scene','场景',auditScenarios.map(s=>({value:s.id,text:`${s.group} · ${s.label}`})),scene);
 for(const [key,label,val]of [['seats','人数',options.seats],['hero','本人座位',options.hero],['actor','状态作用座位',options.actor],['dealer','庄家座位',options.dealer]] as const)select(key,label,Array.from({length:key==='seats'?8:options.seats},(_,i)=>i+(key==='seats'?2:1)),String(val));
 select('cards','手牌',[2,4,5,6],String(options.cards));select('scale','尺寸',[90,95,100,105,110],String(scale));select('locale','语言',['zh_CN','zh_TW','en','pt'],q.get('locale')??'zh_CN');select('quick','快捷',[3,5],q.get('quick')??'5');select('submit','滑杆',['confirm','release'],q.get('submit')??'confirm');
 const host=new AuditHost(options,log);await i18nMgr.initLanguage();i18nMgr.setLanguage(q.get('locale')??'zh_CN');
+// Standalone audit can load the same served font files as H5; production declares them in H5 once.
+if(q.get('fontHost'))for(const [family,file]of [['HONOR Sans CN','HONORSansCN-Regular.woff2'],['Keania One','KeaniaOne-Regular.woff2']]){
+ const font=new FontFace(family!,`url("${new URL('/assets/fonts/'+file,q.get('fontHost')!).href}")`);document.fonts.add(await font.load());
+}
+if(scene.startsWith('mtt-report'))await new Promise<void>((resolve,reject)=>{
+ const request=indexedDB.open('public_cache');
+ request.onupgradeneeded=()=>request.result.createObjectStore('multi_language_template',{keyPath:'template_id'});
+ request.onerror=()=>reject(request.error);
+ request.onsuccess=()=>{const db=request.result,tx=db.transaction('multi_language_template','readwrite');tx.objectStore('multi_language_template').put({template_id:'MX_AUDIT_MTT',cn_name:'测试锦标赛',us_name:'Test tournament',br_name:'Torneio de teste'});tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>{db.close();reject(tx.error);};};
+});
 const target={roomID:909090,matchID:scene.startsWith('mtt-')?900001:0,roomType:0};
 const game=new GameClient(stage,{host,preferences:prefs,layout:q.get('orientation')==='auto'?'auto':'portrait',minimumLoadingMs:0,onState:s=>{stage.dataset.phase=s.phase;stage.dataset.hand=String(s.table?.handNum??0);if(s.phase==='error'){stage.dataset.ready='true';log(s.error??'');}},onLeave:()=>log('已离桌；点击重新进入可恢复。')});
 function button(label:string,run:()=>unknown){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{Promise.resolve(run()).catch(e=>log(String(e)));};bar.append(b);}
@@ -32,7 +42,7 @@ if(game.getState().phase==='table'){
  await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
  const click=(selector:string)=>stage.querySelector<HTMLElement>(selector)?.click();
  if(scene==='raise')click('.mx-operation-raise');
- if(scene.startsWith('report')||scene==='mtt-report')click('.mx-nav-button[data-action="report"]');
+ if(scene.startsWith('report')||scene.startsWith('mtt-report'))click('.mx-nav-button[data-action="report"]');
  if(scene==='history')click('.mx-nav-button[data-action="replay"]');
  if(scene.startsWith('profile')||scene==='mtt-profile')click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
  if(scene.startsWith('settings')){click('.mx-menu');click('.mx-menu-item[data-menu-action="UITexas_Setting"]');}

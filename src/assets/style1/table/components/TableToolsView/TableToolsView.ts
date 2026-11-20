@@ -1,6 +1,7 @@
 import { componentBox } from '../../ComponentBox.js';
 import { resourceURL } from '../../ResourcePath.js';
 import config from './config.json';
+import './layout.css';
 import type { RoomRecords } from '../../../../../core/RoomRecords.js';
 import type { TableSnapshot } from '../../../../../core/types.js';
 import { element } from '../../dom.js';

@@ -90,7 +90,7 @@ export class RecordDialogView {
         // CC UIViewUtil.alignTableDialog: visibleHeight * designTop / config.layout.designHeight.
         // CSS max() combines it with the live H5/device top safe area.
         this.root.style.setProperty('--record-design-top', `${height * this.designTop / config.layout.designHeight}px`);
-        const panelWidth = Math.min(width * config.layout.widthRatio, config.layout.maxWidth);
+        const panelWidth = Math.min(width * config.layout.widthRatio, this.dock && width > height ? config.layout.desktopWidth : config.layout.maxWidth);
         const unit = this.dock ? panelWidth / config.layout.designWidth : Math.min(width / config.layout.screenWidth, height / config.layout.panelHeight, config.layout.maxWidth / config.layout.designWidth);
         this.root.style.setProperty('--record-unit', `${unit}px`);
         this.root.style.setProperty('--record-width', `${(this.dock ? panelWidth : Math.min(width - config.layout.widthGap, config.layout.designWidth * unit))}px`);

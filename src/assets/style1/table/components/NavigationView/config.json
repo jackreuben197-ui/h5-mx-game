@@ -106,7 +106,20 @@
       "mx-navigation-width-5": "100%",
       "mx-navigation-height-4": "100%",
       "mx-navigation-margin-5": "0",
-      "mx-nav-button-width-4": "100%"
+      "mx-nav-button-width-4": "100%",
+      "desktop-width": "600px",
+      "desktop-height": "96.1353px",
+      "desktop-radius": "48.0676px",
+      "desktop-button-width": "52.1739px",
+      "desktop-button-height": "71.9807px",
+      "desktop-icon-size": "36.864px",
+      "desktop-font-size": "18.04px",
+      "desktop-button-gap": "7.5px",
+      "desktop-logo-width": "98.0374px",
+      "desktop-logo-height": "54.4604px",
+      "desktop-padding": "26px",
+      "desktop-edge-gap": "24px",
+      "desktop-controls-height": "110px"
     }
   },
   "sizing": {

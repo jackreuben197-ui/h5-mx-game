@@ -48,6 +48,7 @@ export class PlayerInfoView {
     const generation = ++this.generation;
     this.busy = false;
     this.player = player;
+    this.root.dataset.game = this.records?.target.matchID || this.records?.data.mtt ? 'mtt' : 'cash';
     this.profile = this.records?.peekPlayerProfile?.(player.userRid ?? 0);
     this.tab = 'data';
     this.muted = false; this.balance = undefined;
@@ -190,12 +191,12 @@ export class PlayerInfoView {
     if (this.tab === 'data') {
       const room = stats?.room_data;
       const podium = stats?.mtt_room_data;
-      const values: Array<[string, string]> = this.records?.data.mtt ? [
-        [t('UIData_YGvXd5iXr_006','冠军'), String(podium?.frist_times ?? 0)],
-        [t('UIData_YGvXd5iXr_007','亚军'), String(podium?.second_times ?? 0)],
-        [t('UIData_YGvXd5iXr_008','季军'), String(podium?.third_times ?? 0)],
-        [t('UIData_YGvXd5iXr_005','参赛次数'), String(podium?.play_times ?? 0)],
-        [t('UITexasInfo_wincount','获奖次数'), String(podium?.win_times ?? 0)],
+      const values: Array<[string, string]> = this.root.dataset.game === 'mtt' ? [
+        [t('UIData_YGvXd5iXr_006','冠军'), podium ? String(podium.frist_times ?? 0) : '—'],
+        [t('UIData_YGvXd5iXr_007','亚军'), podium ? String(podium.second_times ?? 0) : '—'],
+        [t('UIData_YGvXd5iXr_008','季军'), podium ? String(podium.third_times ?? 0) : '—'],
+        [t('UIData_YGvXd5iXr_005','参赛次数'), podium ? String(podium.play_times ?? 0) : '—'],
+        [t('UITexasInfo_wincount','获奖次数'), podium ? String(podium.win_times ?? 0) : '—'],
       ] : [
         [t('UITexasInfo_games', '总局数'), room ? String(room.total_game_cnt || 0) : '—'],
         [t('UITexasInfo_allhands', '总手数'), room ? String(room.total_hand || 0) : '—'],

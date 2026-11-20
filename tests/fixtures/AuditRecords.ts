@@ -4,15 +4,17 @@ import { PrivateUcChargeStore } from '../../src/data/PrivateUcChargeStore.js';
 import type { DemoFeatures } from '../../src/demo/DemoFeatures.js';
 import type { TableSnapshot } from '../../src/core/types.js';
 import type { HoldemRuntime } from '../../src/net/ProtocolRuntime.js';
+import { MttReportConfig } from '../../src/config/MttReportConfig.js';
 /** Local-only service responses. No production HTTP, websocket or payment adapter is created. */
 export function auditRecords(features:DemoFeatures,pb:HoldemRuntime,current:()=>TableSnapshot,update:(v:Partial<TableSnapshot>)=>void,log:(v:string)=>void,scene=''):RoomRecords {
- const data=features.data,notes=new Map<number,string>(),muted=new Set<number>(),saved=new Set<number>();
+ const data=features.data,notes=new Map<number,string>(),muted=new Set<number>(),saved=new Set<number>(),reportTime=Math.floor(Date.now()/1000);
  const profile=(uid:number)=>({basic:{random_num:uid,nick_name:current().players.find(p=>p.userRid===uid)?.name??'模拟观众',avatar:new URL('../../src/assets/style1/resources/raw/ui/avatar.png',import.meta.url).href,remark_name:notes.get(uid)},stats:{mtt_room_data:{frist_times:7,second_times:4,third_times:2,play_times:38,win_times:13},room_data:{total_game_cnt:12,vpip:45,prf:20,total_hand:98,wins:31},pool_rate:45,allin_data:{active_count:12,active_profit_count:8,passive_count:4,passive_profit_count:2,behind_count:3,behind_profit_count:1,ahead_count:5,ahead_profit_count:4}}});
  const records:RoomRecords={data,config:{...features.config,privateUc:new PrivateUcChargeStore()},get userRID(){return 99+current().mySeat;},target:{roomID:909090,matchID:0},
   async mttReport(section,offset=0){
-   if(section==='detail')return {mtt:{name:'测试锦标赛',blindtable_type:0,hunter_on:1,upblind_interval:600},more:{bl:2,sb:5000,nu:Math.floor(Date.now()/1000)+300}};
-   if(section==='real_prize')return {prizes:[{min:1,max:1,award:90000}]};
-   return {sb:5000,records:offset?[]:[{rank:1,name:'测试玩家',chip:20000,rid:12,award:25,roomers:[{chip:20000}]}]};
+   const now=reportTime,preStart=scene==='mtt-report-prestart';
+   if(section==='detail')return {mtt:{name:'MX_AUDIT_MTT-1',status:preStart?0:1,start_time:new Date((now+(preStart?120:-3661))*1000).toISOString(),gold_type:1,total_buy_times:158,blindtable_type:0,hunter_on:scene==='mtt-report-normal'?0:1,upblind_interval:600,addon_begin_bl:5,addon_end_bl:6,max_rebuy_bl:4},more:{bl:2,sb:5000,nsb:10000,nu:now-289,prize_pool:1000000,max_chip:scene==='mtt-report-long'?999999999999:123456,avg_chip:65432,min_chip:15000},alive:106};
+   if(section==='real_prize')return {award:1000000,award_num:15,prizes:[{min:1,max:1,award:90000},{min:2,max:3,award:45000,goods:[{na:'测试门票',n:1}]}]};
+   return {sb:5000,total:106,alive:106,records:Array.from({length:Math.min(MttReportConfig.pageSize,106-offset)},(_,i)=>({rank:offset+i+1,urid:100+offset+i,name:scene==='mtt-report-long'?'玩家很长的名字 Player '+(i+1):'测试玩家 '+(offset+i+1),chip:20000+offset+i,rid:12+i,award:25+i,roomers:[{chip:20000},{chip:90000}]}))};
   },
   async playerStats(){return {vpip:45,pfr:20};},async playerProfile(id){return profile(id);},peekPlayerProfile:profile,
   async savePlayerRemark(id,note){notes.set(id,note);},async playerMuted(id){return muted.has(id);},async setPlayerMuted(id,v){v?muted.add(id):muted.delete(id);},

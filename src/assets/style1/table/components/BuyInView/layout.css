@@ -1,0 +1,71 @@
+/* PC frames use Figma 11222:35446 / 39425 at a fixed size. Mobile keeps its own fit. */
+.mx-buyin-overlay[data-desktop=true] > .mx-buyin-panel {
+  padding: var(--mx-BuyInView-desktop-top-padding) var(--mx-BuyInView-desktop-padding) var(--mx-BuyInView-desktop-padding);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel[data-step=rules] {
+  height: min(100%, var(--mx-BuyInView-desktop-rules-height));
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel[data-step=amount]:not(.mx-buyin-diamond-tab) {
+  height: min(100%, var(--mx-BuyInView-desktop-amount-height));
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-body {
+  flex: 1 1 auto;
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-title {
+  font-size: var(--mx-BuyInView-desktop-title-size);
+  line-height: 1.35;
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-tabs button {
+  font-size: var(--mx-BuyInView-desktop-tab-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel[data-step=amount] .mx-buyin-detail {
+  font-size: var(--mx-BuyInView-desktop-field-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-amount-section {
+  min-height: var(--mx-BuyInView-desktop-section-height);
+  padding: var(--mx-BuyInView-desktop-section-padding);
+  gap: var(--mx-BuyInView-desktop-section-gap);
+  margin-inline: 0;
+}
+.mx-buyin-overlay[data-desktop=true] :is(.mx-buyin-amount-title, .mx-buyin-wallet-title, .mx-buyin-auto-label) {
+  font-size: var(--mx-BuyInView-desktop-label-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-amount {
+  font-size: var(--mx-BuyInView-desktop-amount-size);
+  line-height: var(--mx-BuyInView-desktop-amount-line-height);
+  margin-top: var(--mx-BuyInView-desktop-amount-margin);
+}
+.mx-buyin-overlay[data-desktop=true] :is(.mx-buyin-amount-caption, .mx-buyin-limits) {
+  font-size: var(--mx-BuyInView-desktop-caption-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-auto-description {
+  font-size: var(--mx-BuyInView-desktop-description-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-wallet-title {
+  line-height: 1.4;
+  margin-block: var(--mx-BuyInView-desktop-gap);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-wallet-current {
+  min-height: var(--mx-BuyInView-desktop-wallet-height);
+}
+.mx-buyin-overlay[data-desktop=true] :is(.mx-wallet-current, .mx-wallet-row, .mx-wallet-name, .mx-wallet-balance, .mx-wallet-id) {
+  font-size: var(--mx-BuyInView-desktop-wallet-size);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-confirm {
+  width: var(--mx-BuyInView-desktop-button-width);
+  height: var(--mx-BuyInView-desktop-button-height);
+  font-size: var(--mx-BuyInView-desktop-button-size) !important;
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel:is([data-step=security], [data-step=rules]) {
+  padding: var(--mx-BuyInView-desktop-top-padding) var(--mx-BuyInView-desktop-padding) var(--mx-BuyInView-desktop-padding);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel:is([data-step=security], [data-step=rules]) :is(.mx-room-settings, .mx-buyin-confirm, .mx-buyin-cancel) {
+  font-size: var(--mx-BuyInView-desktop-notice-size) !important;
+}
+.mx-buyin-overlay[data-desktop=true] .mx-room-setting-row {
+  min-height: var(--mx-BuyInView-desktop-row-height);
+}
+.mx-buyin-overlay[data-desktop=true] .mx-buyin-panel[data-step=rules] .mx-buyin-confirm {
+  width: 100%;
+  height: var(--mx-BuyInView-desktop-notice-button-height);
+}

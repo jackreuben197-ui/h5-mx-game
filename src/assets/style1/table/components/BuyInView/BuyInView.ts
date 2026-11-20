@@ -7,6 +7,7 @@ import type { TableConfirmDialog } from '../TableConfirmDialog/TableConfirmDialo
 import '../../diamond-purchase.css';
 import { GameplayTableSettingView } from '../GameplayTableSettingView/GameplayTableSettingView.js';
 import '../../buyin-settings.css';
+import './layout.css';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { BindingScope } from '../../../../../binding/BindingScope.js';
@@ -149,8 +150,12 @@ export class BuyInView {
   }
   onFrameResize(width:number,height:number):void {
     this.frame={width,height};
-    const unit=Math.min(width/config.layout.screenWidth,height/(this.diamondTab?config.layout.diamondHeight:config.layout.shortHeight),config.layout.maxWidth/config.layout.panelWidth);
-    this.root.dataset.short=String(height<config.layout.shortHeight*unit);
+    const desktop=width>height;
+    this.root.dataset.desktop=String(desktop);
+    const unit=desktop
+      ? Math.min((width-config.layout.widthGap)/config.layout.panelWidth,config.layout.desktopWidth/config.layout.panelWidth)
+      : Math.min(width/config.layout.screenWidth,height/(this.diamondTab?config.layout.diamondHeight:config.layout.shortHeight),config.layout.maxWidth/config.layout.panelWidth);
+    this.root.dataset.short=String(!desktop&&height<config.layout.shortHeight*unit);
     this.root.style.setProperty('--mx-setup-unit',`${unit}px`);
     this.root.style.setProperty('--dialog-width',`${Math.min(width-config.layout.widthGap,config.layout.panelWidth*unit)}px`);
     this.wallet.positionList();

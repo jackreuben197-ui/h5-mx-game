@@ -1,162 +1,303 @@
 import type { RoomRecords } from '../../../../../core/RoomRecords.js';
 import type { MttReportResult, MttReportSection } from '../../../../../core/MttReport.js';
 import { getMttBlindLevels } from '../../../../../logic/MttBlindTable.js';
+import { mttDuration, mttReportTiming } from '../../../../../logic/MttReportTiming.js';
+import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
+import { resolveTemplateTextByKey } from '../../../../../i18n/resolveTemplateTextByKey.js';
+import { HttpError } from '../../../../../net/http/HttpError.js';
+import { MttReportConfig } from '../../../../../config/MttReportConfig.js';
+import Mtt from '../../../../../data/TexasGameRoomDataMtt.js';
 import { element } from '../../dom.js';
+import { SpriteAtlas } from '../../SpriteAtlas.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
+import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
+import { ReportValueFitter } from '../ReportView/ReportValueFitter.js';
+import recordConfig from '../RecordDialogView/config.json';
+import reportConfig from '../ReportView/config.json';
 import config from './config.json';
+import './layout.css';
 
-type Tab = Exclude<MttReportSection, 'detail'> | 'blinds';
-const tabs: [Tab,string,string][] = [
-    ['ranks','UITexasReport_player','玩家'], ['hranks','UIReward_Bounty','猎人榜'],
-    ['rooms','UITexasReport_Label_AllBarPZ','牌桌'], ['real_prize','UIReward','奖励'],
-    ['blinds','UITexasReport_Label_AllBarMZ','盲注'],
+type Tab = 'players' | 'rooms' | 'real_prize' | 'blinds';
+type Page = Exclude<MttReportSection, 'detail'>;
+const tabs: [Tab, string, string][] = [
+    ['players', 'UITexasReport_player', '玩家'], ['rooms', 'UITexasReport_Label_AllBarPZ', '牌桌'],
+    ['real_prize', 'MTT_State_Reward', '奖励'], ['blinds', 'UITexasReport_Text_BlindBlindTip', '盲注'],
 ];
-const t = (key:string, fallback:string) => i18nMgr.Get(key,[],fallback);
+const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
+
+/** Tournament report stays inside the table; H5 supplies the shared font faces. */
 export class MttReportView {
-    readonly dialog = new RecordDialogView(() => this.detail?.mtt?.name || t('UIMine_RecordList','战绩'), () => this.close(), 'left', config.layout.dockTop);
+    readonly dialog: RecordDialogView;
     private detail: MttReportResult = {};
-    private tab: Tab = 'ranks';
-    private version = 0;
+    private tab: Tab = 'players';
+    private mode: 'ranks' | 'hranks' = 'ranks';
     private offset = 0;
-    private rank?: number;
-    private readonly elapsed = element('strong','');
+    private generation = 0;
+    private pageVersion = 0;
+    private languageVersion = 0;
+    private readonly names = new Map<string, string>();
+    private readonly pages = new Map<string, MttReportResult>();
+    private readonly emptyPlayers = new Set<string>();
+    private readonly values = new ReportValueFitter();
+    private readonly overview = element('div', 'mx-mtt-overview');
+    private readonly tabBar = element('div', 'mx-mtt-tabs');
+    private readonly modeBar = element('div', 'mx-mtt-modes');
+    private readonly content = element('div', 'mx-mtt-content');
+    private readonly elapsed = element('strong', 'mx-mtt-elapsed');
+    private readonly clock = element('strong', 'mx-mtt-clock');
+    private readonly pagination = new RecordPaginationView(page => { this.offset = (page - 1) * MttReportConfig.pageSize; void this.loadPage(); });
     private timer?: ReturnType<typeof setInterval>;
-    private readonly clock = element('strong','');
-    constructor(private records: RoomRecords) {
-        this.dialog.root.classList.add('mx-report-overlay','mx-mtt-report');
+    private detailLoading = false;
+    private pageLoading = false;
+    private detailError = '';
+    private pageError = '';
+    private lastRefresh = 0;
+    private offMtt?: () => void;
+
+    constructor(private readonly records: RoomRecords) {
+        this.dialog = new RecordDialogView(() => this.names.get(this.detail.mtt?.name ?? '') || t('UIMine_RecordList', '战绩'), () => this.close(), 'left', config.layout.dockTop);
+        this.dialog.root.classList.add('mx-mtt-report');
+        this.dialog.header.after(this.overview, this.tabBar, this.modeBar);
+        this.dialog.body.append(this.content);
+        this.dialog.footer.append(this.pagination.root);
+        this.tabBar.setAttribute('role', 'tablist');
+        this.tabBar.setAttribute('aria-label', t('UIMine_RecordList', '战绩'));
+        this.content.id = this.dialog.panel.getAttribute('aria-labelledby') + '-content';
+        this.content.setAttribute('role', 'tabpanel');
+        i18nMgr.register(this);
     }
-    private close() {
-        this.version++;
+
+    open(): void {
+        ++this.generation;
+        this.detail = {};
+        this.tab = 'players'; this.mode = 'ranks'; this.offset = 0;
+        this.pages.clear(); this.emptyPlayers.clear(); this.names.clear(); ++this.languageVersion;
+        this.detailError = this.pageError = '';
+        this.detailLoading = this.pageLoading = false;
+        this.lastRefresh = 0;
+        this.dialog.show(true);
+        this.offMtt?.();
+        this.offMtt = this.records.data.mtt?.on(Mtt.STATE_CHANGED, () => {
+            if (this.records.data.mtt?.blindLevel !== this.detail.more?.bl) void this.refreshDetail();
+            this.tick();
+        });
+        this.dialog.refreshTitle(); this.render();
         clearInterval(this.timer);
+        this.timer = setInterval(() => this.tick(), MttReportConfig.tickMs);
+        void this.refreshDetail(); void this.loadPage();
+    }
+
+    private close(): void {
+        ++this.generation; ++this.pageVersion; ++this.languageVersion;
+        clearInterval(this.timer); this.timer = undefined;
+        this.values.clear();
+        this.offMtt?.(); this.offMtt = undefined;
         this.dialog.show(false);
     }
-    destroy() { this.close(); this.dialog.destroy(); }
-    open() {
-        this.detail = {};
-        this.rank = undefined;
-        this.tab = 'ranks';
-        this.offset = 0;
-        this.dialog.show(true);
-        clearInterval(this.timer);
-        this.timer = setInterval(() => this.tick(),1000);
-        void this.load();
+    destroy(): void { this.close(); this.dialog.destroy(); }
+
+    onFrameResize(width: number, height: number): void {
+        this.dialog.onFrameResize(width, height);
+        const panelWidth = Math.min(width * config.layout.designWidth / config.layout.screenWidth, recordConfig.layout.desktopWidth);
+        // The close button and pagination use the same design scale as the cash report.
+        const maxWidth = width > height ? reportConfig.layout.desktopPanelWidth : reportConfig.layout.maxPanelWidth;
+        const designWidth = Math.min(width, maxWidth / reportConfig.layout.panelWidthRatio);
+        this.dialog.root.style.setProperty('--record-unit', `${designWidth / reportConfig.layout.designWidth}px`);
+        this.dialog.root.style.setProperty('--record-width', `${panelWidth}px`);
+        this.dialog.root.style.setProperty('--mtt-unit', `${panelWidth / config.layout.designWidth}px`);
+        this.dialog.root.dataset.compact = String(height < config.layout.compactHeight * panelWidth / config.layout.designWidth);
+        this.dialog.root.dataset.shortLandscape = String(width > height && height < config.layout.shortLandscapeHeight);
     }
-    private tick() {
-        const rawStart=this.detail.mtt?.start_time ?? 0;
-        const start=rawStart>1e12 ? rawStart/1000 : rawStart;
-        const used=start?Math.max(0,Math.floor(Date.now()/1000-start)):0;
-        this.elapsed.textContent=[Math.floor(used/3600), Math.floor(used/60)%60, used%60].map(n=>String(n).padStart(2,'0')).join(':');
-        const interval = this.detail.mtt?.upblind_interval ?? 0;
-        const preStart = this.detail.mtt?.status === 0;
-        const deadline = preStart ? start : (this.detail.more?.nu ?? 0) + interval;
-        const remaining = Math.max(0, Math.ceil(deadline - Date.now()/1000));
-        const seconds = preStart ? remaining : interval && (remaining % interval || interval);
-        this.clock.textContent = deadline ? Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0') : '—';
-        if (deadline && remaining === 0 && !this.dialog.body.getAttribute('aria-busy') && Date.now()/1000 - deadline < 2) void this.load();
+
+    refreshLanguage(): void {
+        ++this.languageVersion; this.names.clear();
+        if (!this.dialog.root.hidden) this.render();
     }
-    private button(label:string, click:()=>void) {
-        const button = element('button','',label);
-        button.type='button';
-        button.onclick=click;
-        return button;
+
+    private resolveName(raw: string): string {
+        if (this.names.has(raw)) return this.names.get(raw)!;
+        const version = this.languageVersion, generation = this.generation, fallback = t(raw, raw);
+        this.names.set(raw, fallback);
+        if (raw) void resolveTemplateTextByKey(raw).then(name => {
+            if (version !== this.languageVersion || generation !== this.generation || this.dialog.root.hidden) return;
+            if (name !== raw && name !== fallback) { this.names.set(raw, name); this.render(); }
+        });
+        return fallback;
     }
-    private async load() {
-        const version = ++this.version;
-        const {tab,offset} = this;
-        this.dialog.body.setAttribute('aria-busy','true');
-        this.dialog.body.replaceChildren();
-        this.dialog.status.textContent=t('MX_Loading','加载中…');
-        this.renderTabs();
+
+    private get section(): Page | undefined { return this.tab === 'blinds' ? undefined : this.tab === 'players' ? this.mode : this.tab; }
+    private get pageKey(): string { return `${this.section}:${this.offset}`; }
+    private get page(): MttReportResult { return this.pages.get(this.pageKey) ?? {}; }
+    private get hunter(): boolean { return Number(this.detail.mtt?.hunter_on ?? 0) > 0; }
+    private money(value?: number): string { return value == null || !Number.isFinite(value) ? '—' : StringHelper.GetLongString(value, this.detail.mtt?.gold_type === 4 ? 1 : 100); }
+    private blinds(sb?: number): string { return sb == null ? '—' : `${this.money(sb)}/${this.money(sb * 2)}`; }
+    private duration(): string { return this.detail.mtt?.upblind_interval ? i18nMgr.Get('UITexasReport_Text_MatchNextBlindTime', [Math.floor(this.detail.mtt.upblind_interval / 60)], '{0}min') : '—'; }
+
+    private async refreshDetail(): Promise<void> {
+        if (this.detailLoading || !this.records.mttReport) return;
+        const generation = this.generation;
+        this.detailLoading = true; this.lastRefresh = Date.now();
         try {
-            if (!this.records.mttReport) throw Error(t('MX_Retry','请重试'));
-            const [detail,page] = await Promise.all([this.records.mttReport('detail'), tab === 'blinds' ? Promise.resolve({} as MttReportResult) : this.records.mttReport(tab,offset)]);
-            if (version !== this.version) return;
-            this.detail=detail;
-            if (page.alive != null) this.detail.alive = page.alive;
-            if(tab==='ranks')this.rank=page.records?.find(r=>r.urid===this.records.userRID)?.rank ?? this.rank;
-            this.dialog.refreshTitle();
-            this.dialog.status.textContent='';
-            this.render(page);
+            const detail = await this.records.mttReport('detail');
+            if (generation !== this.generation) return;
+            this.detail = detail; this.detailError = '';
+            if (!this.hunter) this.mode = 'ranks';
+            this.render();
         } catch (error) {
-            if (version !== this.version) return;
-            this.dialog.status.textContent=String(error);
-            this.dialog.body.append(this.button(t('MX_Retry','重试'),()=>void this.load()));
-        } finally {
-            if (version === this.version) this.dialog.body.removeAttribute('aria-busy');
-        }
+            if (generation === this.generation) { this.detailError = error instanceof Error ? error.message : String(error); this.render(); }
+        } finally { if (generation === this.generation) this.detailLoading = false; }
     }
-    private render(page:MttReportResult) {
-        const {mtt,more} = this.detail;
-        const money = (n?:number) => n == null ? '—' : String(n/(mtt?.gold_type===4?1:100));
-        const blinds = (sb?:number) => sb == null ? '—' : money(sb)+'/'+money(sb*2);
-        const summary = element('div','mx-mtt-overview');
-        for (const [label,value] of [
-            [t('UITexasReportMTT_MyRank_Tip','我的排名'),this.rank], [t('MTT_State_UseTime','比赛已进行'),this.elapsed],
-            [t('UITexasReport_Text_MatchNextBlindTimeTip','下一注时长'),(mtt?.upblind_interval??0)/60+' min'],
-            [t('UIMTT_chouma5','最大筹码'),money(more?.max_chip)], [t('UIMTT_chouma2','平均筹码'),money(more?.avg_chip)],
-            [t('UIMTT_chouma3','最小筹码'),money(more?.min_chip)],
-            [t('UITexasReport_Text_BlindLevelTip','级别'),more?.bl], [t('UITexasReport_Text_MatchOnTableBuy','在桌/买入'),(this.detail.alive??'—')+'/'+(mtt?.total_buy_times??'—')],
-            [t('UITexasReport_Text_MatchTotalBonusTip','总奖池'),money(more?.prize_pool??this.detail.real_prize?.award)],
-            [t('UITexasReport_Text_MatchNextBlindTip','下一盲注'),blinds(more?.nsb)],
-            [t('UISB','小盲')+'/'+t('UIBB','大盲'),blinds(more?.sb)],
-            [t('UITexasReport_Text_MatchZmsysjTip','剩余时间'),this.clock],
-        ] as const) {
-            const cell=element('div','',label+' ');
-            cell.append(value instanceof HTMLElement ? value : element('strong','',String(value??'—')));
-            summary.append(cell);
-        }
-        this.tick();
-        this.dialog.body.append(summary);
-        const table=element('table','mx-record-table');
-        const row=(values:(string|number|undefined)[],header=false)=>{
-            const tr=element('tr','');
-            for (const value of values) tr.append(element(header?'th':'td','',String(value??'—')));
-            table.append(tr);
-        };
-        const current=this.tab;
-        const records=page.records??[];
-        if (current==='blinds') {
-            row([t('UITexasReport_Text_BlindLevelTip','级别'),t('UIBB','盲注'),t('UITexasReport_Text_BlindAnteTip','前注'),t('UITexasReport_Text_BlindBlindTimeTip','时长')],true);
-            getMttBlindLevels(mtt?.blindtable_type).forEach((v,i)=>{
-                const level = i+1;
-                const marker = level===mtt?.addon_end_bl ? t('MTT_Blind_Deadline_add_cl','增购结束') : level===mtt?.addon_begin_bl ? t('MTT_Blind_Deadline_add_op','增购开始') : level===mtt?.max_rebuy_bl ? t('MTT_Blind_Deadline_to_buy','重购截止') : '';
-                row([(level===more?.bl?'▶ ':'')+level+' '+marker, v.sb/100+'/'+v.sb*2/100, v.ante/100,(mtt?.upblind_interval??0)/60+' min']);
-            });
-        } else if (current==='real_prize') {
-            row([t('UIRank','名次'),t('UIReward','奖励')],true);
-            this.dialog.body.append(element('p', '', t('UITexasReport_Text_MatchTotalBonusTip','总奖池')+' '+money(page.award ?? this.detail.real_prize?.award)+' · '+i18nMgr.Get('UITexasReport_Text_RewardReward',[page.award_num ?? this.detail.real_prize?.award_num ?? 0],'获奖人数 {0}')));
-            for (const p of page.prizes??this.detail.real_prize?.prizes??[]) {
-                const rewards = (p.goods ?? []).map(g => t(g.na,g.na)+' × '+g.n);
-                if (p.award) rewards.unshift(money(p.award));
-                if (mtt?.hunter_on) rewards.push(t('UIReward_Bounty','赏金'));
-                row([p.max>p.min?p.min+'–'+p.max:p.min,rewards.join(' + ') || '—']);
+
+    private async loadPage(retry = false): Promise<void> {
+        const section = this.section;
+        const version = ++this.pageVersion, generation = this.generation, key = this.pageKey;
+        this.pageError = ''; this.pageLoading = false;
+        this.dialog.body.scrollTop = 0;
+        if (!section || (!retry && this.pages.has(key))) { this.render(); return; }
+        this.pageLoading = true; this.render();
+        try {
+            if (!this.records.mttReport) throw Error(t('MX_Retry', '请重试'));
+            const page = await this.records.mttReport(section, this.offset);
+            if (generation !== this.generation || version !== this.pageVersion) return;
+            this.pages.set(key, page);
+        } catch (error) {
+            if (generation === this.generation && version === this.pageVersion) {
+                if (error instanceof HttpError && error.code === 10001) { this.pages.set(key, {records: []}); this.emptyPlayers.add(key); }
+                else this.pageError = error instanceof Error ? error.message : String(error);
             }
-        } else if (current==='rooms') {
-            row([t('UITexasReport_Text_DeskNumTip','桌号'),t('UITexasReport_player','玩家'),t('MX_Min','最少筹码'),t('MX_Max','最多筹码')],true);
-            for(const r of records){const chips=(r.roomers??[]).map(p=>p.chip);row([r.rid,chips.length,chips.length?money(Math.min(...chips)):'—',chips.length?money(Math.max(...chips)):'—']);}
-        } else {
-            const hunter=current==='hranks';
-            row([t('UIRank','排名'),t('UITexasReport_player','玩家'),...(hunter?[t('UIReward_Bounty','赏金')]:[t('UITexasReport_Text_DeskNumTip','桌号'),t('UIChipsBB','筹码')])],true);
-            for(const r of records)row([r.rank,r.name,...(hunter?[r.award]:[r.rid,money(r.chip)+(page.sb && r.chip ? ' ('+(r.chip/(2*page.sb)).toFixed(1)+'BB)' : '')])]);
+        } finally {
+            if (generation === this.generation && version === this.pageVersion) { this.pageLoading = false; this.render(); }
         }
-        this.dialog.body.append(table);
-        if (table.rows.length===1) this.dialog.body.append(element('p','mx-record-empty',t('UICareerRecordNon','暂无数据')));
-        if(this.offset>0 || records.length===50) {
-            const pageBy=(delta:number)=>{this.offset+=delta;void this.load();};
-            if(this.offset>0)this.dialog.body.append(this.button(t('MX_PreviousRound','上一页'),()=>pageBy(-50)));
-            if(records.length===50)this.dialog.body.append(this.button(t('MX_NextRound','下一页'),()=>pageBy(50)));
-        }
-        this.renderTabs();
     }
-    private renderTabs() {
-        const mtt = this.detail.mtt;
-        this.dialog.footer.replaceChildren();
-        for(const [id,key,label] of tabs) {
-            if(id==='hranks' && !mtt?.hunter_on)continue;
-            const button=this.button(t(key,label),()=>{this.tab=id;this.offset=0;void this.load();});
-            button.setAttribute('aria-pressed',String(id===this.tab));
-            this.dialog.footer.append(button);
+
+    private tick(): void {
+        if (!this.detail.mtt) { this.clock.textContent = this.elapsed.textContent = '—'; return; }
+        const timing = mttReportTiming(this.detail);
+        this.elapsed.textContent = mttDuration(timing.elapsed, true);
+        const live = this.records.data.mtt;
+        const liveDeadline = !timing.preStart && live && live.blindLevel >= (this.detail.more?.bl ?? 0) ? live.upBlindDeadline : 0;
+        const deadline = liveDeadline || timing.deadline;
+        const remaining = liveDeadline ? Math.max(0, Math.ceil(liveDeadline - Date.now() / 1000)) : timing.remaining;
+        this.clock.textContent = timing.preStart && remaining > 3600
+            ? new Date(timing.start * 1000).toLocaleTimeString(i18nMgr.getCurrentLocale(), {hour: '2-digit', minute: '2-digit', hour12: false})
+            : mttDuration(Math.min(remaining, MttReportConfig.maxTimerSeconds));
+        this.clock.setAttribute('aria-label', t(timing.preStart ? 'UIMTT_ListdistancestartTip' : 'UITexasReport_Text_MatchZmsysjTip', timing.preStart ? '距离开赛' : '涨盲剩余时间'));
+        if (deadline && remaining === 0 && Date.now() - this.lastRefresh >= MttReportConfig.refreshMs) void this.refreshDetail();
+    }
+
+    private button(label: string, click: () => void): HTMLButtonElement {
+        const button = element('button', '', label); button.type = 'button'; button.onclick = click; return button;
+    }
+
+    private render(): void {
+        if (this.dialog.root.hidden) return;
+        const scroll = this.dialog.body.scrollTop;
+        const focused = this.dialog.panel.contains(document.activeElement) ? document.activeElement?.id : undefined;
+        this.values.clear();
+        const {mtt, more} = this.detail;
+        if (mtt?.name) this.resolveName(mtt.name);
+        this.dialog.refreshTitle();
+        const rankPages = [...this.pages.entries()].filter(([key]) => key.startsWith('ranks:')).map(([, page]) => page);
+        const rank = rankPages.flatMap(page => page.records ?? []).find(row => Number(row.urid) === this.records.userRID)?.rank || this.records.data.mtt?.currentRank;
+        const alive = rankPages[0]?.alive ?? this.detail.alive;
+        const stat = (key: string, fallback: string, value: string | HTMLElement) => {
+            const item = element('div', 'mx-mtt-stat');
+            item.append(element('span', 'mx-mtt-label', t(key, fallback)), this.values.wrap(typeof value === 'string' ? element('strong', '', value) : value));
+            return item;
+        };
+        const left = element('div', 'mx-mtt-column');
+        left.append(stat('UITexasReportMTT_MyRank_Tip', '我的排名', rank ? String(rank) : '—'), stat('UITexasReport_Text_MatchNextBlindTimeTip', '下一注时长', this.duration()), stat('MTT_State_UseTime', '比赛已进行', this.elapsed), stat('UIMTT_chouma5', '最大筹码', this.money(more?.max_chip)));
+        const center = element('div', 'mx-mtt-column mx-mtt-center');
+        const clockCard = element('div', 'mx-mtt-clock-card');
+        clockCard.append(this.values.wrap(this.clock));
+        center.append(stat('UITexasReport_Text_BlindLevelTip', '当前级别', this.blinds(more?.sb)), clockCard, stat('UIMTT_chouma2', '平均筹码', this.money(more?.avg_chip)));
+        const right = element('div', 'mx-mtt-column');
+        right.append(stat('UITexasReport_Text_MatchOnTableBuy', '在桌/买入', `${alive ?? '—'}/${mtt?.total_buy_times ?? '—'}`), stat('UITexasReport_Text_MatchTotalBonusTip', '总奖池', this.money(more?.prize_pool ?? this.detail.real_prize?.award)), stat('UITexasReport_Text_MatchNextBlindTip', '下一盲注', this.blinds(more?.nsb)), stat('UIMTT_chouma3', '最小筹码', this.money(more?.min_chip)));
+        this.overview.replaceChildren(left, center, right);
+        this.tabBar.replaceChildren(...tabs.map(([id, key, fallback]) => {
+            const button = this.button(t(key, fallback), () => { if (this.tab !== id) { this.tab = id; this.offset = 0; void this.loadPage(); } });
+            button.id = this.content.id + '-' + id;
+            button.setAttribute('role', 'tab'); button.setAttribute('aria-selected', String(id === this.tab)); button.setAttribute('aria-controls', this.content.id);
+            return button;
+        }));
+        this.content.setAttribute('aria-labelledby', this.content.id + '-' + this.tab);
+        this.modeBar.hidden = this.tab !== 'players' || !this.hunter;
+        this.modeBar.replaceChildren(...(['ranks', 'hranks'] as const).map(mode => {
+            const button = this.button(t(mode === 'ranks' ? 'Ranking' : 'Hunter_Rank', mode === 'ranks' ? '排名' : '猎人榜'), () => { if (this.mode !== mode) { this.mode = mode; this.offset = 0; void this.loadPage(); } });
+            button.setAttribute('aria-pressed', String(this.mode === mode)); return button;
+        }));
+        this.renderContent(); this.renderStatus(); this.tick();
+        this.dialog.body.scrollTop = scroll;
+        if (focused) this.dialog.panel.querySelector<HTMLElement>(`[id="${focused}"]`)?.focus({preventScroll: true});
+    }
+
+    private renderStatus(): void {
+        this.dialog.status.textContent = this.detailError || this.pageError;
+        this.content.setAttribute('aria-busy', String(this.pageLoading));
+    }
+
+    private renderContent(): void {
+        const page = this.page, {mtt, more} = this.detail, records = page.records ?? [];
+        this.content.replaceChildren();
+        if (this.pageError || this.detailError) this.content.append(this.button(t('MX_Retry', '重试'), () => { void this.refreshDetail(); void this.loadPage(true); }));
+        const table = element('table', 'mx-mtt-table');
+        const head = element('thead', ''), body = element('tbody', ''); table.append(head, body);
+        const row = (values: (string | number | HTMLElement | undefined)[], header = false) => {
+            const tr = element('tr', '');
+            for (const value of values) {
+                const cell = element(header ? 'th' : 'td', '');
+                cell.append(value instanceof HTMLElement ? value : header ? this.values.wrap(String(value ?? '—').replace(/\s+/g, '\n')) : document.createTextNode(String(value ?? '—')));
+                tr.append(cell);
+            }
+            (header ? head : body).append(tr); return tr;
+        };
+        if (this.tab === 'blinds') {
+            row([t('UITexasReport_Text_BlindLevelTip', '级别'), t('UITexasReport_Text_BlindBlindTip', '盲注'), t('UITexasReport_Text_BlindAnteTip', '前注'), t('UITexasReport_Text_BlindBlindTimeTip', '时长')], true);
+            getMttBlindLevels(mtt?.blindtable_type).forEach((blind, index) => {
+                const level = index + 1, cell = element('span', 'mx-mtt-level', `${level === more?.bl ? '▶ ' : ''}${level}`);
+                const marker = level === mtt?.addon_end_bl ? ['MTT_Blind_Deadline_add_cl', '增购结束', 'addon-end'] : level === mtt?.addon_begin_bl ? ['MTT_Blind_Deadline_add_op', '增购开始', 'addon-begin'] : level === mtt?.max_rebuy_bl ? ['MTT_Blind_Deadline_to_buy', '重购截止', 'rebuy-end'] : undefined;
+                if (marker) { const label = element('small', '', t(marker[0]!, marker[1]!)); cell.dataset.marker = marker[2]!; cell.append(label); }
+                const format = (value: number) => value < 100000 ? String(value / 100) : StringHelper.GetDecimalNWithKM(value / 100);
+                const tr = row([cell, `${format(blind.sb)}/${format(blind.sb * 2)}`, format(blind.ante), this.duration()]);
+                if (level === more?.bl) tr.setAttribute('aria-current', 'true');
+            });
+        } else if (this.tab === 'real_prize') {
+            const summary = element('div', 'mx-mtt-rewards');
+            summary.append(element('span', '', `${t('UITexasReport_Text_RewardTotalBonusTip', '总奖池')} ${this.money(page.award ?? this.detail.real_prize?.award)}`), element('span', '', i18nMgr.Get('UITexasReport_Text_RewardReward', [page.award_num ?? this.detail.real_prize?.award_num ?? 0], '获奖人数 {0}')));
+            this.content.append(summary);
+            row([t('UI_Rank', '名次'), t('MTT_State_Reward', '奖励')], true);
+            for (const prize of page.prizes ?? this.detail.real_prize?.prizes ?? []) {
+                const rewards = (prize.goods ?? []).map(good => `${this.resolveName(good.na)} ×${good.n}`);
+                if (prize.award) rewards.unshift(this.money(prize.award));
+                if (this.hunter) rewards.push(t('UIReward_Bounty', '赏金'));
+                const value = element('span', 'mx-mtt-reward');
+                if (prize.award) { const icon = element('span', 'mx-mtt-reward-icon'); SpriteAtlas.paint(icon, config.paths.chips); value.append(icon); }
+                value.append(document.createTextNode(rewards.join(' + ') || '—'));
+                row([prize.max > prize.min ? `${prize.min}–${prize.max}` : prize.min, value]);
+            }
+        } else if (this.tab === 'rooms') {
+            row([t('UITexasReport_Text_DeskNumTip', '桌号'), t('UITexasReport_Text_DeskPlayerCountTip', '玩家数'), t('UIMTT_chouma3', '最少筹码'), t('UIMTT_chouma5', '最多筹码')], true);
+            for (const room of records) { const chips = (room.roomers ?? []).map(player => player.chip); row([room.rid, chips.length, chips.length ? this.money(Math.min(...chips)) : '—', chips.length ? this.money(Math.max(...chips)) : '—']); }
+        } else {
+            const hunter = this.mode === 'hranks'; table.dataset.mode = this.mode;
+            if (!hunter) {
+                const columns = element('colgroup', '');
+                for (const name of ['rank', 'player', 'room', 'chips']) columns.append(element('col', `mx-mtt-col-${name}`));
+                table.prepend(columns);
+            }
+            row([t('UI_Rank', '排名'), t('UITexasReport_player', '玩家'), ...(hunter ? [t('UIReward_Bounty', '赏金')] : [t('UITexasReport_Text_DeskNumTip', '桌号'), t('UIChipsBB', '筹码')])], true);
+            for (const player of records) {
+                const chips = (player.chip ?? 0) > 0 ? `${this.money(player.chip)}${(page.sb ?? 0) > 0 ? `(${Number((player.chip! / (page.sb! * 2)).toFixed(1))}BB)` : ''}` : '—';
+                row([player.rank, player.name, ...(hunter ? [player.award] : [(player.rid ?? 0) > 0 ? player.rid : '—', this.values.wrap(chips)])]);
+            }
         }
+        this.content.append(table);
+        if (!body.children.length) this.content.append(element('p', 'mx-record-empty', this.pageLoading ? t('MX_Loading', '加载中…') : this.tab === 'players' && this.emptyPlayers.has(this.pageKey) ? t('MTTDetailPlayer_nulltips', '比赛开始后展示玩家排名') : t('UICareerRecordNon', '暂无数据')));
+        const current = this.offset / MttReportConfig.pageSize + 1;
+        const total = page.total != null ? Math.ceil(page.total / MttReportConfig.pageSize) : current + (records.length === MttReportConfig.pageSize ? 1 : 0);
+        this.pagination.labels(t('UIMine_RecordList', '战绩'), t('MX_PreviousRound', '上一页'), t('MX_NextRound', '下一页'));
+        this.pagination.update(current, Math.max(1, total), this.pageLoading);
+        this.dialog.footer.hidden = this.tab === 'blinds' || this.tab === 'real_prize' || total < 2;
     }
 }

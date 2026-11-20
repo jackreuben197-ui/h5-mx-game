@@ -43,26 +43,41 @@ try {
         const after = await stack(2).boundingBox();
         assert.ok(Math.abs(before.width - after.width) < 0.1, `${layout}: bubble expands for long balance`);
         assert.ok(Math.abs(before.height - after.height) < 0.1, `${layout}: balance height changes`);
-        assert.equal(await stack(2).locator('.mx-chip-unit').count(), bb);
-        const bubbleNickname = layout === 'original' || orientation === 'auto';
-        assert.equal(await animated(seat(2).locator('.mx-player-name')), Number(bubbleNickname));
-        if (!bubbleNickname) {
-          assert.equal(await seat(2).locator('.mx-player-name').evaluate(node => getComputedStyle(node).textOverflow), 'ellipsis');
-        }
-        // Visit both ends of a real animation: every digit and the BB suffix must fit at the end.
-        for (const id of [1, 2]) {
-          const bounds = await stack(id).evaluate(node => {
+        assert.equal(await stack(2).locator('.mx-seat-info-text > .mx-chip-unit').count(), bb);
+        assert.equal(await animated(seat(2).locator('.mx-player-name')), 1);
+        // Sample a whole cycle, including the handoff to the next identical copy.
+        const tickers = [stack(1), stack(2), seat(2).locator('.mx-player-name')];
+        for (const ticker of tickers) {
+          const bounds = await ticker.evaluate(node => {
             const text = node.querySelector('.mx-seat-info-text');
+            const repeat = text.querySelector('.mx-seat-info-repeat');
             const animation = text.getAnimations()[0];
+            const { duration, delay } = animation.effect.getTiming();
+            const startTime = Number(delay);
+            const period = Number(duration);
             animation.pause();
-            animation.currentTime = 0;
+            animation.currentTime = startTime;
             const start = text.getBoundingClientRect().left - node.getBoundingClientRect().left;
-            animation.currentTime = animation.effect.getTiming().duration / 2;
+            const positions = Array.from({ length: 11 }, (_, i) => {
+              animation.currentTime = startTime + period * i / 11;
+              return text.getBoundingClientRect().left;
+            });
+            // When the original tail reaches the edge, the full amount including BB is readable.
+            const distance = parseFloat(repeat.style.left);
+            animation.currentTime = startTime + period * (text.offsetWidth - node.clientWidth) / distance;
             const end = text.getBoundingClientRect().right - node.getBoundingClientRect().right;
+            animation.currentTime = startTime + period - 0.01;
+            const handoff = repeat.getBoundingClientRect().left;
+            animation.currentTime = startTime + period + 0.01;
+            const wrapped = text.getBoundingClientRect().left;
             animation.play();
-            return { start, end, overflow: getComputedStyle(node).overflowX, ellipsis: getComputedStyle(node).textOverflow };
+            return { start, end, positions, seam: handoff - wrapped, hidden: repeat.getAttribute('aria-hidden'), same: repeat.textContent === [...text.childNodes].filter(child => child !== repeat).map(child => child.textContent).join(''), overflow: getComputedStyle(node).overflowX, ellipsis: getComputedStyle(node).textOverflow };
           });
-          assert.ok(Math.abs(bounds.start) < 1 && Math.abs(bounds.end) < 1, JSON.stringify({ layout, id, bounds }));
+          assert.ok(Math.abs(bounds.start) < 1 && Math.abs(bounds.end) < 1, JSON.stringify({ layout, bounds }));
+          assert.ok(bounds.positions.every((x, i, xs) => !i || x < xs[i - 1]), `${layout}: text reverses direction`);
+          assert.ok(Math.abs(bounds.seam) < 0.1, `${layout}: loop jumps`);
+          assert.equal(bounds.hidden, 'true');
+          assert.equal(bounds.same, true);
           assert.equal(bounds.overflow, 'hidden');
           assert.equal(bounds.ellipsis, 'clip');
         }

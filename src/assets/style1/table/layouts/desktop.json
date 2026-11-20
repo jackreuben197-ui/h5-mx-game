@@ -1,0 +1,17 @@
+{
+  "avatarSize": 93.2945,
+  "avatarDesignSize": 199,
+  "publicCardWidth": 61.76,
+  "publicCardDesignWidth": 120,
+  "menuButtonSize": 41.5459,
+  "menuLeft": 20,
+  "menuTop": 32,
+  "middleGap": 8,
+  "roomInfoFontSize": 38,
+  "totalLineHeight": 1.5,
+  "anchorDesignHeight": 1440,
+  "suggestScale": 0.85,
+  "seatEdgeInset": 110,
+  "dealerMarkerHeight": 44,
+  "seatEdgeGap": 10
+}

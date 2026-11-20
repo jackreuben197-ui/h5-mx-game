@@ -73,7 +73,8 @@
     "dockTop": 185,
     "designWidth": 1252,
     "panelWidthRatio": 0.9223,
-    "maxPanelWidth": 660
+    "maxPanelWidth": 660,
+    "desktopPanelWidth": 452.64
   },
   "sizing": {
     "mode": "composite",

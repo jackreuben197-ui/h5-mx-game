@@ -2,8 +2,59 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultTableUi} from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
 import {LayoutClassic} from '../.test-build/assets/style1/table/layouts/LayoutClassic.js';
+import {landscapeLayout} from '../.test-build/assets/style1/table/layouts/landscape-layout.js';
+import desktop from '../src/assets/style1/table/layouts/desktop.json' with {type:'json'};
 import actionButtonConfig from '../.test-build/assets/style1/table/components/ActionButton/config.json' with {type:'json'};
 const state={seatCount:9,mySeat:4,players:[]};
+test('PC room text is centered and Jackpot/CallTime reserve their own space above the pot',()=>{
+ for(const id of ['original','classic','balanced','oval'])for(const [width,height]of [[1440,694],[1920,874],[1024,394]])for(const dual of [false,true])for(const textSize of [.9,1,1.1])for(const jackpotHeight of [0,70,77,147]){
+  const layout=defaultTableUi.createLayout(id);layout.resize(width,height,true);
+  const content=layout.content({dual,boardSize:1,jackpotHeight,textSize});
+  assert.equal(content.info.x,layout.width/2,'room text must share the public-card center');
+  const gap=8/layout.unit,potTop=content.total.y-60*1.2*textSize/2;
+  const infoBottom=content.info.y+38*1.15*3*textSize/2;
+  const features=[];
+  if(jackpotHeight===77||jackpotHeight===147){const y=parseFloat(content.styles['--mx-jackpot-y']);features.push([y-38.5*layout.suggest,y+38.5*layout.suggest]);}
+  if(jackpotHeight===70||jackpotHeight===147){const y=parseFloat(content.styles['--mx-calltime-y']);features.push([y-35*layout.suggest,y+35*layout.suggest]);}
+  if(features.length){
+   assert.ok(infoBottom+gap<=Math.min(...features.map(([top])=>top))+1e-8,'feature badges must clear the room text');
+   assert.ok(Math.max(...features.map(([,bottom])=>bottom))+gap<=potTop+1e-8,'feature badges must clear the total pot');
+  }else assert.ok(infoBottom+gap<=potTop+1e-8,'room text must clear the total pot');
+ }
+});
+test('PC layouts retain the original seat anchors while artwork stops growing at design size',()=>{
+  for(const [width,height] of [[1440,817.8647],[1920,873.8647],[2560,1233.8647],[844,183.8647],[1024,693.8647]])for(let count=2;count<=9;count++)for(const mySeat of [0,2]){
+    const snapshot={...state,seatCount:count,mySeat};
+    const oldUnit=height/1440;
+    const original=landscapeLayout(width/oldUnit,1440,count);
+    const layouts=['original','classic','balanced','oval'].map(id=>defaultTableUi.createLayout(id));
+    const anchorSets=[];
+    for(const layout of layouts){
+      layout.resize(width,height,true);
+      assert.equal(layout.unit,desktop.avatarSize/desktop.avatarDesignSize);
+      assert.equal(layout.menuScale,1,'all PC menu sizes must match');
+      assert.equal(layout.suggest,.85,'viewport height must not enlarge PC feature widgets');
+      const positions=layout.positions(snapshot);
+      anchorSets.push([...positions].map(([id,p])=>[id,p.x,p.y]));
+      for(const [id,p] of positions){
+        const slot=(id-(mySeat||1)+count)%count,old=original[slot];
+        const dealerY=slot===0?120:230.55;
+        const oldY=Math.min(old.y,1440-(dealerY+44)*old.scale-10);
+        const fittedX=Math.max(110*layout.unit,Math.min(width-110*layout.unit,old.x*oldUnit));
+        assert.ok(Math.abs(p.x*layout.unit-fittedX)<1e-7,'original horizontal anchors only move to retain fixed-size avatars inside the viewport');
+        const fittedY=Math.max(110*layout.unit,Math.min(oldY*oldUnit,height-(dealerY+44+10)*layout.unit));
+        assert.ok(Math.abs(p.y*layout.unit-fittedY)<1e-7,'original vertical anchors only move when a fixed-size frame would hit the bottom menu');
+        assert.equal(p.scale,1,'PC avatars must not adapt to viewport size or aspect ratio');
+        assert.equal(p.microphoneSide,old.x<width/oldUnit/2?'left':'right');
+      }
+      for(const dual of [false,true])for(const size of [.9,1,1.1]){
+        const content=layout.content({dual,boardSize:size,jackpotHeight:0});
+        assert.ok(Math.abs(content.board.scale*120*layout.unit-desktop.publicCardWidth*size*(dual?.85:1))<1e-7);
+      }
+    }
+    for(const anchors of anchorSets)assert.deepEqual(anchors,anchorSets[0],'PC skin selection must not change seat distribution');
+  }
+});
 test('all three profile layouts consume one configurable button standard and proportional size setting',()=>{
   const buttons=actionButtonConfig.layout.portrait,original={...buttons};
   try{

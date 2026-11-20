@@ -35,7 +35,7 @@ export class JackpotView {
     if(s.start!==this.started&&s.start){
       this.started=s.start;this.cancel();this.button.hidden=true;this.start.hidden=false;
       this.animation=this.start.animate(config.layout.startAnimation.frames,{duration:config.layout.startAnimation.duration});
-      this.animation.onfinish=()=>{this.start.hidden=true;this.button.hidden=false;this.roll(0,to);};
+      this.animation.onfinish=()=>{this.start.hidden=true;this.button.hidden=false;this.roll(0,to);this.layout();};
     }else{
       this.started=s.start;this.cancel();this.start.hidden=true;
       if(s.rolling)this.roll(this.shown,to);else this.setGold(to);
@@ -54,6 +54,7 @@ export class JackpotView {
   }
   infoLines():string[]{const r=this.data.record;return r?.calltime===1?[`CallTime:${i18nMgr.Get('UIClub_GainNum')}${r.calltimeWinLine}BB ${r.calltimeLimit}${i18nMgr.Get('UIMine_RecordDetailForNormal_ss')}`]:[];}
   get extraHeight():number{return (this.data.jackpot.enabled?77:0)+(this.data.record?.calltime===1&&this.data.callTime.state.stay?70:0);}
+  bounds():DOMRect[]{return [this.button,this.progress].filter(node=>!node.hidden).map(node=>node.getBoundingClientRect());}
   resize(width:number,height:number,scale:number):void{
     this.width=width;this.height=height;this.scale=scale;
     this.root.style.setProperty('--mx-jackpot-base-scale',String(scale));

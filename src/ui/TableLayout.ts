@@ -23,7 +23,7 @@ export interface SeatPlacement {
   microphoneSide?: 'left' | 'right';
 }
 export interface LayoutPoint { x: number; y: number; scale?: number; }
-export interface LayoutContentOptions { dual: boolean; boardSize: number; jackpotHeight: number; }
+export interface LayoutContentOptions { dual: boolean; boardSize: number; jackpotHeight: number; textSize?: number; }
 export interface LayoutContent {
   board: LayoutPoint; secondBoard: LayoutPoint; total: LayoutPoint; pool: LayoutPoint; info: LayoutPoint;
   styles: Record<string, string>;

@@ -1,5 +1,6 @@
 import { GameplayTableSettingView } from './components/GameplayTableSettingView/GameplayTableSettingView.js';
 import { RecordDialogView } from './components/RecordDialogView/RecordDialogView.js';
+import desktop from './layouts/desktop.json';
 import { InsuranceRulesView } from './components/InsuranceRulesView/InsuranceRulesView.js';
 import { GameRulesView } from './components/GameRulesView/GameRulesView.js';
 import { TableEffectAnchors } from '../effects/TableEffectAnchors.js';
@@ -415,24 +416,26 @@ export class TableView {
   private resizeTable(): void {
     const box = this.root.getBoundingClientRect();
     if (box.width <= 0 || box.height <= 0) return;
+    const landscape = this.options.layout === 'auto' && box.width > box.height;
     this.chat?.resize(box.width,box.height);
-    this.root.style.setProperty('--mx-chat-unit',`${box.width/1440}px`);
+    const overlayUnit=box.width/1440;
+    this.root.style.setProperty('--mx-chat-unit',`${landscape?desktop.avatarSize/desktop.avatarDesignSize:overlayUnit}px`);
     this.personalSettings.onFrameResize(box.width,box.height);
     this.roomSettingsDialog?.onFrameResize(box.width,box.height);
-    this.mttReport?.dialog.onFrameResize(box.width,box.height);
+    this.mttReport?.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
     this.playerInfo.onFrameResize(box.width,box.height);
     this.emoji?.onFrameResize(box.width,box.height);
     this.bringOut.onFrameResize(box.width,box.height);
     this.buyInView.onFrameResize(box.width,box.height);
-    const landscape = this.options.layout === 'auto' && box.width > box.height;
     this.root.dataset.orientation = landscape ? 'landscape' : 'portrait';
     const { width, height } = this.viewport.getBoundingClientRect();
     if (width <= 0 || height <= 0) return;
     const navigationBox=this.navigation.root.getBoundingClientRect();
     const contentBottom=landscape||!navigationBox.height?height:Math.min(height,navigationBox.top-box.top);
-    this.root.style.setProperty('--mx-navigation-inset',`${box.height-contentBottom}px`);
+    const navigationInset=landscape&&navigationBox.height?box.bottom-navigationBox.top:box.height-contentBottom;
+    this.root.style.setProperty('--mx-navigation-inset',`${navigationInset}px`);
     this.layout.resize(width, landscape ? height : box.height, landscape, contentBottom);
     const l = this.layout;
     const fixedBoardSlots = l.id === 'classic' && !landscape;
@@ -441,9 +444,10 @@ export class TableView {
     this.secondBoard.setFixedSlots(false);
     const bubbleWidth = landscape ? Math.min(width, box.height) : width;
     const bubbleDesignWidth = landscape || l.id === 'original' ? 1242 : 440;
-    this.root.style.setProperty('--mx-side-bubble-unit', `${bubbleWidth / bubbleDesignWidth}px`);
+    const bubbleUnit=bubbleWidth/bubbleDesignWidth;
+    this.root.style.setProperty('--mx-side-bubble-unit', `${landscape?desktop.avatarSize/desktop.avatarDesignSize:bubbleUnit}px`);
     this.settlementWatch.resize(l.unit,landscape ? 0 : box.height - contentBottom);
-    this.menu.resize(l.unit, l.height, l.suggest);
+    this.menu.resize(l.unit, l.height, l.suggest, landscape);
     this.menu.root.style.setProperty('--mx-menu-scale',String(l.menuScale));
     this.squid?.resize(l.suggest);
     this.jackpot?.resize(l.width,l.height,l.suggest);
@@ -458,7 +462,7 @@ export class TableView {
       transform: `scale(${l.unit})`,
     });
     const content=l.content({dual:!!this.data.info.snapshot?.secondCommunity?.length,
-      boardSize:this.settings.tableAppearance.publicCardSize/100,jackpotHeight:this.jackpot?.extraHeight??0});
+      boardSize:this.settings.tableAppearance.publicCardSize/100,jackpotHeight:this.jackpot?.extraHeight??0,textSize:this.settings.tableAppearance.tableTextSize/100});
     for(const [node,point] of [[this.board.root,content.board],[this.secondBoard.root,content.secondBoard],
       [this.pot.total,content.total],[this.pot.pool,content.pool],[this.info,content.info]] as const){
       place(node,point.x,point.y);
@@ -478,7 +482,7 @@ export class TableView {
       if(!bounds||!info.height||!this.layout.unit)return;
       const mtt=!!this.mtt?.returnVisible;
       const obstacles=[...(this.board instanceof PublicCardsView?this.board.cardBounds():[]),...this.secondBoard.cardBounds(),
-        this.pot.total.getBoundingClientRect(),this.pot.pool.getBoundingClientRect()];
+        this.pot.total.getBoundingClientRect(),this.pot.pool.getBoundingClientRect(),...(this.layout.landscape?(this.jackpot?.bounds()??[]):[])];
       const styles=entryButtonsLayout({info,stage,avatarTop:bounds.avatarTop,unit:this.layout.unit,seatScale:bounds.scale,
         join:!!this.squid?.joinVisible,returning:mtt||bounds.returnVisible,mtt,mttScale:this.layout.suggest,obstacles});
       for(const [name,value]of Object.entries(styles))this.root.style.setProperty(name,value);

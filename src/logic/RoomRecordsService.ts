@@ -12,6 +12,8 @@ import { canWatchPlayerCards, canWatchPublicCards } from './ViewPlayerCardsConfi
 import { parseHistoryHand, hasHiddenCards, hasHiddenPublicCards, getViewPubRound } from './HistoryReplayModel.js';
 import type { RoomRecords } from '../core/RoomRecords.js';
 import type { PlayerProfile } from '../core/PlayerProfile.js';
+import { playerProfileStats, type PlayerProfileStatsResponse } from './PlayerProfileStats.js';
+import { MttReportConfig } from '../config/MttReportConfig.js';
 import type { RoomTarget } from '../core/types.js';
 import type { ProtocolRoomData } from '../data/ProtocolRoomData.js';
 import type { ReplayHandData } from '../data/ReplayHandData.js';
@@ -96,7 +98,7 @@ export class RoomRecordsService implements RoomRecords {
     mttReport(section: import('../core/MttReport.js').MttReportSection, offset = 0) {
         const paged = section === 'rooms' || section === 'ranks' || section === 'hranks';
         return this.post<import('../core/MttReport.js').MttReportResult>(
-            `/api/roomcenter/mtt/${this.target.matchID}/${section}`, paged ? {limit:50,offset} : {});
+            `/api/roomcenter/mtt/${this.target.matchID}/${section}`, paged ? {limit:MttReportConfig.pageSize,offset} : {});
     }
     async mttAddOn():Promise<void>{
         const m=this.data.mtt;if(!m||!m.beginAddOn(m.currentAddOnMode))return;
@@ -246,7 +248,7 @@ export class RoomRecordsService implements RoomRecords {
         if (!room) throw new Error('房间数据已失效');
         const result = await this.post<{
             user_info_by_rid_resp?: PlayerProfile['basic'][];
-            user_stats_by_user_rid_resp?: Array<{data?: PlayerProfile['stats']} & PlayerProfile['stats']> | ({data?: PlayerProfile['stats']} & PlayerProfile['stats']);
+            user_stats_by_user_rid_resp?: Array<{data?: PlayerProfileStatsResponse} & PlayerProfileStatsResponse> | ({data?: PlayerProfileStatsResponse} & PlayerProfileStatsResponse);
         }>('/api/misc/combine', {
             api_list: [24, 25],
             user_info_by_rid_req: { user_random_id: userRIDs },
@@ -261,9 +263,9 @@ export class RoomRecordsService implements RoomRecords {
         const statsList = Array.isArray(responses) ? responses : responses ? [responses] : [];
         for (const userRID of userRIDs) {
             const basic = result?.user_info_by_rid_resp?.find(item => item?.random_num === userRID);
-            const raw = statsList.find(item => (item?.data ?? item)?.user_random_id === userRID)
-                ?? (userRIDs.length === 1 ? statsList.find(item => !(item?.data ?? item)?.user_random_id) : undefined);
-            const stats = raw?.data ?? raw;
+            const raw = statsList.find(item => Number(item?.data?.user_random_id ?? item?.user_random_id) === userRID)
+                ?? (userRIDs.length === 1 ? statsList.find(item => !(item?.data?.user_random_id ?? item?.user_random_id)) : undefined);
+            const stats = playerProfileStats(raw?.data ?? raw);
             if (basic || stats) {
                 const profile = {basic, stats};
                 this.profiles.set(userRID, profile);

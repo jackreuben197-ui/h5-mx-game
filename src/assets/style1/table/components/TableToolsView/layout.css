@@ -1,0 +1,14 @@
+.mx-table[data-orientation=landscape] .mx-table-tools {
+  right: var(--mx-TableToolsView-desktop-right);
+  top: var(--mx-TableToolsView-desktop-top);
+  gap: var(--mx-TableToolsView-desktop-gap);
+  width: var(--mx-TableToolsView-desktop-width);
+}
+.mx-table[data-orientation=landscape] .mx-table-add-chips {
+  width: var(--mx-TableToolsView-desktop-add-width);
+  height: var(--mx-TableToolsView-desktop-add-height);
+}
+.mx-table[data-orientation=landscape] .mx-table-safety {
+  width: var(--mx-TableToolsView-desktop-safety-width);
+  height: var(--mx-TableToolsView-desktop-safety-height);
+}

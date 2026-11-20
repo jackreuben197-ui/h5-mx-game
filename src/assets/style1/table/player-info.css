@@ -104,3 +104,8 @@
 .mx-player-profile-overlay .mx-record-status:not(:empty){position:relative;order:7;inset:auto}
 
 .mx-player-profile-overlay .mx-record-panel .mx-record-close{right:0;top:0}
+.mx-player-profile-overlay[data-game=mtt]{font-family:'HONOR Sans CN','PingFang SC',sans-serif}
+.mx-player-profile-overlay[data-game=mtt] .mx-player-profile-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.mx-player-profile-overlay[data-game=mtt] .mx-player-profile-stat{grid-column:span 2;min-width:0}
+.mx-player-profile-overlay[data-game=mtt] .mx-player-profile-stat:nth-child(n+4){grid-column:span 3}
+.mx-player-profile-overlay[data-game=mtt] .mx-player-profile-stat span{white-space:normal;overflow-wrap:anywhere}

@@ -80,6 +80,19 @@ test('player profile operations preserve CC admin, seating and gift gates',async
  c.host.globalConfig.setConfig({channel_package_diamond_free_mode:true});
  await assert.rejects(r.giftDiamonds(105,50),/不能赠送/);
 });
+test('combine array statistics reach the player profile cache with MTT podium data intact',async t=>{
+ const podium={frist_times:3,second_times:2,third_times:1,play_times:17,win_times:6};
+ const c=await setup(t,{user_info_by_rid_resp:[{random_num:105,nick_name:'赛事玩家'}],user_stats_by_user_rid_resp:[{user_random_id:105,mtt_room_data:[podium],room_data:[{total_hand:51,vpip:28}]}]});
+ const profile=await c.records.playerProfile(105);
+ assert.deepEqual(profile.stats.mtt_room_data,podium);
+ assert.equal(profile.stats.room_data.total_hand,51);
+ assert.equal(c.records.peekPlayerProfile(105),profile);
+});
+test('batch profile matching also reads a user id outside the wrapped statistics data',async t=>{
+ const c=await setup(t,{user_info_by_rid_resp:[{random_num:104,nick_name:'自己'},{random_num:105,nick_name:'好友'}],user_stats_by_user_rid_resp:[{user_random_id:104,data:{mtt_room_data:[{frist_times:2}]}},{user_random_id:105,data:{mtt_room_data:[{frist_times:9}]}}]});
+ assert.equal((await c.records.playerProfile(104)).stats.mtt_room_data.frist_times,2);
+ assert.equal((await c.records.playerProfile(105)).stats.mtt_room_data.frist_times,9);
+});
 test('Roomers travels through H5 bridge and updates only room-scoped report events',async t=>{
  const c=await setup(t),other=new ProtocolRoomData();let own=0,foreign=0;
  c.host.roomData.report.on(ReportData.PLAYERS_CHANGE,()=>own++);other.report.on(ReportData.PLAYERS_CHANGE,()=>foreign++);

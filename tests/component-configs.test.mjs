@@ -52,6 +52,25 @@ test('explicit box uses local anchor while auto preserves responsive rules',asyn
  componentBox(root,{w:160,h:70,anchor:{x:.5,y:.5}});assert.equal(root.style.width,'160px');assert.equal(root.style.marginLeft,'-80px');assert.equal(root.style.marginTop,'-35px');
 });
 
+test('warning icons render from standalone images and atlas-only resources without interrupting settings rows',async()=>{
+ for(const raw of [true,false]){
+  const resources={rawImages:raw?{'raw/ui/infoTip.png':'warning.png'}:{},frames:{'raw/ui/infoTip.png':{page:0,x:32,y:16,width:45,height:45}},pages:[{url:'atlas.png',width:256,height:256}]};
+  const built=await build({entryPoints:[join(style,'table/SpriteAtlas.ts')],bundle:true,write:false,format:'esm',loader:{'.css':'empty'},plugins:[{name:'warning-resources',setup(b){
+   b.onResolve({filter:/\/resources\.js$|^virtual:mx-images$/},()=>({path:'resources',namespace:'test'}));
+   b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:`export const resources=${JSON.stringify(resources)}`}));
+  }}]});
+  const {SpriteAtlas}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+  const node={style:{},classList:{add(){}}};
+  for(let i=0;i<2;i++){
+   assert.doesNotThrow(()=>SpriteAtlas.paintWarning(node));
+   assert.ok(node.style.backgroundImage.includes(raw?'warning.png':'atlas.png'));
+   assert.equal((node.style.backgroundImage.match(/radial-gradient/g)??[]).length,1);
+   assert.equal(node.style.backgroundSize,raw?'contain, 100% 100%':`${256/45*100}% ${256/45*100}%, 100% 100%`);
+   assert.equal(node.style.backgroundColor,'transparent');
+  }
+ }
+});
+
 test('automatic fold and call keep their own configured selected/unselected icons',async()=>{
  const built=await build({entryPoints:[join(base,'AutoOperationView/AutoOperationView.ts')],bundle:true,write:false,format:'esm',plugins:[{name:'ui-test',setup(b){
   b.onResolve({filter:/SpriteAtlas\.js$/},()=>({path:'sprites',namespace:'test'}));

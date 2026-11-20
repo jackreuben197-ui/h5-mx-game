@@ -80,6 +80,9 @@ export class AuditHost implements RoomHost {
   if(scene==='watch')this.features.settlement();
   if(scene==='insurance-single')this.features.insurance(1);if(scene==='insurance-multi')this.features.insurance(2);if(scene==='insurance-force')this.features.insurance(1,true);
   if(scene==='second-board')this.features.secondBoard();if(scene==='mushroom')this.features.mushroomPool();if(scene==='critical')this.features.criticalHit();if(scene==='jackpot')this.features.jackpot();if(scene==='calltime')this.features.callTime();
+  if(scene==='jackpot-calltime'){
+   this.features.jackpot();Object.assign(d.record!,{calltime:1,calltimeWinLine:10,calltimeLimit:10});d.callTime.update(3,true);this.publish({});
+  }
   if(scene==='fold-other')this.publish({players:this.state.players.map(p=>p.seat===(this.options.actor===this.state.mySeat?this.state.mySeat%this.state.seatCount+1:this.options.actor)?{...p,folded:true}:p)});
   if(scene==='countdown-expire')this.later(()=>this.publish({actions:[],countdowns:[],actingSeat:undefined,players:this.state.players.map(p=>p.seat===this.state.mySeat?{...p,folded:true}:p)}),4000);
   if(scene==='emoji'){d.emoji.emojiEvent({type:710,userID:99+this.options.hero});this.later(()=>d.emoji.emojiEvent({type:717,userID:101}),600);}

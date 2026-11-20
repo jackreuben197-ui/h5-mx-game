@@ -1,4 +1,5 @@
 .mx-seat-info-text {
+  position: relative;
   display: inline-block;
   min-width: 100%;
   width: max-content;
@@ -6,15 +7,16 @@
   white-space: nowrap;
   text-align: center;
 }
+.mx-seat-info-repeat {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
 .mx-table .mx-stack {
   min-width: 0;
   overflow: hidden;
   text-overflow: clip;
 }
-.mx-table:is([data-table-layout=original], [data-orientation=landscape]) .mx-player-name {
+.mx-table .mx-player-name {
   text-overflow: clip;
-}
-/* New portrait layouts keep their nickname above the avatar, outside the bubble. */
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-name > .mx-seat-info-text {
-  display: inline;
 }

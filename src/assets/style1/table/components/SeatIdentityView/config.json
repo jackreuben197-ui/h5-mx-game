@@ -25,6 +25,7 @@
   },
   "layout": {
     "infoScrollSpeed": 90,
+    "infoScrollGap": 32,
     "infoScrollDelayMs": 1200,
     "css": {
       "mx-player-name-font-size": "35px",

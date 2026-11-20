@@ -21,6 +21,9 @@ export class ChipFormatter {
     }
 
     public showPlayerBalanceWithShowBB(value: number): string {
-        return ChipFormatter.tableAmount(value, this.smallBlind, this.showBB);
+        if (this.showBB && this.smallBlind > 0)
+            return `${StringHelper.GetDecimalNWithoutKM(value / (this.smallBlind * 2))}BB`;
+        const chips = value / 100;
+        return String(Math.abs(chips) < 1 ? chips : Math.trunc(chips));
     }
 }

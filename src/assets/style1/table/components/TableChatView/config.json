@@ -20,6 +20,10 @@
       "mx-chat-button-left": "5.5%",
       "mx-chat-button-bottom": "7.8%",
       "mx-chat-button-unit": "0.3333333333px",
+      "desktop-support-width": "86.7463px",
+      "desktop-support-height": "44.8px",
+      "desktop-support-top": "37px",
+      "desktop-support-right": "39.2537px",
       "mx-chat-button-width": "130",
       "mx-chat-button-height": "180",
       "mx-chat-button-bottom-2": "0",
@@ -124,6 +128,7 @@
     },
     "dockTop": 200,
     "screenWidth": 1440,
+    "desktopWidth": 452.64,
     "panelWidth": 1296
   },
   "images": {

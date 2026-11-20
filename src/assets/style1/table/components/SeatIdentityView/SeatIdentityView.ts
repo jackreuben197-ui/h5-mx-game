@@ -35,7 +35,7 @@ export class SeatIdentityView {
   private name = element('span', 'mx-player-name');
   private line = element('span', 'mx-player-line');
   private chips = element('strong', 'mx-stack');
-  private nameTicker = new SeatInfoTicker(this.name, () => getComputedStyle(this.name).position !== 'absolute');
+  private nameTicker = new SeatInfoTicker(this.name);
   private chipsTicker = new SeatInfoTicker(this.chips);
   private fold = element('div', 'mx-fold-cover', () => i18nMgr.Get("UITexas_fold", [], "弃牌"));
   private win = element('div','mx-seat-win');

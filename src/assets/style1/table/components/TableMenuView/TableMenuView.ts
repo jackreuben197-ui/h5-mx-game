@@ -1,5 +1,6 @@
 import { componentBox } from '../../ComponentBox.js';
 import config from './config.json';
+import './layout.css';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import type { TableSnapshot } from '../../../../../core/types.js';
@@ -134,9 +135,9 @@ export class TableMenuView {
     this.bb.setAttribute('aria-checked', String(!!state.showBB));
     this.stand.hidden = state.matchID>0 || !state.mySeat || this.stand.dataset.available !== 'true';
   }
-  resize(unit: number, height: number, suggest: number): void {
+  resize(unit: number, height: number, suggest: number, fixed = false): void {
     // UITexasMenu.onFrameResize uses 2290 design units as its maximum menu height.
-    this.overlay.style.setProperty('--menu-unit', `${unit * (height < config.layout.maxHeight ? height / config.layout.maxHeight : suggest)}px`);
+    this.overlay.style.setProperty('--menu-unit', `${unit * (!fixed && height < config.layout.maxHeight ? height / config.layout.maxHeight : suggest)}px`);
   }
   destroy(): void {
     this.disposed = true;

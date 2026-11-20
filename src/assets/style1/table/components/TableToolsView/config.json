@@ -33,7 +33,15 @@
       "mx-table-tool-plus-left": "50%",
       "mx-table-tool-plus-left-2": "40",
       "mx-table-tool-plus-width": "42",
-      "mx-table-tool-plus-height": "42"
+      "mx-table-tool-plus-height": "42",
+      "desktop-right": "39.2537px",
+      "desktop-width": "86.7463px",
+      "desktop-top": "91.7154px",
+      "desktop-gap": "11.8px",
+      "desktop-add-width": "84.1887px",
+      "desktop-add-height": "43.3398px",
+      "desktop-safety-width": "44.6183px",
+      "desktop-safety-height": "54.5917px"
     }
   },
   "images": {

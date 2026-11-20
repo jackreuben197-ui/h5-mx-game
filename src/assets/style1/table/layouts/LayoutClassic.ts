@@ -14,6 +14,6 @@ export class LayoutClassic extends LayoutProfile {
     const originalUnit=landscape?height/1440:width/height>.75?height/2688:width/1440;
     super.resize(width,landscape?height:Math.min(height,(height-44)*782/738),landscape,viewportBottom);
     this.viewportHeight=height;
-    this.menuScale=originalUnit/this.unit;
+    this.menuScale=landscape?1:originalUnit/this.unit;
   }
 }

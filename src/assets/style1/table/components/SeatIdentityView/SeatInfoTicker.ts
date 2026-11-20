@@ -7,6 +7,7 @@ export class SeatInfoTicker {
   private observer = new ResizeObserver(() => this.refresh());
   private frame = 0;
   private animation?: Animation;
+  private repeat?: HTMLElement;
   private value = '';
   private owner = '';
   private distance = 0;
@@ -33,27 +34,32 @@ export class SeatInfoTicker {
     this.frame = requestAnimationFrame(() => {
       this.frame = 0;
       const width = this.viewport.clientWidth;
-      const distance = this.text.offsetWidth - width;
-      if (!width || distance <= 1 || !this.enabled()) { this.stop(); return; }
+      const textWidth = this.text.offsetWidth;
+      if (!width || textWidth - width <= 1 || !this.enabled()) { this.stop(); return; }
+      const distance = textWidth + config.layout.infoScrollGap;
       if (this.animation && Math.abs(this.distance - distance) < 1) return;
       this.stop();
       this.distance = distance;
+      // The next copy enters from the right, so wrapping never moves the text backwards.
+      const repeat = element('span', 'mx-seat-info-repeat');
+      repeat.setAttribute('aria-hidden', 'true');
+      repeat.style.left = `${distance}px`;
+      for (const child of this.text.childNodes) repeat.append(child.cloneNode(true));
+      this.text.append(repeat);
+      this.repeat = repeat;
       const travel = distance / config.layout.infoScrollSpeed * 1000;
-      const duration = (travel + config.layout.infoScrollDelayMs) * 2;
-      const hold = config.layout.infoScrollDelayMs / duration;
       this.animation = this.text.animate([
-        { transform: 'translateX(0)', offset: 0 },
-        { transform: 'translateX(0)', offset: hold },
-        { transform: `translateX(-${distance}px)`, offset: 0.5 },
-        { transform: `translateX(-${distance}px)`, offset: 0.5 + hold },
-        { transform: 'translateX(0)', offset: 1 },
-      ], { duration, iterations: Infinity, easing: 'linear' });
+        { transform: 'translateX(0)' },
+        { transform: `translateX(-${distance}px)` },
+      ], { duration: travel, delay: config.layout.infoScrollDelayMs, iterations: Infinity, easing: 'linear' });
     });
   }
 
   private stop(): void {
     this.animation?.cancel();
     this.animation = undefined;
+    this.repeat?.remove();
+    this.repeat = undefined;
     this.distance = 0;
   }
 

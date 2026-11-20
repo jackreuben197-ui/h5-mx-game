@@ -1,0 +1,43 @@
+/* Figma 11222:33287: the PC menu remains centered at the bottom. */
+.mx-game > .mx-table[data-orientation=landscape] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--mx-NavigationView-desktop-controls-height) var(--mx-NavigationView-desktop-height);
+}
+.mx-table[data-orientation=landscape] > .mx-viewport {
+  grid-column: 1;
+  grid-row: 1;
+}
+.mx-table[data-orientation=landscape] > .mx-navigation[data-layout] {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: end;
+  justify-self: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  width: min(var(--mx-NavigationView-desktop-width), calc(100% - var(--mx-NavigationView-desktop-edge-gap)));
+  height: var(--mx-NavigationView-desktop-height);
+  margin: 0;
+  padding-inline: var(--mx-NavigationView-desktop-padding);
+  gap: 0;
+  border: 0;
+  border-radius: var(--mx-NavigationView-desktop-radius);
+}
+.mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-button {
+  flex: 0 0 var(--mx-NavigationView-desktop-button-width);
+  width: var(--mx-NavigationView-desktop-button-width);
+  height: var(--mx-NavigationView-desktop-button-height);
+  gap: var(--mx-NavigationView-desktop-button-gap);
+  padding: 0;
+  font-size: var(--mx-NavigationView-desktop-font-size) !important;
+}
+.mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-icon {
+  width: var(--mx-NavigationView-desktop-icon-size);
+  height: var(--mx-NavigationView-desktop-icon-size);
+}
+.mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-logo {
+  flex: 0 0 var(--mx-NavigationView-desktop-logo-width);
+  width: var(--mx-NavigationView-desktop-logo-width);
+  height: var(--mx-NavigationView-desktop-logo-height);
+  margin: 0;
+}

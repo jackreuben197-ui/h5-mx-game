@@ -1,5 +1,6 @@
 import { componentBox } from '../../ComponentBox.js';
 import config from './config.json';
+import './layout.css';
 import { resourceURL } from '../../ResourcePath.js';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
