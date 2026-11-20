@@ -93,7 +93,11 @@ export class RoomRecordsService implements RoomRecords {
         this.transport.send('showPanel',{panelType:'supportChat',props:{tribeId:this.data.record?.tribeId??0,clubId}});
     }
     mttRegistration():void{this.data.mtt?.emit('registration');}
-    openMttRecord():void {this.transport.send('showPanel',{panelType:'mttRecord',props:{matchId:this.target.matchID,tournamentName:this.data.mtt?.matchName}});}
+    mttReport(section: import('../core/MttReport.js').MttReportSection, offset = 0) {
+        const paged = section === 'rooms' || section === 'ranks' || section === 'hranks';
+        return this.post<import('../core/MttReport.js').MttReportResult>(
+            `/api/roomcenter/mtt/${this.target.matchID}/${section}`, paged ? {limit:50,offset} : {});
+    }
     async mttAddOn():Promise<void>{
         const m=this.data.mtt;if(!m||!m.beginAddOn(m.currentAddOnMode))return;
         const room=new this.pb.Room();room.setRoomId(this.target.roomID);room.setMatchId(this.target.matchID);

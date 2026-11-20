@@ -278,3 +278,28 @@
 .mx-history-overlay .mx-record-own :is(.mx-history-name,.mx-history-overview-actions,.mx-history-last-action){color:#05e7ae}
 
 .mx-history-street-heading>.mx-history-public-cards>.mx-card:nth-child(n+4){margin-left:calc(var(--mx-HistoryCardsView-mx-history-cards-gap) * var(--record-unit))}
+
+.mx-history-identity { position: relative; }
+.mx-history-role {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  padding: 0 .35em;
+  border-radius: .4em;
+  background: #266a83;
+  color: white;
+  font: bold .65em/1.1 Arial,sans-serif;
+}
+.mx-report-overlay [data-tab=battle] th:first-child,
+.mx-report-overlay [data-tab=battle] td:first-child { text-align:left; padding-inline-start:0; }
+.mx-report-overlay [data-tab=battle] th:last-child { text-align:right; padding-inline-end:0; }
+.mx-report-overlay [data-tab=battle] td:last-child .mx-report-value,
+.mx-report-summary .mx-report-value { justify-content:flex-end; }
+.mx-report-summary .mx-report-value { flex:1; }
+.mx-report-overlay [data-tab=battle] td:last-child .mx-report-value-text,
+.mx-report-summary .mx-report-value-text { transform-origin:right center; }
+.mx-mtt-report .mx-mtt-overview {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6em;padding:.8em;border-radius:.8em;background:#162820ac;color:white;}
+.mx-mtt-report .mx-record-table {color:#fff;background:rgba(16,30,32,.84);border-radius:.6em;}
+.mx-mtt-report .mx-record-footer button[aria-pressed=true] {color:#63ffd4;}
+.mx-mtt-report .mx-record-footer { display:flex; flex-direction:row; }
+.mx-mtt-report .mx-record-footer button { flex:1; min-width:0; }

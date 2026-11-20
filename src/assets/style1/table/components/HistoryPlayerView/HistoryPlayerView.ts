@@ -9,7 +9,7 @@ import { HistoryCardsView } from '../HistoryCardsView/HistoryCardsView.js';
 import { element, profitAmount } from '../../dom.js';
 export class HistoryPlayerView {
     readonly root = componentBox(element('article', 'mx-history-player'),config);
-    constructor(player: HistoryPlayerInfo, model: HistoryHandModel, private readonly formatAmount: (wire: number) => string) {
+    constructor(player: HistoryPlayerInfo, model: HistoryHandModel, private readonly formatAmount: (wire: number) => string, roles = '') {
         this.root.classList.toggle('mx-record-own', player.isMine);
         const identity = element('div', 'mx-history-identity');
         const avatar = element('span', 'mx-record-avatar');
@@ -18,6 +18,7 @@ export class HistoryPlayerView {
             const img = element('img', ''); img.src = player.headPic; img.alt = ''; img.loading = 'lazy';
             img.onerror = () => img.remove(); avatar.append(img);
         }
+        if (roles) identity.append(element('span', 'mx-history-role', roles));
         identity.append(avatar, element('span', 'mx-history-name', StringHelper.LengthNick(player.userName)));
         const hands = element('div', 'mx-history-overview-hands');
         // CC overview shows two backs for unknown hands and leaves all known cards bright.

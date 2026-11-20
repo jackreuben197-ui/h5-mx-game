@@ -44,7 +44,7 @@ export interface RoomRecords {
     jackpot(): Promise<void>;
     openJackpot?():void;
     mttRegistration?():void;
-    openMttRecord?():void;
+    mttReport?(section: import('./MttReport.js').MttReportSection, offset?: number): Promise<import('./MttReport.js').MttReportResult>;
     mttAddOn?():Promise<void>;
     mttAutoOp?(enable:boolean):Promise<void>;
     leaveTable?():void;

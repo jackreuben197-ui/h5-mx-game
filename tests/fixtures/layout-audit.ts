@@ -32,9 +32,9 @@ if(game.getState().phase==='table'){
  await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
  const click=(selector:string)=>stage.querySelector<HTMLElement>(selector)?.click();
  if(scene==='raise')click('.mx-operation-raise');
- if(scene.startsWith('report'))click('.mx-nav-button[data-action="report"]');
+ if(scene.startsWith('report')||scene==='mtt-report')click('.mx-nav-button[data-action="report"]');
  if(scene==='history')click('.mx-nav-button[data-action="replay"]');
- if(scene.startsWith('profile'))click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
+ if(scene.startsWith('profile')||scene==='mtt-profile')click(`.mx-seat[data-seat="${options.actor}"] .mx-avatar-hit`);
  if(scene.startsWith('settings')){click('.mx-menu');click('.mx-menu-item[data-menu-action="UITexas_Setting"]');}
  if(scene==='settings-quick')click('.mx-settings-tabs button:nth-child(2)');
  if(scene==='settings-system')click('.mx-settings-tabs button:nth-child(3)');

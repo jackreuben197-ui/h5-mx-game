@@ -16,6 +16,7 @@ export interface PlayerProfile {
       total_hand?: number;
       wins?: number;
     };
+    mtt_room_data?: Partial<Record<'frist_times' | 'second_times' | 'third_times' | 'play_times' | 'win_times', number>>;
     pool_rate?: number;
     allin_data?: {
       active_count?: number;

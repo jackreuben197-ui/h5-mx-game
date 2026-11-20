@@ -155,7 +155,11 @@ export class HistoryView {
         content.replaceChildren();
         const cardCount = Math.max(2, data.d?.length ?? 0, ...model.players.map(player => player.handCards?.length ?? 0));
         const players = element('div', 'mx-history-players');
-        players.append(...model.players.map(player => new HistoryPlayerView(player, model, amount).root));
+        const { btn, sb, bb } = data.s.table;
+        players.append(...model.players.map(player => {
+            const roles = [player.seatID === btn && 'D', player.seatID === sb.sn && 'SB', player.seatID === bb.sn && 'BB'].filter(Boolean).join(' · ');
+            return new HistoryPlayerView(player, model, amount, roles).root;
+        }));
         content.append(players, this.details);
         if (state.details) {
             if (model.hasResult) content.append(new HistoryScoreView(t('UITexas_History_paipu', '牌谱'), model.players, model, cardCount, model.haveSecondCard ? 'dual' : 'first', amount).root);

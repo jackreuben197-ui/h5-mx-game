@@ -7,8 +7,13 @@ import type { HoldemRuntime } from '../../src/net/ProtocolRuntime.js';
 /** Local-only service responses. No production HTTP, websocket or payment adapter is created. */
 export function auditRecords(features:DemoFeatures,pb:HoldemRuntime,current:()=>TableSnapshot,update:(v:Partial<TableSnapshot>)=>void,log:(v:string)=>void,scene=''):RoomRecords {
  const data=features.data,notes=new Map<number,string>(),muted=new Set<number>(),saved=new Set<number>();
- const profile=(uid:number)=>({basic:{random_num:uid,nick_name:current().players.find(p=>p.userRid===uid)?.name??'模拟观众',avatar:new URL('../../src/assets/style1/resources/raw/ui/avatar.png',import.meta.url).href,remark_name:notes.get(uid)},stats:{room_data:{total_game_cnt:12,vpip:45,prf:20,total_hand:98,wins:31},pool_rate:45,allin_data:{active_count:12,active_profit_count:8,passive_count:4,passive_profit_count:2,behind_count:3,behind_profit_count:1,ahead_count:5,ahead_profit_count:4}}});
+ const profile=(uid:number)=>({basic:{random_num:uid,nick_name:current().players.find(p=>p.userRid===uid)?.name??'模拟观众',avatar:new URL('../../src/assets/style1/resources/raw/ui/avatar.png',import.meta.url).href,remark_name:notes.get(uid)},stats:{mtt_room_data:{frist_times:7,second_times:4,third_times:2,play_times:38,win_times:13},room_data:{total_game_cnt:12,vpip:45,prf:20,total_hand:98,wins:31},pool_rate:45,allin_data:{active_count:12,active_profit_count:8,passive_count:4,passive_profit_count:2,behind_count:3,behind_profit_count:1,ahead_count:5,ahead_profit_count:4}}});
  const records:RoomRecords={data,config:{...features.config,privateUc:new PrivateUcChargeStore()},get userRID(){return 99+current().mySeat;},target:{roomID:909090,matchID:0},
+  async mttReport(section,offset=0){
+   if(section==='detail')return {mtt:{name:'测试锦标赛',blindtable_type:0,hunter_on:1,upblind_interval:600},more:{bl:2,sb:5000,nu:Math.floor(Date.now()/1000)+300}};
+   if(section==='real_prize')return {prizes:[{min:1,max:1,award:90000}]};
+   return {sb:5000,records:offset?[]:[{rank:1,name:'测试玩家',chip:20000,rid:12,award:25,roomers:[{chip:20000}]}]};
+  },
   async playerStats(){return {vpip:45,pfr:20};},async playerProfile(id){return profile(id);},peekPlayerProfile:profile,
   async savePlayerRemark(id,note){notes.set(id,note);},async playerMuted(id){return muted.has(id);},async setPlayerMuted(id,v){v?muted.add(id):muted.delete(id);},
   async managePlayer(id){update({players:current().players.filter(p=>p.userRid!==id)});},async diamondBalance(){return 100000;},

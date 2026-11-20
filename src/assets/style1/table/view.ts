@@ -12,6 +12,7 @@ import './media.css';
 import { TableToolsView } from './components/TableToolsView/TableToolsView.js';
 import { TableChatView } from './components/TableChatView/TableChatView.js';
 import './mtt.css';
+import { MttReportView } from './components/MttReportView/MttReportView.js';
 import { MttTableStateView } from './components/MttTableStateView/MttTableStateView.js';
 import './jackpot.css';
 import { JackpotView } from './components/JackpotView/JackpotView.js';
@@ -104,6 +105,7 @@ export class TableView {
   private seatViews = new Map<number, SeatComponent>();
   private remarkNames = new Map<number,string>();
   private allInTest?: AllInTestView;
+  private mttReport?: MttReportView;
   private report?: ReportView;
   private history?: HistoryView;
   private gameRules = new GameRulesView();
@@ -230,6 +232,7 @@ export class TableView {
     const ruleData = (options.records ?? options.specialOperations)?.data;
     this.insuranceRules = new InsuranceRulesView(ruleData);
     if (options.records) {
+      this.mttReport = new MttReportView(options.records);
       this.report = new ReportView(new ReportController(options.records), () => this.showBB);
       this.history = new HistoryView(new HistoryController(options.records), () => this.showBB);
     }
@@ -238,7 +241,7 @@ export class TableView {
       this.seatEmoji = new SeatEmojiView(options.emojis, new TableEffectAnchors(this.root,id=>options.emojis!.seatForUser(id)).avatar, this.sound);
     }
     const onNavigate = (action: 'report' | 'replay' | 'emoji' | 'effect' | 'voice' | 'camera') => {
-      if(action==='report'&&options.records?.data.mtt){options.records.openMttRecord?.();return;}
+      if(action==='report'&&options.records?.data.mtt){this.mttReport?.open();return;}
       if (action === 'report' && this.report) { this.emoji?.controller.close(); this.history?.controller.close(); this.report.open(); }
       else if (action === 'replay' && this.history) { this.emoji?.controller.close(); this.report?.controller.close(); this.history.open(); }
       else if (action === 'emoji' && this.emoji) {
@@ -326,6 +329,7 @@ export class TableView {
     );
     this.viewport.append(this.stage);
     this.root.append(this.deskBackground.root, this.viewport, this.controls.root, this.actionBubbles, this.settlementWatch.root, this.navigation.root, this.soundControl.root, this.menu.overlay, this.toast.root, this.buyInView.root, this.personalSettings.root, this.bringOut.root, this.sound.root);
+    if (this.mttReport) this.root.append(this.mttReport.dialog.root);
     if (this.report && this.history) this.root.append(this.report.root, this.history.root);
     this.root.append(this.gameRules.root, this.insuranceRules.root);
     if (this.emoji && this.seatEmoji) this.root.append(this.emoji.root, this.seatEmoji.root);
@@ -415,6 +419,7 @@ export class TableView {
     this.root.style.setProperty('--mx-chat-unit',`${box.width/1440}px`);
     this.personalSettings.onFrameResize(box.width,box.height);
     this.roomSettingsDialog?.onFrameResize(box.width,box.height);
+    this.mttReport?.dialog.onFrameResize(box.width,box.height);
     this.report?.onFrameResize(box.width,box.height);
     this.history?.onFrameResize(box.width,box.height);
     this.playerInfo.onFrameResize(box.width,box.height);
@@ -537,6 +542,7 @@ export class TableView {
     this.appearanceObserver?.disconnect();
     this.settingsOff.forEach(off=>off());
     this.personalSettings.destroy();
+    this.mttReport?.destroy();
     this.report?.destroy();
     this.history?.destroy();
     this.gameRules.destroy();
