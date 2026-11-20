@@ -49,6 +49,7 @@ export class PublicCardsView implements PublicCardsComponent {
       const pitch=config.slots[1]!-config.slots[0]!;
       const centeredX=config.w/2+(i-(layoutCount-1)/2)*pitch-config.layout.cardWidth/2;
       slot.style.setProperty('--mx-card-centered-x',`${centeredX}px`);
+      slot.style.setProperty('--mx-public-index',String(i-(layoutCount-1)/2));
       slot.style.setProperty('--mx-public-original-spread',`${config.slots[0]!-x}px`);
       slot.style.setProperty('--mx-public-centered-spread',`${-i*pitch}px`);
       place(slot,x,0);slot.style.margin='0';

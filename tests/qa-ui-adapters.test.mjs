@@ -24,10 +24,11 @@ test('wallet popup closes when its anchor scrolls outside the dialog body',()=>{
 test('WIN and ALLIN share the avatar anchor, with a closer lift for ring portrait self ALLIN',()=>{
  const previous=globalThis.getComputedStyle;globalThis.getComputedStyle=()=>({opacity:'0.8'});
  try{for(const scale of [.2,.6,1])for(const layout of ['original','classic','balanced','oval'])for(const orientation of ['portrait','landscape']){
-  const seat={dataset:{anchorX:'.5',anchorY:String(2/3)},getBoundingClientRect:()=>({left:300-400*scale,top:500-600*scale,width:800*scale,height:900*scale}),querySelector:()=>({getBoundingClientRect:()=>({width:199*scale})}),closest:()=>({dataset:{tableLayout:layout,orientation}})};
+  const avatarScale=orientation==='landscape'?({classic:58/60,oval:.9}[layout]??1):1;
+  const seat={dataset:{anchorX:'.5',anchorY:String(2/3)},getBoundingClientRect:()=>({left:300-400*scale,top:500-600*scale,width:800*scale,height:900*scale}),querySelector:()=>({getBoundingClientRect:()=>({width:199*scale*avatarScale})}),closest:()=>({dataset:{tableLayout:layout,orientation},style:{getPropertyValue:name=>name==='--mx-pc-stage-unit'?String(scale):''}})};
   const anchor={x:300,y:500,scale,opacity:.8};
   assert.deepEqual(seatEffectAnchor(seat,'win'),anchor);
-  assert.deepEqual(seatEffectAnchor(seat,'allin-other'),layout==='oval'&&orientation==='portrait'?{...anchor,lift:110*scale}:anchor);
+  assert.deepEqual(seatEffectAnchor(seat,'allin-other'),orientation==='landscape'?{...anchor,lift:75*scale}:layout==='oval'?{...anchor,lift:110*scale}:anchor);
   assert.deepEqual(seatEffectAnchor(seat,'allin-self'),['balanced','oval'].includes(layout)&&orientation==='portrait'?{...anchor,lift:176*scale}:anchor);
  }}finally{globalThis.getComputedStyle=previous;}
 });

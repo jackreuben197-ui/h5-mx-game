@@ -152,8 +152,9 @@ export class BuyInView {
     this.frame={width,height};
     const desktop=width>height;
     this.root.dataset.desktop=String(desktop);
+    const desktopWidth=this.controller.data.state.step==='rules'?config.layout.desktopRulesWidth:config.layout.desktopWidth;
     const unit=desktop
-      ? Math.min((width-config.layout.widthGap)/config.layout.panelWidth,config.layout.desktopWidth/config.layout.panelWidth)
+      ? Math.min((width-config.layout.widthGap)/config.layout.panelWidth,desktopWidth/config.layout.panelWidth)
       : Math.min(width/config.layout.screenWidth,height/(this.diamondTab?config.layout.diamondHeight:config.layout.shortHeight),config.layout.maxWidth/config.layout.panelWidth);
     this.root.dataset.short=String(!desktop&&height<config.layout.shortHeight*unit);
     this.root.style.setProperty('--mx-setup-unit',`${unit}px`);

@@ -320,7 +320,7 @@ export class PlayerInfoView {
   onFrameResize(width: number, height: number): void {
     // The admin controls and two rows of props share this frame with the stats.
     // Fit the complete CC-style dialog, rather than clipping its last row.
-    const scale = Math.min(width / config.layout.fitWidth, (height - 16) / config.layout.fitHeight);
+    const scale = Math.min(config.layout.maxScale, width / config.layout.fitWidth, (height - 16) / config.layout.fitHeight);
     this.root.style.setProperty('--player-profile-unit', `${scale}px`);
   }
   close(): void { this.offBalance?.();this.offBalance=undefined; ++this.generation; this.dialog.show(false); this.player = undefined; this.profile = undefined; this.confirmDialog?.close('player-admin'); this.dialog.panel.querySelector('.mx-player-profile-actions')?.remove(); this.dialog.status.textContent = ''; }

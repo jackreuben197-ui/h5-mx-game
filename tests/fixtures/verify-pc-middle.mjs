@@ -10,18 +10,19 @@ try{
  page.on('pageerror',e=>errors.push(e.message));
  const measure=()=>page.evaluate(()=>{
   const read=selector=>{const node=document.querySelector(selector);if(!node||!node.checkVisibility())return null;const r=node.getBoundingClientRect();return{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
-  return{frame:read('.mx-viewport'),info:read('.mx-room-info'),total:read('.mx-pot'),pool:read('.mx-pool-main'),jackpot:read('.mx-jackpot-pool'),calltime:read('.mx-calltime')};
+  return{frame:read('.mx-viewport'),board:read('.mx-board'),info:read('.mx-room-info'),total:read('.mx-pot'),pool:read('.mx-pool-main'),jackpot:read('.mx-jackpot-pool'),calltime:read('.mx-calltime')};
  });
  const verify=(m,label)=>{
-  assert.ok(Math.abs((m.info.left+m.info.right)-(m.frame.left+m.frame.right))<.3,label+': room text is off center');
+  assert.ok(Math.abs((m.info.left+m.info.right)-(m.board.left+m.board.right))<.3,label+': room text is off the Figma board axis');
   assert.ok(m.info.top>=m.frame.top+7.5,label+': room text is clipped at the top');
   const features=[m.jackpot,m.calltime].filter(Boolean);
   for(const feature of features){
-   assert.ok(m.info.bottom+7.5<=feature.top,label+': feature overlaps room text');
-   assert.ok(feature.bottom+7.5<=m.total.top,label+': feature overlaps total pot');
+   assert.ok(m.info.top>=feature.bottom,label+': feature overlaps room text');
+   assert.ok(feature.bottom<=m.total.top,label+': feature overlaps total pot');
    if(m.pool)assert.ok(feature.bottom<=m.pool.top,label+': feature overlaps main pot');
   }
-  if(!features.length)assert.ok(m.info.bottom+7.5<=m.total.top,label+': room text overlaps total pot');
+  assert.ok(m.total.bottom<=m.info.top,label+': room text overlaps total pot');
+  assert.ok(m.info.bottom<=m.board.top+.3,label+': room text overlaps cards');
  };
  for(const layout of ['original','classic','balanced','oval'])for(const [width,height]of [[1440,900],[1920,1080]])for(const scene of ['actions','jackpot','jackpot-calltime']){
   const label=`${layout}/${width}/${scene}`;
@@ -36,7 +37,8 @@ try{
    await page.locator('#audit-stage').evaluate(node=>{node.style.width='1024px';node.style.height='600px';});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const small=await measure();verify(small,label+'/resized');
-   assert.ok(Math.abs(small.jackpot.width-geometry.jackpot.width)<.1,'Jackpot must retain its fixed PC size');
+   const density=Math.min(1,1024/1440,600/1024)/Math.min(1,width/1440,height/1024);
+   assert.ok(Math.abs(small.jackpot.width-geometry.jackpot.width*density)<.1,'Jackpot must share the uniform PC frame scale');
    results.push({label:label+'/resized',geometry:small});
   }
  }

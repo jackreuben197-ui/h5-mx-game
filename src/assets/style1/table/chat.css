@@ -85,7 +85,7 @@
 .mx-game:has(.mx-table-confirm:not([hidden])) ~ .mx-test-menu{visibility:hidden}
 /* Keep the CC 94×115 shield ratio within the existing hit area. */
 .mx-game .mx-table-tools .mx-table-safety{background-size:contain;background-position:center}
-.mx-table[data-orientation=landscape] .mx-support-button{width:var(--mx-TableChatView-desktop-support-width);min-width:0;height:var(--mx-TableChatView-desktop-support-height);top:var(--mx-TableChatView-desktop-support-top);right:var(--mx-TableChatView-desktop-support-right)}
+.mx-table[data-orientation=landscape] .mx-support-button{width:calc(var(--mx-TableChatView-desktop-support-width) * var(--mx-pc-scale,1));min-width:0;height:calc(var(--mx-TableChatView-desktop-support-height) * var(--mx-pc-scale,1));top:calc(var(--mx-TableChatView-desktop-support-top) * var(--mx-pc-scale,1));right:calc(var(--mx-TableChatView-desktop-support-right) * var(--mx-pc-scale,1))}
 
 /* Chat shares the report glass surface, including the docked outline. */
 .mx-chat-dialog[data-dock=left]>.mx-record-panel{background:linear-gradient(135deg,rgba(150,155,165,.18),rgba(48,55,70,.16) 52%,rgba(115,120,133,.20));backdrop-filter:blur(3px);border:1px solid #ffffffa3;border-radius:0 40px 0 0;overflow:hidden}

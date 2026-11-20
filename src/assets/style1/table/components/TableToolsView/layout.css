@@ -1,14 +1,14 @@
 .mx-table[data-orientation=landscape] .mx-table-tools {
-  right: var(--mx-TableToolsView-desktop-right);
-  top: var(--mx-TableToolsView-desktop-top);
-  gap: var(--mx-TableToolsView-desktop-gap);
-  width: var(--mx-TableToolsView-desktop-width);
+  right: calc(var(--mx-TableToolsView-desktop-right) * var(--mx-pc-scale,1));
+  top: calc(var(--mx-TableToolsView-desktop-top) * var(--mx-pc-scale,1));
+  gap: calc(var(--mx-TableToolsView-desktop-gap) * var(--mx-pc-scale,1));
+  width: calc(var(--mx-TableToolsView-desktop-width) * var(--mx-pc-scale,1));
 }
 .mx-table[data-orientation=landscape] .mx-table-add-chips {
-  width: var(--mx-TableToolsView-desktop-add-width);
-  height: var(--mx-TableToolsView-desktop-add-height);
+  width: calc(var(--mx-TableToolsView-desktop-add-width) * var(--mx-pc-scale,1));
+  height: calc(var(--mx-TableToolsView-desktop-add-height) * var(--mx-pc-scale,1));
 }
 .mx-table[data-orientation=landscape] .mx-table-safety {
-  width: var(--mx-TableToolsView-desktop-safety-width);
-  height: var(--mx-TableToolsView-desktop-safety-height);
+  width: calc(var(--mx-TableToolsView-desktop-safety-width) * var(--mx-pc-scale,1));
+  height: calc(var(--mx-TableToolsView-desktop-safety-height) * var(--mx-pc-scale,1));
 }

@@ -258,8 +258,8 @@ export class MttReportView {
                 const level = index + 1, cell = element('span', 'mx-mtt-level', `${level === more?.bl ? '▶ ' : ''}${level}`);
                 const marker = level === mtt?.addon_end_bl ? ['MTT_Blind_Deadline_add_cl', '增购结束', 'addon-end'] : level === mtt?.addon_begin_bl ? ['MTT_Blind_Deadline_add_op', '增购开始', 'addon-begin'] : level === mtt?.max_rebuy_bl ? ['MTT_Blind_Deadline_to_buy', '重购截止', 'rebuy-end'] : undefined;
                 if (marker) { const label = element('small', '', t(marker[0]!, marker[1]!)); cell.dataset.marker = marker[2]!; cell.append(label); }
-                const format = (value: number) => value < 100000 ? String(value / 100) : StringHelper.GetDecimalNWithKM(value / 100);
-                const tr = row([cell, `${format(blind.sb)}/${format(blind.sb * 2)}`, format(blind.ante), this.duration()]);
+                const format = (value: number) => StringHelper.GetLongString(value);
+                const tr = row([cell, this.values.wrap(`${format(blind.sb)}/${format(blind.sb * 2)}`), this.values.wrap(format(blind.ante)), this.duration()]);
                 if (level === more?.bl) tr.setAttribute('aria-current', 'true');
             });
         } else if (this.tab === 'real_prize') {

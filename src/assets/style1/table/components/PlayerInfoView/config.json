@@ -164,6 +164,7 @@
     },
     "fitWidth": 375,
     "fitHeight": 680,
+    "maxScale": 1,
     "radarSize": 200,
     "radarCenter": 100,
     "radarRadius": 80,

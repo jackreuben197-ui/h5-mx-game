@@ -39,18 +39,21 @@ try{
    await page.locator('.mx-table-safety').evaluate(node=>{node.hidden=false;});
    near((await rect('.mx-table-safety')).width,44.6183,'PC safety button width');
    near((await rect('.mx-table-safety')).height,54.5917,'PC safety button height');
-   const frame=await rect('#audit-stage'),nav=await rect('.mx-navigation'),operation=await rect('.mx-operation');
+   const frame=await rect('#audit-stage'),nav=await rect('.mx-navigation');
    near(nav.width,600,'PC bottom menu width');near(nav.height,96.1353,'PC bottom menu height');
    near(nav.x+nav.width/2,frame.x+width/2,'PC menu centered');
    near(nav.y+nav.height,frame.y+height,'PC menu bottom alignment');
-   assert.ok(operation.y+operation.height<=nav.y+.2,'bottom menu must not cover operation controls');
+   for(const button of await page.locator('.mx-operation-row .mx-operation-button:visible').all()){
+    const operation=await button.boundingBox();assert.ok(operation.y+operation.height<=nav.y+.2,'bottom menu must not cover operation controls');
+   }
    for(const [resizeWidth,resizeHeight]of [[1024,900],[844,390]]){
     await page.locator('#audit-stage').evaluate((node,{w,h})=>{node.style.width=w+'px';node.style.height=h+'px';},{w:resizeWidth,h:resizeHeight});
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-    near((await rect('.mx-seat-mine .mx-avatar-fallback')).width,avatar.width,'resizing PC must not change the avatar size');
-    near((await rect('.mx-board .mx-card')).width,61.76,'resizing PC must not change public card size');
-    near((await rect('.mx-menu')).width,41.5459,'resizing PC must not change settings size');
-    near((await rect('.mx-support-button')).width,86.7463,'resizing PC must not change support size');
+    const density=Math.min(1,resizeWidth/1440,resizeHeight/1024);
+    near((await rect('.mx-seat-mine .mx-avatar-fallback')).width,avatar.width*density,'PC avatars retain their aspect ratio under frame scaling');
+    near((await rect('.mx-board .mx-card')).width,61.76*density,'PC cards share the frame scale');
+    near((await rect('.mx-menu')).width,41.5459*density,'PC settings share the frame scale');
+    near((await rect('.mx-support-button')).width,86.7463*density,'PC support shares the frame scale');
    }
    await page.locator('#audit-stage').evaluate((node,{w,h})=>{node.style.width=w+'px';node.style.height=h+'px';},{w:width,h:height});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -73,8 +76,8 @@ try{
    await load(layout,'bring-wallet',width,height);
    await page.locator('.mx-buyin-confirm').click();
    await page.locator('.mx-buyin-panel[data-step=rules]').waitFor();
-   near((await rect('.mx-buyin-panel')).width,387.03,'configuration width');
-   near((await rect('.mx-buyin-panel')).height,587.58,'configuration height');
+   near((await rect('.mx-buyin-panel')).width,325,'configuration width');
+   near((await rect('.mx-buyin-panel')).height,494,'configuration height');
    if(width===1440&&layout==='original')await page.locator('#audit-stage').screenshot({path:`${output}/final-configuration.png`});
    await page.locator('.mx-buyin-confirm').click();
    await page.locator('.mx-buyin-panel[data-step=amount]').waitFor();

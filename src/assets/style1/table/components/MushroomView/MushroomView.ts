@@ -14,6 +14,7 @@ export class MushroomView {
   private amount=element('span','mx-mushroom-amount');
   private count=element('span','mx-mushroom-count');
   private bindings=new BindingScope(this);
+  private mushroomSeat?:HTMLElement;
   private motion?:Animation;private mirror?:Animation;private serial=-1;private destroyed=false;
   constructor(private data:MushroomData,private stage:HTMLElement){
     this.icon.style.backgroundImage=`url("${resourceURL(config.paths.table_icon_mushroom)}")`;
@@ -25,7 +26,8 @@ export class MushroomView {
   private changed():void {queueMicrotask(()=>{if(!this.destroyed)this.resize();});}
   resize():void {
     if(this.destroyed)return;
-    const s=this.data.state,seat=this.position(s.seat);this.root.hidden=!seat||!s.pool;if(!seat)return;
+    const s=this.data.state,seat=this.position(s.seat);this.root.hidden=!seat||s.pool<=0;
+    this.markSeat(this.root.hidden?undefined:seat?.node);if(!seat)return;
     const first=s.serial!==this.serial;this.serial=s.serial;
     const transform=`scale(${seat.scale})`;Object.assign(this.root.style,{left:`${seat.x}px`,top:`${seat.y}px`,transform});
     this.root.dataset.side=seat.side<0?'right':'left';this.root.style.setProperty('--mushroom-side',String(seat.side));
@@ -40,11 +42,17 @@ export class MushroomView {
       this.motion.onfinish=()=>{this.amount.style.opacity=this.count.style.opacity='1';};
     }
   }
-  private position(id:number):{x:number;y:number;scale:number;side:number}|undefined {
+  private markSeat(node?:HTMLElement):void {
+    if(this.mushroomSeat===node)return;
+    this.mushroomSeat?.classList.remove('mx-seat-has-mushroom');
+    this.mushroomSeat=node;
+    node?.classList.add('mx-seat-has-mushroom');
+  }
+  private position(id:number):{node:HTMLElement;x:number;y:number;scale:number;side:number}|undefined {
     const node=this.stage.querySelector<HTMLElement>(`.mx-seat[data-seat="${id}"]`);if(!node)return;
     const r=viewportAnchor(node),stage=this.stage.getBoundingClientRect(),unit=stage.width/this.stage.offsetWidth;
     if(!unit)return;const scale=Number(node.dataset.scale??1),side=node.dataset.edge==='right'?-1:1;
-    return {x:(r.x-stage.left)/unit+config.layout.offsetX*scale*side,y:(r.y-stage.top)/unit+config.layout.offsetY*scale,scale,side};
+    return {node,x:(r.x-stage.left)/unit+config.layout.offsetX*scale*side,y:(r.y-stage.top)/unit+config.layout.offsetY*scale,scale,side};
   }
-  destroy():void {this.destroyed=true;this.motion?.cancel();this.mirror?.cancel();this.bindings.destroy();this.root.remove();}
+  destroy():void {this.destroyed=true;this.markSeat();this.motion?.cancel();this.mirror?.cancel();this.bindings.destroy();this.root.remove();}
 }

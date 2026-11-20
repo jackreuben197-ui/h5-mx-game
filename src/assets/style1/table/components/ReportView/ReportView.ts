@@ -1,4 +1,3 @@
-import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import config from './config.json';
 import { ReportPlayerInfoView } from '../ReportPlayerInfoView/ReportPlayerInfoView.js';
 import { ReportController, type ReportTab } from '../../../../../logic/ReportController.js';
@@ -101,7 +100,8 @@ export class ReportView {
         this.tabs.replaceChildren(...tabs.map(([key, label]) => { const b = element('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.tab === key)); b.onclick = () => void this.controller.select(key); return b; }));
         const report = records.data.report;
         const blind = records.data.snapshot?.roomInfo?.smallBlind ?? 0;
-        const amount = (wire: number) => ChipFormatter.tableAmount(wire, blind, blind > 0 && this.showBB());
+        const useBB = blind > 0 && this.showBB();
+        const amount = (wire: number) => `${StringHelper.GetLongString(wire, useBB ? blind * 2 : 100)}${useBB ? 'BB' : ''}`;
         const tableUsers = new Set(records.data.snapshot?.playersList.map(p => p.userRid) ?? []);
         this.list.replaceChildren();
         if (state.tab === 'battle') {

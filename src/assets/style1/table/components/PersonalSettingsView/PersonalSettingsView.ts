@@ -2,6 +2,7 @@ import { componentBox } from '../../ComponentBox.js';
 import config from './config.json';
 import { LayoutPreview } from '../../appearance/LayoutPreview.js';
 import { cardBacks } from '../../appearance/TableSkin.js';
+import { renderedTableAppearance } from '../../appearance/TableAppearanceContext.js';
 import defaultSettings, { TexasGamePersonalSettings as Settings, shortCutMode, TABLE_CARD_BACKS, TABLE_FELT_COLORS, TABLE_SIZE_STEPS, type TableLayoutId } from '../../../../../data/TexasGamePersonalSettings.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
@@ -122,7 +123,7 @@ export class PersonalSettingsView {
     const solidChoice=this.button('MX_SolidFelt',()=>{void this.choose(async()=>()=>this.settings.updateAppearance({style:'solid'}));});
     solidChoice.replaceChildren(element('span','mx-settings-desk-name',()=>i18nMgr.Get('MX_SolidFelt')));solidChoice.className='mx-settings-desk mx-settings-solid';this.desks[0]!.after(solidChoice);
     this.appearanceRefresh.push(()=>{
-      const solid=this.settings.tableAppearance.style==='solid';
+      const solid=renderedTableAppearance(this.root,this.settings).style==='solid';
       const modern=this.settings.supportsLayoutCustomization;
       appearance.dataset.modern=String(modern);
       solidChoice.hidden=!modern;solidChoice.setAttribute('aria-pressed',String(solid));
@@ -187,7 +188,7 @@ export class PersonalSettingsView {
     // Legacy tables also retain the quick-bet mode and ratio controls.
     this.tabs[1]!.hidden=false;
     this.submitModes.forEach((b,i)=>b.setAttribute('aria-pressed',String(this.settings.tableSliderSubmit===(i===0?'release':'confirm'))));
-    const numbered=this.settings.tableAppearance.style==='legacy';
+    const numbered=renderedTableAppearance(this.root,this.settings).style==='legacy';
     this.desks.forEach((b,i)=>b.setAttribute('aria-pressed',String(numbered&&i+1===this.settings.deskType)));
     this.cards.forEach((b,i)=>b.setAttribute('aria-pressed',String(i+1===this.settings.pokerCardType)));
     this.modes.forEach((b,i)=>b.setAttribute('aria-pressed',String(i+1===this.settings.shortCutMode)));

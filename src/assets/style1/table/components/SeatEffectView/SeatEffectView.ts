@@ -7,9 +7,11 @@ export function seatEffectAnchor(seat: HTMLElement, effect: SeatEffect): EffectA
   const {x,y}=viewportAnchor(seat);
   // 头像的实测宽度包含牌桌缩放和座位移动时的缩放。
   const avatar=seat.querySelector<HTMLElement>('.mx-avatar-fallback');
-  const scale=(avatar?.getBoundingClientRect().width??config.layout.avatarSize)/config.layout.avatarSize;
   const table=seat.closest<HTMLElement>('.mx-table');
+  const desktop=table?.dataset.orientation==='landscape';
+  const scale=desktop?Number(table.style.getPropertyValue('--mx-pc-stage-unit'))||1:(avatar?.getBoundingClientRect().width??config.layout.avatarSize)/config.layout.avatarSize;
   const anchor:EffectAnchor={x,y,scale,opacity:Number(getComputedStyle(seat).opacity)};
+  if(desktop&&effect==='allin-other')anchor.lift=config.layout.desktopOtherAllInLift*scale;
   if(effect==='allin-self'&&['balanced','oval'].includes(table?.dataset.tableLayout??'')&&table?.dataset.orientation!=='landscape')
     anchor.lift=config.layout.ringSelfAllInLift*scale;
   if(effect==='allin-other'&&table?.dataset.tableLayout==='oval'&&table.dataset.orientation!=='landscape')anchor.lift=config.layout.ovalOtherAllInLift*scale;

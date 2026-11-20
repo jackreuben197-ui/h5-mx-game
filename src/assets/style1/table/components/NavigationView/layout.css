@@ -15,29 +15,32 @@
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  width: min(var(--mx-NavigationView-desktop-width), calc(100% - var(--mx-NavigationView-desktop-edge-gap)));
-  height: var(--mx-NavigationView-desktop-height);
+  width: min(calc(var(--mx-NavigationView-desktop-width) * var(--mx-pc-scale,1)), calc(100% - var(--mx-NavigationView-desktop-edge-gap)));
+  height: calc(var(--mx-NavigationView-desktop-height) * var(--mx-pc-scale,1));
+  min-height: 0;
+  min-width: 0;
   margin: 0;
-  padding-inline: var(--mx-NavigationView-desktop-padding);
+  padding-inline: calc(var(--mx-NavigationView-desktop-padding) * var(--mx-pc-scale,1));
   gap: 0;
   border: 0;
-  border-radius: var(--mx-NavigationView-desktop-radius);
+  border-radius: calc(var(--mx-NavigationView-desktop-radius) * var(--mx-pc-scale,1));
 }
 .mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-button {
-  flex: 0 0 var(--mx-NavigationView-desktop-button-width);
-  width: var(--mx-NavigationView-desktop-button-width);
-  height: var(--mx-NavigationView-desktop-button-height);
-  gap: var(--mx-NavigationView-desktop-button-gap);
+  flex: 0 0 calc(var(--mx-NavigationView-desktop-button-width) * var(--mx-pc-scale,1));
+  width: calc(var(--mx-NavigationView-desktop-button-width) * var(--mx-pc-scale,1));
+  height: calc(var(--mx-NavigationView-desktop-button-height) * var(--mx-pc-scale,1));
+  min-height: 0;
+  gap: calc(var(--mx-NavigationView-desktop-button-gap) * var(--mx-pc-scale,1));
   padding: 0;
-  font-size: var(--mx-NavigationView-desktop-font-size) !important;
+  font-size: calc(var(--mx-NavigationView-desktop-font-size) * var(--mx-pc-scale,1)) !important;
 }
 .mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-icon {
-  width: var(--mx-NavigationView-desktop-icon-size);
-  height: var(--mx-NavigationView-desktop-icon-size);
+  width: calc(var(--mx-NavigationView-desktop-icon-size) * var(--mx-pc-scale,1));
+  height: calc(var(--mx-NavigationView-desktop-icon-size) * var(--mx-pc-scale,1));
 }
 .mx-table[data-orientation=landscape] > .mx-navigation[data-layout] .mx-nav-logo {
-  flex: 0 0 var(--mx-NavigationView-desktop-logo-width);
-  width: var(--mx-NavigationView-desktop-logo-width);
-  height: var(--mx-NavigationView-desktop-logo-height);
+  flex: 0 0 calc(var(--mx-NavigationView-desktop-logo-width) * var(--mx-pc-scale,1));
+  width: calc(var(--mx-NavigationView-desktop-logo-width) * var(--mx-pc-scale,1));
+  height: calc(var(--mx-NavigationView-desktop-logo-height) * var(--mx-pc-scale,1));
   margin: 0;
 }

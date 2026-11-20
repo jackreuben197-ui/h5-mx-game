@@ -10,7 +10,7 @@ export function portraitSideButtons(width:number,viewportHeight:number,viewportB
     Math.min(height-50,viewportBottom-2)-48.15*designUnit,
   )-73*designUnit;
   return {
-    '--mx-side-add-center-y':`${actionY+19.5*width/440}px`,
+    '--mx-side-add-center-y':`${actionY+19.5}px`,
     '--mx-side-watch-bottom':`${Math.max(360*unit,viewportHeight-viewportBottom)}px`,
   };
 }

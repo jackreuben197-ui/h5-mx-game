@@ -1,6 +1,6 @@
 /** DEV-only acceptance workbench. Real views, isolated host, no game backend. */
 import {GameClient} from '../../src/GameClient.js';
-import {TexasGamePersonalSettings,type TableLayoutId} from '../../src/data/TexasGamePersonalSettings.js';
+import {TexasGamePersonalSettings,type TableAppearance,type TableLayoutId} from '../../src/data/TexasGamePersonalSettings.js';
 import {i18nMgr} from '../../src/i18n/i18nMgr.js';
 import {installAuditInspector} from './AuditInspector.js';
 import {AuditHost} from './AuditHost.js';
@@ -9,7 +9,7 @@ if(!import.meta.env.DEV)throw Error('Development-only audit');
 const q=new URLSearchParams(location.search),scene=q.get('scene')??'figma',layout=q.get('layout')??'balanced';
 const width=Number(q.get('width')??440),height=Number(q.get('height')??782),scale=Number(q.get('scale')??100);
 const options:AuditOptions={layout,scene,seats:Number(q.get('seats')??(scene==='figma'?8:scene==='squid-result-figma'?7:9)),hero:Number(q.get('hero')??1),actor:Number(q.get('actor')??1),dealer:Number(q.get('dealer')??1),cards:Number(q.get('cards')??2),long:q.get('long')==='1',scale};
-const prefs=new TexasGamePersonalSettings();prefs.setSoundOnToStorage(false);prefs.updateAppearance({layout:layout as TableLayoutId,style:layout==='original'?'legacy':'solid',feltColor:q.get('felt')??(layout==='balanced'?'#57427f':layout==='classic'?'#079d80':'#3296d2'),cardBack:'red',publicCardSize:scale,tableTextSize:scale,betButtonSize:scale});prefs.shortCutMode=q.get('quick')==='3'?1:2;prefs.sliderSubmit=q.get('submit')==='release'?'release':'confirm';prefs.setShowBBToStorage(scene==='figma'||q.get('bb')==='1');
+const prefs=new TexasGamePersonalSettings();prefs.setSoundOnToStorage(false);prefs.updateAppearance({layout:layout as TableLayoutId,style:layout==='original'?'legacy':'solid',feltColor:q.get('felt')??(layout==='balanced'?'#57427f':layout==='classic'?'#079d80':'#3296d2'),cardBack:(q.get('back')??'red') as TableAppearance['cardBack'],publicCardSize:scale,tableTextSize:scale,betButtonSize:scale});prefs.shortCutMode=q.get('quick')==='3'?1:2;prefs.sliderSubmit=q.get('submit')==='release'?'release':'confirm';prefs.setShowBBToStorage(scene==='figma'||q.get('bb')==='1');
 const style=document.createElement('style');style.textContent=`html,body{margin:0;background:#101419;color:#eee;font:13px system-ui}#audit-controls{padding:10px;display:flex;gap:7px;flex-wrap:wrap;max-width:1100px}#audit-controls label{display:flex;align-items:center;gap:4px}#audit-stage{position:relative;width:${width}px;height:${height}px;overflow:hidden}.mx-test-menu{display:none!important}#audit-info,#audit-log{max-width:1000px;padding:8px}#audit-log{max-height:150px;overflow:auto}button,select{font:inherit}#audit-controls button{padding:4px 9px}`;document.head.append(style);
 const bar=document.querySelector<HTMLElement>('#audit-controls')!,stage=document.querySelector<HTMLElement>('#audit-stage')!;
 const info=document.createElement('div'),logNode=document.createElement('ol');info.id='audit-info';logNode.id='audit-log';stage.before(info);stage.after(logNode);

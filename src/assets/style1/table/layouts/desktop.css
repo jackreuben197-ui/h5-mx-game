@@ -1,0 +1,68 @@
+/* Figma 11222:30137 is a complete 1440 × 1024 frame. Seats, cards and controls
+   share that frame; the bottom menu overlays it instead of shortening it. */
+.mx-game > .mx-table[data-orientation=landscape]{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.mx-table[data-orientation=landscape] > .mx-viewport{position:absolute;inset:0;grid-area:auto;overflow:hidden}
+.mx-table[data-orientation=landscape] > .mx-navigation[data-layout]{position:absolute;left:50%;bottom:0;translate:-50% 0;grid-area:auto}
+.mx-table[data-orientation=landscape] > .mx-operation{position:absolute;inset:0;grid-area:auto;width:100%;height:100%;padding:0;display:block;background:none;pointer-events:none}
+.mx-table[data-orientation=landscape] .mx-operation-row,
+.mx-table[data-orientation=landscape] .mx-operation-quick,
+.mx-table[data-orientation=landscape] .mx-auto-operation{
+ position:absolute;left:var(--mx-pc-action-x);top:var(--mx-pc-action-y);right:auto;bottom:auto;
+ width:0;height:0;display:block;padding:0;gap:0;pointer-events:none;
+}
+.mx-table[data-orientation=landscape] .mx-operation .mx-operation-row .mx-operation-button{
+ position:absolute;left:var(--mx-op-main-x);top:0;flex:none;width:var(--mx-op-button-size);height:var(--mx-op-button-size);
+ transform:translate(-50%,-50%);font-size:calc(40 / 137 * var(--mx-op-button-size))!important;line-height:1.1;pointer-events:auto;
+}
+.mx-table[data-orientation=landscape] .mx-operation .mx-operation-row .mx-operation-fold{
+ left:var(--mx-op-fold-x);top:var(--mx-pc-fold-y);width:var(--mx-op-fold-size);height:var(--mx-op-fold-size);transform:translate(-47.9591837%,-47.9591837%);
+}
+.mx-table[data-orientation=landscape] .mx-operation .mx-operation-row :is(.mx-operation-raise,.mx-operation-allin){left:0;top:calc(-1 * var(--mx-op-upper-y));width:var(--mx-op-raise-size);height:var(--mx-op-raise-size)}
+.mx-table[data-orientation=landscape] .mx-operation .mx-operation-row:not([data-allin-secondary=true]) .mx-operation-allin{left:var(--mx-op-main-x);top:0;width:var(--mx-op-button-size);height:var(--mx-op-button-size)}
+.mx-table[data-orientation=landscape] .mx-operation .mx-operation-row .mx-operation-straddle{top:var(--mx-op-straddle-y)}
+.mx-table[data-orientation=landscape] .mx-operation .mx-quick-bet{position:absolute;display:block;width:var(--mx-op-quick-width);height:var(--mx-op-quick-height);max-width:none;min-width:0;flex:none;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none;transform:translate(-50%,-50%);pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-auto-operation button{position:absolute;left:var(--mx-op-main-x);top:0;width:var(--mx-op-button-size);height:var(--mx-op-button-size);padding:0;border:0;background-color:transparent;transform:translate(-50%,-50%);font-size:calc(30 / 137 * var(--mx-op-button-size))!important;white-space:pre-line;pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-auto-operation .mx-auto-fold{left:var(--mx-op-fold-x)}
+.mx-table[data-orientation=landscape] .mx-add-time{left:var(--mx-pc-add-left);top:var(--mx-pc-add-top);right:auto;bottom:auto;pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-operation[data-mode=raise]{z-index:15;background:rgb(0 0 0 / .118);pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-operation[data-mode=raise] :is(.mx-operation-row,.mx-operation-quick){opacity:.882;pointer-events:none}
+.mx-table[data-orientation=landscape] .mx-operation[data-mode=raise] :is(.mx-operation-row button,.mx-quick-bet){pointer-events:none}
+.mx-table[data-orientation=landscape] .mx-raise-editor{position:absolute;inset:0;display:block;width:100%;min-width:0;max-width:none;padding:0;border-radius:0;background:none;pointer-events:none}
+.mx-table[data-orientation=landscape] .mx-raise-track{position:absolute;left:var(--mx-pc-action-x);top:calc(var(--mx-pc-action-y) - var(--mx-op-upper-y) - var(--mx-op-raise-size) * .85 - var(--mx-raise-height) / 2);width:var(--mx-raise-width);height:var(--mx-raise-height);transform:translate(-50%,-50%);background-repeat:no-repeat;pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-raise-track::after{content:'';position:absolute;inset:auto 2px 2px;height:calc(var(--mx-raise-progress,0%) - 4px);max-height:calc(100% - 4px);background:white;border-radius:100px}
+.mx-table[data-orientation=landscape] .mx-raise-range{position:absolute;inset:0;z-index:2;width:100%;height:100%;margin:0;writing-mode:vertical-lr;direction:rtl;opacity:0;pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-raise-thumb{position:absolute;left:0;bottom:calc(var(--mx-raise-progress,0%) - 5px);z-index:1;width:100%;height:var(--mx-raise-thumb-height);pointer-events:none}
+.mx-table[data-orientation=landscape] .mx-raise-amount{position:absolute;left:50%;top:calc(50% - var(--mx-raise-info-offset));display:flex;align-items:center;justify-content:center;gap:5px;width:var(--mx-raise-bubble-width);height:var(--mx-raise-bubble-height);padding:0 5px 5px;transform:translate(-50%,-50%);font-size:var(--mx-raise-font-size);font-weight:700;line-height:1;white-space:nowrap;color:black}
+.mx-table[data-orientation=landscape] .mx-raise-confirm{position:absolute;left:var(--mx-pc-action-x);top:calc(var(--mx-pc-action-y) - var(--mx-op-upper-y));width:var(--mx-op-raise-size);height:var(--mx-op-raise-size);min-height:0;padding:0;border:0;background-color:transparent;transform:translate(-50%,-50%);font-size:var(--mx-raise-confirm-font)!important;line-height:1.1;white-space:pre-line;pointer-events:auto}
+.mx-table[data-orientation=landscape] .mx-operation-cancel{display:none}
+.mx-table[data-orientation=landscape] .mx-public-slot{left:calc(341px + var(--mx-public-index) * var(--mx-pc-card-pitch) - 60px)!important;top:-2px!important;height:180px}
+.mx-table[data-orientation=landscape] :is(.mx-public-slot>.mx-card,.mx-seat-mine .mx-hole-cards:not(.mx-small-cards) .mx-card-slot>.mx-card){height:180px}
+.mx-table[data-orientation=landscape] .mx-seat-mine .mx-hole-cards:not(.mx-small-cards) .mx-card-slot{height:180px;margin-top:-90px}
+.mx-table[data-orientation=landscape] .mx-dealer{width:var(--mx-pc-dealer-width);height:var(--mx-pc-dealer-height);margin-left:calc(-.5 * var(--mx-pc-dealer-width));margin-top:calc(-.5 * var(--mx-pc-dealer-height))}
+.mx-table[data-orientation=landscape] .mx-room-info{font-size:min(calc(38px * var(--mx-table-text-scale)),var(--mx-room-info-max-font))}
+.mx-table[data-orientation=landscape] .mx-pools{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;width:max-content;max-width:90%;transform:translate(-50%,-100%)}
+.mx-table[data-orientation=landscape] .mx-side-pools{display:contents}
+.mx-table[data-orientation=landscape] .mx-jackpot-pool{left:var(--mx-pc-jackpot-x)!important}
+.mx-table[data-orientation=landscape] .mx-calltime{left:var(--mx-pc-calltime-x)!important;transform:translate(var(--mx-pc-calltime-translate),-50%)!important}
+.mx-table[data-orientation=landscape] .mx-settlement-watch{width:calc(90.31px * var(--mx-pc-scale));bottom:calc(138px * var(--mx-pc-scale));gap:calc(7.3px * var(--mx-pc-scale))}
+.mx-table[data-orientation=landscape] .mx-settlement-watch-button{width:calc(90.31px * var(--mx-pc-scale));height:calc(65.4px * var(--mx-pc-scale))}
+
+/* PC changes only the identity region. Its local unit uses the shared 60px
+   profile baseline while cards, dealer markers and bets keep their anchors. */
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat{--mx-classic-seat-unit:calc(199px / 60);--mx-seat-chip-top:calc(32.5 * var(--mx-classic-seat-unit));--mx-seat-name-clearance:calc(32 * var(--mx-classic-seat-unit))}
+.mx-table[data-orientation=landscape][data-table-layout=classic] .mx-seat{--mx-seat-chip-top:calc(30 * var(--mx-classic-seat-unit))}
+.mx-table[data-orientation=landscape][data-table-layout=oval] .mx-seat{--mx-seat-chip-top:calc(29 * var(--mx-classic-seat-unit));--mx-seat-name-clearance:calc(30 * var(--mx-classic-seat-unit))}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-player-info{left:calc(-29 * var(--mx-classic-seat-unit));top:var(--mx-seat-chip-top);width:calc(58 * var(--mx-classic-seat-unit));min-height:calc(14 * var(--mx-classic-seat-unit) + 2px);padding:0 8px;border:1px solid transparent;border-radius:22px;justify-content:center}
+.mx-table[data-orientation=landscape][data-table-layout=classic] .mx-player-info{left:calc(-31 * var(--mx-classic-seat-unit));width:calc(62 * var(--mx-classic-seat-unit));min-height:calc(22 * var(--mx-classic-seat-unit));padding-block:calc(2 * var(--mx-classic-seat-unit))}
+.mx-table[data-orientation=landscape][data-table-layout=classic] .mx-seat-mine .mx-player-info{min-height:calc(18 * var(--mx-classic-seat-unit));padding-block:0}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-player-name{position:absolute;left:50%;top:calc(-1 * (var(--mx-seat-chip-top) + var(--mx-seat-name-clearance)));bottom:auto;width:calc(68 * var(--mx-classic-seat-unit));transform:translate(-50%,-100%);font-size:calc(11 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));font-weight:600;line-height:calc(13 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));overflow:hidden}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat[data-edge=top] .mx-player-name{top:max(calc(-1 * (var(--mx-seat-chip-top) + var(--mx-seat-name-clearance))),calc(13 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale) - var(--mx-seat-world-y) - var(--mx-seat-chip-top)))}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-stack{width:100%;font-size:calc(12 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));line-height:calc(14 * var(--mx-classic-seat-unit));overflow:hidden}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-player-line{display:none}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat-mine .mx-player-info:has(.mx-seat-win:not([hidden])){top:min(var(--mx-seat-chip-top),calc(var(--mx-pc-menu-top-y) - var(--mx-seat-world-y) - 114px - var(--mx-pc-menu-clearance)))}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:1px solid #ffffff70}
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#ffffff90}
+/* The old circular frame must not show through rounded profile avatars. */
+.mx-table:not([data-table-layout=original]) .mx-seat .mx-avatar-border{display:none}
+.mx-table:not([data-table-layout=original]) .mx-seat :is(.mx-avatar,.mx-avatar-fallback){box-shadow:none;filter:none}
+.mx-table:not([data-table-layout=original]) .mx-seat-identity:has(> .mx-avatar:not([hidden])) > .mx-avatar-fallback{background-image:none!important;background-color:transparent!important}

@@ -2,54 +2,54 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultTableUi} from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
 import {LayoutClassic} from '../.test-build/assets/style1/table/layouts/LayoutClassic.js';
-import {landscapeLayout} from '../.test-build/assets/style1/table/layouts/landscape-layout.js';
+import {desktopScale,landscapeLayout} from '../.test-build/assets/style1/table/layouts/landscape-layout.js';
 import desktop from '../src/assets/style1/table/layouts/desktop.json' with {type:'json'};
 import actionButtonConfig from '../.test-build/assets/style1/table/components/ActionButton/config.json' with {type:'json'};
 const state={seatCount:9,mySeat:4,players:[]};
-test('PC room text is centered and Jackpot/CallTime reserve their own space above the pot',()=>{
+test('PC retains the Figma pool, total and board order without moving either board for feature badges',()=>{
  for(const id of ['original','classic','balanced','oval'])for(const [width,height]of [[1440,694],[1920,874],[1024,394]])for(const dual of [false,true])for(const textSize of [.9,1,1.1])for(const jackpotHeight of [0,70,77,147]){
   const layout=defaultTableUi.createLayout(id);layout.resize(width,height,true);
   const content=layout.content({dual,boardSize:1,jackpotHeight,textSize});
-  assert.equal(content.info.x,layout.width/2,'room text must share the public-card center');
-  const gap=8/layout.unit,potTop=content.total.y-60*1.2*textSize/2;
-  const infoBottom=content.info.y+38*1.15*3*textSize/2;
+  assert.equal(content.pool.x,content.board.x);
+  assert.ok(content.pool.y<content.total.y,'Figma places the main pool above the total label');
+  const font=Math.min(38*textSize,parseFloat(content.styles['--mx-room-info-max-font']));
+  const infoTop=content.info.y-font*1.15*3/2,infoBottom=content.info.y+font*1.15*3/2;
+  const boardTop=content.board.y-90*content.board.scale;
+  if(!dual){assert.ok(infoTop>content.total.y,'room text uses the space between the total and cards');assert.ok(infoBottom<=boardTop+1e-8);}
+  else assert.ok(content.info.x>content.board.x+content.board.scale*334.4/2/(desktop.publicCardWidth/120),'dual-board text stays beside the cards');
   const features=[];
   if(jackpotHeight===77||jackpotHeight===147){const y=parseFloat(content.styles['--mx-jackpot-y']);features.push([y-38.5*layout.suggest,y+38.5*layout.suggest]);}
   if(jackpotHeight===70||jackpotHeight===147){const y=parseFloat(content.styles['--mx-calltime-y']);features.push([y-35*layout.suggest,y+35*layout.suggest]);}
   if(features.length){
-   assert.ok(infoBottom+gap<=Math.min(...features.map(([top])=>top))+1e-8,'feature badges must clear the room text');
-   assert.ok(Math.max(...features.map(([,bottom])=>bottom))+gap<=potTop+1e-8,'feature badges must clear the total pot');
-  }else assert.ok(infoBottom+gap<=potTop+1e-8,'room text must clear the total pot');
+   assert.ok(Math.max(...features.map(([,bottom])=>bottom))<content.pool.y-74/2,'feature badges must clear the main pool');
+  }
  }
 });
-test('PC layouts retain the original seat anchors while artwork stops growing at design size',()=>{
-  for(const [width,height] of [[1440,817.8647],[1920,873.8647],[2560,1233.8647],[844,183.8647],[1024,693.8647]])for(let count=2;count<=9;count++)for(const mySeat of [0,2]){
+test('PC stretches full-frame Figma anchors and keeps all modes on the same geometry',()=>{
+  for(const [width,height] of [[1440,1024],[1920,1080],[2560,1440],[844,390],[1024,900],[1025,1024]])for(let count=2;count<=9;count++)for(const mySeat of [0,2]){
     const snapshot={...state,seatCount:count,mySeat};
-    const oldUnit=height/1440;
-    const original=landscapeLayout(width/oldUnit,1440,count);
+    const density=desktopScale(width,height),original=landscapeLayout(width,height,count);
     const layouts=['original','classic','balanced','oval'].map(id=>defaultTableUi.createLayout(id));
     const anchorSets=[];
     for(const layout of layouts){
       layout.resize(width,height,true);
-      assert.equal(layout.unit,desktop.avatarSize/desktop.avatarDesignSize);
+      assert.equal(layout.unit,desktop.avatarSize/desktop.avatarDesignSize*density);
       assert.equal(layout.menuScale,1,'all PC menu sizes must match');
-      assert.equal(layout.suggest,.85,'viewport height must not enlarge PC feature widgets');
+      assert.equal(layout.suggest,1,'the uniform PC stage handles artwork scaling');
       const positions=layout.positions(snapshot);
       anchorSets.push([...positions].map(([id,p])=>[id,p.x,p.y]));
       for(const [id,p] of positions){
         const slot=(id-(mySeat||1)+count)%count,old=original[slot];
-        const dealerY=slot===0?120:230.55;
-        const oldY=Math.min(old.y,1440-(dealerY+44)*old.scale-10);
-        const fittedX=Math.max(110*layout.unit,Math.min(width-110*layout.unit,old.x*oldUnit));
-        assert.ok(Math.abs(p.x*layout.unit-fittedX)<1e-7,'original horizontal anchors only move to retain fixed-size avatars inside the viewport');
-        const fittedY=Math.max(110*layout.unit,Math.min(oldY*oldUnit,height-(dealerY+44+10)*layout.unit));
-        assert.ok(Math.abs(p.y*layout.unit-fittedY)<1e-7,'original vertical anchors only move when a fixed-size frame would hit the bottom menu');
-        assert.equal(p.scale,1,'PC avatars must not adapt to viewport size or aspect ratio');
-        assert.equal(p.microphoneSide,old.x<width/oldUnit/2?'left':'right');
+        assert.ok(Math.abs(p.x*layout.unit-old.x)<1e-7,'the full-frame horizontal anchor must survive coordinate conversion');
+        assert.ok(Math.abs(p.y*layout.unit-old.y)<1e-7,'the full-frame vertical anchor must survive coordinate conversion');
+        assert.equal(p.scale,1,'only the common stage scales PC artwork');
+        assert.equal(p.microphoneSide,old.x<width/2?'left':'right');
       }
       for(const dual of [false,true])for(const size of [.9,1,1.1]){
         const content=layout.content({dual,boardSize:size,jackpotHeight:0});
-        assert.ok(Math.abs(content.board.scale*120*layout.unit-desktop.publicCardWidth*size*(dual?.85:1))<1e-7);
+        const cardWidth=content.board.scale*120*layout.unit;
+        if(dual){assert.ok(cardWidth>0&&cardWidth<=desktop.publicCardWidth*size*density*.85+1e-7);assert.ok(content.board.y-90*content.board.scale>content.total.y+45);}
+        else assert.ok(Math.abs(cardWidth-desktop.publicCardWidth*size*density)<1e-7);
       }
     }
     for(const anchors of anchorSets)assert.deepEqual(anchors,anchorSets[0],'PC skin selection must not change seat distribution');
@@ -81,7 +81,7 @@ test('layout content preserves classic overlapping dual boards and finite coordi
       assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y));
       assert.ok(point.x>=0&&point.x<=layout.width&&point.y>=0&&point.y<=layout.height);
     }
-    assert.ok(content.total.y<content.pool.y,`${id}: total pot must appear above the main pot`);
+    assert.ok(w>h?content.pool.y<content.total.y:content.total.y<content.pool.y,`${id}: pool order must follow the current orientation`);
     const pitch=content.secondBoard.y-content.board.y;
     if(id==='classic'&&w<=h)assert.ok(Math.abs(pitch-88*content.board.scale)<1e-6,'classic second board overlaps half the first card');
     else assert.ok(pitch>=176*content.board.scale);
@@ -137,7 +137,7 @@ test('modern layouts keep public card width at the same setting for single and d
  }
 });
 
-test('balanced uses the avatar bottom-right corner for opponents’ card backs',()=>{
+test('balanced portrait uses its avatar corner while PC shares the CC card-back strip',()=>{
   const snapshot={...state,players:[{seat:1,cards:[0,0]},{seat:2,cards:[0,0,0,0,0,0]},{seat:3,cards:[1,2]}]};
   const layout=defaultTableUi.createLayout('balanced');
   for(const [width,height] of [[440,782],[375,500]]){
@@ -154,5 +154,5 @@ test('balanced uses the avatar bottom-right corner for opponents’ card backs',
     assert.equal(placements.get(state.mySeat).backHandSpread,undefined);
   }
   layout.resize(782,440,true);
-  assert.equal(layout.positions(snapshot).get(1).backHandSpread,undefined);
+  assert.equal(layout.positions(snapshot).get(1).backHandSpread,56);
 });

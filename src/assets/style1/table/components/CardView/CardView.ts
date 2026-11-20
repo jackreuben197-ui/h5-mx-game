@@ -1,5 +1,5 @@
 import config from './config.json';
-import { tableAppearanceFor } from '../../appearance/TableAppearanceContext.js';
+import { renderedTableAppearance, tableAppearanceFor } from '../../appearance/TableAppearanceContext.js';
 import { cardBacks } from '../../appearance/TableSkin.js';
 import settings from '../../../../../data/TexasGamePersonalSettings.js';
 import { i18nLabel } from '../../../../../i18n/i18nLabel.js';
@@ -27,7 +27,7 @@ export class CardView {
     root.dataset.smallBack = String(smallBack);
     root.dataset.cardValue = String(value);
     if (value === 0) {
-      const back=preferences.tableAppearance.cardBack;
+      const back=renderedTableAppearance(root,preferences).cardBack;
       if(back==='original')SpriteAtlas.paint(root, smallBack ? config.paths.smallBack : config.paths.back);
       else {root.style.backgroundImage=`url("${cardBacks[back]}")`;root.style.backgroundSize='100% 100%';root.style.backgroundPosition='center';}
       i18nLabel.bind(root, () => i18nMgr.Get("MX_CardBack", [], "牌背"), 'aria-label');
