@@ -123,7 +123,6 @@
 /* Button countdown owns its rounded perimeter; the avatar halo must not leak in. */
 .mx-operation-fold>.mx-seat-timer[data-kind=action]::before{content:none}
 .mx-seat-timer-rounded .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-SeatCountdownView-mx-seat-timer-texture-border-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
-.mx-table[data-orientation=landscape] .mx-operation-row .mx-operation-fold{position:relative;--mx-fold-timer-scale:calc(var(--mx-op-scale) * var(--mx-SeatCountdownView-mx-seat-timer-transform-5) / var(--mx-SeatCountdownView-mx-seat-timer-transform-6))}
 
 /* Layout-specific card rhythm; initial table keeps CC/Figma fixed five-slot spacing. */
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-public-slot{left:var(--mx-card-centered-x)!important;--mx-public-spread-x:var(--mx-public-centered-spread)}

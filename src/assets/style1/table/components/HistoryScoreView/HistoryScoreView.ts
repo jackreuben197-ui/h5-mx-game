@@ -39,13 +39,13 @@ export class HistoryScoreView {
                 const text = amount === undefined ? '' : formatAmount(amount);
                 profits.append(profitAmount('span', amount ?? 0, text));
             }
-            if (player.insuranceGain) profits.append(profitAmount('small', player.insuranceGain));
+            if (player.insuranceGain) profits.append(profitAmount('small', player.insuranceGain, (player.insuranceGain > 0 ? '+' : '') + formatAmount(player.insuranceGain)));
             row.append(position, hands, boards, profits);
             this.root.append(row);
         }
         if (model.insurancePool) {
             const insurance = element('p', 'mx-history-insurance');
-            insurance.append(`${i18nMgr.Get('UITexasHistory_insurance', [], '保险')} `, profitAmount('span', model.insurancePool));
+            insurance.append(`${i18nMgr.Get('UITexasHistory_insurance', [], '保险')} `, profitAmount('span', model.insurancePool, (model.insurancePool > 0 ? '+' : '') + formatAmount(model.insurancePool)));
             this.root.append(insurance);
         }
     }

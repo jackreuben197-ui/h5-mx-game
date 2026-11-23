@@ -4,6 +4,8 @@
 .mx-table[data-orientation=landscape] > .mx-viewport{position:absolute;inset:0;grid-area:auto;overflow:hidden}
 .mx-table[data-orientation=landscape] > .mx-navigation[data-layout]{position:absolute;left:50%;bottom:0;translate:-50% 0;grid-area:auto}
 .mx-table[data-orientation=landscape] > .mx-operation{position:absolute;inset:0;grid-area:auto;width:100%;height:100%;padding:0;display:block;background:none;pointer-events:none}
+/* Use the avatar's local box so independent profile scaling keeps the mask aligned. */
+.mx-table[data-orientation=landscape] .mx-seat-play-status{left:var(--mx-SeatIdentityView-mx-fold-cover-left);top:var(--mx-SeatIdentityView-mx-fold-cover-top);transform:none}
 .mx-table[data-orientation=landscape] .mx-operation-row,
 .mx-table[data-orientation=landscape] .mx-operation-quick,
 .mx-table[data-orientation=landscape] .mx-auto-operation{

@@ -1,5 +1,6 @@
 // MX-only UI strings missing from the shared CC language package.
 export const supplement: Record<string, Record<string, string>> = {
+  MX_TotalDuration:{cn:'总时长',zh:'總時長',en:'Total duration',pt:'Duração total'},
   MX_BBAmount:{cn:'BB',zh:'BB',en:'BB',pt:'BB'},
   MX_SquidRoundEnded:{cn:'本轮鱼游戏结束',zh:'本輪魚遊戲結束',en:'Squid round finished',pt:'Rodada de lula encerrada'},
   MX_SquidStand:{cn:'站起',zh:'站起',en:'Stand up',pt:'Levantar'},

@@ -2,7 +2,7 @@ import type { RoomRecords } from '../../../../../core/RoomRecords.js';
 import type { MttReportResult, MttReportSection } from '../../../../../core/MttReport.js';
 import { getMttBlindLevels } from '../../../../../logic/MttBlindTable.js';
 import { mttDuration, mttReportTiming } from '../../../../../logic/MttReportTiming.js';
-import { StringHelper } from '../../../../../logic/StringHelper.js';
+import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { resolveTemplateTextByKey } from '../../../../../i18n/resolveTemplateTextByKey.js';
 import { HttpError } from '../../../../../net/http/HttpError.js';
@@ -130,7 +130,7 @@ export class MttReportView {
     private get pageKey(): string { return `${this.section}:${this.offset}`; }
     private get page(): MttReportResult { return this.pages.get(this.pageKey) ?? {}; }
     private get hunter(): boolean { return Number(this.detail.mtt?.hunter_on ?? 0) > 0; }
-    private money(value?: number): string { return value == null || !Number.isFinite(value) ? '—' : StringHelper.GetLongString(value, this.detail.mtt?.gold_type === 4 ? 1 : 100); }
+    private money(value?: number): string { return value == null || !Number.isFinite(value) ? '—' : ChipFormatter.amount(value, this.detail.mtt?.gold_type === 4 ? 1 : 100); }
     private blinds(sb?: number): string { return sb == null ? '—' : `${this.money(sb)}/${this.money(sb * 2)}`; }
     private duration(): string { return this.detail.mtt?.upblind_interval ? i18nMgr.Get('UITexasReport_Text_MatchNextBlindTime', [Math.floor(this.detail.mtt.upblind_interval / 60)], '{0}min') : '—'; }
 
@@ -258,7 +258,7 @@ export class MttReportView {
                 const level = index + 1, cell = element('span', 'mx-mtt-level', `${level === more?.bl ? '▶ ' : ''}${level}`);
                 const marker = level === mtt?.addon_end_bl ? ['MTT_Blind_Deadline_add_cl', '增购结束', 'addon-end'] : level === mtt?.addon_begin_bl ? ['MTT_Blind_Deadline_add_op', '增购开始', 'addon-begin'] : level === mtt?.max_rebuy_bl ? ['MTT_Blind_Deadline_to_buy', '重购截止', 'rebuy-end'] : undefined;
                 if (marker) { const label = element('small', '', t(marker[0]!, marker[1]!)); cell.dataset.marker = marker[2]!; cell.append(label); }
-                const format = (value: number) => StringHelper.GetLongString(value);
+                const format = (value: number) => ChipFormatter.amount(value);
                 const tr = row([cell, this.values.wrap(`${format(blind.sb)}/${format(blind.sb * 2)}`), this.values.wrap(format(blind.ante)), this.duration()]);
                 if (level === more?.bl) tr.setAttribute('aria-current', 'true');
             });

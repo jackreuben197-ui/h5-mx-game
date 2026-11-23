@@ -4,7 +4,6 @@ import type { ReplayHandData } from '../../../../../data/ReplayHandData.js';
 import { HistoryController } from '../../../../../logic/HistoryController.js';
 import { BindingScope } from '../../../../../binding/BindingScope.js';
 import { bindEvent } from '../../../../../binding/bindEvent.js';
-import { StringHelper } from '../../../../../logic/StringHelper.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
@@ -141,7 +140,7 @@ export class HistoryView {
             const roomIcon = element('span', 'mx-record-icon'); SpriteAtlas.paint(roomIcon, config.paths.recordRoom); name.prepend(roomIcon);
             const count = element('span', 'mx-history-room-count', `${model.playerCount}/${data.s.table.seatcount}`);
             const people = element('span', 'mx-record-icon'); SpriteAtlas.paint(people, config.paths.recordPeople); count.prepend(people);
-            this.room.append(element('span', '', `${data.s.rid}-${data.s.hand}`), element('span', '', `${StringHelper.GetLongString(data.s.table.sb.bet)}/${StringHelper.GetLongString(data.s.table.bb.bet)}`), name, count);
+            this.room.append(element('span', '', `${data.s.rid}-${data.s.hand}`), element('span', '', `${ChipFormatter.amount(data.s.table.sb.bet)}/${ChipFormatter.amount(data.s.table.bb.bet)}`), name, count);
         }
         const blind = data.s.table.bb.bet / 2;
         const amount = (wire: number) => ChipFormatter.tableAmount(wire, blind, blind > 0 && this.showBB());

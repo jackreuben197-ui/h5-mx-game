@@ -7,6 +7,7 @@ import TexasReportPresentation from '../../../../../logic/TexasReportPresentatio
 import { BindingScope } from '../../../../../binding/BindingScope.js';
 import { bindEvent } from '../../../../../binding/bindEvent.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
+import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { RecordPaginationView } from '../RecordPaginationView/RecordPaginationView.js';
@@ -14,6 +15,7 @@ import { element, profitAmount } from '../../dom.js';
 import { ReportValueFitter } from './ReportValueFitter.js';
 import './layout.css';
 const t = (key: string, fallback: string) => i18nMgr.Get(key, [], fallback);
+const chips = (wire: number) => ChipFormatter.amount(wire);
 export class ReportView {
     readonly dialog: RecordDialogView;
     readonly root: HTMLElement;
@@ -85,8 +87,8 @@ export class ReportView {
         const depositBase = mode === 'mush' ? basic?.mushroomBase ?? records.data.record?.mushroomBase ?? 0 : basic?.squidBase ?? records.data.record?.squidBase ?? 0;
         this.deposit.hidden = state.tab !== 'battle' || mode === 'none';
         this.deposit.textContent = mode === 'mush'
-            ? StringHelper.Format(t('UIMushYaJinDir', '蘑菇押金 {0}'), [StringHelper.GetLongString(depositBase)])
-            : `${t('UISquidYaJin', '鱿鱼押金')}　${StringHelper.GetLongString(depositBase)}`;
+            ? StringHelper.Format(t('UIMushYaJinDir', '蘑菇押金 {0}'), [chips(depositBase)])
+            : `${t('UISquidYaJin', '鱿鱼押金')}　${chips(depositBase)}`;
         if (!this.controller.tabs.includes(state.tab)) { void this.controller.select('battle'); return; }
         const labels: Record<ReportTab, string> = {
             battle: t('UITexasReport_title', '实时战况'),
@@ -100,8 +102,7 @@ export class ReportView {
         this.tabs.replaceChildren(...tabs.map(([key, label]) => { const b = element('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', String(state.tab === key)); b.onclick = () => void this.controller.select(key); return b; }));
         const report = records.data.report;
         const blind = records.data.snapshot?.roomInfo?.smallBlind ?? 0;
-        const useBB = blind > 0 && this.showBB();
-        const amount = (wire: number) => `${StringHelper.GetLongString(wire, useBB ? blind * 2 : 100)}${useBB ? 'BB' : ''}`;
+        const amount = (wire: number) => ChipFormatter.tableAmount(wire, blind, this.showBB());
         const tableUsers = new Set(records.data.snapshot?.playersList.map(p => p.userRid) ?? []);
         this.list.replaceChildren();
         if (state.tab === 'battle') {
@@ -110,9 +111,9 @@ export class ReportView {
             if (mode !== 'none')
                 headers.splice(3, 0, t(mode === 'mush' ? 'UIMush' : 'UISquid', mode === 'mush' ? '蘑菇' : '鱿鱼'));
             this.table(headers, players.map(p => {
-                const bringIn = element('span', 'mx-report-bringin', StringHelper.GetLongString(p.bringInTotal));
+                const bringIn = element('span', 'mx-report-bringin', chips(p.bringInTotal));
                 if (p.storeChips)
-                    bringIn.append(element('small', 'mx-report-stored-chips', StringHelper.GetLongString(p.storeChips)));
+                    bringIn.append(element('small', 'mx-report-stored-chips', chips(p.storeChips)));
                 const score = TexasReportPresentation.getPlayerScore(p);
                 const cells = [
                     StringHelper.LengthNick(p.name),
@@ -122,7 +123,7 @@ export class ReportView {
                 ];
                 if (mode === 'mush') {
                     const mushroom = p.mushroomAmount > 0
-                        ? profitAmount('span', p.mushroomAmount, `+${p.mushroomCount}\n(+${StringHelper.GetLongString(p.mushroomAmount)})`)
+                        ? profitAmount('span', p.mushroomAmount, `+${p.mushroomCount}\n(+${chips(p.mushroomAmount)})`)
                         : '-';
                     cells.splice(3, 0, mushroom);
                 } else if (mode === 'squid') {
@@ -137,7 +138,7 @@ export class ReportView {
                 cells: [
                     p.name,
                     p.createTime > 0 ? new Date(p.createTime * 1000).toLocaleString(i18nMgr.getCurrentLocale(), { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--',
-                    StringHelper.GetLongString(p.insurBet),
+                    chips(p.insurBet),
                     profitAmount('span', -p.insurWin),
                 ],
                 own: p.userRid === records.userRID,
@@ -146,7 +147,7 @@ export class ReportView {
             this.table([t('UITexasReport_player', '玩家'), t('UIClubJackpotRecordDetail_ContributionTip', '贡献'), t('UIClubJackpotRecordDetail_AwardsTip', '奖励'), t('MX_HandType', '牌型')], report.jackpotRecords.map(p => ({
                 cells: [
                     p.name,
-                    StringHelper.GetLongString(p.contributeTotal),
+                    chips(p.contributeTotal),
                     profitAmount('span', p.awardTotal),
                     [[p.royalFlushCount, 'UIJackPotInfo_huangjia'], [p.straightFlushCount, 'UIJackPotInfo_tonghuashun'], [p.fourOfaKindCount, 'UIJackPotInfo_shitiao']]
                         .filter(([count]) => Number(count) > 0).map(([, key]) => t(String(key), '')).join('\n'),
@@ -171,11 +172,11 @@ export class ReportView {
         const avg = s.totalHand ? Math.trunc(s.totalPot / s.totalHand) : 0;
         const summary = [
             [t('UISituationTotalPot', '总底池'), amount(s.totalPot)],
-            [t('UISituationTotalBringIn', '总带入'), StringHelper.GetLongString(s.totalBringin)],
+            [t('UISituationTotalBringIn', '总带入'), chips(s.totalBringin)],
             [t('UISituationCurHandNum', '总手数'), String(s.totalHand)],
             [t('UISituationVerBottom', '场均底池'), amount(avg)],
-            [t('UISituationCurTime', '已用时间'), this.durationInHours(s.startTime ? Date.now() / 1000 - s.startTime : 0)],
-            [t('UITexasHistory_insurance', '保险池'), profitAmount('strong', s.insurance, StringHelper.GetLongString(s.insurance))],
+            [t('MX_TotalDuration', '总时长'), this.durationInHours(records.data.record?.playDuration ?? 0)],
+            [t('UITexasHistory_insurance', '保险池'), profitAmount('strong', s.insurance, chips(s.insurance))],
         ] as const;
         this.summary.replaceChildren(...summary.map(([label, value]) => {
             const cell = element('div', '');

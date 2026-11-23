@@ -3,6 +3,7 @@ import type { RoomRecords } from '../../../../../core/RoomRecords.js';
 import type { TexasReportPlayerInfo } from '../../../../../data/TexasGameRoomDataReport.js';
 import { RecordDialogView } from '../RecordDialogView/RecordDialogView.js';
 import { StringHelper } from '../../../../../logic/StringHelper.js';
+import { ChipFormatter } from '../../../../../logic/ChipFormatter.js';
 import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import { element, profitAmount } from '../../dom.js';
 export class ReportPlayerInfoView {
@@ -57,7 +58,7 @@ export class ReportPlayerInfoView {
                 ['PFR', `${s.prf || 0}%`],
                 [i18nMgr.Get('MX_TotalGames', [], '总局数'), String(s.total_game_cnt || 0)],
                 [i18nMgr.Get('MX_WinRate', [], '胜率'), `${s.wins || 0}%`],
-                [i18nMgr.Get('MX_AverageProfit', [], '场均盈亏'), profitAmount('strong', averageProfit, StringHelper.GetLongString(averageProfit))],
+                [i18nMgr.Get('MX_AverageProfit', [], '场均盈亏'), profitAmount('strong', averageProfit, ChipFormatter.amount(averageProfit))],
             ] as const;
             for (const [label, value] of stats) {
                 const item = element('div', '');

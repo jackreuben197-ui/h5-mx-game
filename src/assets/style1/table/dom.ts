@@ -1,5 +1,5 @@
 import { i18nLabel } from '../../../i18n/i18nLabel.js';
-import { StringHelper } from '../../../logic/StringHelper.js';
+import { ChipFormatter } from '../../../logic/ChipFormatter.js';
 export function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   cls: string,
@@ -14,7 +14,7 @@ export function element<K extends keyof HTMLElementTagNameMap>(
 export function profitAmount<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   value: number,
-  text = StringHelper.GetSignedLongString(value),
+  text = (value > 0 ? '+' : '') + ChipFormatter.amount(value),
 ): HTMLElementTagNameMap[K] {
   const cls = value > 0 ? 'mx-profit-positive' : value < 0 ? 'mx-profit-negative' : '';
   return element(tag, cls, text);
