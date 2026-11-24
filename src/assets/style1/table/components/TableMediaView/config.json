@@ -30,6 +30,8 @@
   "layout": {
     "css": {
       "portrait-mic-size": "24.488px",
+      "desktop-mic-size": "69px",
+      "mic-edge-shift": "0.1",
       "mx-avatar-video-mask-left": "-99.5px",
       "mx-avatar-video-mask-top": "-99.5px",
       "mx-avatar-video-mask-width": "199px",
@@ -37,10 +39,6 @@
       "mx-avatar-video-mask-border-radius": "50%",
       "mx-avatar-video-mask-background-size": "100%",
       "mx-avatar-video-mask-background-size-2": "100%",
-      "mx-avatar-mic-left-3": "55.5px",
-      "mx-avatar-mic-top-2": "-34.5px",
-      "mx-avatar-mic-width-2": "69px",
-      "mx-avatar-mic-height-2": "69px",
       "mx-media-controls-right": "11.5",
       "mx-media-controls-bottom": "320",
       "mx-media-remote-width": "177",

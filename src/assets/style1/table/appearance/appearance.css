@@ -348,18 +348,6 @@
 .mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine) :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status,.mx-seat-timer){
  scale:1 calc(var(--mx-SeatIdentityView-balanced-opponent-avatar-height) / var(--mx-opponent-avatar));
 }
-.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
- --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-mic-reference-scale) / var(--mx-seat-local-scale));
- width:var(--mic-size);height:var(--mic-size);top:calc(-.5 * var(--mic-size));left:min(calc(var(--mx-mic-avatar-offset,90px) - .5 * var(--mic-size)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size)));
-}
-.mx-table[data-table-layout=classic][data-orientation=portrait]{
- --mx-mic-avatar-offset:calc(var(--mx-SeatIdentityView-mx-fold-cover-width) / 2);
-}
-.mx-table:is([data-table-layout=balanced],[data-table-layout=oval])[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
- --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-portrait-seat-unit) / var(--mx-seat-local-scale));
-}
-.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat)[data-microphone-side=left] .mx-avatar-mic{left:max(calc(-1 * var(--mx-mic-avatar-offset,90px) - .5 * var(--mic-size)),calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)))}
-
 .mx-table[data-orientation=portrait] > :is(.mx-operation,.mx-action-bubbles,.mx-support-button,.mx-table-tools){margin-top:var(--mx-safe-top,env(safe-area-inset-top,0px))}
 
 .mx-table[data-table-layout=oval][data-orientation=portrait] .mx-seat:not(.mx-seat-mine) .mx-player-info{width:calc(58 * var(--mx-classic-seat-unit));left:calc(-29 * var(--mx-classic-seat-unit))}
