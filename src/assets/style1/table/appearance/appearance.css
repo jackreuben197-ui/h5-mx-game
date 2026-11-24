@@ -200,11 +200,6 @@
 }
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:var(--mx-hero-card-height);margin-top:calc(var(--mx-hero-card-height) / var(--mx-HandCardsView-mx-card-slot-margin-top-2))}
 .mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-quick-bet{translate:0 calc(-1 * var(--mx-quick-lift,0px))}
-.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-avatar-mic{
-  left:calc(var(--mx-TableMediaView-mx-avatar-mic-left) * var(--mx-classic-seat-unit));top:calc(var(--mx-TableMediaView-mx-avatar-mic-top) * var(--mx-classic-seat-unit));
-  width:calc(var(--mx-TableMediaView-mx-avatar-mic-width) * var(--mx-classic-seat-unit));height:calc(var(--mx-TableMediaView-mx-avatar-mic-height) * var(--mx-classic-seat-unit));
-}
-.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat[data-microphone-side=left] .mx-avatar-mic{left:calc(var(--mx-TableMediaView-mx-avatar-mic-left-2) * var(--mx-classic-seat-unit))}
 .mx-table:is([data-table-layout=classic],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat .mx-seat-timer[data-kind=action]{
   --mx-gold-countdown-inset:calc(-1.1 * 199px / 58);
   --mx-gold-countdown-stroke:calc(3.2 * 199px / 58);
@@ -355,12 +350,15 @@
 }
 .mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
  --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-mic-reference-scale) / var(--mx-seat-local-scale));
- width:var(--mic-size);height:var(--mic-size);top:calc(-.5 * var(--mic-size));left:min(calc(90px - .5 * var(--mic-size)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size)));
+ width:var(--mic-size);height:var(--mic-size);top:calc(-.5 * var(--mic-size));left:min(calc(var(--mx-mic-avatar-offset,90px) - .5 * var(--mic-size)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size)));
+}
+.mx-table[data-table-layout=classic][data-orientation=portrait]{
+ --mx-mic-avatar-offset:calc(var(--mx-SeatIdentityView-mx-fold-cover-width) / 2);
 }
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval])[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
  --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-portrait-seat-unit) / var(--mx-seat-local-scale));
 }
-.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat)[data-microphone-side=left] .mx-avatar-mic{left:max(calc(-90px - .5 * var(--mic-size)),calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)))}
+.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat)[data-microphone-side=left] .mx-avatar-mic{left:max(calc(-1 * var(--mx-mic-avatar-offset,90px) - .5 * var(--mic-size)),calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)))}
 
 .mx-table[data-orientation=portrait] > :is(.mx-operation,.mx-action-bubbles,.mx-support-button,.mx-table-tools){margin-top:var(--mx-safe-top,env(safe-area-inset-top,0px))}
 

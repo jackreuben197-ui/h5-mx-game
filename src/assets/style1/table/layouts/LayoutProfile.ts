@@ -57,7 +57,7 @@ export class LayoutProfile extends LayoutOriginal {
             : Math.min(p.y,Math.min(height-50/this.unit,menuTop)-groupBottom);
         }
         p.edge=x<220?'left':x>220?'right':slot===0?'bottom':'top';
-        p.microphoneSide=x<220?'left':'right';
+        p.microphoneSide=(profile.id==='classic'?x>220:x<220)?'left':'right';
         // Hand sizes follow the table's card scale independently of seat size.
         const cardUnitRatio=unit/seatUnit;
         p.cardsX=face?0:14*local;
