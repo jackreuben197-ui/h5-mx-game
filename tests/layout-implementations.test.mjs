@@ -137,17 +137,20 @@ test('modern layouts keep public card width at the same setting for single and d
  }
 });
 
-test('balanced portrait uses its avatar corner while PC shares the CC card-back strip',()=>{
+test('balanced portrait uses the Figma card-back size and avatar corner while PC shares the CC strip',()=>{
   const snapshot={...state,players:[{seat:1,cards:[0,0]},{seat:2,cards:[0,0,0,0,0,0]},{seat:3,cards:[1,2]}]};
   const layout=defaultTableUi.createLayout('balanced');
   for(const [width,height] of [[440,782],[375,500]]){
     layout.resize(width,height,false);
     const placements=layout.positions(snapshot);
+    const unit=layout.unit*parseFloat(layout.content({dual:false,boardSize:1,jackpotHeight:0}).styles['--mx-layout-unit']);
     for(const seat of [1,2]){
       const p=placements.get(seat);
+      const cardScale=p.cardScale*p.scale*layout.unit;
       assert.equal(p.cardsX,99.5);
       assert.equal(p.cardsY,99.5);
-      assert.equal(p.backHandSpread,56);
+      assert.ok(Math.abs(65*cardScale-15.2*unit)<.001);
+      assert.ok(Math.abs(p.backHandSpread/2*cardScale-6.7*unit)<.001);
     }
     assert.equal(placements.get(3).cardsX,0);
     assert.equal(placements.get(3).cardsY,0);

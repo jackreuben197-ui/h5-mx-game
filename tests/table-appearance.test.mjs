@@ -4,7 +4,7 @@ import { defaultTableUi } from '../.test-build/assets/style1/table/layouts/Defau
 import { SliderBetGesture } from '../.test-build/assets/style1/table/SliderBetGesture.js';
 
 test('440px portrait seats retain their design avatar sizes when the viewport gets shorter',()=>{
-  const avatars={classic:[52.8,58],balanced:[60.13,60.13],oval:[54,48]};
+  const avatars={classic:[55,60],balanced:[60.13,60.13],oval:[54,48]};
   for(const [id,[own,other]] of Object.entries(avatars))for(const height of [710,782,956]){
     const layout=defaultTableUi.createLayout(id);
     layout.resize(440,height,false,height-57);
@@ -97,7 +97,7 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
  for(const profile of ['balanced','oval','classic'])for(const [width,height] of [[320,400],[375,500],[390,844],[440,782],[768,1024]])for(const mine of [1,5,9]){
   const layout=defaultTableUi.createLayout(profile);layout.resize(width,height,false);
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
-  const avatar=profile==='balanced'?60.13:profile==='oval'?54:52.8;
+  const avatar=profile==='balanced'?60.13:profile==='oval'?54:55;
   const ratio=p.scale*layout.unit*199/avatar;
   const tableRatio=Math.min(width/440,layout.height*layout.unit/782);
   const cardsY=p.cardsY*p.scale*layout.unit/tableRatio;

@@ -12,6 +12,8 @@ const frameWidth=n(bet.layout.css['mx-seat-bet-width']);
 const avatarEdge=n(info['mx-fold-cover-width'])/2+Math.abs(n(countdown.layout.css['mx-seat-timer-inset-3']));
 export const betGap=(scale:number,unit:number)=>bet.layout.avatarGap/(scale*unit);
 export const sideBetAnchor=(scale:number,unit:number)=>avatarEdge+chipExtent+betGap(scale,unit);
+// The classic balance frame starts at the viewport edge, one avatar radius from its center.
+export const classicSideBetAnchor=(local:number)=>(n(info['classic-chip-width'])*local-199/2)+chipExtent;
 export function betEdges(p:SeatPlacement):[number,number] {
   if(p.betAnchor==='left')return[-chipExtent,frameWidth];
   if(p.betAnchor==='right')return[-frameWidth,chipExtent];
@@ -19,7 +21,7 @@ export function betEdges(p:SeatPlacement):[number,number] {
 }
 export function profileBalanceBottom(id:string,local:number):number {
   const top=n(id==='classic'?info['classic-chip-top']:id==='oval'?info['oval-chip-top']:info['qa-chip-top'])*local;
-  const height=id==='classic'?Math.max(n(info['mx-player-info-min-height-2'])*local,n(info['mx-stack-line-height-2'])*local+2):Math.max(n(info['mx-player-info-min-height']),14*local+2);
+  const height=id==='classic'?n(info['classic-chip-height'])*local:Math.max(n(info['mx-player-info-min-height']),14*local+2);
   return top+height;
 }
 export const legacyBalanceBottom=n(info['mx-player-info-top'])+Math.max(n(info['mx-player-info-min-height-3']),2*n(info['mx-player-info-padding-5'])+n(info['mx-player-line-height'])+1.1*(n(info['mx-player-name-line-height-3'])+n(info['mx-stack-line-height-3'])));

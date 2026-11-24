@@ -18,6 +18,12 @@
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-player-action{top:var(--mx-SeatIdentityView-mx-player-action-top)}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine .mx-card-slot{height:var(--mx-hero-card-height);margin-top:calc(var(--mx-hero-card-height) / var(--mx-HandCardsView-mx-card-slot-margin-top))}
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine .mx-seat-hand-type{left:var(--mx-SeatIdentityView-mx-seat-hand-type-left);top:var(--mx-ring-hand-type-y)}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval])[data-orientation=portrait] .mx-small-cards .mx-card-slot{
+  --mx-ring-back-slot-height:calc(var(--mx-HandCardsView-mx-card-slot-width-2) * var(--mx-HandCardsView-ring-back-card-height) / var(--mx-HandCardsView-ring-back-card-width));
+  height:var(--mx-ring-back-slot-height);
+  /* Resize from the lower edge where the concealed strip meets the avatar. */
+  margin-top:calc(-1 * (var(--mx-HandCardsView-mx-card-slot-margin-top-4) + var(--mx-ring-back-slot-height)));
+}
 /* Results share the balance card's top edge rather than growing over the avatar. */
 .mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]) .mx-stack-slot{position:static}
 .mx-table:is([data-table-layout=classic],[data-table-layout=balanced],[data-table-layout=oval]) .mx-seat .mx-seat-win{top:0;bottom:auto;transform:translateX(-50%);margin-top:0}
@@ -248,6 +254,10 @@
  --mx-seat-chip-top:calc(var(--mx-SeatIdentityView-qa-chip-top) * var(--mx-classic-seat-unit));
 }
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-mine{--mx-seat-chip-top:var(--mx-hero-info-y)}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat{
+ --mx-seat-name-clearance:calc(99.5px + var(--mx-SeatIdentityView-classic-name-gap) * var(--mx-classic-seat-unit));
+ --mx-classic-chip-width:calc(var(--mx-SeatIdentityView-classic-chip-width) * var(--mx-classic-seat-unit));
+}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(var(--mx-SeatIdentityView-classic-chip-top) * var(--mx-classic-seat-unit))}
 /* Empty hands share the avatar-bottom balance/result anchor in both ring layouts. */
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat-mine:not(.mx-seat-has-cards){
@@ -296,7 +306,11 @@
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:has(.mx-seat-win:not([hidden])){--mx-seat-info-rise:calc(var(--mx-SeatIdentityView-ring-info-rise) * var(--mx-classic-seat-unit))}
 /* The result can cross the menu; normal seats retain their established stacking. */
 .mx-table[data-table-layout=classic] .mx-viewport:has(.mx-seat-mine .mx-seat-win:not([hidden])){z-index:8;overflow:visible;pointer-events:none}
-.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{left:calc(-31 * var(--mx-classic-seat-unit));width:calc(62 * var(--mx-classic-seat-unit));min-height:calc(22 * var(--mx-classic-seat-unit));padding-block:calc(2 * var(--mx-classic-seat-unit))}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{
+ left:clamp(calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)),calc(-.5 * var(--mx-classic-chip-width)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mx-classic-chip-width)));
+ width:var(--mx-classic-chip-width);
+ min-height:calc(var(--mx-SeatIdentityView-classic-chip-height) * var(--mx-classic-seat-unit));padding-block:calc(2 * var(--mx-classic-seat-unit));
+}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-player-info{min-height:calc(18 * var(--mx-classic-seat-unit));padding:0}
 
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-room-info{font-size:min(calc(38px * var(--mx-table-text-scale)),var(--mx-room-info-max-font,100px))}

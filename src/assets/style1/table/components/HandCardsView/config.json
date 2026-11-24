@@ -28,6 +28,8 @@
       "mx-card-slot-height-2": "87px",
       "mx-card-slot-margin-left-2": "-32.5px",
       "mx-card-slot-margin-top-4": "-43.5px",
+      "ring-back-card-width": "15.2",
+      "ring-back-card-height": "22.7",
       "mx-card-selected-left": "25%",
       "mx-card-selected-top": "100%",
       "mx-card-selected-top-2": "2px",
@@ -38,6 +40,7 @@
     },
     "faceStripWidth": 270,
     "backStripWidth": 80,
+    "ringBackCardPitch": 6.7,
     "backCenter": 45,
     "emphasisLift": 10
   },
