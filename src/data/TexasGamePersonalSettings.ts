@@ -28,7 +28,7 @@ export interface TableAppearance {
     tableTextSize: number;
     betButtonSize: number;
 }
-const defaultAppearance = (): TableAppearance => ({layout:'original',style:'solid',feltColor:TABLE_FELT_COLORS[0],cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
+const defaultAppearance = (): TableAppearance => ({layout:'balanced',style:'solid',feltColor:TABLE_FELT_COLORS[0],cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
 export interface ShortCut {
     name: string;
     percent: number;
@@ -134,7 +134,7 @@ export class TexasGamePersonalSettings extends EventSource {
     }
     private validateAppearance(value: unknown): TableAppearance {
         let p=(value&&typeof value==='object'?value:{}) as Partial<TableAppearance>;
-        const layout=this.availableLayouts.includes(p.layout as TableLayoutId)?p.layout!:this.availableLayouts[0]??'original';
+        const layout=this.availableLayouts.includes(p.layout as TableLayoutId)?p.layout!:(this.availableLayouts.includes('balanced')?'balanced':this.availableLayouts[0]??'original');
         const size=(v:unknown)=>TABLE_SIZE_STEPS.includes(v as 100)?v as number:100;
         if(p.feltColor==='#8b72b5')p={...p,feltColor:'#57427f'};
         return {layout,style:p.style==='solid'?'solid':'legacy',feltColor:TABLE_FELT_COLORS.includes(p.feltColor as typeof TABLE_FELT_COLORS[number])?p.feltColor!:this.defaultFelt,cardBack:p.cardBack==='original'||TABLE_CARD_BACKS.includes(p.cardBack as 'red')?p.cardBack!:'original',publicCardSize:size(p.publicCardSize),tableTextSize:size(p.tableTextSize),betButtonSize:size(p.betButtonSize)};

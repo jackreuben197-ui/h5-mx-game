@@ -1,0 +1,7 @@
+{
+  "name": "MX 牌桌验收",
+  "short_name": "MX 牌桌验收",
+  "start_url": "./home-screen-audit.html?layout=classic&scene=actions",
+  "scope": "./",
+  "display": "standalone"
+}

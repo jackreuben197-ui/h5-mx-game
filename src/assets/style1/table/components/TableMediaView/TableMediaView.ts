@@ -43,7 +43,9 @@ export class TableMediaView {
       let entry=this.seats.get(player.seatId);
       if(entry&&(entry.uid!==player.userRid||entry.root!==host)){this.remove(player.seatId);entry=undefined;}
       if(!entry){
-        const video=element('div','mx-avatar-video'),mask=element('div','mx-avatar-video-mask'),mic=element('img','mx-avatar-mic');
+        const video=element('div','mx-avatar-video'),mask=element('div','mx-avatar-video-mask'),mic=element('span','mx-avatar-mic');
+        mic.style.setProperty('--mx-mic-glass',`url("${mediaImage('seatGlass')}")`);
+        mic.append(element('img',''));
         const border=host.querySelector('.mx-avatar-border');host.insertBefore(video,border);host.insertBefore(mask,border);host.append(mic);
         entry={uid:player.userRid,root:host,video,mask,mic};this.seats.set(player.seatId,entry);
       }
@@ -53,7 +55,9 @@ export class TableMediaView {
       const mask=media.visibleMask(player.userRid);entry.mask.hidden=!mask;if(mask)entry.mask.style.backgroundImage=`url("${mediaImage(`vm${mask}`)}")`;
       const enabled=media.audioEnabled(player.userRid),speaking=media.speaking.has(player.userRid);
       entry.mic.hidden=!media.joined||(enabled&&!speaking);
-      (entry.mic as HTMLImageElement).src=mediaImage(enabled?'speaking':'mutemic');
+      const glyph=entry.mic.firstElementChild as HTMLImageElement;
+      glyph.alt='';
+      glyph.src=mediaImage(enabled?'seatSpeaking':'table_icon_audio_disabled');
     }
     for(const id of this.seats.keys())if(!ids.has(id))this.remove(id);
     for(const [action,icon,on,allowed] of [

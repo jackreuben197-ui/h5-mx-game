@@ -203,8 +203,7 @@
       "oval-name-clearance": "30",
       "ring-info-rise": "2",
       "qa-win-weight": "700",
-      "qa-wait-font": "44px",
-      "qa-glass-blur": "10px"
+      "qa-wait-font": "44px"
     }
   },
   "images": {

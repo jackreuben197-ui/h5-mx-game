@@ -68,7 +68,7 @@ test('legacy migration retains appearance and both custom ratio modes without le
   const reloaded=new TexasGamePersonalSettings('mx');reloaded.setAccount(101);
   assert.deepEqual(reloaded.tableShortcuts,migrated.tableShortcuts);
   reloaded.setAccount(102);
-  assert.equal(reloaded.appearance.layout,'original');
+  assert.equal(reloaded.appearance.layout,'balanced');
   assert.equal(reloaded.tableShortcuts[0].name,'1/2');
 });
 

@@ -169,13 +169,13 @@ test('account and brand preferences are isolated, migrated once and restored aft
     const a=new TexasGamePersonalSettings('mx');
     a.setAccount(101);assert.equal(a.showBB,true);assert.equal(a.deskType,7);
     a.updateAppearance({layout:'classic',cardBack:'blue',publicCardSize:110});a.setSliderSubmit('release');
-    a.setAccount(102);assert.equal(a.showBB,false);assert.equal(a.appearance.layout,'original');assert.equal(a.sliderSubmit,'confirm');
+    a.setAccount(102);assert.equal(a.showBB,false);assert.equal(a.appearance.layout,'balanced');assert.equal(a.sliderSubmit,'confirm');
     a.updateAppearance({layout:'oval',tableTextSize:90});
     a.setAccount(101);assert.equal(a.appearance.layout,'classic');assert.equal(a.appearance.publicCardSize,110);assert.equal(a.sliderSubmit,'release');
     const reloaded=new TexasGamePersonalSettings('mx');reloaded.setAccount(102);assert.equal(reloaded.appearance.layout,'oval');
     const brand=new TexasGamePersonalSettings('midnight','#34383f');brand.setAccount(101);
-    assert.equal(brand.appearance.layout,'original');assert.equal(brand.appearance.feltColor,'#34383f');assert.equal(brand.showBB,false);
-    a.setAccount(0);assert.equal(a.appearance.layout,'original');assert.equal(a.sliderSubmit,'confirm');
+    assert.equal(brand.appearance.layout,'balanced');assert.equal(brand.appearance.feltColor,'#34383f');assert.equal(brand.showBB,false);
+    a.setAccount(0);assert.equal(a.appearance.layout,'balanced');assert.equal(a.sliderSubmit,'confirm');
   }finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else delete globalThis.localStorage;}
 });
 
@@ -185,7 +185,7 @@ test('appearance rejects corrupt choices and duplicate changes do not notify',()
   settings.updateAppearance({layout:'classic',publicCardSize:110,tableTextSize:90,betButtonSize:105});
   settings.updateAppearance({layout:'classic',publicCardSize:110});assert.equal(changes,1);
   settings.updateAppearance({layout:'broken',publicCardSize:NaN,tableTextSize:200,betButtonSize:0,feltColor:'url(secret)',cardBack:'missing'});
-  assert.deepEqual(settings.appearance,{layout:'original',style:'solid',feltColor:'#079d80',cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
+  assert.deepEqual(settings.appearance,{layout:'balanced',style:'solid',feltColor:'#079d80',cardBack:'original',publicCardSize:100,tableTextSize:100,betButtonSize:100});
 });
 
 

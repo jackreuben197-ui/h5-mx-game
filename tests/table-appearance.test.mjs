@@ -12,6 +12,18 @@ test('classic avatars use the full 58px design diameter and keep the hero above 
   assert.ok((hero.y+(26*199/58+54)*hero.scale)*layout.unit<=725+1e-9);
 });
 
+test('ring dealer follows the balance when the hero loses their hand',()=>{
+  for(const id of ['balanced','oval']){
+    const layout=defaultTableUi.createLayout(id);
+    layout.resize(440,782,false,725);
+    const hero=cards=>layout.positions({seatCount:8,mySeat:3,players:[{seat:3,cards}]}).get(3);
+    const waiting=hero([]), playing=hero([14,29]);
+    assert.ok(waiting.dealerY<playing.dealerY);
+    const fromAvatar=waiting.dealerY*waiting.scale*layout.unit;
+    assert.ok(Math.abs(fromAvatar-199*waiting.scale*layout.unit/2-12)<.01);
+  }
+});
+
 test('modern dealer markers clear the chip row and the bottom marker stays above the footer',()=>{
   for(const profile of ['classic','balanced','oval']){
     const layout=defaultTableUi.createLayout(profile);
@@ -78,7 +90,7 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
  for(const profile of ['balanced','oval','classic'])for(const [width,height] of [[320,400],[375,500],[390,844],[440,782],[768,1024]])for(const mine of [1,5,9]){
   const layout=defaultTableUi.createLayout(profile);layout.resize(width,height,false);
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
-  const avatar=profile==='balanced'?60:profile==='oval'?54:58;
+  const avatar=profile==='balanced'?60.13:profile==='oval'?54:58;
   const ratio=p.scale*layout.unit*199/avatar;
   const cardsY=p.cardsY*p.scale*layout.unit/ratio;
   if(profile==='classic')assert.ok(Math.abs(cardsY+73)<.001);

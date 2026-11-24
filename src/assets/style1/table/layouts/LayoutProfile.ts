@@ -27,14 +27,15 @@ export class LayoutProfile extends LayoutOriginal {
         const mine=id===state.mySeat;
         const player=state.players.find(player=>player.seat===id);
         const face=mine||player?.cards.some(card=>card>0);
-        const local=199/profile.avatar;
+        const avatar=mine ? profile.avatar : profile.opponentAvatar ?? profile.avatar;
+        const local=199/avatar;
         p.x=Math.max(34*unit,Math.min(this.width-34*unit,x/profile.width*this.width));
         p.y=y/profile.height*height;
         if(profile.id==='classic'&&slot===0){
           const bottomInset=mine?40:56;
           p.y=Math.min(p.y,this.viewportBottom/this.unit-bottomInset*unit);
         }
-        p.scale=profile.avatar*unit/199;
+        p.scale=avatar*unit/199;
         // Reserve space for the settlement popup and dealer above navigation, then anchor every
         // child to this adjusted avatar. Design distances scale with the existing seat unit.
         if(mine){
@@ -63,10 +64,10 @@ export class LayoutProfile extends LayoutOriginal {
           p.backHandSpread=56;
           const count=Math.max(2,player?.cards.length??2);
           const backWidth=(65+(count-1)*56/count)*18/65;
-          p.cardsX=(profile.id==='classic'?backWidth-profile.avatar/2+2:x<220?profile.avatar/2:-profile.avatar/2)*local;
-          p.cardsY=profile.avatar/2*local;
+          p.cardsX=(profile.id==='classic'?backWidth-profile.avatar/2+2:x<220?avatar/2:-avatar/2)*local;
+          p.cardsY=avatar/2*local;
           // cardsX anchors the strip's right edge, so include its width on the right side.
-          if(profile.id==='oval'&&x>220)p.cardsX+=backWidth*local;
+          if(profile.id==='oval'&&x>=220)p.cardsX+=backWidth*local;
         }
         // Both top seats bet below their own stack, rather than towards each other.
         const bottomSeat=!mine && slot===0;
@@ -128,7 +129,7 @@ export class LayoutProfile extends LayoutOriginal {
   override content(options: LayoutContentOptions): LayoutContent {
     if (this.landscape) {
       const content = super.content(options);
-      return { ...content, styles: { ...content.styles, '--mx-wide-avatar-scale': String(this.profile.avatar / 60) } };
+      return { ...content, styles: { ...content.styles, '--mx-wide-avatar-scale': String(this.profile.landscapeAvatar / 60) } };
     }
     const {dual,boardSize}=options, l=this, profile=this.profile, m=this.metrics;
     const u=Math.min(l.width/440,l.height/782);
@@ -151,7 +152,7 @@ export class LayoutProfile extends LayoutOriginal {
     return {
       board:{x:l.width/2,y:y-(dual?gap/2:0),scale}, secondBoard:{x:l.width/2,y:y+gap/2,scale},
       total:{x:l.width/2,y:potY},pool:{x:l.width/2,y:potY+22*u},info:{x:l.width/2,y:infoY},
-      styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),...(Number.isFinite(infoMaxFont)?{'--mx-room-info-max-font':`${infoMaxFont}px`}:{}),'--mx-room-info-width':`${this.roomInfoWidth}px`,'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
+      styles:{...portraitSideButtons(l.width*l.unit,this.viewportHeight,this.viewportBottom),...(Number.isFinite(infoMaxFont)?{'--mx-room-info-max-font':`${infoMaxFont}px`}:{}),'--mx-room-info-width':`${this.roomInfoWidth}px`,'--mx-layout-unit':`${u}px`,'--mx-profile-avatar':String(profile.avatar),'--mx-opponent-avatar':String(profile.opponentAvatar??profile.avatar),'--mx-jackpot-y':`${(profile.id==='classic'?18:58)*u}px`,'--mx-calltime-y':`${(profile.id==='classic'?48:95)*u}px`,'--mx-felt-bottom':`${208*u*l.unit}px`,
         '--mx-hero-card-height':`${120*profile.heroCardHeight/profile.heroCardWidth}px`,
         '--mx-hero-info-y':`${profile.heroInfoY*199/profile.avatar}px`},
     };

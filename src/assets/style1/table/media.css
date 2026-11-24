@@ -15,3 +15,7 @@
 .mx-navigation:is([data-layout="4"],[data-layout="6"]) .mx-nav-logo{width:calc(var(--mx-NavigationView-mx-nav-logo-width-4) * var(--mx-chat-unit));height:calc(var(--mx-NavigationView-mx-nav-logo-height) * var(--mx-chat-unit));margin:var(--mx-NavigationView-mx-nav-logo-margin) calc(var(--mx-NavigationView-mx-nav-logo-margin-2) * var(--mx-chat-unit))}
 .mx-nav-button:disabled .mx-nav-icon{filter:grayscale(1);opacity:.6}
 .mx-player-profile-controls.mx-player-media button{flex:1;background-color:transparent;background-size:var(--mx-PlayerInfoView-mx-player-media-background-size) var(--mx-PlayerInfoView-mx-player-media-background-size-2);background-repeat:no-repeat;border:0;border-radius:var(--mx-PlayerInfoView-mx-player-media-border-radius);display:flex;align-items:center;justify-content:center;gap:var(--mx-PlayerInfoView-mx-player-media-gap-2)}
+
+.mx-avatar-mic{display:grid;place-items:center;border-radius:50%;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.mx-avatar-mic::before{content:'';position:absolute;inset:-6.05% -24.2% -26.22% -8.07%;background:var(--mx-mic-glass) center/100% 100% no-repeat}
+.mx-avatar-mic img{position:relative;width:52%;height:52%;object-fit:contain}

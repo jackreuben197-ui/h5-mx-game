@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./home-screen-audit.webmanifest">
+  <title>MX 牌桌验收</title>
+  <style>
+    #audit-stage { position:fixed!important; inset:0; width:100%!important; height:100%!important }
+    #audit-controls,#audit-info,#audit-log { display:none!important }
+    #audit-switch { position:fixed;top:env(safe-area-inset-top);left:35%;z-index:100;display:flex;background:#fff;color:#111;font:10px sans-serif }
+  </style>
+</head>
+<body><div id="audit-controls"></div><div id="audit-stage"></div><nav id="audit-switch"></nav>
+<script type="module">
+  const nav=document.querySelector('#audit-switch');
+  nav.append(matchMedia('(display-mode: standalone)').matches?'主屏':'Safari');
+  for(const [id,name] of Object.entries({original:'初',classic:'经',balanced:'均',oval:'椭'})){
+    const a=document.createElement('a');a.href='?layout='+id+'&scene=actions';a.textContent=name;
+    a.onclick=e=>{e.preventDefault();location.search=a.search};nav.append(a);
+  }
+</script>
+<script type="module" src="./layout-audit.ts"></script></body></html>

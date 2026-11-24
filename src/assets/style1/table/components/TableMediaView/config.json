@@ -23,7 +23,9 @@
     "table_icon_camera": "raw/media/table_icon_camera.png",
     "table_icon_camera_disabled": "raw/media/table_icon_camera_disabled.png",
     "sndicon": "raw/media/sndicon.png",
-    "muteBtnBg": "raw/media/muteBtnBg.png"
+    "muteBtnBg": "raw/media/muteBtnBg.png",
+    "seatGlass": "raw/media/seat-audio-glass.png",
+    "seatSpeaking": "raw/media/seat-speaking.svg"
   },
   "layout": {
     "css": {
@@ -111,6 +113,12 @@
       "pack": false
     },
     "muteBtnBg": {
+      "pack": false
+    },
+    "seatGlass": {
+      "pack": false
+    },
+    "seatSpeaking": {
       "pack": false
     }
   }

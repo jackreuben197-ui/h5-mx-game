@@ -65,6 +65,7 @@
 .mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-empty-seat .mx-avatar-fallback{background-image:none!important;background-color:#0002;border:1px solid #ffffff70}
 .mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-empty-seat .mx-avatar-fallback::before{content:'+';position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#ffffff90}
 /* The old circular frame must not show through rounded profile avatars. */
-.mx-table:not([data-table-layout=original]) .mx-seat .mx-avatar-border{display:none}
+.mx-table[data-table-layout=classic] .mx-seat .mx-avatar-border,
+.mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat .mx-avatar-border{display:none}
 .mx-table:not([data-table-layout=original]) .mx-seat :is(.mx-avatar,.mx-avatar-fallback){box-shadow:none;filter:none}
 .mx-table:not([data-table-layout=original]) .mx-seat-identity:has(> .mx-avatar:not([hidden])) > .mx-avatar-fallback{background-image:none!important;background-color:transparent!important}

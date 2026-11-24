@@ -41,6 +41,8 @@ export class LayoutOval extends LayoutProfile {
         bottom.cardsY=area.cardsY-area.localDrop;
         bottom.dealerY-=area.localDrop;
       }
+      if(state.mySeat && !state.players.find(player=>player.seat===state.mySeat)?.cards.length)
+        bottom.dealerY=(this.profile.avatar/2+5+7)*199/this.profile.avatar;
       bottom.dealerY=Math.min(bottom.dealerY,((this.viewportBottom-2)/this.unit-bottom.y)/bottom.scale-44);
     }
     return result;

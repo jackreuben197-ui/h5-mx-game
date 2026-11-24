@@ -31,5 +31,17 @@ export class TableToolsView {
     this.safety.hidden=!(records.data.record?.tribeId);
   }
   render(state:TableSnapshot):void{this.add.hidden=!state.mySeat||!!state.matchID;}
+  avoidNicknames(table:HTMLElement):void {
+    this.safety.style.translate='';
+    if(this.safety.hidden || table.dataset.tableLayout!=='classic' || table.dataset.orientation!=='portrait')return;
+    const shield=this.safety.getBoundingClientRect();
+    let left=shield.left;
+    for(const name of table.querySelectorAll<HTMLElement>('.mx-seat[data-edge=right] .mx-player-name')){
+      const nick=name.getBoundingClientRect();
+      if(nick.width && nick.top<shield.bottom+2 && nick.bottom>shield.top-2 && nick.left<shield.right+2 && nick.right>shield.left-2)
+        left=Math.min(left,nick.left-shield.width-2);
+    }
+    if(left!==shield.left)this.safety.style.translate=`${left-shield.left}px 0`;
+  }
   destroy():void{this.root.remove();}
 }

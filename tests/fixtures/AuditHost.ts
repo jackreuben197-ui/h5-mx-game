@@ -26,7 +26,7 @@ export class AuditHost implements RoomHost {
  }
  private configure(){
   const pb=this.pb!,data=this.features.data;this.features.sync(this.state);
-  Object.assign(data.record!,{rid:this.state.roomID,name:'离线全元素验收',gameType:1,pokerType:1,insuranceOn:1,secondPcsOn:1,viewPlayerCards:1,chatType:1,calltime:0,jackpot:1,antiCheatType:['media-video','profile-admin','profile-video'].includes(this.options.scene)?3:this.options.scene==='media-voice'?2:0,micSeatSwitch:1,micMiddleSwitch:1,videoSeatSwitch:1,videoMiddleSwitch:1,powerSaving:1,powerSavingSeatSwitch:1,powerSavingMiddleSwitch:1});
+  Object.assign(data.record!,{rid:this.state.roomID,tribeId:1,name:'离线全元素验收',gameType:1,pokerType:1,insuranceOn:1,secondPcsOn:1,viewPlayerCards:1,chatType:1,calltime:0,jackpot:1,antiCheatType:['media-video','profile-admin','profile-video'].includes(this.options.scene)?3:this.options.scene==='media-voice'?2:0,micSeatSwitch:1,micMiddleSwitch:1,videoSeatSwitch:1,videoMiddleSwitch:1,powerSaving:1,powerSavingSeatSwitch:1,powerSavingMiddleSwitch:1});
   Object.assign(data.snapshot!.roomInfo!,{smallBlind:10,currentMinRate:100,currentMaxRate:1000,limitIp:true,limitGps:true,insuranceMode:1,antiCheatType:data.record!.antiCheatType});
   if(this.options.scene==='intro-mushroom'){data.record!.mushroomBase=100;localStorage.removeItem('mx-mushroom-intro-hidden');}
   if(this.options.scene==='intro-critical'){data.record!.criticalHit=1;data.record!.ante=100;localStorage.removeItem('mx-critical-hit-intro-hidden');}

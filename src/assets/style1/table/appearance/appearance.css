@@ -269,19 +269,22 @@
 .mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-player-action{z-index:11}
 .mx-seat-win-amount{font-weight:var(--mx-SeatIdentityView-qa-win-weight)}
 .mx-table .mx-seat-play-status{font-size:calc(var(--mx-SeatIdentityView-qa-wait-font) * var(--mx-table-text-scale))}
-/* Keep the original frame with a faint dark tint and a gentle backdrop blur. */
+/* A translucent face lets each table finish show through the stack frame. */
 .mx-table .mx-player-info{
- background-color:rgb(0 0 0 / .08);
+ background-image:none!important;
+ background-color:rgba(58,56,56,.22);
+ box-shadow:inset .7px .7px 1.4px #f2f2f233, 2px 2.5px 4px #0004;
+ outline:2px solid #f2f2f266;outline-offset:-2px;
  border-radius:var(--mx-SeatIdentityView-mx-player-info-border-radius);
- backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));
- -webkit-backdrop-filter:blur(var(--mx-SeatIdentityView-qa-glass-blur));
+
 }
+.mx-table :is(.mx-stack,.mx-seat-bet-value){font-weight:700}
 .mx-seat .mx-seat-timer[data-kind=action]{z-index:7}
 
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat :is(.mx-avatar-fallback,.mx-avatar,.mx-avatar-border){box-shadow:none;filter:none}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:1px solid #ffffff70}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) :is(.mx-seat-bet,.mx-pool-item){background-image:none!important;background-color:#ffffff20;border:1px solid #ffffff60;border-radius:20px;box-shadow:none;backdrop-filter:blur(4px)}
-.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat-bet{--mx-bet-stroke:var(--mx-SeatBetView-mx-seat-bet-border-width)}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:0;z-index:4;box-shadow:0 0 1px 2.8px #ffffff2e,0 3px 6px .6px #00000024!important}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-pool-item{background-image:none!important;background-color:rgba(58,56,56,.22);border:1px solid #ffffff60;border-radius:20px;box-shadow:none;backdrop-filter:blur(4px)}
+.mx-table .mx-seat-bet{--mx-bet-stroke:var(--mx-SeatBetView-mx-seat-bet-border-width);background-image:none!important;background-color:rgba(58,56,56,.22);border:var(--mx-bet-stroke) solid #ffffff66;border-radius:999px;box-shadow:inset 1px 1px 2px #ffffff30,1px 2px 4px #0003}
 
 
 .mx-layout-preview{display:block;flex:none;width:calc(var(--mx-PersonalSettingsView-preview-width) * var(--settings-unit));height:calc(var(--mx-PersonalSettingsView-preview-height) * var(--settings-unit));object-fit:contain}
@@ -324,3 +327,17 @@
 .mx-table[data-orientation=landscape]:not([data-table-layout=original]) .mx-seat :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status,.mx-seat-timer) {
   scale: var(--mx-wide-avatar-scale, 1);
 }
+
+.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-player-name{
+ font-size:calc(11.5 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));line-height:calc(12.6 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));font-weight:700;
+}
+.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-classic-seat-unit:calc(199px / var(--mx-opponent-avatar))}
+.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
+ --mic-size:calc(24.488px * var(--mx-mic-reference-scale) / var(--mx-seat-local-scale));
+ width:var(--mic-size);height:var(--mic-size);top:calc(-.5 * var(--mic-size));left:min(calc(90px - .5 * var(--mic-size)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size)));
+}
+.mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat)[data-microphone-side=left] .mx-avatar-mic{left:max(calc(-90px - .5 * var(--mic-size)),calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)))}
+
+.mx-table[data-orientation=portrait] > :is(.mx-operation,.mx-action-bubbles,.mx-support-button,.mx-table-tools){margin-top:var(--mx-safe-top,env(safe-area-inset-top,0px))}
+
+.mx-table[data-table-layout=oval][data-orientation=portrait] .mx-seat:not(.mx-seat-mine) .mx-player-info{width:calc(58 * var(--mx-classic-seat-unit));left:calc(-29 * var(--mx-classic-seat-unit))}
