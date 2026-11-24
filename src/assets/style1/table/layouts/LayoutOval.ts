@@ -9,7 +9,7 @@ export class LayoutOval extends LayoutProfile {
   private heroUpperArea() {
     const area=this.ringHeroArea(this.profile.avatar/2);
     const unit=Math.min(this.width/this.profile.width,this.height/this.profile.height);
-    const scale=this.profile.avatar*unit/199;
+    const scale=this.profile.avatar*this.portraitSeatUnit/199;
     const clearance=(area.cardsY-199/2)*scale-this.profile.heroCardHeight/2*unit;
     // Lower the upper group by 6 design pixels, retaining a 7px hand gap on short screens.
     const drop=Math.min(6*unit,Math.max(0,clearance-7*unit));

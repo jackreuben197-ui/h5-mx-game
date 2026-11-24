@@ -159,17 +159,18 @@
 .mx-table:not([data-orientation=landscape]) .mx-navigation .mx-nav-icon{width:var(--mx-NavigationView-mx-nav-icon-width);height:var(--mx-NavigationView-mx-nav-icon-height)}
 .mx-table:not([data-orientation=landscape]) .mx-navigation .mx-nav-logo{width:clamp(var(--mx-NavigationView-mx-nav-logo-width),var(--mx-NavigationView-mx-nav-logo-width-2),var(--mx-NavigationView-mx-nav-logo-width-3));margin-inline:var(--mx-NavigationView-mx-nav-logo-margin-inline)}
 
-/* Classic values below are in the 58 px avatar's design units. The seat shares
-   its transform with the avatar, click target, cards, chips and timer. */
-.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat{
-  --mx-classic-seat-unit:calc(199px / 58);
-  --mx-seat-chip-top:calc(30 * var(--mx-classic-seat-unit));
-  --mx-seat-name-clearance:calc(36 * var(--mx-classic-seat-unit));
+.mx-table:is([data-table-layout=classic],[data-table-layout=balanced]):not([data-orientation=landscape]) .mx-seat .mx-player-name{
+  max-width:calc(2 * min(var(--mx-seat-world-x),var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale));
 }
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-avatar-border{
   width:calc(var(--mx-SeatIdentityView-mx-avatar-border-width) * var(--mx-classic-seat-unit));height:calc(var(--mx-SeatIdentityView-mx-avatar-border-height) * var(--mx-classic-seat-unit));
   left:calc(var(--mx-SeatIdentityView-mx-avatar-border-left) * var(--mx-classic-seat-unit));top:calc(var(--mx-SeatIdentityView-mx-avatar-border-top) * var(--mx-classic-seat-unit));
   background:var(--mx-classic-avatar-border) center / contain no-repeat!important;border:0;
+}
+.mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat-mine .mx-avatar-border{
+  left:var(--mx-SeatIdentityView-mx-fold-cover-left);top:var(--mx-SeatIdentityView-mx-fold-cover-top);
+  width:var(--mx-SeatIdentityView-mx-fold-cover-width);height:var(--mx-SeatIdentityView-mx-fold-cover-height);
+  background:none!important;border:calc(1.35 * var(--mx-classic-seat-unit)) solid #d3b773;
 }
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-video,.mx-avatar-video-mask){z-index:1}
 .mx-table[data-table-layout=classic]:not([data-orientation=landscape]) .mx-seat .mx-player-info{
@@ -282,7 +283,7 @@
 .mx-seat .mx-seat-timer[data-kind=action]{z-index:7}
 
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat :is(.mx-avatar-fallback,.mx-avatar,.mx-avatar-border){box-shadow:none;filter:none}
-.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:0;z-index:4;box-shadow:0 0 1px 2.8px #ffffff2e,0 3px 6px .6px #00000024!important}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:0;z-index:4;box-shadow:0 0 1px 5.6px #f2f2f24d,0 3px 6px .6px #00000024!important}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-pool-item{background-image:none!important;background-color:rgba(58,56,56,.22);border:1px solid #ffffff60;border-radius:20px;box-shadow:none;backdrop-filter:blur(4px)}
 .mx-table .mx-seat-bet{--mx-bet-stroke:var(--mx-SeatBetView-mx-seat-bet-border-width);background-image:none!important;background-color:rgba(58,56,56,.22);border:var(--mx-bet-stroke) solid #ffffff66;border-radius:999px;box-shadow:inset 1px 1px 2px #ffffff30,1px 2px 4px #0003}
 
@@ -291,7 +292,6 @@
 
 /* 108: settlement occupies two compact lines, not the original tall nameplate. */
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine) .mx-seat-win{min-height:113px;line-height:40px;row-gap:4px;padding:8px 4px}
-.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-seat-chip-top:calc(32.5 * var(--mx-classic-seat-unit))}
 /* Keep the extra rise only for visible win cards; ordinary balances use their original spacing. */
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-seat:has(.mx-seat-win:not([hidden])){--mx-seat-info-rise:calc(var(--mx-SeatIdentityView-ring-info-rise) * var(--mx-classic-seat-unit))}
 /* The result can cross the menu; normal seats retain their established stacking. */
@@ -329,12 +329,22 @@
 }
 
 .mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-player-name{
- font-size:calc(11.5 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));line-height:calc(12.6 * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));font-weight:700;
+ width:calc(var(--mx-SeatIdentityView-balanced-name-width) * var(--mx-classic-seat-unit));
+ font-size:calc(var(--mx-SeatIdentityView-balanced-name-font-size) * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
+ line-height:calc(var(--mx-SeatIdentityView-balanced-name-line-height) * var(--mx-classic-seat-unit) * var(--mx-table-text-scale));
+ font-family:"Noto Sans SC","PingFang SC",sans-serif;
+ font-weight:700;
 }
-.mx-table[data-table-layout=oval]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-classic-seat-unit:calc(199px / var(--mx-opponent-avatar))}
+.mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine){--mx-classic-seat-unit:calc(199px / var(--mx-opponent-avatar))}
+.mx-table[data-table-layout=balanced]:not([data-orientation=landscape]) .mx-seat:not(.mx-seat-mine) :is(.mx-avatar,.mx-avatar-fallback,.mx-avatar-border,.mx-avatar-hit,.mx-avatar-video,.mx-avatar-video-mask,.mx-fold-cover,.mx-seat-play-status,.mx-seat-timer){
+ scale:1 calc(var(--mx-SeatIdentityView-balanced-opponent-avatar-height) / var(--mx-opponent-avatar));
+}
 .mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
- --mic-size:calc(24.488px * var(--mx-mic-reference-scale) / var(--mx-seat-local-scale));
+ --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-mic-reference-scale) / var(--mx-seat-local-scale));
  width:var(--mic-size);height:var(--mic-size);top:calc(-.5 * var(--mic-size));left:min(calc(90px - .5 * var(--mic-size)),calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size)));
+}
+.mx-table:is([data-table-layout=balanced],[data-table-layout=oval])[data-orientation=portrait] .mx-seat:not(.mx-empty-seat) .mx-avatar-mic{
+ --mic-size:calc(var(--mx-TableMediaView-portrait-mic-size) * var(--mx-portrait-seat-unit) / var(--mx-seat-local-scale));
 }
 .mx-table[data-orientation=portrait] .mx-seat:not(.mx-empty-seat)[data-microphone-side=left] .mx-avatar-mic{left:max(calc(-90px - .5 * var(--mic-size)),calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)))}
 

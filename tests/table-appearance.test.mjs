@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 import { defaultTableUi } from '../.test-build/assets/style1/table/layouts/DefaultTableUi.js';
 import { SliderBetGesture } from '../.test-build/assets/style1/table/SliderBetGesture.js';
 
-test('classic avatars use the full 58px design diameter and keep the hero above the menu',()=>{
-  const layout=defaultTableUi.createLayout('classic');
-  layout.resize(440,782,false,725);
-  const positions=layout.positions({seatCount:8,mySeat:1,players:[]});
-  for(const seat of positions.values()) assert.equal(Math.round(199*seat.scale*layout.unit*100)/100,58);
-  const hero=positions.get(1);
-  assert.ok((hero.y+(26*199/58+54)*hero.scale)*layout.unit<=725+1e-9);
+test('440px portrait seats retain their design avatar sizes when the viewport gets shorter',()=>{
+  const avatars={classic:[52.8,58],balanced:[60.13,60.13],oval:[54,48]};
+  for(const [id,[own,other]] of Object.entries(avatars))for(const height of [710,782,956]){
+    const layout=defaultTableUi.createLayout(id);
+    layout.resize(440,height,false,height-57);
+    const positions=layout.positions({seatCount:8,mySeat:3,players:[]});
+    for(const [seat,p] of positions)assert.ok(Math.abs(199*p.scale*layout.unit-(seat===3?own:other))<1e-6);
+    const hero=positions.get(3);
+    assert.ok((hero.y+(hero.dealerY+38.5)*hero.scale)*layout.unit<=height-57+1e-9);
+  }
 });
 
 test('ring dealer follows the balance when the hero loses their hand',()=>{
@@ -49,7 +52,11 @@ test('all new layouts retain seat IDs and distinct in-bounds avatars for 2–9 s
     const state={seatCount:count,mySeat:mine,players:[]};const seats=layout.positions(state);
     assert.deepEqual([...seats.keys()],Array.from({length:count},(_,i)=>i+1));
     const rects=[...seats].map(([id,p])=>({id,x:p.x*layout.unit,y:p.y*layout.unit,r:199*p.scale*layout.unit/2}));
-    for(const p of rects){assert.ok(p.x-p.r>=0&&p.x+p.r<=width,`${profile} ${count}: horizontal bounds`);assert.ok(p.y-p.r>=0&&p.y+p.r<=height,`${profile} ${count}: vertical bounds`);}
+    for(const p of rects){
+      assert.ok(p.x-p.r>=-1e-9&&p.x+p.r<=width+1e-9,`${profile} ${count}: horizontal bounds`);
+      assert.ok(p.y-p.r>=0&&p.y+p.r<=height,`${profile} ${count}: vertical bounds`);
+      if(profile==='classic'&&(p.x<width*.1||p.x>width*.9))assert.ok(Math.min(Math.abs(p.x-p.r),Math.abs(width-p.x-p.r))<1e-9,'classic side avatars touch the viewport edge');
+    }
     for(let a=0;a<rects.length;a++)for(let b=a+1;b<rects.length;b++)assert.ok(Math.hypot(rects[a].x-rects[b].x,rects[a].y-rects[b].y)>rects[a].r+rects[b].r,`${profile} ${count}: avatar overlap`);
     assert.equal(seats.get(mine).edge,'bottom');
   }
@@ -90,9 +97,10 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
  for(const profile of ['balanced','oval','classic'])for(const [width,height] of [[320,400],[375,500],[390,844],[440,782],[768,1024]])for(const mine of [1,5,9]){
   const layout=defaultTableUi.createLayout(profile);layout.resize(width,height,false);
   const p=layout.positions({seatCount:9,mySeat:mine,players:[]}).get(mine);
-  const avatar=profile==='balanced'?60.13:profile==='oval'?54:58;
+  const avatar=profile==='balanced'?60.13:profile==='oval'?54:52.8;
   const ratio=p.scale*layout.unit*199/avatar;
-  const cardsY=p.cardsY*p.scale*layout.unit/ratio;
+  const tableRatio=Math.min(width/440,layout.height*layout.unit/782);
+  const cardsY=p.cardsY*p.scale*layout.unit/tableRatio;
   if(profile==='classic')assert.ok(Math.abs(cardsY+73)<.001);
   else {
    assert.ok(cardsY>=(profile==='oval'?62:65)-.001);
@@ -100,12 +108,12 @@ test('hero card and dealer offsets stay avatar-relative across viewport and seat
    const typeY=parseFloat(styles['--mx-ring-hand-type-y']);
    const infoY=parseFloat(styles['--mx-hero-info-y']);
    const scale=p.scale*layout.unit;
-   assert.ok(Math.abs((typeY-30-p.cardsY)*scale-28*ratio-2.8*ratio)<.001);
-   assert.ok(Math.abs((infoY-typeY-30)*scale-1.5*ratio)<.001);
-   assert.ok(Math.abs(height-57-(p.y+infoY*p.scale)*layout.unit-(14*199/avatar+2)*scale-3.6*ratio)<.001);
+   assert.ok(Math.abs((typeY-30-p.cardsY)*scale-28*tableRatio-2.8*tableRatio)<.001);
+   assert.ok(Math.abs((infoY-typeY-30)*scale-1.5*tableRatio)<.001);
+   assert.ok(Math.abs(height-57-(p.y+infoY*p.scale)*layout.unit-(14*199/avatar+2)*scale-3.6*tableRatio)<.001);
    assert.ok(p.betX>0&&p.betY<0,'hero bet stays above and to the right of raise');
   }
   assert.ok(Math.abs(p.dealerX*p.scale*layout.unit/ratio-(profile==='classic'?-44:-54))<.001);
-  if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-avatar/2*ratio-28*ratio>=7*ratio-.001,'hand must clear avatar');
+  if(profile!=='classic')assert.ok(p.cardsY*p.scale*layout.unit-avatar/2*ratio-28*tableRatio>=7*tableRatio-.001,'hand must clear avatar');
  }
 });
