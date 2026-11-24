@@ -31,7 +31,8 @@
     "css": {
       "portrait-mic-size": "24.488px",
       "desktop-mic-size": "69px",
-      "mic-edge-shift": "0.1",
+      "mic-edge-shift": "0.35",
+      "mic-edge-overhang": "0.22",
       "mx-avatar-video-mask-left": "-99.5px",
       "mx-avatar-video-mask-top": "-99.5px",
       "mx-avatar-video-mask-width": "199px",

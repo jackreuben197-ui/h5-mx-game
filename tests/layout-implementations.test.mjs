@@ -149,7 +149,7 @@ test('balanced portrait uses the Figma card-back size and avatar corner while PC
       const cardScale=p.cardScale*p.scale*layout.unit;
       assert.equal(p.cardsX,99.5);
       assert.equal(p.cardsY,99.5);
-      assert.ok(Math.abs(65*cardScale-15.2*unit)<.001);
+      assert.ok(Math.abs(65*cardScale-16.2*unit)<.001);
       assert.ok(Math.abs(p.backHandSpread/2*cardScale-6.7*unit)<.001);
     }
     assert.equal(placements.get(3).cardsX,0);

@@ -104,10 +104,17 @@
 .mx-game:has(.mx-settings-overlay:not([hidden]))~.mx-test-menu{visibility:hidden}
 /* Keep the exported foreground in its original bottom slice; the source art removes the inner arc. */
 .mx-table[data-felt=solid]::before{content:'';position:absolute;inset:0;pointer-events:none;border-image-source:var(--mx-felt-image);border-image-slice:0 0 416 0 fill;border-image-width:0 0 var(--mx-felt-bottom,208px) 0;border-image-repeat:stretch}
-.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:10px solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
+.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer-texture{mask-image:none!important;-webkit-mask-image:none!important;background:transparent!important;border:var(--mx-SeatCountdownView-balanced-ring-stroke) solid var(--mx-countdown-color,#14fd00);border-radius:var(--mx-avatar-radius);box-shadow:0 0 5px var(--mx-countdown-color,#14fd00)}
 .mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action]{--mx-action-countdown-color:#81f18d}
 .mx-table:is([data-table-layout=original],[data-table-layout=balanced]) .mx-seat .mx-seat-timer[data-kind=action]::before{content:none}
-.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{border-width:10px;box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
+.mx-table[data-table-layout=balanced] .mx-seat .mx-seat-timer[data-kind=action] .mx-seat-timer-texture{box-shadow:0 0 8px 1px rgb(129 241 141 / .5)}
+.mx-table[data-table-layout=balanced][data-orientation=portrait] .mx-seat .mx-seat-timer-ring{
+  inset:calc(-1 * var(--mx-SeatCountdownView-balanced-ring-outset));
+}
+.mx-table[data-table-layout=balanced][data-orientation=portrait] .mx-seat .mx-seat-timer-ring .mx-seat-timer-texture{
+  border-radius:calc(var(--mx-SeatCountdownView-mx-seat-timer-width) * var(--mx-SeatCountdownView-ring-corner-ratio) + var(--mx-SeatCountdownView-balanced-ring-outset));
+  box-shadow:none;
+}
 .mx-table .mx-seat-timer[data-kind=keep]::before{border-radius:var(--mx-avatar-radius)}
 /* Keep confirmation on the raise entry; the track ends above that button. */
 .mx-table[data-table-layout=original]:not([data-orientation=landscape]) .mx-operation[data-mode=raise] .mx-raise-track{--mx-raise-height:var(--mx-original-raise-height);--mx-raise-info-offset:var(--mx-original-raise-info-offset)}
@@ -285,10 +292,22 @@
 
 }
 .mx-table :is(.mx-stack,.mx-seat-bet-value){font-weight:700}
-.mx-seat .mx-seat-timer[data-kind=action]{z-index:7}
+/* The hand follows the identity in the seat, so its backs paint over the timer at the same level. */
+.mx-seat .mx-seat-timer[data-kind=action],
+.mx-seat .mx-hole-cards:has(.mx-card[data-card-value="0"]){z-index:7}
 
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-seat :is(.mx-avatar-fallback,.mx-avatar,.mx-avatar-border){box-shadow:none;filter:none}
 .mx-table:is([data-table-layout=balanced],[data-table-layout=oval]):not([data-orientation=landscape]) .mx-avatar-border{background:none!important;border:0;z-index:4;box-shadow:0 0 1px 5.6px #f2f2f24d,0 3px 6px .6px #00000024!important}
+.mx-table[data-table-layout=balanced][data-orientation=portrait] .mx-avatar{background-color:#345c59}
+.mx-table[data-table-layout=balanced][data-orientation=portrait] .mx-avatar-border{
+  /* Join the two antialiased edges under the translucent frame. */
+  box-shadow:0 0 0 4.2px var(--mx-balanced-frame-color,#f2f2f24d),0 0 1.5px 4.2px var(--mx-balanced-frame-highlight,transparent),inset 0 0 0 1px #f2f2f24d,0 3px 6px .6px #00000024!important;
+}
+.mx-table[data-table-layout=balanced][data-orientation=portrait] .mx-seat-identity:has(> .mx-seat-timer:not([hidden]) > .mx-seat-timer-ring:not([hidden])) > .mx-avatar-border{
+  /* Keep the exposed quarter legible after the frame scales to handset size. */
+  --mx-balanced-frame-color:#f2f2f2d9;
+  --mx-balanced-frame-highlight:#fff8;
+}
 .mx-table:not([data-table-layout=original]):not([data-orientation=landscape]) .mx-pool-item{background-image:none!important;background-color:rgba(58,56,56,.22);border:1px solid #ffffff60;border-radius:20px;box-shadow:none;backdrop-filter:blur(4px)}
 .mx-table .mx-seat-bet{--mx-bet-stroke:var(--mx-SeatBetView-mx-seat-bet-border-width);background-image:none!important;background-color:rgba(58,56,56,.22);border:var(--mx-bet-stroke) solid #ffffff66;border-radius:999px;box-shadow:inset 1px 1px 2px #ffffff30,1px 2px 4px #0003}
 

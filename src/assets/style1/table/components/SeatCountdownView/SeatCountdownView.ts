@@ -5,6 +5,10 @@ import { i18nMgr } from '../../../../../i18n/i18nMgr.js';
 import type { SeatCountdown } from '../../../../../core/types.js';
 import { element } from '../../dom.js';
 import { SpriteAtlas } from '../../SpriteAtlas.js';
+
+const balancedRingOutset = Number.parseFloat(config.layout.css['balanced-ring-outset']);
+const balancedHalfStroke = Number.parseFloat(config.layout.css['balanced-ring-stroke']) / 2;
+const cornerRatio = Number(config.layout.css['ring-corner-ratio']);
 /** CC ShiningPathTimer Circle branch: 24 points, 199px track, 8px path thickness.
  * Only cc.Sprite.fillRange/handle positioning become DOM mask/transform.
  */
@@ -80,12 +84,16 @@ export class SeatCountdownView {
       }
       target -= length;
     }
-    const balanced=this.root.closest<HTMLElement>('.mx-table')?.dataset.tableLayout==='balanced';
+    const table=this.root.closest<HTMLElement>('.mx-table');
+    const balanced=table?.dataset.tableLayout==='balanced';
     if(this.rounded||balanced){
-      // Match the conic mask ray to the rounded avatar perimeter (199px, 28% radius).
+      // Align the endpoint center with the middle of the rounded progress stroke.
       const angle=ballProgress*Math.PI*2,dx=Math.sin(angle),dy=-Math.cos(angle);
-      const halfStroke=balanced&&!this.keep&&!this.rounded?config.layout.balancedStroke:config.layout.roundedStroke;
-      const half=config.layout.diameter/2-halfStroke,radius=config.layout.diameter*config.layout.cornerRatio-halfStroke,corner=half-radius;
+      const balancedPortrait=balanced&&!this.rounded&&table.dataset.orientation==='portrait';
+      const halfStroke=balanced&&!this.rounded?balancedHalfStroke:config.layout.roundedStroke;
+      const outset=balancedPortrait?balancedRingOutset:0;
+      const half=config.layout.diameter/2+outset-halfStroke;
+      const radius=config.layout.diameter*cornerRatio+outset-halfStroke,corner=half-radius;
       let distance=half/Math.max(Math.abs(dx),Math.abs(dy));
       if(Math.abs(dx*distance)>corner&&Math.abs(dy*distance)>corner){
         const projection=(Math.abs(dx)+Math.abs(dy))*corner;

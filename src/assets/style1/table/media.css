@@ -5,12 +5,13 @@
   --mic-size:var(--mx-TableMediaView-desktop-mic-size);
   --mic-shift:calc(var(--mx-TableMediaView-mic-edge-shift) * var(--mic-size));
   --mic-offset:calc(90px + var(--mic-shift));
+  --mic-overhang:calc(var(--mx-TableMediaView-mic-edge-overhang) * var(--mic-size));
   --mic-direction:1;
   position:absolute;
   left:clamp(
-    calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale)),
+    calc(-1 * var(--mx-seat-world-x) / var(--mx-seat-local-scale) - var(--mic-overhang)),
     calc(var(--mic-direction) * var(--mic-offset) - .5 * var(--mic-size)),
-    calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size))
+    calc((var(--mx-stage-local-width) - var(--mx-seat-world-x)) / var(--mx-seat-local-scale) - var(--mic-size) + var(--mic-overhang))
   );
   top:calc(-.5 * var(--mic-size));width:var(--mic-size);height:var(--mic-size);
   pointer-events:none;z-index:11;
@@ -42,6 +43,6 @@
 .mx-nav-button:disabled .mx-nav-icon{filter:grayscale(1);opacity:.6}
 .mx-player-profile-controls.mx-player-media button{flex:1;background-color:transparent;background-size:var(--mx-PlayerInfoView-mx-player-media-background-size) var(--mx-PlayerInfoView-mx-player-media-background-size-2);background-repeat:no-repeat;border:0;border-radius:var(--mx-PlayerInfoView-mx-player-media-border-radius);display:flex;align-items:center;justify-content:center;gap:var(--mx-PlayerInfoView-mx-player-media-gap-2)}
 
-.mx-avatar-mic{display:grid;place-items:center;border-radius:50%;background-color:rgb(0 0 0 / .35);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
-.mx-avatar-mic::before{content:'';position:absolute;inset:-6.05% -24.2% -26.22% -8.07%;background:var(--mx-mic-glass) center/100% 100% no-repeat}
+.mx-avatar-mic{display:grid;place-items:center;border-radius:50%;background-color:rgb(0 0 0 / .72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.mx-avatar-mic::before{content:'';position:absolute;inset:-6.05% -24.2% -26.22% -8.07%;background:var(--mx-mic-glass) center/100% 100% no-repeat;filter:brightness(.75)}
 .mx-avatar-mic img{position:relative;width:52%;height:52%;object-fit:contain}

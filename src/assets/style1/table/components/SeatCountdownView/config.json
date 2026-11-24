@@ -27,6 +27,9 @@
       "mx-seat-timer-inset-3": "-12px",
       "mx-seat-timer-border-radius": "50%",
       "mx-seat-timer-ring-inset": "0",
+      "balanced-ring-outset": "3.15px",
+      "ring-corner-ratio": "0.28",
+      "balanced-ring-stroke": "10px",
       "mx-seat-timer-dot-width": "20px",
       "mx-seat-timer-dot-height": "20px",
       "mx-seat-timer-dot-margin": "-10px",
@@ -50,9 +53,7 @@
     "balancedRadius": 51.72,
     "actionColor": "#14fd00",
     "keepColor": "#0ee3fe",
-    "balancedStroke": 5,
-    "roundedStroke": 5,
-    "cornerRatio": 0.28
+    "roundedStroke": 5
   },
   "sizing": {
     "mode": "responsive",
